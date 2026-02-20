@@ -1,0 +1,38 @@
+# Python environment & cache
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+app.log
+
+# Large files (models, datasets)
+models/
+models_cache/
+input/
+output/
+temp_test_ai/
+data/
+storage/
+
+# Local user config (nếu cần share, tạo config.example.json)
+setting.json
+config.json
+.env
