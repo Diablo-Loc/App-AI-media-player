@@ -1,6 +1,7 @@
 import sys
 import os
 from pathlib import Path
+from paths import get_input_path, temp_dir
 from PySide6.QtCore import QObject, QCoreApplication, Signal
 
 # =========================================================
@@ -37,8 +38,8 @@ except ImportError:
 class MockSubtitleManager:
     def __init__(self):
         # Tạo folder temp để AI có chỗ xuất file .ass
-        self.dirs = {"temp": Path("./temp_test_ai").absolute()}
-        self.dirs["temp"].mkdir(exist_ok=True)
+        self.dirs = {"temp": temp_dir()}
+        self.dirs["temp"].mkdir(parents=True, exist_ok=True)
 
     def get_path(self, media_id, ext):
         return self.dirs["temp"] / f"{media_id}.{ext}"
@@ -63,9 +64,9 @@ def test_run():
     global global_worker
     app = QCoreApplication(sys.argv)
 
-    # ĐƯỜNG DẪN VIDEO CỦA BÁC
-    video_path = r"D:\HocTap\11_MusicApp\input\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4" 
-    
+    # ĐƯỜNG DẪN VIDEO: ưu tiên env override, fallback sang `app.paths` input dir
+    video_path = os.environ.get("TEST_VIDEO_PATH") or str(get_input_path("【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4"))
+
     if not os.path.exists(video_path):
         print(f"❌ LỖI: Không tìm thấy file tại: {video_path}")
         return

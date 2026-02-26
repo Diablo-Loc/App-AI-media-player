@@ -376,9 +376,18 @@ class ForYouPage(QWidget):
         self.cards_map = {}    
         
         if self.current_playing_id:
-             # Load đợt đầu tiên trước
-            self.load_next_batch()
-            # Sau đó highlight và tính số
+             # Tìm vị trí của bài đang phát
+            target_idx = -1
+            for idx, item in enumerate(self.all_items_data):
+                if item.id == self.current_playing_id:
+                    target_idx = idx
+                    break
+            
+            # *** FIX: Load lần lượt cho đến khi đủ item được click ***
+            while self.loaded_count <= target_idx and self.loaded_count < len(self.all_items_data):
+                self.load_next_batch()
+            
+            # Sau đó highlight
             self.mark_playing_item(self.current_playing_id)
         else:
             self.update_playing_status(0, len(self.all_items_data))
@@ -551,7 +560,20 @@ class ForYouPage(QWidget):
                 label.setStyleSheet("color: #efefef; font-weight: 600; font-size: 13px; border: none;")
     
     def mark_playing_item(self, media_id):
-        # 1. Xử lý Style thẻ cũ (giữ nguyên)
+        # *** FIX: Nếu item chưa được load, hãy load batches cho đến khi tìm thấy ***
+        if media_id not in self.cards_map:
+            # Item chưa load, tìm vị trí và load batches
+            target_idx = -1
+            for idx, item in enumerate(self.all_items_data):
+                if item.id == media_id:
+                    target_idx = idx
+                    break
+            
+            # Load batches cho đến khi đủ item
+            while self.loaded_count <= target_idx and self.loaded_count < len(self.all_items_data):
+                self.load_next_batch()
+        
+        # 1. Xử lý Style thẻ cũ
         if self.current_playing_id in self.cards_map:
             try:
                 self.set_card_normal_style(self.cards_map[self.current_playing_id])
@@ -560,11 +582,12 @@ class ForYouPage(QWidget):
 
         self.current_playing_id = media_id
 
-        # 2. Highlight thẻ mới (giữ nguyên)
+        # 2. Highlight thẻ mới
         if media_id in self.cards_map:
             active_card = self.cards_map[media_id]
             self.set_card_active_style(active_card)
-            self.playlist_scroll.ensureWidgetVisible(active_card)
+            QTimer.singleShot(100, lambda: self.playlist_scroll.ensureWidgetVisible(active_card))
+            
 
         # --- [MỚI] TÍNH TOÁN SỐ THỨ TỰ ĐỂ CẬP NHẬT LABEL 0/0 ---
         current_index = -1

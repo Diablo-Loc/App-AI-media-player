@@ -12,6 +12,7 @@ from PySide6.QtCore import QObject, Signal, QRunnable, QThreadPool
 
 from job.job_state import JobState
 from core.subtitle_manager import SubtitleStatus
+from paths import storage_dir
 
 logger = logging.getLogger("JobManager")
 
@@ -94,7 +95,7 @@ class JobManager(QObject):
     # ========================================================
 
     def extract_thumbnail_async(self, media_id: str, video_path: str):
-        output_dir = Path("storage/thumbnails")
+        output_dir = storage_dir() / "thumbnails"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / f"{media_id}.jpg"
 

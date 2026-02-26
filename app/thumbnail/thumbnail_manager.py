@@ -2,9 +2,10 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from paths import storage_dir
 
 # Cấu hình đường dẫn Cache
-CACHE_DIR = Path("data/thumbnails")
+CACHE_DIR = storage_dir() / "thumbnails"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 class ThumbnailManager:

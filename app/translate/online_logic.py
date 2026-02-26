@@ -1,4 +1,3 @@
-import lyricsgenius
 import difflib
 import requests
 import re
@@ -13,6 +12,7 @@ except ImportError:
     genai = None
 
 def fetch_lyric_genius(song_title, token):
+    import lyricsgenius  # 🔥 LAZY IMPORT - chỉ load khi dùng Genius lyrics
     if not token: return None
     try:
         # Cấu hình skip_non_songs để tránh trang danh sách/nghệ sĩ

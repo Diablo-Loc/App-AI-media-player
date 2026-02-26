@@ -12,11 +12,13 @@ from ui.main_window import MainWindow
 from subtitle.mode import SubtitleMode 
 
 # =========================================================
-# CẤU HÌNH ĐƯỜNG DẪN TẠI ĐÂY (BÁC DÁN LINK VÀO ĐÂY)
+# CẤU HÌNH ĐƯỜNG DẪN: ưu tiên env vars, fallback sang `app.paths`
 # =========================================================
-# Lưu ý: Thêm chữ r ở trước dấu ngoặc kép để tránh lỗi dấu gạch chéo ngược (\) trên Windows
-VIDEO_PATH = r"D:\HocTap\11_MusicApp\input\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4"
-ASS_PATH   = r"D:\HocTap\11_MusicApp\temp_test_ai\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.ass"
+from paths import get_input_path, temp_dir
+
+# Environment overrides (convenient for CI / other machines)
+VIDEO_PATH = os.environ.get("TEST_VIDEO_PATH") or str(get_input_path("【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4"))
+ASS_PATH = os.environ.get("TEST_ASS_PATH") or str(temp_dir() / "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.ass")
 
 # =========================================================
 # BỘ GIẢI MÃ FILE .ASS THỰC THỤ

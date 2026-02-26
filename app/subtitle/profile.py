@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 from dataclasses import asdict, is_dataclass
 from subtitle.model import Subtitle, SubtitleLine, SubtitleStyle
+from paths import storage_dir
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ def load_subtitles(path):
 class SubtitleProfile:
     def __init__(self):
         # Tách biệt thư mục Profile để không đè vào file Data
-        self.storage_dir = Path("storage/subtitle_profiles")
+        self.storage_dir = storage_dir() / "subtitle_profiles"
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
     def _get_path(self, video_path):

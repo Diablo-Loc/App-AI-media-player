@@ -9,6 +9,9 @@ class SettingsPanel(QWidget):
     font_size_changed = Signal(int)
     font_color_changed = Signal(str)
     
+    outline_changed = Signal(bool, int, str)# (bật/tắt, độ dày, màu)
+    shadow_changed = Signal(bool, int)      # (bật/tắt, độ đậm)
+    
     # Tín hiệu cho Background (Mới)
     bg_color_changed = Signal(str)
     bg_opacity_changed = Signal(float)
@@ -25,7 +28,7 @@ class SettingsPanel(QWidget):
         self.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setFixedWidth(320) # Mở rộng chút để chứa đủ nút
         self.speed_btns = []
-
+        self._current_outline_color = "#000000"
         # --- Style (CSS) ---
         self.setStyleSheet("""
             QWidget { background-color: #282828; color: white; border: 1px solid #404040; border-radius: 8px; }
@@ -120,6 +123,47 @@ class SettingsPanel(QWidget):
 
         layout.addWidget(self._sep())
 
+        # --- 3.5 TÙY CHỈNH VIỀN & BÓNG (PHẦN MỚI THÊM) ---
+        layout.addWidget(QLabel("Viền & Bóng đổ"))
+        
+        # Hàng cho Viền
+        out_layout = QHBoxLayout()
+        self.chk_outline = QCheckBox("Viền")
+        self.chk_outline.setChecked(True)
+        self.chk_outline.stateChanged.connect(self._emit_style_update)
+        
+        self.slider_out_width = QSlider(Qt.Orientation.Horizontal)
+        self.slider_out_width.setRange(0, 10)
+        self.slider_out_width.setValue(4)
+        self.slider_out_width.valueChanged.connect(self._emit_style_update)
+        
+        self.btn_out_color = QPushButton("C")
+        self.btn_out_color.setFixedSize(25, 20)
+        self.btn_out_color.clicked.connect(self._open_outline_color_dialog)
+        self._set_btn_color(self.btn_out_color, self._current_outline_color, is_bg_btn=True)
+        
+        out_layout.addWidget(self.chk_outline)
+        out_layout.addWidget(self.slider_out_width)
+        out_layout.addWidget(self.btn_out_color)
+        layout.addLayout(out_layout)
+
+        # Hàng cho Bóng
+        sha_layout = QHBoxLayout()
+        self.chk_shadow = QCheckBox("Bóng")
+        self.chk_shadow.setChecked(True)
+        self.chk_shadow.stateChanged.connect(self._emit_style_update)
+        
+        self.slider_sha_alpha = QSlider(Qt.Orientation.Horizontal)
+        self.slider_sha_alpha.setRange(0, 255)
+        self.slider_sha_alpha.setValue(160)
+        self.slider_sha_alpha.valueChanged.connect(self._emit_style_update)
+        
+        sha_layout.addWidget(self.chk_shadow)
+        sha_layout.addWidget(self.slider_sha_alpha)
+        layout.addLayout(sha_layout)
+
+        layout.addWidget(self._sep())
+        
         # --- 4. TỐC ĐỘ PHÁT ---
         layout.addWidget(QLabel("Tốc độ phát"))
         speed_layout = QHBoxLayout()
@@ -222,6 +266,28 @@ class SettingsPanel(QWidget):
                     # Cập nhật màu nút
                     self._set_btn_color(self.btn_font_color, hex_c)
 
+    def _emit_style_update(self):
+        """Gửi tín hiệu tổng hợp về Viền và Bóng"""
+        self.outline_changed.emit(
+            self.chk_outline.isChecked(),
+            self.slider_out_width.value(),
+            self._current_outline_color
+        )
+        self.shadow_changed.emit(
+            self.chk_shadow.isChecked(),
+            self.slider_sha_alpha.value()
+        )
+
+    def _open_outline_color_dialog(self):
+        dialog = QColorDialog(self)
+        dialog.setOption(QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
+        if dialog.exec():
+            color = dialog.selectedColor()
+            if color.isValid():
+                self._current_outline_color = color.name()
+                self._set_btn_color(self.btn_out_color, self._current_outline_color, is_bg_btn=True)
+                self._emit_style_update()
+                
     def _on_speed_click(self, speed, clicked_btn):
         self.playback_speed_changed.emit(speed)
         for btn in self.speed_btns:
@@ -246,6 +312,13 @@ class SettingsPanel(QWidget):
         
         self.chk_lock.setChecked(False)
         self.speed_btns[2].click() # Click vào nút 1.0x
+        
+        self.chk_outline.setChecked(True)
+        self.slider_out_width.setValue(4)
+        self._current_outline_color = "#000000"
+        self._set_btn_color(self.btn_out_color, "#000000", is_bg_btn=True)
+        self.chk_shadow.setChecked(True)
+        self.slider_sha_alpha.setValue(160)
         
         # 2. Gửi tín hiệu để App reset logic bên dưới
         self.reset_requested.emit()
@@ -285,6 +358,22 @@ class SettingsPanel(QWidget):
                 break
         self._set_btn_color(self.btn_bg_color, config.get("bg_color", "#000000"), is_bg_btn=True)
 
+        # Sync Viền (Outline)
+        self.chk_outline.setChecked(config.get("outline_enabled", True))
+        self.slider_out_width.setValue(config.get("outline_width", 4))
+        self._current_outline_color = config.get("outline_color", "#000000")
+        self._set_btn_color(self.btn_out_color, self._current_outline_color, is_bg_btn=True)
+
+        # Sync Bóng (Shadow)
+        self.chk_shadow.setChecked(config.get("shadow_enabled", True))
+        self.slider_sha_alpha.setValue(config.get("shadow_alpha", 160))
+
+        # Sync Khóa vị trí
+        self.chk_lock.setChecked(config.get("lock_position", False))
+        
+        # Sau khi sync xong phải emit một lần để Layer cập nhật
+        self._emit_style_update()
+        
     def get_current_mode(self):
         """Trả về Enum SubtitleMode đang được chọn"""
         return self.combo_mode.currentData()

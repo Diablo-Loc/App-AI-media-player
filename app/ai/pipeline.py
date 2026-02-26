@@ -1,6 +1,7 @@
 import os
 import sys
 import gc
+import time
 import re
 from pathlib import Path
 from typing import Callable, Optional, Dict
@@ -10,7 +11,7 @@ os.environ["TRANSFORMERS_OFFLINE"] = "1"
 os.environ["HF_HUB_OFFLINE"] = "1"
 
 # ================================================================
-# 🔥 FIX NVIDIA DLL
+# 🔥 FIX NVIDIA DLL (LAZY: gọi khi cần)
 # ================================================================
 def fix_nvidia_dlls():
     for path in sys.path:
@@ -29,28 +30,20 @@ def fix_nvidia_dlls():
                             pass
                         os.environ["PATH"] = b + os.pathsep + os.environ.get("PATH", "")
 
-fix_nvidia_dlls()
-
 # ================================================================
-# IMPORTS
+# LIGHTWEIGHT IMPORTS (chỉ bản nhẹ)
 # ================================================================
-from faster_whisper import WhisperModel
-import lyricsgenius
 import difflib
 from pipeline.extractor import extract_audio
 from pipeline.aligner import refine_segments
 from pipeline.lyric_formatter import export_srt, export_lrc
 from pipeline.jp_normalizer import normalize_japanese, universal_text_reconstruct
 
-from subtitle.ass.renderer import render_ass
 from subtitle.converter import refined_to_subtitles
 from subtitle.storage import save_subtitles
 from subtitle.mode import SubtitleMode
 from subtitle.config import SubtitleConfig
 from pipeline.utils import TempFileManager,is_connected
-from translate.pipeline import TranslateMode
-
-from translate.pipeline import TranslateMode
 
 # ================================================================
 # 🔹 HELPERS
@@ -84,8 +77,24 @@ def run_ai_pipeline(
     progress_cb: Optional[Callable[[int, str], None]] = None,
     cancel_cb: Optional[Callable[[], bool]] = None,
     device_policy: str = "auto",
-    translate_mode = TranslateMode.PIVOT_VI
+    translate_mode = None
 ) -> Dict:
+    
+    # 🔥 FIX NVIDIA DLLS (LAZY CALL - chỉ gọi khi AI thực sự chạy)
+    fix_nvidia_dlls()
+    
+    # 🔥🔥🔥 IMPORT NẶNG TẠI ĐÂY (LAZY IMPORT) 🔥🔥🔥
+    # Những library này chỉ được nạp khi user thực sự nhấn nút "Tạo AI"
+    # Giúp app startup nhanh 30 giây!
+    import torch
+    from faster_whisper import WhisperModel
+    import lyricsgenius
+    from subtitle.ass.renderer import render_ass
+    from translate.pipeline import TranslateMode
+    
+    # Set default translate_mode nếu chưa có
+    if translate_mode is None:
+        translate_mode = TranslateMode.PIVOT_VI
     
     # --- BƯỚC KẾT NỐI SETTING: Đọc từ Registry ---
     settings = QSettings("MyStudio", "AI_Music_Player")
@@ -100,12 +109,6 @@ def run_ai_pipeline(
     online_provider = settings.value("online_provider", "Local Default")
     api_key = settings.value("api_key", "").strip()
     # ----------------------------------------------
-    
-    # 🔥🔥🔥 IMPORT LƯỜI TẠI ĐÂY 🔥🔥🔥
-    # Khi hàm này được gọi, các thư viện nặng mới được nạp vào RAM
-    # và GPU mới bắt đầu bị "đánh thức".
-    import torch
-    from faster_whisper import WhisperModel
     
     input_path = Path(input_path)
     output_dir = Path(output_dir)
@@ -128,7 +131,7 @@ def run_ai_pipeline(
         success = extract_audio(str(input_path), str(temp_wav_path))
         if not success:
             raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
-
+        time.sleep(0.5)
         # ============================================================
         # 2️⃣ LOAD WHISPER MODEL
         # ============================================================
@@ -231,7 +234,7 @@ def run_ai_pipeline(
 
         if not raw_segments:
             raise RuntimeError("⚠️ Không tìm thấy lời thoại nào.")
-
+        
         # ============================================================
         # 5️⃣ REFINE SEGMENTS & EXPORT RAW
         # ============================================================

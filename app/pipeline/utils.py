@@ -2,12 +2,12 @@ import shutil
 import uuid
 import re
 from pathlib import Path
+from paths import storage_dir
 import socket
 
 class TempFileManager:
-    # 📁 Đường dẫn lưu trữ: ./storage/temp_cache/
-    # Dùng Path để xử lý đa nền tảng (Win/Mac/Linux) đều chạy tốt
-    TEMP_DIR = Path("storage") / "temp_cache"
+    # 📁 Đường dẫn lưu trữ: use centralized storage_dir()/temp_cache
+    TEMP_DIR = storage_dir() / "temp_cache"
 
     @staticmethod
     def initialize():

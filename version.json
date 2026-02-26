@@ -1,0 +1,6 @@
+{
+  "version": "1.0.2",
+  "update_notes": "- Kích hoạt hệ thống tự cập nhật từ xa\n- Thêm hiệu ứng bay chữ Karaoke\n- Sửa lỗi GPU",
+  "download_url": "https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/update.zip",
+  "critical": false
+}

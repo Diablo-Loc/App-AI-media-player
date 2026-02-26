@@ -38,6 +38,12 @@ class DraggableSubtitle(QLabel):
         self.current_bg_opacity = 0.5      # Mặc định mờ 50%
         self._current_margin = 40
         
+        self.use_outline = True
+        self.outline_width = 4
+        self.outline_color = "#000000"
+        self.use_shadow = True
+        self.shadow_alpha = 160
+               
         # Áp dụng style lần đầu
         self.update_style() 
     
@@ -127,21 +133,18 @@ class DraggableSubtitle(QLabel):
 
         
     def update_style(self):
-        """Cập nhật giao diện (Màu, Font, Nền)"""
+        """Cập nhật giao diện (Nền, Font size) - Logic cũ giữ nguyên"""
         
-        # --- XỬ LÝ MÀU NỀN + ĐỘ MỜ ---
-        # Chuyển Hex sang QColor để lấy RGB
+        # --- XỬ LÝ MÀU NỀN + ĐỘ MỜ (Logic cũ) ---
         c = QColor(self.current_bg_color)
         if not c.isValid(): c = QColor("#000000")
-        
-        # Tính Alpha (0-255) từ Opacity (0.0-1.0)
         alpha = int(self.current_bg_opacity * 255)
-        
         rgba_bg = f"rgba({c.red()}, {c.green()}, {c.blue()}, {alpha})"
 
+        # --- CẬP NHẬT STYLESHEET ---
         self.setStyleSheet(f"""
             QLabel {{
-                color: {self.current_color};
+                /* color: transparent; */ /* Để paintEvent tự vẽ màu chữ giúp viền đẹp hơn */
                 font-family: 'Segoe UI', 'Arial', sans-serif;
                 font-size: {self.current_font_size}px;
                 font-weight: bold;
@@ -150,6 +153,8 @@ class DraggableSubtitle(QLabel):
                 border-radius: 6px;
             }}
         """)
+        
+        # Logic co giãn và vị trí cũ
         self.adjustSize()
         if not self._user_moved:
             self.center_at_bottom()
@@ -164,13 +169,47 @@ class DraggableSubtitle(QLabel):
 
     # --- KHẮC PHỤC LỖI NỀN KHÔNG HIỂN THỊ ---
     def paintEvent(self, event):
-        """Ép Qt phải vẽ Style Sheet ngay cả khi có thuộc tính TranslucentBackground"""
+        from PySide6.QtGui import QPainterPath, QPen, QColor
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.TextAntialiasing)
+        
+        # Vẽ nền cũ
         from PySide6.QtWidgets import QStyleOption, QStyle
-        opt = QStyleOption()
-        opt.initFrom(self)
-        p = QPainter(self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, p, self)
-        super().paintEvent(event)
+        opt = QStyleOption(); opt.initFrom(self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_Widget, opt, painter, self)
+
+        if not self.text(): return
+
+        path = QPainterPath()
+        metrics = self.fontMetrics()
+        rect = self.contentsRect()
+        lines = self.text().split('\n')
+        line_height = metrics.lineSpacing()
+        total_h = line_height * len(lines)
+        
+        for i, line in enumerate(lines):
+            x = rect.x() + (rect.width() - metrics.horizontalAdvance(line)) / 2
+            y = rect.y() + (rect.height() - total_h) / 2 + metrics.ascent() + (i * line_height)
+            path.addText(x, y, self.font(), line)
+
+        # 1. Vẽ Bóng (Shadow)
+        if getattr(self, 'use_shadow', True):
+            alpha = getattr(self, 'shadow_alpha', 160)
+            painter.fillPath(path.translated(2,2), QColor(0, 0, 0, alpha))
+
+        # 2. Vẽ Viền (Outline)
+        if getattr(self, 'use_outline', True):
+            w = getattr(self, 'outline_width', 4)
+            c = getattr(self, 'outline_color', "#000000")
+            pen = QPen(QColor(c), w)
+            pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+            painter.setPen(pen)
+            painter.drawPath(path)
+
+        # 3. Vẽ chữ chính
+        painter.fillPath(path, QColor(self.current_color))
+        painter.end()
         
     # --- Các hàm logic vị trí giữ nguyên ---
     def center_at_bottom(self):
@@ -457,10 +496,28 @@ class SubtitleLayer(DraggableSubtitle):
         # [GỌI HÀM CHUẨN HÓA] -> Nó sẽ tự check _user_moved để giữ vị trí hoặc reset
         self.recalc_position()
 
-    def apply_style(self, font_size=None, color=None, bg_color=None, bg_opacity=None):
-        """Nhận style từ MainWindow và áp dụng xuống DraggableSubtitle"""
+    def apply_style(self, font_size=None, color=None, bg_color=None, bg_opacity=None, **kwargs):
+        """Nhận style từ Editor và áp dụng xuống DraggableSubtitle"""
         changed = False
         
+        # --- PHẦN THÊM MỚI: Tùy chỉnh Viền & Bóng (Không đổi logic cũ) ---
+        if 'outline_enabled' in kwargs: 
+            self.use_outline = kwargs['outline_enabled']
+            changed = True
+        if 'outline_width' in kwargs: 
+            self.outline_width = kwargs['outline_width']
+            changed = True
+        if 'outline_color' in kwargs: 
+            self.outline_color = kwargs['outline_color']
+            changed = True
+        if 'shadow_enabled' in kwargs: 
+            self.use_shadow = kwargs['shadow_enabled']
+            changed = True
+        if 'shadow_alpha' in kwargs: 
+            self.shadow_alpha = kwargs['shadow_alpha']
+            changed = True
+        
+        # --- LOGIC CŨ: Giữ nguyên hoàn toàn ---
         if font_size is not None:
             self.current_font_size = font_size
             changed = True
@@ -469,7 +526,6 @@ class SubtitleLayer(DraggableSubtitle):
             self.current_color = color
             changed = True
             
-        # Thêm 2 dòng này để nhận màu nền và độ mờ
         if bg_color is not None:
             self.current_bg_color = bg_color
             changed = True
@@ -478,11 +534,12 @@ class SubtitleLayer(DraggableSubtitle):
             self.current_bg_opacity = bg_opacity
             changed = True
             
-        # Nếu có thay đổi bất kỳ thuộc tính nào, gọi update_style và vẽ lại
+        # Nếu có bất kỳ thay đổi nào (cũ hoặc mới)
         if changed:
             self.update_style()
+            # Gọi self.update() để ép paintEvent vẽ lại Viền/Bóng ngay lập tức
+            self.update() 
 
-            # Chỉ tính lại vị trí, KHÔNG động vào PTS logic
             if self.isVisible():
                 self.recalc_position()
                 

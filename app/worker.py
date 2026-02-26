@@ -1,4 +1,34 @@
 import sys
+
+# 🔥 FIX PyInstaller issue: sys.stdout/stderr can be None in subprocess
+# Create a safe wrapper that implements isatty() for transformers library
+class SafeStdout:
+    def __init__(self, original=None):
+        self.original = original or sys.stderr
+    
+    def write(self, msg):
+        try:
+            if self.original and hasattr(self.original, 'write'):
+                self.original.write(msg)
+        except:
+            pass
+    
+    def flush(self):
+        try:
+            if self.original and hasattr(self.original, 'flush'):
+                self.original.flush()
+        except:
+            pass
+    
+    def isatty(self):
+        """transformers lib calls this - always return False for non-TTY"""
+        return False
+
+if sys.stdout is None or not hasattr(sys.stdout, 'isatty'):
+    sys.stdout = SafeStdout(sys.stderr)
+if sys.stderr is None or not hasattr(sys.stderr, 'isatty'):
+    sys.stderr = SafeStdout()
+
 import time
 import traceback
 import multiprocessing 
@@ -38,9 +68,17 @@ def _ai_process_wrapper(input_path, output_dir, media_id, queue):
         time.sleep(1.0)
         
     except Exception as e:
-        # Bắt lỗi chi tiết
-        tb = "".join(traceback.format_exception(type(e), e, e.__traceback__))
-        queue.put(("failed", tb))
+        # Lấy traceback chi tiết
+        error_msg = traceback.format_exc()
+        
+        # Ghi vào file log ngay tại thư mục chứa file EXE
+        # Dùng mode "a" để ghi nối tiếp, không bị ghi đè
+        with open("error_log.txt", "a", encoding="utf-8") as f:
+            f.write(f"\n--- ERROR AT {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+            f.write(error_msg)
+            f.write("-" * 30 + "\n")
+            
+        queue.put(("failed", error_msg))
 
 # =========================================================================
 # CLASS AIWORKER (MAIN PROCESS)

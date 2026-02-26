@@ -1,16 +1,19 @@
 import os
+import sys
 import logging
 import json
 import psutil
 import random
+from pathlib import Path
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QScrollArea, QFrame, QPushButton, QGridLayout, 
                              QFileDialog, QStackedWidget, QListWidget, QSizePolicy,QApplication,QLineEdit,QLabel)
 from PySide6.QtCore import Qt, QTimer, QEvent, QPoint,QUrl,QObject, QFileSystemWatcher, QPropertyAnimation,QEasingCurve,QParallelAnimationGroup
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PySide6.QtGui import QShortcut, QKeySequence, QCursor,QPalette, QColor,QPalette
+from PySide6.QtGui import QShortcut, QKeySequence, QCursor,QPalette, QColor,QPalette, QIcon
 from PySide6.QtMultimediaWidgets import QVideoWidget
 # Import UI components
+from paths import project_root, storage_dir, get_icon_path
 from ui.playback_bar import PlaybackBar
 from ui.media_card import MediaCard
 from ui.subs_ui.subtitle_layer import SubtitleLayer
@@ -32,7 +35,8 @@ from ui.pages.settings import SettingsPage
 from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
 
-logger = logging.getLogger(__name__)
+#Import updater
+from updater import download_and_install
 
 class InternalMediaPlayer(QObject):
     def __init__(self, parent=None):
@@ -66,9 +70,19 @@ class MainWindow(QMainWindow):
         self.app_controller = None
         self._normal_geometry = None
         self._normal_window_state = None
+        
+        # --- Set App Icon ---
+        # Use get_icon_path() to correctly locate icon in both Python and EXE modes
+        icon_path = get_icon_path("app_icon.ico")
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
+            print(f"✅ Icon loaded from: {icon_path}")
+        else:
+            print(f"⚠️ Icon not found at: {icon_path}")
+        self.setWindowTitle("BoTube")
 
         # --- 0. CẤU HÌNH & DEPENDENCIES ---
-        self.settings_file = "config.json"
+        self.settings_file = str(storage_dir() / "setting.json")
         self.subtitle_manager = subtitle_manager
         self.job_manager = job_manager
         self.media_library = media_library
@@ -135,13 +149,20 @@ class MainWindow(QMainWindow):
         # Khởi tạo Layer (Chỉ 1 lần duy nhất)
         self.sub_layer = SubtitleLayer(initial_mode=initial_mode, parent=self)
         
-        # Áp dụng giao diện đã lưu ngay lập tức
+        # Áp dụng giao diện đã lưu ngay lập tức (bao gồm viền/bóng)
         self.sub_layer.apply_style(
             font_size=self.config.get("font_size", 24),
             color=self.config.get("font_color", "#FFFF00"),
             bg_color=self.config.get("bg_color", "#000000"),
-            bg_opacity=self.config.get("bg_opacity", 0.5)
+            bg_opacity=self.config.get("bg_opacity", 0.5),
+            outline_enabled=self.config.get("outline_enabled", True),
+            outline_width=self.config.get("outline_width", 4),
+            outline_color=self.config.get("outline_color", "#000000"),
+            shadow_enabled=self.config.get("shadow_enabled", True),
+            shadow_alpha=self.config.get("shadow_alpha", 160)
         )
+        # khóa vị trí nếu cần
+        self.sub_layer.set_locked(self.config.get("lock_position", False))
         
         # Kết nối player timeline với sub layer
         self.media_player.player.positionChanged.connect(self.sub_layer.update_position)
@@ -177,6 +198,11 @@ class MainWindow(QMainWindow):
         # Các setting khác
         self.subsettings_panel.playback_speed_changed.connect(self.change_playback_speed)
         self.subsettings_panel.lock_position_changed.connect(self.sub_layer.set_locked)
+        # lưu trạng thái khóa và vận hành layer
+        self.subsettings_panel.lock_position_changed.connect(lambda v: self._save_setting("lock_position", v))
+        # kiểu viền/bóng
+        self.subsettings_panel.outline_changed.connect(self._on_outline_changed)
+        self.subsettings_panel.shadow_changed.connect(self._on_shadow_changed)
         self.subsettings_panel.reset_requested.connect(self._reset_defaults)
         
         # Nút mở settings
@@ -191,7 +217,7 @@ class MainWindow(QMainWindow):
 
         # --- 7. UI LAYOUT & WINDOW ---
         self.init_ui() 
-        self.setWindowTitle("AI Media Player")
+        self.setWindowTitle("BoTube")
         self.resize(1100, 750)
         self.apply_global_styles()
         self.setup_shortcuts()
@@ -230,6 +256,8 @@ class MainWindow(QMainWindow):
 
         QTimer.singleShot(0, lambda: self.update_video_location("mini"))
         QTimer.singleShot(100, lambda: self.sidebar.setCurrentRow(0))
+        # Auto-update check disabled - user can manually check via menu if needed
+        # QTimer.singleShot(2000, lambda: download_and_install(self))
                 
     def changeEvent(self, event):
         """
@@ -1043,8 +1071,16 @@ class MainWindow(QMainWindow):
 
             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
             if self.active_playlist and hasattr(self, 'foryou_page'):
-                # Dùng Signal hoặc gọi trực tiếp để bên For You vẽ lại danh sách bên phải
-                self.foryou_page.load_playlist(self.active_playlist)
+                # *** FIX: SET current_playing_id TRƯỚC để load_playlist biết load từ đâu ***
+                self.foryou_page.current_playing_id = media_item.id
+                # Chỉ gọi load nếu danh sách chưa có dữ liệu (lần đầu)
+                # Nếu đã có dữ liệu thì chỉ cần highlight item mới
+                if not self.foryou_page.all_items_data:
+                    # Lần đầu tiên, cần load danh sách
+                    self.foryou_page.load_playlist(self.active_playlist)
+                else:
+                    # Đã có danh sách rồi, chỉ highlight item
+                    self.foryou_page.mark_playing_item(media_item.id)
         
         # 0. HỦY JOB CŨ (AI, subtitle...)
         if hasattr(self, "app_controller"):
@@ -1111,27 +1147,29 @@ class MainWindow(QMainWindow):
         # =============================
         # 6. SYNC VỚI FOR YOU PAGE (Highlight bài đang phát)
         # =============================
-        # Luôn gọi sync_to_foryou để highlight bài trên ForYou page
-        # Nếu chưa ở ForYou, nhưng sau này switch sang ForYou, bài sẽ vẫn được highlight
-        self.sync_to_foryou(media_item)
-                
         if hasattr(self, 'foryou_page'):
-            # 1. Cập nhật text tiêu đề chính
+            # 1. Cập nhật thông tin text (Title/Artist)
             self.foryou_page.title_label.setText(media_item.title)
             self.foryou_page.artist_label.setText(getattr(media_item, "artist", "Unknown"))
             
-            # 2. Cập nhật Playlist nếu cần
+            # 2. CẬP NHẬT PLAYLIST (CHỈ KHI CẦN THIẾT)
             if update_playlist and hasattr(self, 'active_playlist'):
-                self.foryou_page.load_playlist(self.active_playlist)
+                # Kiểm tra nếu danh sách hiện tại khác hoàn toàn danh sách mới (VD: chuyển từ album A sang album B)
+                # Hoặc nếu danh sách ForYou đang rỗng
+                if not self.foryou_page.original_data or len(self.foryou_page.original_data) != len(self.active_playlist):
+                    self.foryou_page.load_playlist(self.active_playlist)
+                else:
+                    # Nếu danh sách giống nhau rồi thì KHÔNG gọi load_playlist nữa
+                    # Chỉ cập nhật ID đang phát để mark_playing_item chạy đúng
+                    self.foryou_page.current_playing_id = media_item.id
 
-            # 3. THÊM DÒNG NÀY: Tô đậm bài đang phát trong danh sách bên phải
+            # 3. HIGHLIGHT (Quan trọng nhất: chỉ vẽ lại CSS, không vẽ lại Widget)
             self.foryou_page.mark_playing_item(media_item.id)
             
-            # --- [MỚI] RESET VIDEO STAGE VỀ MẶC ĐỊNH ---
-            # Tránh trường hợp video trước là dọc, video này là ngang mà chưa kịp load size
+            # 4. RESET VIDEO STAGE
             self.foryou_page.video_container.video_width = 1920
             self.foryou_page.video_container.video_height = 1080
-            self.foryou_page.video_container.resizeEvent(None)
+            self.foryou_page.video_container.update_layout() # Dùng hàm update_layout có timer cho mượt
         # ngay sau khi bài mới được kích hoạt, cập nhật mini player
         self.sync_mini_player_state()
     
@@ -1352,14 +1390,44 @@ class MainWindow(QMainWindow):
         self.config["mode"] = mode.value
         self.save_config()
 
+    def _on_outline_changed(self, enabled, width, color):
+        # apply to layer and save each field
+        self.sub_layer.apply_style(
+            outline_enabled=enabled,
+            outline_width=width,
+            outline_color=color
+        )
+        self._save_setting("outline_enabled", enabled)
+        self._save_setting("outline_width", width)
+        self._save_setting("outline_color", color)
+
+    def _on_shadow_changed(self, enabled, alpha):
+        self.sub_layer.apply_style(
+            shadow_enabled=enabled,
+            shadow_alpha=alpha
+        )
+        self._save_setting("shadow_enabled", enabled)
+        self._save_setting("shadow_alpha", alpha)
+
     def _save_setting(self, key, value):
         # 1. Lưu vào biến config
         self.config[key] = value
-        # 2. Cập nhật Layer ngay lập tức
-        if key == "font_size": self.sub_layer.apply_style(font_size=value)
-        elif key == "font_color": self.sub_layer.apply_style(color=value)
-        elif key == "bg_color": self.sub_layer.apply_style(bg_color=value)
-        elif key == "bg_opacity": self.sub_layer.apply_style(bg_opacity=value)
+        # 2. Cập nhật Layer ngay lập tức hoặc xử lý đặc biệt
+        if key == "font_size":
+            self.sub_layer.apply_style(font_size=value)
+        elif key == "font_color":
+            self.sub_layer.apply_style(color=value)
+        elif key == "bg_color":
+            self.sub_layer.apply_style(bg_color=value)
+        elif key == "bg_opacity":
+            self.sub_layer.apply_style(bg_opacity=value)
+        elif key in ("outline_enabled", "outline_width", "outline_color"):
+            self.sub_layer.apply_style(**{key: value})
+        elif key in ("shadow_enabled", "shadow_alpha"):
+            self.sub_layer.apply_style(**{key: value})
+        elif key == "lock_position":
+            # layer already updated by signal before reaching here, nothing else to do
+            pass
         
         # 3. Ghi ra file
         self.save_config()
@@ -1371,14 +1439,35 @@ class MainWindow(QMainWindow):
             "font_size": 24,
             "font_color": "#FFFF00",
             "bg_color": "#000000",
-            "bg_opacity": 0.5
+            "bg_opacity": 0.5,
+            # Viền & bóng
+            "outline_enabled": True,
+            "outline_width": 4,
+            "outline_color": "#000000",
+            "shadow_enabled": True,
+            "shadow_alpha": 160,
+            # Khóa vị trí
+            "lock_position": False
         }
         self.config = defaults
         self.save_config()
         
         # Update Layer
         self.sub_layer.set_mode(SubtitleMode.EN_VI)
-        self.sub_layer.apply_style(24, "#FFFF00", "#000000", 0.5)
+        self.sub_layer.apply_style(
+            font_size=defaults["font_size"],
+            color=defaults["font_color"],
+            bg_color=defaults["bg_color"],
+            bg_opacity=defaults["bg_opacity"],
+            outline_enabled=defaults["outline_enabled"],
+            outline_width=defaults["outline_width"],
+            outline_color=defaults["outline_color"],
+            shadow_enabled=defaults["shadow_enabled"],
+            shadow_alpha=defaults["shadow_alpha"]
+        )
+        self.sub_layer.set_locked(defaults["lock_position"])
+        # Đồng bộ lại panel
+        self.subsettings_panel.sync_ui(self.config)
 
     def load_config(self):
         try:

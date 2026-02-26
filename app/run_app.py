@@ -1,10 +1,22 @@
+import ctypes
 import multiprocessing
+import os
 import sys
 import logging
 import shutil
 from pathlib import Path
+
+# 🔥 FIX PyInstaller issue: sys.stdout can be None
+# This must be before any imports that use print()
+if sys.stdout is None:
+    import io
+    sys.stdout = io.StringIO()
+    sys.stderr = io.StringIO()
+
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 from pipeline.utils import TempFileManager
+from paths import storage_dir, input_dir, temp_dir, get_icon_path, asset_dir, project_root
 
 # ===== CORE =====
 from core.media_library import MediaLibrary
@@ -29,15 +41,27 @@ def check_system_dependencies():
     Trả về True nếu OK, False nếu thiếu.
     """
     # 1. Kiểm tra lệnh trong PATH của Windows
-    ffmpeg_ok = shutil.which("ffmpeg") is not None
-    ffprobe_ok = shutil.which("ffprobe") is not None
+    ffmpeg_in_path = shutil.which("ffmpeg") is not None
+    ffprobe_in_path = shutil.which("ffprobe") is not None
 
-    # 2. (Tùy chọn) Kiểm tra xem có file .exe để cạnh file chạy không
-    # (Hữu ích khi đóng gói portable)
+    # 2. Kiểm tra trong Asset folder (sys._MEIPASS khi chạy từ EXE)
+    asset_folder = asset_dir()
+    ffmpeg_in_bundle = (asset_folder / "ffmpeg.exe").exists()
+    ffprobe_in_bundle = (asset_folder / "ffprobe.exe").exists()
+
+    # 3. Kiểm tra trong bin/ folder (dev mode - FFmpeg được lưu ở bin/)
+    bin_folder = project_root() / "bin"
+    ffmpeg_in_bin = (bin_folder / "ffmpeg.exe").exists()
+    ffprobe_in_bin = (bin_folder / "ffprobe.exe").exists()
+
+    # 4. Tùy chọn: Kiểm tra cạnh file chạy (cwd relative)
     local_ffmpeg = Path("ffmpeg.exe").exists()
     local_ffprobe = Path("ffprobe.exe").exists()
 
-    if (ffmpeg_ok or local_ffmpeg) and (ffprobe_ok or local_ffprobe):
+    ffmpeg_ok = ffmpeg_in_path or ffmpeg_in_bundle or ffmpeg_in_bin or local_ffmpeg
+    ffprobe_ok = ffprobe_in_path or ffprobe_in_bundle or ffprobe_in_bin or local_ffprobe
+
+    if ffmpeg_ok and ffprobe_ok:
         return True
     
     return False
@@ -46,23 +70,59 @@ def main():
 
     # ✅ 1. Tạo QApplication TẠI ĐÂY (chỉ 1 lần duy nhất)
     app = QApplication(sys.argv)
+    
+    # 🔥 Thiết lập AppUserModelID để Windows hiển thị icon ở taskbar
+    # (Phải làm trước khi tạo window)
+    if sys.platform == 'win32':
+        try:
+            # Sử dụng ctypes để set AppUserModelID (AppID cần match với EXE)
+            app_id = 'BoTube.MediaPlayer.1'
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+        except Exception as e:
+            print(f"⚠️ Không thể set AppUserModelID: {e}")
+    
+    # Set app icon (for taskbar, dialogs, etc)
+    icon_path = get_icon_path("app_icon.ico")
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
+        print(f"✅ Icon loaded from: {icon_path}")
+    else:
+        print(f"⚠️ Icon not found at: {icon_path}")
 
     # 2. Kiểm tra FFmpeg
     if not check_system_dependencies():
+        bin_folder = project_root() / "bin"
+        asset_folder = asset_dir()
+        
+        error_msg = (
+            "❌ Lỗi: Không tìm thấy FFmpeg hoặc FFprobe!\n\n"
+            "Ứng dụng cần FFmpeg để xử lý video và âm thanh.\n\n"
+            "Cách khắc phục:\n"
+            "1️⃣ Cài đặt FFmpeg vào biến môi trường PATH\n"
+            "   (Download từ https://ffmpeg.org/download.html)\n\n"
+            "2️⃣ Hoặc copy file 'ffmpeg.exe' và 'ffprobe.exe':\n"
+        )
+        
+        # Hiển thị path khác nhau tùy theo mode
+        if getattr(sys, 'frozen', False):
+            error_msg += f"   Cho EXE: vào thư mục {asset_folder}"
+        else:
+            error_msg += f"   Cho Dev: vào thư mục {bin_folder}"
+            error_msg += f"\n   Hoặc: vào thư mục {asset_folder}"
+        
+        error_msg += "\n\n3️⃣ Hoặc copy vào cạnh file EXE BoTube.exe"
+        
         QMessageBox.critical(
             None, 
             "Thiếu thư viện quan trọng",
-            "❌ Lỗi: Không tìm thấy FFmpeg hoặc FFprobe!\n\n"
-            "Ứng dụng cần FFmpeg để xử lý video và âm thanh.\n"
-            "Vui lòng cài đặt FFmpeg vào biến môi trường PATH hoặc copy file 'ffmpeg.exe' và 'ffprobe.exe' vào cùng thư mục với ứng dụng."
+            error_msg
         )
-        sys.exit(1) # Thoát ngay lập tức
+        sys.exit(1)  # Thoát ngay lập tức
     
     # ==================================================
     # 🔥 STORAGE
     # ==================================================
-    storage_root = Path("storage")
-    storage_root.mkdir(exist_ok=True)
+    storage_root = storage_dir()
     
     app.setOrganizationName("MyMediaPlayerGroup")
     app.setOrganizationDomain("myvideoplayer.com")

@@ -1,4 +1,3 @@
-import torch
 import gc
 import re
 import sys
@@ -13,6 +12,7 @@ class TranslateMode:
     PIVOT_VI = "pivot_vi"   # Dịch Nguồn -> Anh -> Việt (Chuẩn nhất cho Nhật/Trung/Hàn)
     
 def get_translator():
+    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi thực sự dùng translator
     global _translator_instance
     if _translator_instance is None:
         from .translator import NLLBTranslator
@@ -90,6 +90,7 @@ def clean_repetitive_text(text):
 # 2. HÀM CHẠY BATCH AN TOÀN (CORE LOGIC)
 # ==============================================================================
 def run_safe_batch(translator, text_list, src_lang, tgt_lang, batch_size=16):
+    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi thực sự dịch
     results = []
     total = len(text_list)
     
@@ -130,6 +131,8 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     """
     Khai báo thêm 'provider' và 'key' để điều hướng.
     """
+    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi thực sự dịch
+    
     if not subs: return subs
     if src_lang == 'vi':
         print("🇻🇳 Bài hát tiếng Việt, bỏ qua dịch thuật.")
@@ -230,6 +233,7 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     return subs
 
 def clear_translator():
+    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi cần dọn dẹp
     global _translator_instance
     if _translator_instance is not None:
         print("🧹 Giải phóng bộ nhớ AI...")
