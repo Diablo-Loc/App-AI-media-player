@@ -31,6 +31,15 @@ output/
 temp_test_ai/
 data/
 storage/
+venv/
+app_resources/
+backup/
+bin/
+build/
+dist/
+installer/
+scripts/
+test/
 
 # Local user config (nếu cần share, tạo config.example.json)
 setting.json

@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QLabel, 
                              QPushButton, QSlider, QWidget,QSizePolicy)
 from PySide6.QtCore import Qt, Signal, QEvent, QSize
+from .video_info_popup import VideoInfoPopup
 
 class PlaybackBar(QFrame):
     play_toggled = Signal()
@@ -13,6 +14,7 @@ class PlaybackBar(QFrame):
     volume_btn_clicked = Signal()
     reload_clicked = Signal()
     dynamic_island_clicked = Signal()
+    subtitle_tools_clicked = Signal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -44,6 +46,8 @@ class PlaybackBar(QFrame):
                 color: #888;
             }
         """)
+        self.info_popup = VideoInfoPopup(None)
+        self._current_item_data = None # Biến lưu data bài hát hiện tại
         
     def init_ui(self):
         self.main_layout = QHBoxLayout(self)
@@ -133,7 +137,14 @@ class PlaybackBar(QFrame):
         extra_area = QWidget()
         extra_layout = QHBoxLayout(extra_area)
         extra_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        extra_area.setFixedWidth(240)
+        extra_area.setFixedWidth(310)
+        
+        #0. Nút Mở Popup Info
+        self.btn_info = QPushButton("ℹ️")
+        self.btn_info.setFixedSize(32, 32)
+        self.btn_info.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_info.setToolTip("Thong tin chi tiết bài hát")
+        self.btn_info.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 1. Nút Cài đặt Sub
         self.btn_subseting = QPushButton("⚙️")
@@ -141,6 +152,13 @@ class PlaybackBar(QFrame):
         self.btn_subseting.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_subseting.setToolTip("Cài đặt phụ đề")
         self.btn_subseting.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
+        
+        # 1. NÚT CÔNG CỤ PHỤ ĐỀ / BẢNG ĐEN (Subtitle Tools)
+        self.btn_sub = QPushButton("📝")
+        self.btn_sub.setFixedSize(32, 32)
+        self.btn_sub.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_sub.setToolTip("Công cụ khớp & chỉnh sửa phụ đề (Subtitle Tools)")
+        self.btn_sub.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 2. NÚT RELOAD
         self.btn_reload = QPushButton("🔄")
@@ -166,12 +184,14 @@ class PlaybackBar(QFrame):
         # 4. Nút Fullscreen
         self.btn_fs = QPushButton("⤢")
         
+        extra_layout.addWidget(self.btn_info)
         extra_layout.addWidget(self.btn_subseting)
+        extra_layout.addWidget(self.btn_sub)
         extra_layout.addWidget(self.btn_reload)
         extra_layout.addWidget(self.btn_vol)
         extra_layout.addWidget(self.btn_dynamic_island)
         extra_layout.addWidget(self.btn_fs)
-        extra_layout.setSpacing(10)
+        extra_layout.setSpacing(4)
         
         # --- THÊM VÀO LAYOUT CHÍNH THEO TỈ LỆ 3:4:3 ---
         self.main_layout.addWidget(self.info_area, 3)
@@ -186,12 +206,14 @@ class PlaybackBar(QFrame):
         self.btn_play.clicked.connect(self.play_toggled.emit)
         self.btn_next.clicked.connect(self.next_requested.emit)
         self.btn_prev.clicked.connect(self.prev_requested.emit)
+        self.btn_info.clicked.connect(self.show_video_info_popup)
         self.btn_reload.clicked.connect(self.reload_clicked.emit)
         self.btn_shuffle.clicked.connect(self.shuffle_clicked.emit)
         self.btn_dynamic_island.clicked.connect(self.dynamic_island_clicked.emit)
         
         self.time_slider.sliderReleased.connect(lambda: self.seek_requested.emit(self.time_slider.value()))
         self.time_slider.valueChanged.connect(self._on_slider_moved)
+        self.btn_sub.clicked.connect(self.subtitle_tools_clicked.emit)
     
     def set_shuffle_visual(self, is_active):
         """Cập nhật màu nút shuffle dựa trên trạng thái"""
@@ -233,11 +255,11 @@ class PlaybackBar(QFrame):
         self.time_slider.setRange(0, ms)
         self.lbl_total_time.setText(time_str)
 
-    def set_media_info(self, title, artist=""):
+    def set_media_info(self, title, artist="",item_data=None):
         # Code này giờ sẽ chạy tốt vì self.lbl_song_info ĐÃ CÓ
         if not hasattr(self, 'lbl_song_info'):
             return
-
+        self._current_item_data = item_data
         display_title = title
         if len(display_title) > 40:
             display_title = display_title[:37] + "..."
@@ -256,6 +278,11 @@ class PlaybackBar(QFrame):
         
         # 🔥 KHI CÓ VIDEO -> BẬT NÚT RELOAD & FULLSCREEN
         self.btn_reload.setEnabled(True)
+        main_win = self.window()
+        if main_win and hasattr(main_win, 'media_manager') and getattr(main_win.media_manager, 'enabled', False):
+            # Lấy biến title và artist sẵn có trong hàm của bác đẩy lên hệ thống
+            main_win.media_manager.update_metadata(title, artist)
+            main_win.media_manager.set_playing(True)
     
     # Thêm vào class PlaybackBar
     def set_mini_video_visible(self, visible):
@@ -282,3 +309,18 @@ class PlaybackBar(QFrame):
         else:
             # Màu trắng (Inactive)
             self.btn_shuffle.setStyleSheet("color: white; font-size: 18px; border: none; background: transparent;")
+            
+    def show_video_info_popup(self):
+        """Hàm test luồng click nút (i)"""
+        print("➔ [TEST CLIENT]: Đã click vào nút ⓘ thành công!")
+        
+        if hasattr(self, '_current_item_data'):
+            print(f"➔ [TEST DATA]: Dữ liệu bài hát hiện tại = {self._current_item_data}")
+            if self._current_item_data:
+                self.info_popup.update_info(self._current_item_data)
+                print("➔ [TEST POPUP]: Đang ra lệnh .show() cho Popup...")
+                self.info_popup.show_above_widget(self)
+            else:
+                print("⚠️ [TEST WARNING]: Click được nhưng _current_item_data đang bị rỗng (None)!")
+        else:
+            print("⚠️ [TEST ERROR]: Khuyết thiếu thuộc tính _current_item_data!")

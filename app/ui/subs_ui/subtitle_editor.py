@@ -32,13 +32,13 @@ class SubtitleEditor(QWidget):
         layout.addWidget(QLabel("<b>Chế độ hiển thị:</b>"))
         self.mode_box = QComboBox()
         self.mode_box.addItems([
-            "Chỉ Tiếng Nhật (JP)", 
+            "Chỉ Lời Gốc (Original)", 
             "Chỉ Tiếng Anh (EN)", 
             "Chỉ Tiếng Việt (VI)", 
-            "Nhật + Anh", 
-            "Nhật + Việt", 
+            "Lời Gốc + Anh", 
+            "Lời Gốc + Việt", 
             "Anh + Việt", 
-            "Tất cả (Nhật + Anh + Việt)", 
+            "Tất cả (Gốc + Anh + Việt)", 
             "Tắt phụ đề"
         ])
         self.mode_box.currentIndexChanged.connect(self._on_mode_changed)
@@ -134,9 +134,6 @@ class SubtitleEditor(QWidget):
         if color.isValid():
             self._outline_color = color.name()
             self._update_style()
-
-    def _on_mode_changed(self, index):
-        if self.layer: self.layer.set_mode(self.mode_map.get(index))
 
     def _update_style(self):
         size = self.size_slider.value()

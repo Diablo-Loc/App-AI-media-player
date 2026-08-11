@@ -5,7 +5,8 @@ from PySide6.QtCore import QTimer
 PAGE_HOME = 0
 PAGE_FORYOU = 1
 PAGE_LIBRARY = 2
-PAGE_SETTINGS = 3
+PAGE_DOWNLOAD = 3  # Tạm dùng Library làm Download
+PAGE_SETTINGS = 4
 
 class ContentController:
     def __init__(self, main_window):
@@ -36,7 +37,6 @@ class ContentController:
         self._set_video_mode("mini")
             
         # 2. Load nội dung Home (Random 20 bài)
-        # [Tối ưu nhỏ]: Dùng slice thay vì min() để code gọn hơn
         sample_size = min(len(self.main.all_media_items), 20)
         items = random.sample(self.main.all_media_items, sample_size)
         self.main.update_media_grid(items)
@@ -103,6 +103,14 @@ class ContentController:
                 foryou.mark_playing_item(self.main.current_media_item.id)
             QTimer.singleShot(200, highlight_current)
 
+    def switch_to_download(self):
+        """Chuyển tới trang Download - Hiện thanh playback bar ở chế độ mini"""
+        # 1. Chuyển Tab
+        self.main.content_stack.setCurrentIndex(PAGE_DOWNLOAD)
+        
+        # 2. Set chế độ mini để playback bar hiển thị
+        self._set_video_mode("mini")
+    
     def switch_to_settings(self):
         """Chuyển tới trang Settings - Chỉ hiện thanh playback bar"""
         # 1. Chuyển Tab

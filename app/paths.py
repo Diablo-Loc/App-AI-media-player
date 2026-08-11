@@ -21,48 +21,38 @@ def input_dir() -> Path:
     p.mkdir(exist_ok=True)
     return p
 
-
-def temp_dir() -> Path:
-    p = project_root() / "temp_test_ai"
-    p.mkdir(exist_ok=True)
-    return p
-
-
 def storage_dir() -> Path:
     """Bản Portable: Lưu mọi thứ vào thư mục storage ngay tại gốc App"""
     p = project_root() / "storage"
     p.mkdir(exist_ok=True)
     return p
 
-
-def models_dir() -> Path:
-    """Thêm hàm này để quản lý folder Model cho chuẩn bác nhé"""
-    p = project_root() / "models"
-    p.mkdir(exist_ok=True)
-    return p
-
-
 def asset_dir(asset_name: str = None) -> Path:
     """
-    Lấy đường dẫn ASSET (icon, hình ảnh, DLL) từ Bundle của PyInstaller hoặc Dev folder.
-    
-    Khi PyInstaller bundle app:
-    - Asset được đặt trong _internal/ (sys._MEIPASS)
-    
-    Khi chạy từ Python:
-    - Asset nằm ở project_root()
-    
-    Args:
-        asset_name: Tên asset (e.g., 'icon/app_icon.ico', 'image.png')
-        
-    Returns:
-        Path đến asset
+    Lấy đường dẫn ASSET (icon, hình ảnh, DLL) tự động co giãn thông minh.
+    Ưu tiên tìm trong bundle nội bộ, nếu không thấy (do script build ném ra ngoài) 
+    thì tự động bẻ lái ra ngoài cạnh file EXE.
     """
+    import sys
+    
     if getattr(sys, 'frozen', False):
-        # Chạy từ EXE - Asset nằm trong _internal/
-        base_path = Path(sys._MEIPASS)
+        # 1. Nếu có sys._MEIPASS (Môi trường EXE thật của PyInstaller)
+        if hasattr(sys, "_MEIPASS"):
+            base_path = Path(sys._MEIPASS)
+        else:
+            # Dự phòng khi bác chạy file giả lập test.py / run_app.py ép sys.frozen = True
+            base_path = Path(sys.executable).parent
+            
+        # 🎯 CHIÊU ĐỘC: Nếu có asset_name truyền vào (ví dụ: 'icon/app_icon.ico' hoặc 'native/AudioEngineNative.dll')
+        if asset_name:
+            target_path = base_path / asset_name
+            # Nếu tìm trong kén nội bộ _internal KHÔNG CÓ file này
+            if not target_path.exists():
+                # Tự động bẻ lái đường dẫn ra thư mục ngoài nằm ngang hàng file BoTube.exe
+                exe_dir = Path(sys.executable).parent
+                return exe_dir / asset_name
     else:
-        # Chạy từ Python - Asset nằm ở project root
+        # Chạy từ Python thô (Dev trong VS Code) - Asset nằm ở project root
         base_path = project_root()
     
     if asset_name:
@@ -83,9 +73,7 @@ def init_folders() -> None:
     """Khởi tạo tất cả các thư mục cần thiết"""
     try:
         input_dir()
-        temp_dir()
         storage_dir()
-        models_dir()
     except Exception as e:
         # Safe print for PyInstaller (sys.stdout might be None)
         try:

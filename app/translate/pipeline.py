@@ -17,7 +17,14 @@ def get_translator():
     if _translator_instance is None:
         from .translator import NLLBTranslator
         # Tự động chọn GPU nếu có
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        has_cuda = False
+        try:
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                has_cuda = True
+        except Exception:
+            has_cuda = False
+
+        device = "cuda" if has_cuda else "cpu"
         print(f"🔌 Khởi tạo NLLB Translator trên thiết bị: {device.upper()}")
         _translator_instance = NLLBTranslator(device=device)
     return _translator_instance
@@ -129,13 +136,24 @@ def run_safe_batch(translator, text_list, src_lang, tgt_lang, batch_size=16):
 # ==============================================================================
 def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", song_title="", mode=TranslateMode.PIVOT_VI):
     """
-    Khai báo thêm 'provider' và 'key' để điều hướng.
+    Hàm dịch thuật tự động thông minh theo src_lang
     """
-    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi thực sự dịch
+    import torch  # LAZY IMPORT
     
-    if not subs: return subs
+    if not subs: 
+        return subs
+        
+    src_lang = str(src_lang).lower().strip()
+
+    # ==============================================================================
+    # 🇻🇳 TRƯỜNG HỢP SPECIAL: BÀI HÁT TIẾNG VIỆT
+    # ==============================================================================
     if src_lang == 'vi':
-        print("🇻🇳 Bài hát tiếng Việt, bỏ qua dịch thuật.")
+        print("🇻🇳 Bài hát tiếng Việt: Gán tiếng Việt cho gốc & bỏ qua dịch AI.")
+        for s in subs:
+            orig_txt = s.top.text if s.top else ""
+            s.bottom = SubtitleLine(text=orig_txt, lang="vi", style="VI")
+            s.middle = SubtitleLine(text="", lang="en", style="EN") # Để trống tiếng Anh
         return subs
 
     # ==============================================================================
@@ -143,27 +161,27 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     # ==============================================================================
     if provider in ["OpenAI (GPT-4o)", "Google Gemini", "Claude 3.5"]:
         if key and key.strip():
-            print(f"🌍 [ONLINE] Đang gọi API {provider}...")
+            print(f"🌍 [ONLINE] Đang gọi API {provider} (src_lang: {src_lang})...")
             from translate.online_logic import translate_online_pipeline
-            return translate_online_pipeline(subs, provider, key, song_title)
+            # 🔥 SỬA LỖI: Đã truyền thêm src_lang sang Online Logic
+            return translate_online_pipeline(subs, provider, key, song_title, src_lang=src_lang)
         else:
             print("⚠️ API Key trống! Tự động chuyển về Local NLLB...")
-            # Nếu không có key, code sẽ tự trôi xuống phía dưới chạy Local
 
     # ==============================================================================
-    # NHÁNH 2: DỊCH LOCAL (Giữ nguyên 100% logic gốc của bác)
+    # NHÁNH 2: DỊCH LOCAL NLLB
     # ==============================================================================
-    # Code của bác bắt đầu từ đây:
     cache = TranslationCache()
     translator = get_translator() 
     
     # --- BƯỚC A: CHUẨN BỊ DỮ LIỆU ---
     all_texts = [s.top.text if s.top else "" for s in subs]
     to_translate = []
-    mapping = [] # Lưu index gốc để map lại sau khi dịch
+    mapping = [] 
 
     for i, text in enumerate(all_texts):
-        if not text or not text.strip(): continue
+        if not text or not text.strip(): 
+            continue
         cached = cache.get(text)
         if cached and "vi" in cached:
             subs[i].bottom = SubtitleLine(text=cached["vi"], lang="vi", style="VI")
@@ -181,7 +199,7 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
         print(f"🌍 [LOCAL AI] Bắt đầu dịch {len(to_translate)} dòng từ '{src_lang}' (Mode: {mode})...")
 
         # ---------------------------------------------------------
-        # TRƯỜNG HỢP 1: DỊCH THẲNG (DIRECT)
+        # 🇺🇸 TRƯỜNG HỢP 1: BÀI HÁT TIẾNG ANH HOẶC DỊCH THẲNG (DIRECT)
         # ---------------------------------------------------------
         if src_lang == 'en' or mode == TranslateMode.DIRECT_VI:
             print(f"🚀 Mode: Direct Translate ({src_lang} -> VI)")
@@ -189,36 +207,36 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
             
             for idx, vi in zip(mapping, vi_new):
                 clean_vi = clean_repetitive_text(vi)
+                orig_en = all_texts[idx]
+                
+                # 🔥 SỬA LỖI CHÍ MẠNG: Gán rõ ràng cả Tiếng Anh (middle) và Tiếng Việt (bottom)
+                if src_lang == 'en':
+                    subs[idx].middle = SubtitleLine(text=orig_en, lang="en", style="EN")
+                
                 subs[idx].bottom = SubtitleLine(text=clean_vi, lang="vi", style="VI")
-                cache_en = all_texts[idx] if src_lang == 'en' else ""
-                cache.set(all_texts[idx], {"vi": clean_vi, "en": cache_en})
+                cache.set(all_texts[idx], {"vi": clean_vi, "en": orig_en if src_lang == 'en' else ""})
 
         # ---------------------------------------------------------
-        # TRƯỜNG HỢP 2: DỊCH BẮC CẦU (PIVOT)
+        # 🇯🇵 🇰🇷 🇨🇳 TRƯỜNG HỢP 2: DỊCH BẮC CẦU (PIVOT JA/KO/ZH -> EN -> VI)
         # ---------------------------------------------------------
         else:
             print(f"🔄 Mode: Pivot Translate ({src_lang} -> EN -> VI)")
             
-            # --- BƯỚC 1: SRC -> EN ---
+            # Bước 1: SRC -> EN
             print(f"    ↳ Bước 1: {src_lang} -> EN...")
             en_raw = run_safe_batch(translator, to_translate, src_lang, "en", batch_size=BATCH_STEP_1)
 
-            # 🔥🔥🔥 QUAN TRỌNG: LÀM SẠCH TIẾNG ANH NGAY LẬP TỨC 🔥🔥🔥
-            en_clean_batch = []
-            for raw_text in en_raw:
-                cleaned = clean_repetitive_text(raw_text)
-                en_clean_batch.append(cleaned)
+            en_clean_batch = [clean_repetitive_text(raw_text) for raw_text in en_raw]
 
-            # Dọn dẹp bộ nhớ
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             gc.collect()
 
-            # --- BƯỚC 2: EN (ĐÃ SẠCH) -> VI ---
+            # Bước 2: EN -> VI
             print(f"    ↳ Bước 2: EN (Cleaned) -> VI...")
             vi_new = run_safe_batch(translator, en_clean_batch, "en", "vi", batch_size=BATCH_STEP_2)
 
-            # --- GÁN KẾT QUẢ ---
+            # Gán kết quả
             for idx, clean_en, vi in zip(mapping, en_clean_batch, vi_new):
                 clean_vi = clean_repetitive_text(vi)
                 subs[idx].middle = SubtitleLine(text=clean_en, lang="en", style="EN")

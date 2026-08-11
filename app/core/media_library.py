@@ -115,6 +115,8 @@ class MediaLibrary:
         
         for file in folder.rglob('*'):
             if not file.is_file(): continue
+            if file.suffix.lower() in {'.part', '.ytdl', '.tmp', '.temp'}:
+                continue
             if file.suffix.lower() not in SUPPORTED_EXTS: continue
 
             # Lấy ID ổn định (Hash hoặc Inode)

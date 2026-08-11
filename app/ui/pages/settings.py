@@ -3,12 +3,15 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from PySide6.QtCore import Qt, QSettings,Signal
 from PySide6.QtGui import QFont
 
+from download_core.download_source_app import ResourceDownloadDialog, check_resource_status
+
 class SettingsPage(QWidget):
     settings_changed = Signal(dict)  # Tín hiệu phát ra khi cài đặt thay đổi, gửi dict mới
     def __init__(self):
         super().__init__()
         self.settings = QSettings("MyStudio", "AI_Music_Player")
         self.init_ui()
+        self.refresh_model_list()
         self.load_settings()
         
     def init_ui(self):
@@ -28,13 +31,28 @@ class SettingsPage(QWidget):
         self.add_section_title("🤖 Local AI Model (Speech-to-Text)")
         
         self.combo_model = QComboBox()
-        self.combo_model.addItems(["tiny", "base", "small", "medium", "large-v2", "large-v3"])
         self.add_setting_row("Whisper Model:", self.combo_model, "Chọn độ chính xác (Càng lớn càng chậm nhưng chuẩn)")
 
         self.combo_device = QComboBox()
         self.combo_device.addItems(["cuda", "cpu"])
         self.add_setting_row("Compute Device:", self.combo_device, "Sử dụng GPU (NVIDIA) để dịch nhanh hơn")
         
+        # NÚT THÊM MỚI: KÍCH HOẠT DOWNLOAD MANAGER CÙNG CẤP APP
+        btn_res_layout = QHBoxLayout()
+        self.btn_download_resource = QPushButton("📥 Tải / Cập nhật Resource AI (Thư viện & Model)")
+        self.btn_download_resource.setFixedHeight(35)
+        self.btn_download_resource.setCursor(Qt.PointingHandCursor)
+        self.btn_download_resource.setStyleSheet("""
+            QPushButton {
+                background-color: #2b2b2b; color: #00f7ff; border: 1px solid #00f7ff; 
+                border-radius: 5px; font-weight: bold; padding: 5px 15px; margin-left: 125px;
+            }
+            QPushButton:hover { background-color: #00f7ff; color: black; }
+        """)
+        self.btn_download_resource.clicked.connect(self.open_download_manager)
+        btn_res_layout.addWidget(self.btn_download_resource)
+        self.content_layout.addLayout(btn_res_layout)
+
         # --- PHẦN 2: ONLINE AI (TRANSLATION & API) ---
         self.add_section_title("🌐 Cloud AI Services (Translation)")
         
@@ -124,10 +142,33 @@ class SettingsPage(QWidget):
         row.addWidget(help_lbl)
         self.content_layout.addLayout(row)
 
+    def open_download_manager(self):
+        if ResourceDownloadDialog is None:
+            QMessageBox.critical(self, "Lỗi", "Không tìm thấy module Trình cài đặt tại đường dẫn 'app.download_core.download_source_app'")
+            return
+            
+        # Khởi tạo giao diện tải tài nguyên
+        downloader = ResourceDownloadDialog(self)
+        
+        # ✅ ĐỒNG BỘ CHUẨN QT: Tìm vị trí của chữ (Index) rồi ép cbo chọn vị trí đó
+        idx_hardware = downloader.cbo_hardware.findText(self.combo_device.currentText())
+        if idx_hardware != -1:
+            downloader.cbo_hardware.setCurrentIndex(idx_hardware)
+            
+        idx_model = downloader.cbo_model.findText(self.combo_model.currentText())
+        if idx_model != -1:
+            downloader.cbo_model.setCurrentIndex(idx_model)
+        
+        # Mở dialog chặn (Modal)
+        if downloader.exec():
+            self.refresh_model_list()
+            self.load_settings()
+
+
     # --- LOGIC LƯU TRỮ ---
     def save_settings(self):
         new_config = {
-            "ai_model": self.combo_model.currentText(),
+            "ai_model": self.combo_model.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "api_key": self.api_key_input.text(),
@@ -147,9 +188,14 @@ class SettingsPage(QWidget):
         # Tùy chỉnh màu chữ cho hộp thoại vì app đang dùng nền tối
         msg.setStyleSheet("QLabel{ color: white; } QPushButton{ width: 80px; }")
         msg.exec()
+        self.settings_changed.emit(new_config)
         
     def load_settings(self):
-        self.combo_model.setCurrentText(self.settings.value("ai_model", "base"))
+        model = self.settings.value("ai_model", "base")
+        for i in range(self.combo_model.count()):
+            if self.combo_model.itemData(i) == model:
+                self.combo_model.setCurrentIndex(i)
+                break
         self.combo_device.setCurrentText(self.settings.value("device", "cpu"))
         self.combo_online_ai.setCurrentText(self.settings.value("online_provider", "Local Default"))
         self.api_key_input.setText(self.settings.value("api_key", ""))
@@ -164,7 +210,10 @@ class SettingsPage(QWidget):
             QMessageBox.Yes | QMessageBox.No
         )
         if confirm == QMessageBox.Yes:
-            self.combo_model.setCurrentText("base")
+            for i in range(self.combo_model.count()):
+                if self.combo_model.itemData(i) == "base":
+                    self.combo_model.setCurrentIndex(i)
+                    break
             self.combo_device.setCurrentText("cpu")
             self.combo_online_ai.setCurrentText("Local Default")
             self.api_key_input.clear()
@@ -176,7 +225,7 @@ class SettingsPage(QWidget):
     # Hàm phụ để lưu mà không hiện pop-up (tránh làm phiền khi Reset)
     def save_settings_silent(self):
         new_config = {
-            "ai_model": self.combo_model.currentText(),
+            "ai_model": self.combo_model.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "api_key": self.api_key_input.text(),
@@ -203,3 +252,39 @@ class SettingsPage(QWidget):
             }
             QMessageBox QPushButton:hover { background-color: #00b8bd; }
         """
+    
+    def refresh_model_list(self):
+        info = check_resource_status()
+
+        current = self.settings.value("ai_model", "base")
+
+        self.combo_model.blockSignals(True)
+        self.combo_model.clear()
+
+        models = [
+            ("tiny", "Tiny (~75MB)"),
+            ("base", "Base (~140MB)"),
+            ("small", "Small (~460MB)"),
+            ("medium", "Medium (~1.5GB)"),
+            ("large-v2", "Large-v2 (~3GB)"),
+            ("large-v3", "Large-v3 (~3GB)")
+        ]
+
+        current_index = 0
+
+        for i, (key, title) in enumerate(models):
+
+            installed = info["whisper"].get(key, False)
+
+            if installed:
+                text = f"{title}   ✔ Đã cài"
+            else:
+                text = f"{title}   ⬇ Chưa cài"
+
+            self.combo_model.addItem(text, key)
+
+            if key == current:
+                current_index = i
+
+        self.combo_model.setCurrentIndex(current_index)
+        self.combo_model.blockSignals(False)

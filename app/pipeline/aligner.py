@@ -72,6 +72,17 @@ def clean_text_for_comparison(text):
     """Xóa khoảng trắng và ký tự đặc biệt để so sánh chính xác (Inst agram -> instagram)"""
     return re.sub(r'[\s\W_]+', '', text).lower()
 
+
+def stabilize_initial_segment(segments):
+    """Giữ subtitle đầu không bị đẩy quá muộn sau khi refine."""
+    if not segments:
+        return
+    first = segments[0]
+    if first.get("start", 0) > 0.8:
+        first["start"] = max(0.0, first["start"] - 0.8)
+    if first.get("end", 0) <= first.get("start", 0):
+        first["end"] = first.get("start", 0) + 0.35
+
 # ==========================================================
 # 🔹 LOGIC CĂN CHỈNH CHÍNH
 # ==========================================================

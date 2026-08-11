@@ -6,11 +6,11 @@ import psutil
 import random
 from pathlib import Path
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                             QScrollArea, QFrame, QPushButton, QGridLayout, 
-                             QFileDialog, QStackedWidget, QListWidget, QSizePolicy,QApplication,QLineEdit,QLabel)
+                             QFrame, QPushButton, QGridLayout, 
+                             QFileDialog, QStackedWidget, QMessageBox, QSizePolicy,QApplication,QLineEdit,QLabel)
 from PySide6.QtCore import Qt, QTimer, QEvent, QPoint,QUrl,QObject, QFileSystemWatcher, QPropertyAnimation,QEasingCurve,QParallelAnimationGroup
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PySide6.QtGui import QShortcut, QKeySequence, QCursor,QPalette, QColor,QPalette, QIcon
+from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer, QAudioOutput
+from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtMultimediaWidgets import QVideoWidget
 # Import UI components
 from paths import project_root, storage_dir, get_icon_path
@@ -31,9 +31,12 @@ from core.media_library import MediaLibrary
 from ui.pages.mode_manager import HomePage, LibraryPage
 from ui.pages.content_manager import ContentController
 from ui.pages.for_you import ForYouPage
+from ui.pages.download import DownloadPage
 from ui.pages.settings import SettingsPage
 from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
+from ui.system_media_manager import SystemMediaManager
+from ui.subs_ui.lyric_settings_dialog import SubtitleToolsDialog
 
 #Import updater
 from updater import download_and_install
@@ -64,6 +67,13 @@ class InternalMediaPlayer(QObject):
     def stop(self):
         self.player.stop()
         
+    def refresh_audio_output(self):
+        device = QMediaDevices.defaultAudioOutput()
+        print("🔊 Switching audio device:", device.description())
+        volume = self.audio_output.volume()
+        self.audio_output.setDevice(device)
+        self.audio_output.setVolume(volume)
+    
 class MainWindow(QMainWindow):
     def __init__(self, subtitle_manager, job_manager, media_library, media_player=None):
         super().__init__()
@@ -89,9 +99,10 @@ class MainWindow(QMainWindow):
         self.vol_popup = VolumePopup(self)
         self.vol_popup.hide()
         self.is_global_shuffle = False
+        self.refresh_paused = False
         # Tải cấu hình
         self.config = self.load_config()
-        
+                
         # --- 1. SETUP MEDIA PLAYER ---
         # (Làm trước để có video widget làm nền)
         if media_player is None:
@@ -173,7 +184,8 @@ class MainWindow(QMainWindow):
         # --- 4. SETUP SETTINGS PANEL ---
         self.subsettings_panel = SettingsPanel(self) # Đổi tên thống nhất là settings_panel
         self.subsettings_panel.sync_ui(self.config)  # Đẩy config vào giao diện Settings
-        
+        if hasattr(self, 'sub_layer'):
+            self.sub_layer.set_fade_enabled(self.config.get("fade_enabled", True))
         # Kết nối: Khi kéo slider ở popup -> chỉnh âm lượng thật
         self.vol_popup.volumeChanged.connect(self.update_volume_from_popup)
         
@@ -184,29 +196,31 @@ class MainWindow(QMainWindow):
 
         # 2. Font Size (Chỉ kết nối vào _save_setting)
         # Hàm _save_setting của bác đã tự gọi apply_style rồi, nên không cần connect lẻ nữa
-        self.subsettings_panel.font_size_changed.connect(lambda v: self._save_setting("font_size", v))
+        self.subsettings_panel.font_size_changed.connect(self._save_font_size)
 
         # 3. Font Color
-        self.subsettings_panel.font_color_changed.connect(lambda v: self._save_setting("font_color", v))
+        self.subsettings_panel.font_color_changed.connect(self._save_font_color)
 
         # 4. Background Color
-        self.subsettings_panel.bg_color_changed.connect(lambda v: self._save_setting("bg_color", v))
+        self.subsettings_panel.bg_color_changed.connect(self._save_bg_color)
 
         # 5. Background Opacity
-        self.subsettings_panel.bg_opacity_changed.connect(lambda v: self._save_setting("bg_opacity", v))
+        self.subsettings_panel.bg_opacity_changed.connect(self._save_bg_opacity)
 
         # Các setting khác
         self.subsettings_panel.playback_speed_changed.connect(self.change_playback_speed)
         self.subsettings_panel.lock_position_changed.connect(self.sub_layer.set_locked)
         # lưu trạng thái khóa và vận hành layer
-        self.subsettings_panel.lock_position_changed.connect(lambda v: self._save_setting("lock_position", v))
+        self.subsettings_panel.lock_position_changed.connect(self._save_lock_position)
         # kiểu viền/bóng
         self.subsettings_panel.outline_changed.connect(self._on_outline_changed)
         self.subsettings_panel.shadow_changed.connect(self._on_shadow_changed)
         self.subsettings_panel.reset_requested.connect(self._reset_defaults)
-        
+        self.subsettings_panel.fade_effect_changed.connect(self.set_fade_enabled)
         # Nút mở settings
         self.playback_bar.btn_subseting.clicked.connect(self.toggle_subsettings_panel)
+        self.playback_bar.subtitle_tools_clicked.connect(self.open_subtitle_tools_dialog)
+  
 
         # --- 6. TRẠNG THÁI NỘI BỘ ---
         self.video_mode = None
@@ -254,11 +268,78 @@ class MainWindow(QMainWindow):
         self.playback_bar.raise_()       # Đè lên sub (để click nút)
         self.subsettings_panel.raise_()     # Trên cùng
 
-        QTimer.singleShot(0, lambda: self.update_video_location("mini"))
-        QTimer.singleShot(100, lambda: self.sidebar.setCurrentRow(0))
+        self._startup_timer = QTimer(self)
+        self._startup_timer.setSingleShot(True)
+        self._startup_timer.timeout.connect(lambda: self.update_video_location("mini"))
+        self._startup_timer.start(0)
+
+        self._sidebar_timer = QTimer(self)
+        self._sidebar_timer.setSingleShot(True)
+        self._sidebar_timer.timeout.connect(lambda: self.sidebar.setCurrentRow(0))
+        self._sidebar_timer.start(100)
         # Auto-update check disabled - user can manually check via menu if needed
         # QTimer.singleShot(2000, lambda: download_and_install(self))
-                
+        self.media_manager = SystemMediaManager(self)
+        self.audio_devices = QMediaDevices()
+
+        self._system_media_connected = False
+        self.audio_devices.audioOutputsChanged.connect(
+            self.on_audio_outputs_changed
+        )
+        if self.media_manager.enabled and not getattr(self, '_system_media_connected', False):
+            self._system_media_connected = True
+
+            self.media_manager.audio_received.connect(
+                self.process_realtime_audio
+            )
+
+            self.media_manager.media_play.connect(
+                self._hardware_play
+            )
+
+            self.media_manager.media_pause.connect(
+                self._hardware_pause
+            )
+
+            self.media_manager.media_next.connect(
+                self.playback_bar.btn_next.click
+            )
+
+            self.media_manager.media_prev.connect(
+                self.playback_bar.btn_prev.click
+            )
+        self.media_player.player.metaDataChanged.connect(
+            self._on_video_metadata_ready
+        )
+    def _hardware_play(self):
+
+        if hasattr(self, "playback_bar"):
+            self.playback_bar.btn_play.click()
+
+    def _hardware_pause(self):
+
+        if hasattr(self, "playback_bar"):
+            self.playback_bar.btn_play.click()
+
+    def _save_font_size(self, value):
+        self._save_setting("font_size", value)
+
+    def _save_font_color(self, value):
+        self._save_setting("font_color", value)
+
+    def _save_bg_color(self, value):
+        self._save_setting("bg_color", value)
+
+    def _save_bg_opacity(self, value):
+        self._save_setting("bg_opacity", value)
+
+    def _save_lock_position(self, value):
+        self._save_setting("lock_position", value)
+
+    def _escape_shortcut(self):
+        if self.isFullScreen():
+            self.toggle_fullscreen()
+                             
     def changeEvent(self, event):
         """
         Xử lý sự kiện thay đổi trạng thái cửa sổ (Alt+Tab, Minimize)
@@ -269,7 +350,7 @@ class MainWindow(QMainWindow):
         # Nếu chưa có sub_layer thì không làm gì cả
         if not hasattr(self, "sub_layer") or self.sub_layer is None:
             return
-
+        
         # --- CASE 1: XỬ LÝ ALT + TAB (Chuyển cửa sổ) ---
         if event.type() == QEvent.Type.ActivationChange:
             # Nếu App đang được dùng (Active)
@@ -300,9 +381,10 @@ class MainWindow(QMainWindow):
         """
         Xử lý đóng ứng dụng:
         1. Dừng Player.
-        2. Dừng AI Worker.
-        3. Xóa Cache.
-        4. GIẾT SẠCH TIẾN TRÌNH (Force Kill).
+        2. NGẮT NATIVE AUDIO ENGINE C++ (Bổ sung chuẩn Enterprise)
+        3. Dừng AI Worker.
+        4. Xóa Cache.
+        5. GIẾT SẠCH TIẾN TRÌNH (Force Kill).
         """
         print("🔻 Đang thực hiện quy trình đóng ứng dụng...")
         
@@ -314,11 +396,23 @@ class MainWindow(QMainWindow):
                     player.stop()
                     player.setSource(QUrl("")) # Nhả file ra
 
+            # --- 🔥 BƯỚC 1.5: GIẢI PHÓNG AUDIO ENGINE NATIVE C++ (MỚI) ---
+            # Ngắt callback từ DLL C++ bắn về Python trước để tránh giật lag luồng hệ thống
+            if hasattr(self, "media_manager") and self.media_manager:
+                print("🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...")
+                try:
+                    self.media_manager.close()
+                except Exception as e:
+                    print(f"⚠️ Lỗi giải phóng Native Engine: {e}")
+
+            if hasattr(self, "_startup_timer") and self._startup_timer:
+                self._startup_timer.stop()
+            if hasattr(self, "_sidebar_timer") and self._sidebar_timer:
+                self._sidebar_timer.stop()
+
             # --- BƯỚC 2: HỦY CÁC LUỒNG AI ĐANG CHẠY ---
-            # Nếu bạn có Controller quản lý AI, hãy gọi lệnh hủy tại đây
             if hasattr(self, "job_manager") and self.job_manager:
                 print("⛔ Đang gửi lệnh dừng tới các Worker...")
-                # Giả sử controller có hàm stop_all() hoặc cancel_all()
                 if hasattr(self.job_manager, "abort_all_jobs"):
                     self.job_manager.abort_all_jobs()
                 elif hasattr(self.job_manager, "terminate"): 
@@ -337,15 +431,14 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     print(f"⚠️ Không xóa được cache: {e}")
 
-            # --- BƯỚC 4: GIẾT FFmpeg CÒN SÓT (Tùy chọn, cần thư viện psutil) ---
-            # Đoạn này giúp đảm bảo không còn process ffmpeg.exe nào chạy ngầm
+            # --- BƯỚC 4: GIẾT FFmpeg CÒN SÓT ---
             try:
                 current_process = psutil.Process()
                 children = current_process.children(recursive=True)
                 for child in children:
                     if "ffmpeg" in child.name().lower():
                         print(f"🔪 Đang diệt tiến trình con: {child.name()}")
-                        child.kill()
+                        child.terminate()
             except Exception:
                 pass
 
@@ -353,11 +446,9 @@ class MainWindow(QMainWindow):
             print(f"❌ Lỗi trong quá trình đóng: {e}")
 
         finally:
-            print("💀 FORCE EXIT: Tắt toàn bộ hệ thống ngay lập tức!")
+            print("✅ Đóng ứng dụng theo luồng an toàn")
             event.accept()
-            
-            # 🔥 QUAN TRỌNG NHẤT: Lệnh này giết toàn bộ App, Thread, AI ngay lập tức
-            os._exit(0)
+            QApplication.instance().quit()
 
     def moveEvent(self, event):
         """Kéo cửa sổ chính -> Sub trôi theo"""
@@ -507,7 +598,7 @@ class MainWindow(QMainWindow):
 
         # B. Sidebar Custom (Load từ file sidebar.py)
         self.sidebar = Sidebar()
-        self.sidebar.add_menu_items(["🏠 Trang chủ", "🎶 For You", "📚 Thư viện", "⚙️ Tùy chỉnh"])
+        self.sidebar.add_menu_items(["🏠 Trang chủ", "🎶 For You", "📚 Thư viện", "💾 Download", "⚙️ Tùy chỉnh"])
 
         # Add vào Container
         self.sidebar_layout.addWidget(self.btn_menu, alignment=Qt.AlignLeft)
@@ -518,12 +609,16 @@ class MainWindow(QMainWindow):
         self.home_page = HomePage()
         self.foryou_page = ForYouPage()
         self.library_page = LibraryPage()
+        self.download_page = DownloadPage()
+        self.download_page.download_started_signal.connect(self.pause_refresh)
+        self.download_page.manual_refresh_signal.connect(self.resume_refresh)
         self.settings_page = SettingsPage()
         self.content_stack.addWidget(self.home_page)    # Index 0
         self.content_stack.addWidget(self.foryou_page)  # Index 1
         self.content_stack.addWidget(self.library_page) # Index 2
-        self.content_stack.addWidget(self.settings_page) # Index 3
-   
+        self.content_stack.addWidget(self.download_page) # Index 3
+        self.content_stack.addWidget(self.settings_page) # Index 4
+
         # 3. Tạo Vỏ bọc (Toolbar + Stack)
         self.content_ctrl = ContentController(self)
         self.init_grid_page() 
@@ -658,7 +753,9 @@ class MainWindow(QMainWindow):
         self.playback_bar.update_play_state(is_playing)
         # đồng bộ mini player mọi khi trạng thái phát thay đổi
         self.sync_mini_player_state()
-
+        if hasattr(self, 'media_manager') and getattr(self.media_manager, 'enabled', False):
+            self.media_manager.set_status(is_playing)
+            
     def on_position_changed(self, position):
         if not self.playback_bar.time_slider.isSliderDown():
             self.playback_bar.update_position(position, self.format_time(position))
@@ -745,7 +842,7 @@ class MainWindow(QMainWindow):
         self.spacebar_shortcut.activated.connect(self.toggle_play_pause)
         
         QShortcut(QKeySequence(Qt.Key.Key_F), self).activated.connect(self.toggle_fullscreen)
-        QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(lambda: self.toggle_fullscreen() if self.isFullScreen() else None)
+        QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(self._escape_shortcut)
         QShortcut(QKeySequence(Qt.Key.Key_Right), self).activated.connect(lambda: self.seek_relative(10000))
         QShortcut(QKeySequence(Qt.Key.Key_Left), self).activated.connect(lambda: self.seek_relative(-10000))
         QShortcut(QKeySequence(Qt.Key.Key_Up), self).activated.connect(lambda: self.adjust_volume(0.05))
@@ -1071,15 +1168,13 @@ class MainWindow(QMainWindow):
 
             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
             if self.active_playlist and hasattr(self, 'foryou_page'):
-                # *** FIX: SET current_playing_id TRƯỚC để load_playlist biết load từ đâu ***
-                self.foryou_page.current_playing_id = media_item.id
-                # Chỉ gọi load nếu danh sách chưa có dữ liệu (lần đầu)
-                # Nếu đã có dữ liệu thì chỉ cần highlight item mới
+                    # sync For You page only when necessary
                 if not self.foryou_page.all_items_data:
-                    # Lần đầu tiên, cần load danh sách
+                    # first time loading playlist, we need to tell page where to start
+                    self.foryou_page.current_playing_id = media_item.id
                     self.foryou_page.load_playlist(self.active_playlist)
                 else:
-                    # Đã có danh sách rồi, chỉ highlight item
+                    # playlist already shown – just highlight the new track
                     self.foryou_page.mark_playing_item(media_item.id)
         
         # 0. HỦY JOB CŨ (AI, subtitle...)
@@ -1100,25 +1195,21 @@ class MainWindow(QMainWindow):
         # =============================
         # 2. CẬP NHẬT GIAO DIỆN (TITLE + ARTIST)
         # =============================
-        # Đây là chỗ thay đổi để dùng hàm set_media_info mới
+        artist_name = getattr(media_item, "artist", "Unknown Artist")
         if hasattr(self, "playback_bar") and hasattr(self.playback_bar, 'set_media_info'):
-            # Lấy artist từ media_item, đề phòng trường hợp object cũ chưa có field artist
-            artist_name = getattr(media_item, "artist", "Unknown Artist")
-            self.playback_bar.set_media_info(media_item.title, artist_name)
+            self.playback_bar.set_media_info(media_item.title, artist_name, item_data=self.current_media_item)
+
+        # 🎯 ĐẨY TRỰC TIẾP TÊN BÀI HÁT VÀ CA SĨ LÊN POPUP WINDOWS
+        if hasattr(self, 'media_manager') and self.media_manager.enabled:
+            self.media_manager.update_meta(media_item.title, artist_name)
+            self.media_manager.set_status(True)
 
         # =============================
         # 3. RESET PLAYER (CHỈ PLAYER)
         # =============================
         player = self.media_player.player
         player.stop()
-        player.setSource(QUrl.fromLocalFile(video_path))
-        
-        # Ngắt kết nối cũ (để tránh gọi chồng chéo nhiều lần)
-        try: player.metaDataChanged.disconnect(self._on_video_metadata_ready)
-        except: pass
-        # Kết nối mới
-        player.metaDataChanged.connect(self._on_video_metadata_ready)
-        
+        player.setSource(QUrl.fromLocalFile(video_path))       
         player.play()
 
         # Fix audio mute state
@@ -1425,13 +1516,22 @@ class MainWindow(QMainWindow):
             self.sub_layer.apply_style(**{key: value})
         elif key in ("shadow_enabled", "shadow_alpha"):
             self.sub_layer.apply_style(**{key: value})
+        elif key == "fade_enabled":
+            self.sub_layer.set_fade_enabled(value)
         elif key == "lock_position":
-            # layer already updated by signal before reaching here, nothing else to do
             pass
         
         # 3. Ghi ra file
         self.save_config()
 
+    def set_fade_enabled(self, enabled: bool):
+        # 1. Gọi trực tiếp vào sub_layer
+        if hasattr(self, 'sub_layer'):
+            self.sub_layer.set_fade_enabled(enabled)
+        
+        # 2. Lưu vào config và ghi ra file settings.json
+        self._save_setting("fade_enabled", enabled)
+        
     def _reset_defaults(self):
         # Reset về mặc định
         defaults = {
@@ -1447,7 +1547,8 @@ class MainWindow(QMainWindow):
             "shadow_enabled": True,
             "shadow_alpha": 160,
             # Khóa vị trí
-            "lock_position": False
+            "lock_position": False,
+            "fade_enabled": True
         }
         self.config = defaults
         self.save_config()
@@ -1466,19 +1567,30 @@ class MainWindow(QMainWindow):
             shadow_alpha=defaults["shadow_alpha"]
         )
         self.sub_layer.set_locked(defaults["lock_position"])
+        self.sub_layer.set_fade_enabled(defaults["fade_enabled"])
         # Đồng bộ lại panel
         self.subsettings_panel.sync_ui(self.config)
 
     def load_config(self):
         try:
             with open(self.settings_file, "r") as f:
-                return json.load(f)
+                data = json.load(f)
+                return data.get('appearance', data)  # flat appearance or backward compat
         except:
             return {} # Trả về rỗng nếu chưa có file
 
+    def load_full_config(self):
+        try:
+            with open(self.settings_file, "r") as f:
+                return json.load(f)
+        except:
+            return {}
+
     def save_config(self):
+        full_data = self.load_full_config()
+        full_data['appearance'] = self.config
         with open(self.settings_file, "w") as f:
-            json.dump(self.config, f, indent=4)
+            json.dump(full_data, f, indent=4)
             
     def update_media_grid(self, media_items):
         if not media_items:
@@ -1574,6 +1686,8 @@ class MainWindow(QMainWindow):
         """
         Load nội dung thư mục. 
         """
+        if self.refresh_paused:
+            return
         if not folder_path: return
         
         # --- BƯỚC 1: DỌN DẸP SẠCH SẼ TRƯỚC TIÊN ---
@@ -1602,6 +1716,7 @@ class MainWindow(QMainWindow):
             scanned_items = self.media_library.scan_folder(folder_path)
             self.all_media_items = scanned_items # <--- CẬP NHẬT KHO TỔNG
             self.media_items = scanned_items     # Đồng bộ luôn vào biến cũ
+                
         except Exception as e:
             print(f"Lỗi scan: {e}")
             self.all_media_items = []
@@ -1611,13 +1726,22 @@ class MainWindow(QMainWindow):
         
         # 3. SAU KHI SCAN XONG:
         if self.all_media_items:
-            # Sắp xếp kho tổng
+            # 1. Sắp xếp trước để trang For You nhận danh sách đúng thứ tự mới nhất
             self.all_media_items.sort(key=lambda x: x.mtime if x.mtime else 0, reverse=True)
             
-            # Gửi kho tổng sang Controller
+            # 2. ĐẨY DỮ LIỆU SANG FOR YOU TẠI ĐÂY (Vị trí mới)
+            if hasattr(self, 'foryou_page'): 
+                print("🚀 Đang đẩy dữ liệu vào trang For You...")
+                self.foryou_page.load_playlist(self.all_media_items)
+            else:
+                print("⚠️ Vẫn không tìm thấy biến self.foryou_page")
+
+            # 3. Cập nhật dữ liệu cho Controller và vẽ Grid chính
             self.content_ctrl.set_new_data(self.all_media_items)
+            #self.media_items = self.all_media_items.copy()
+            #self.pending_items = self.media_items.copy()
             
-            # Cập nhật Sidebar UI (Lệnh này sẽ kích hoạt handle_sidebar_navigation)
+            #self.load_next_batch() 
             self.sidebar.setCurrentRow(0)
 
         # Nạp dữ liệu vào hàng chờ (SAU KHI ĐÃ CLEAR GRID)
@@ -1634,6 +1758,8 @@ class MainWindow(QMainWindow):
         
     def on_folder_changed(self, path):
         """Xử lý khi file trong thư mục bị thay đổi"""
+        if self.refresh_paused:
+            return
         print(f"🔄 Phát hiện thay đổi file tại: {path}")
         
         # Dùng QTimer (Debounce) để tránh reload liên tục khi copy nhiều file
@@ -1919,6 +2045,22 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(200, final_show)
                          
     #logic mode trang chủ, ...
+    def pause_refresh(self):
+        self.refresh_paused = True
+
+    def resume_refresh(self):
+        self.refresh_paused = False
+        
+        # 1. Mở khóa lại menu bên trái để người dùng bấm được các tab khác
+        if hasattr(self, 'sidebar'):
+            self.sidebar.setEnabled(True)
+            
+        # 2. Refresh lại danh sách video (giữ nguyên logic 1s của bác)
+        if hasattr(self, 'current_watched_folder') and self.current_watched_folder:
+            QTimer.singleShot(1000, lambda: self.load_folder_content(self.current_watched_folder))
+            
+        print("🔓 [BẢO VỆ] Hệ thống đã mở khóa và cập nhật video mới.")
+
     def handle_sidebar_click(self, item):
         index = self.sidebar.row(item) 
         if index == self.content_stack.currentIndex():
@@ -1964,7 +2106,7 @@ class MainWindow(QMainWindow):
             self.top_toolbar_container.show()
             if hasattr(self, 'playback_bar'): self.playback_bar.show()
 
-        is_setting= (index == 3)
+        is_setting= (index == 3 or index == 4)
         if is_setting:
             self.top_toolbar_container.hide()
         # ===============================================================
@@ -1974,7 +2116,8 @@ class MainWindow(QMainWindow):
             if index == 0: self.content_ctrl.switch_to_home()
             elif index == 1: self.content_ctrl.switch_to_foryou()
             elif index == 2: self.content_ctrl.switch_to_library()
-            elif index == 3: self.content_ctrl.switch_to_settings()
+            elif index == 3: self.content_ctrl.switch_to_download()
+            elif index == 4: self.content_ctrl.switch_to_settings()
 
         # 4. Cập nhật vị trí video & sub
         if index == 1:
@@ -2220,7 +2363,44 @@ class MainWindow(QMainWindow):
             self.manage_video_state(target_mode)
         else:
             self.update_video_location(target_mode)
+        
+        if self.media_manager.enabled:
 
+            try:
+                self.media_manager.media_play.disconnect()
+            except:
+                pass
+
+            try:
+                self.media_manager.media_pause.disconnect()
+            except:
+                pass
+
+            try:
+                self.media_manager.media_next.disconnect()
+            except:
+                pass
+
+            try:
+                self.media_manager.media_prev.disconnect()
+            except:
+                pass
+
+            self.media_manager.media_play.connect(
+                self.playback_bar.btn_play.click
+            )
+
+            self.media_manager.media_pause.connect(
+                self.playback_bar.btn_play.click
+            )
+
+            self.media_manager.media_next.connect(
+                self.playback_bar.btn_next.click
+            )
+
+            self.media_manager.media_prev.connect(
+                self.playback_bar.btn_prev.click
+            )    
         # 5. HIỂN THỊ CHÍNH THỨC
         self.show()
         self.raise_()
@@ -2262,3 +2442,60 @@ class MainWindow(QMainWindow):
         
         # Thêm update cuối cùng để tránh vết lưu (artifact) trên màn hình
         sub.update()
+    
+    def process_realtime_audio(self, audio_data):
+        """
+        Hàm nhận mảng NumPy (frames, channels) từ luồng C++ đẩy về.
+        Chạy an toàn hoàn toàn trên luồng giao diện chính của Qt.
+        """
+        # audio_data lúc này là mảng float chuẩn, bác thích làm gì thì làm:
+        # Ví dụ: Lấy kênh trái/phải để vẽ sóng nhạc Visualizer realtime
+        pass
+
+    def on_audio_outputs_changed(self):
+
+        print("🎧 Audio Output Changed")
+
+        # đổi output của Qt
+        if hasattr(self.media_player, "refresh_audio_output"):
+            self.media_player.refresh_audio_output()
+
+        # restart WASAPI + SMTC
+        self.media_manager.restart()
+    
+
+
+    # 1. Cập nhật khi chọn hoặc phát một bài hát
+    # 2. Khi người dùng bấm nút 📝 (Sửa Sub)
+    def open_subtitle_tools_dialog(self):
+        """Mở bảng sửa Sub chuẩn luồng Kiến trúc gốc"""
+
+        # Kiểm tra bài hát hiện tại
+        if not (hasattr(self, 'app_controller') and getattr(self.app_controller, 'current_media_item', None)):
+            QMessageBox.warning(
+                self, 
+                "Cảnh báo", 
+                "⚠️ Chưa có bài hát nào được chọn! Vui lòng chọn một bài hát trước khi mở công cụ phụ đề."
+            )
+            return
+
+        item = self.app_controller.current_media_item
+        media_id = getattr(item, 'id', '')
+
+        if not media_id:
+            QMessageBox.warning(
+                self, 
+                "Cảnh báo", 
+                "⚠️ Không tìm thấy thông tin (ID) của bài hát hiện tại!"
+            )
+            return
+
+        # Gọi Dialog gốc
+        dialog = SubtitleToolsDialog(parent=self)
+        
+        # Nạp dữ liệu chuẩn JSON/ASS qua Manager
+        if dialog.load_from_media_file(media_id):
+            dialog.exec()
+        else:
+            # Trường hợp bài hát chưa có file phụ đề nào sẵn có
+            dialog.exec()

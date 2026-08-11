@@ -41,4 +41,8 @@ class ThumbnailWorker(QThread):
 
     def stop(self):
         self.is_running = False
-        self.wait() # Đợi thread dừng hẳn cho an toàn
+        try:
+            self.wait(1000)
+        except Exception:
+            pass
+        self.queue = []

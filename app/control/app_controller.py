@@ -114,7 +114,7 @@ class AppController(QObject):
         # Cập nhật Title và Artist lên thanh điều khiển
         # (Giả sử playback_bar nằm trong self.window)
         if hasattr(self.window, "playback_bar"):
-            self.window.playback_bar.set_media_info(media_item.title, media_item.artist)
+            self.window.playback_bar.set_media_info(media_item.title, media_item.artist,item_data=self.current_media_item)
 
         # ===== HỦY AI CŨ =====
         self.ai.cancel()

@@ -1,0 +1,781 @@
+
+--- ERROR AT 2026-03-07 08:39:02 ---
+Traceback (most recent call last):
+  File "worker.py", line 57, in _ai_process_wrapper
+  File "ai\pipeline.py", line 337, in run_ai_pipeline
+  File "ai\pipeline.py", line 133, in run_ai_pipeline
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-03-07 08:39:45 ---
+Traceback (most recent call last):
+  File "worker.py", line 57, in _ai_process_wrapper
+  File "ai\pipeline.py", line 337, in run_ai_pipeline
+  File "ai\pipeline.py", line 133, in run_ai_pipeline
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-03-07 08:46:34 ---
+Traceback (most recent call last):
+  File "worker.py", line 57, in _ai_process_wrapper
+  File "ai\pipeline.py", line 337, in run_ai_pipeline
+  File "ai\pipeline.py", line 236, in run_ai_pipeline
+RuntimeError: ⚠️ Không tìm thấy lời thoại nào.
+------------------------------
+
+--- ERROR AT 2026-03-07 08:47:44 ---
+Traceback (most recent call last):
+  File "worker.py", line 57, in _ai_process_wrapper
+  File "ai\pipeline.py", line 337, in run_ai_pipeline
+  File "ai\pipeline.py", line 236, in run_ai_pipeline
+RuntimeError: ⚠️ Không tìm thấy lời thoại nào.
+------------------------------
+
+--- ERROR AT 2026-03-13 22:36:03 ---
+Traceback (most recent call last):
+  File "worker.py", line 57, in _ai_process_wrapper
+  File "ai\pipeline.py", line 337, in run_ai_pipeline
+  File "ai\pipeline.py", line 133, in run_ai_pipeline
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-04-28 11:23:05 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 323, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 122, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-04-28 11:37:18 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 323, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 122, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-07-04 22:54:24 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 22:57:02 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 22:57:25 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:08:12 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:14:00 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:16:56 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:18:45 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 56, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 76, in run_ai_pipeline
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:20:38 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 53, in _ai_process_wrapper
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-04 23:20:47 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 53, in _ai_process_wrapper
+    import torch
+ModuleNotFoundError: No module named 'torch'
+------------------------------
+
+--- ERROR AT 2026-07-05 09:25:54 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 337, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 133, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-07-05 09:34:51 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 337, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 133, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-07-05 09:35:26 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 143, in run_ai_pipeline
+    actual_device = "cuda" if saved_device == "cuda" and torch.cuda.is_available() else "cpu"
+                                                         ^^^^^^^^^^
+AttributeError: module 'torch' has no attribute 'cuda'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 165, in snapshot_download
+    repo_info = api.repo_info(repo_id=repo_id, repo_type=repo_type, revision=revision)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2867, in repo_info
+    return method(
+           ^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2660, in model_info
+    r = get_session().get(path, headers=headers, timeout=timeout, params=params)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 671, in get
+    return self.request("GET", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_http.py", line 107, in send
+    raise OfflineModeIsEnabled(
+huggingface_hub.errors.OfflineModeIsEnabled: Cannot reach https://huggingface.co/api/models/Systran/faster-whisper-medium/revision/main: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 104, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 236, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, set 'HF_HUB_OFFLINE=0' as environment variable.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 337, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 152, in run_ai_pipeline
+    model = WhisperModel("medium", device="cpu", compute_type="int8")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\transcribe.py", line 138, in __init__
+    model_path = download_model(
+                 ^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 120, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 230, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.
+------------------------------
+
+--- ERROR AT 2026-07-05 09:43:40 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 168, in run_ai_pipeline
+    model = WhisperModel(
+            ^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\transcribe.py", line 138, in __init__
+    model_path = download_model(
+                 ^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 77, in download_model
+    raise ValueError(
+ValueError: Invalid model size 'D:\HocTap\11_MusicApp\app_resources\whisper_models\large-v2', expected one of: tiny.en, tiny, base.en, base, small.en, small, medium.en, medium, large-v1, large-v2, large-v3, large, distil-large-v2, distil-medium.en, distil-small.en, distil-large-v3
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 368, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 178, in run_ai_pipeline
+    model = WhisperModel(
+            ^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\transcribe.py", line 138, in __init__
+    model_path = download_model(
+                 ^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 77, in download_model
+    raise ValueError(
+ValueError: Invalid model size 'D:\HocTap\11_MusicApp\app_resources\whisper_models\medium', expected one of: tiny.en, tiny, base.en, base, small.en, small, medium.en, medium, large-v1, large-v2, large-v3, large, distil-large-v2, distil-medium.en, distil-small.en, distil-large-v3
+------------------------------
+
+--- ERROR AT 2026-07-05 09:45:20 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 165, in snapshot_download
+    repo_info = api.repo_info(repo_id=repo_id, repo_type=repo_type, revision=revision)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2867, in repo_info
+    return method(
+           ^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2660, in model_info
+    r = get_session().get(path, headers=headers, timeout=timeout, params=params)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 671, in get
+    return self.request("GET", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_http.py", line 107, in send
+    raise OfflineModeIsEnabled(
+huggingface_hub.errors.OfflineModeIsEnabled: Cannot reach https://huggingface.co/api/models/Systran/faster-whisper-large-v2/revision/main: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 104, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 236, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, set 'HF_HUB_OFFLINE=0' as environment variable.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 175, in run_ai_pipeline
+    model = WhisperModel(
+            ^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\transcribe.py", line 138, in __init__
+    model_path = download_model(
+                 ^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 120, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 230, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 165, in snapshot_download
+    repo_info = api.repo_info(repo_id=repo_id, repo_type=repo_type, revision=revision)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2867, in repo_info
+    return method(
+           ^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\hf_api.py", line 2660, in model_info
+    r = get_session().get(path, headers=headers, timeout=timeout, params=params)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 671, in get
+    return self.request("GET", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_http.py", line 107, in send
+    raise OfflineModeIsEnabled(
+huggingface_hub.errors.OfflineModeIsEnabled: Cannot reach https://huggingface.co/api/models/Systran/faster-whisper-medium/revision/main: offline mode is enabled. To disable it, please unset the `HF_HUB_OFFLINE` environment variable.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 104, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 236, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, set 'HF_HUB_OFFLINE=0' as environment variable.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 374, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 189, in run_ai_pipeline
+    model = WhisperModel("medium", device="cpu", compute_type="int8", local_files_only=False)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\transcribe.py", line 138, in __init__
+    model_path = download_model(
+                 ^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\faster_whisper\utils.py", line 120, in download_model
+    return huggingface_hub.snapshot_download(repo_id, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\_snapshot_download.py", line 230, in snapshot_download
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.
+------------------------------
+
+--- ERROR AT 2026-07-05 09:49:57 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 243, in run_ai_pipeline
+    if torch.cuda.is_available():
+       ^^^^^^^^^^
+AttributeError: module 'torch' has no attribute 'cuda'
+------------------------------
+
+--- ERROR AT 2026-07-05 09:58:25 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 243, in run_ai_pipeline
+    if torch.cuda.is_available():
+       ^^^^^^^^^^
+AttributeError: module 'torch' has no attribute 'cuda'
+------------------------------
+
+--- ERROR AT 2026-07-05 10:08:35 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 158, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 20, in get_translator
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+                       ^^^^^^^^^^
+AttributeError: module 'torch' has no attribute 'cuda'
+------------------------------
+
+--- ERROR AT 2026-07-05 10:13:04 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 165, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 29, in get_translator
+    _translator_instance = NLLBTranslator(device=device)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\translator.py", line 10, in __init__
+    from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\__init__.py", line 26, in <module>
+    from . import dependency_versions_check
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\dependency_versions_check.py", line 16, in <module>
+    from .utils.versions import require_version, require_version_core
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\__init__.py", line 31, in <module>
+    from .generic import (
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\generic.py", line 432, in <module>
+    import torch.utils._pytree as _torch_pytree
+ModuleNotFoundError: No module named 'torch.utils'
+------------------------------
+
+--- ERROR AT 2026-07-05 11:43:01 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 437, in cached_files
+    hf_hub_download(
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1018, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1170, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1860, in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\tokenization_auto.py", line 746, in from_pretrained
+    config = AutoConfig.from_pretrained(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\configuration_auto.py", line 376, in from_pretrained
+    config_dict, unused_kwargs = PreTrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 705, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 760, in _get_config_dict
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 293, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 513, in cached_files
+    raise OSError(
+OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
+Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 437, in cached_files
+    hf_hub_download(
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1018, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1170, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1860, in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 165, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 29, in get_translator
+    _translator_instance = NLLBTranslator(device=device)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\translator.py", line 26, in __init__
+    self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\tokenization_auto.py", line 750, in from_pretrained
+    config = PreTrainedConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 664, in from_pretrained
+    config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 705, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 760, in _get_config_dict
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 293, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 513, in cached_files
+    raise OSError(
+OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
+Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+------------------------------
+
+--- ERROR AT 2026-07-05 11:57:33 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 437, in cached_files
+    hf_hub_download(
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1018, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1170, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1860, in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\tokenization_auto.py", line 746, in from_pretrained
+    config = AutoConfig.from_pretrained(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\configuration_auto.py", line 376, in from_pretrained
+    config_dict, unused_kwargs = PreTrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 705, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 760, in _get_config_dict
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 293, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 513, in cached_files
+    raise OSError(
+OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
+Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 437, in cached_files
+    hf_hub_download(
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\utils\_validators.py", line 88, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1018, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1170, in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+  File "D:\HocTap\11_MusicApp\app_resources\libs\huggingface_hub\file_download.py", line 1860, in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 165, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 29, in get_translator
+    _translator_instance = NLLBTranslator(device=device)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\translator.py", line 26, in __init__
+    self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\tokenization_auto.py", line 750, in from_pretrained
+    config = PreTrainedConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 664, in from_pretrained
+    config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 705, in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\configuration_utils.py", line 760, in _get_config_dict
+    resolved_config_file = cached_file(
+                           ^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 293, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\hub.py", line 513, in cached_files
+    raise OSError(
+OSError: We couldn't connect to 'https://huggingface.co' to load the files, and couldn't find them in the cached files.
+Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+------------------------------
+
+--- ERROR AT 2026-07-05 11:59:41 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 165, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 29, in get_translator
+    _translator_instance = NLLBTranslator(device=device)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\translator.py", line 23, in __init__
+    if getattr(sys, 'frozen', False):
+               ^^^
+NameError: name 'sys' is not defined
+------------------------------
+
+--- ERROR AT 2026-07-05 12:00:56 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 354, in run_ai_pipeline
+    subs = translate_pipeline(
+           ^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 165, in translate_pipeline
+    translator = get_translator()
+                ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\pipeline.py", line 29, in get_translator
+    _translator_instance = NLLBTranslator(device=device)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\translate\translator.py", line 48, in __init__
+    self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name,tie_word_embeddings=False).to(device)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\models\auto\auto_factory.py", line 402, in from_pretrained
+    return model_class.from_pretrained(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\modeling_utils.py", line 4368, in from_pretrained
+    loading_info, disk_offload_index = cls._load_pretrained_model(model, state_dict, checkpoint_files, load_config)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\modeling_utils.py", line 4498, in _load_pretrained_model
+    merged_state_dict.update(load_state_dict(ckpt_file, disable_mmap=load_config.disable_mmap))
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\modeling_utils.py", line 378, in load_state_dict
+    check_torch_load_is_safe()
+  File "D:\HocTap\11_MusicApp\app_resources\libs\transformers\utils\import_utils.py", line 1440, in check_torch_load_is_safe
+    raise ValueError(
+ValueError: Due to a serious vulnerability issue in `torch.load`, even with `weights_only=True`, we now require users to upgrade torch to at least v2.6 in order to use the function. This version restriction does not apply when loading files with safetensors.
+See the vulnerability report here https://nvd.nist.gov/vuln/detail/CVE-2025-32434
+------------------------------
+
+--- ERROR AT 2026-07-06 09:31:43 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 92, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 382, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 145, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-07-06 09:37:48 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 57, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 379, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 142, in run_ai_pipeline
+    raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+RuntimeError: Lỗi trích xuất âm thanh (FFmpeg failed)
+------------------------------
+
+--- ERROR AT 2026-08-10 19:49:51 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 64, in _ai_process_wrapper
+    result = run_ai_pipeline(
+             ^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 392, in run_ai_pipeline
+    raise e
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 290, in run_ai_pipeline
+    from pipeline.local_lyric_aligner import align_lyric_locally
+ModuleNotFoundError: No module named 'pipeline.local_lyric_aligner'
+------------------------------
+
+--- ERROR AT 2026-08-10 19:57:01 ---
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\app\worker.py", line 61, in _ai_process_wrapper
+    from ai.pipeline import run_ai_pipeline
+  File "D:\HocTap\11_MusicApp\app\ai\pipeline.py", line 50, in <module>
+    from pipeline.lyric_corrector import align_lyric_locally
+ImportError: cannot import name 'align_lyric_locally' from 'pipeline.lyric_corrector' (D:\HocTap\11_MusicApp\app\pipeline\lyric_corrector.py)
+------------------------------

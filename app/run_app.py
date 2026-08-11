@@ -1,22 +1,96 @@
 import ctypes
 import multiprocessing
 import os
+import io
 import sys
 import logging
 import shutil
 from pathlib import Path
 
-# 🔥 FIX PyInstaller issue: sys.stdout can be None
-# This must be before any imports that use print()
+if os.name == "nt":
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+# =====================================================================
+# 🌟 CẤU HÌNH ĐƯỜNG DẪN BẤT BIẾN (TỰ CO GIÃN THEO MÔI TRƯỜNG)
+# =====================================================================
+if getattr(sys, 'frozen', False):
+    # Khi đã đóng gói thành file EXE, app_resources nằm ngay cạnh file EXE
+    APP_ROOT = os.path.dirname(sys.executable)
+else:
+    # Khi chạy code thô .py trong môi trường phát triển (VS Code)
+    current_file_path = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file_path)
+    
+    # BẪY TỰ ĐỘNG: Nếu file chạy nằm trong thư mục app/ thì lùi 2 cấp, nếu ở gốc thì lùi 1 cấp
+    if os.path.basename(current_dir) == "app":
+        APP_ROOT = os.path.dirname(current_dir)
+    else:
+        APP_ROOT = current_dir
+
+# =====================================================================
+# 🗃️ 1. ĐỒNG BỘ MÔI TRƯỜNG AI DI ĐỘNG (PYTHONPATH)
+# =====================================================================
+PORTABLE_LIBS_DIR = os.path.join(APP_ROOT, "app_resources", "libs")
+
+if os.path.exists(PORTABLE_LIBS_DIR):
+    if PORTABLE_LIBS_DIR not in sys.path:
+        sys.path.insert(0, PORTABLE_LIBS_DIR)
+    
+    # CHỐT CHẶN CHO .EXE: Ép đường dẫn này để Process con tự động thừa kế
+    os.environ["PYTHONPATH"] = PORTABLE_LIBS_DIR + os.pathsep + os.environ.get("PYTHONPATH", "")
+    print(f"✅ [Hệ thống] Đã khóa mục tiêu môi trường AI di động: {PORTABLE_LIBS_DIR}")
+else:
+    print(f"⚠️ [Hệ thống] Chưa phát hiện thư mục libs di động tại: {PORTABLE_LIBS_DIR}")
+
+# =====================================================================
+# 🛠️ 2. ÉP GHIM THƯ MỤC BIN (FFMPEG) VÀO PATH HỆ THỐNG (SỬA LỖI WINERROR 2)
+# =====================================================================
+# Định vị thư mục bin chứa 3 file exe (ffmpeg, ffprobe, ffplay)
+BIN_DIR = os.path.join(APP_ROOT, "bin")
+
+if os.path.exists(BIN_DIR):
+    # CƯỠNG ÉP nạp thư mục bin vào đầu biến PATH. 
+    # Mẹo này giúp bất kỳ đoạn code nào gọi 'ffmpeg' đều chạy trực tiếp được luôn!
+    os.environ["PATH"] = BIN_DIR + os.pathsep + os.environ.get("PATH", "")
+    print(f"✅ [Hệ thống] Đã đồng bộ bộ công cụ xử lý âm thanh tự động: {BIN_DIR}")
+else:
+    # Thử quét thêm trường hợp nằm trong app_resources/bin phòng hờ
+    ALT_BIN_DIR = os.path.join(APP_ROOT, "app_resources", "bin")
+    if os.path.exists(ALT_BIN_DIR):
+        os.environ["PATH"] = ALT_BIN_DIR + os.pathsep + os.environ.get("PATH", "")
+        print(f"✅ [Hệ thống] Đã đồng bộ bộ công cụ xử lý âm thanh (Dự phòng): {ALT_BIN_DIR}")
+    else:
+        print(f"⚠️ [Hệ thống] Không tìm thấy thư mục bin chứa FFmpeg tại: {BIN_DIR}")
+
+# =====================================================================
+# 3. FIX PyInstaller issue & Exception Handling
+# =====================================================================
 if sys.stdout is None:
     import io
     sys.stdout = io.StringIO()
     sys.stderr = io.StringIO()
 
+def global_exception_handler(exctype, value, traceback):
+    logging.error("Unhandled Exception:", exc_info=(exctype, value, traceback))
+    if QApplication.instance():
+        QMessageBox.critical(None, "Lỗi Hệ Thống", f"Đã xảy ra lỗi:\n{value}")
+    sys.__excepthook__(exctype, value, traceback)
+    sys.exit(1)
+
+sys.excepthook = global_exception_handler
+
+# 4. Imports core (Bây giờ import cực kỳ an toàn vì PATH và PYTHONPATH đã setup xong)
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 from pipeline.utils import TempFileManager
-from paths import storage_dir, input_dir, temp_dir, get_icon_path, asset_dir, project_root
+from paths import storage_dir, get_icon_path, asset_dir, project_root
 
 # ===== CORE =====
 from core.media_library import MediaLibrary
@@ -36,35 +110,12 @@ def setup_logging():
     )
 
 def check_system_dependencies():
-    """
-    Kiểm tra xem máy có FFmpeg/FFprobe chưa.
-    Trả về True nếu OK, False nếu thiếu.
-    """
-    # 1. Kiểm tra lệnh trong PATH của Windows
-    ffmpeg_in_path = shutil.which("ffmpeg") is not None
-    ffprobe_in_path = shutil.which("ffprobe") is not None
+    """ Kiểm tra an toàn hệ thống dựa trên PATH đã được ghim động """
+    ffmpeg_ok = shutil.which("ffmpeg") is not None
+    ffprobe_ok = shutil.which("ffprobe") is not None
+    return ffmpeg_ok and ffprobe_ok
 
-    # 2. Kiểm tra trong Asset folder (sys._MEIPASS khi chạy từ EXE)
-    asset_folder = asset_dir()
-    ffmpeg_in_bundle = (asset_folder / "ffmpeg.exe").exists()
-    ffprobe_in_bundle = (asset_folder / "ffprobe.exe").exists()
-
-    # 3. Kiểm tra trong bin/ folder (dev mode - FFmpeg được lưu ở bin/)
-    bin_folder = project_root() / "bin"
-    ffmpeg_in_bin = (bin_folder / "ffmpeg.exe").exists()
-    ffprobe_in_bin = (bin_folder / "ffprobe.exe").exists()
-
-    # 4. Tùy chọn: Kiểm tra cạnh file chạy (cwd relative)
-    local_ffmpeg = Path("ffmpeg.exe").exists()
-    local_ffprobe = Path("ffprobe.exe").exists()
-
-    ffmpeg_ok = ffmpeg_in_path or ffmpeg_in_bundle or ffmpeg_in_bin or local_ffmpeg
-    ffprobe_ok = ffprobe_in_path or ffprobe_in_bundle or ffprobe_in_bin or local_ffprobe
-
-    if ffmpeg_ok and ffprobe_ok:
-        return True
-    
-    return False
+# --- Main Entry ---
 def main():
     setup_logging()
 
@@ -162,7 +213,7 @@ def main():
     window.set_app_controller(app_controller)
 
     window.show()
-    
+
     # ✅ 2. Chạy Event Loop
     sys.exit(app.exec())
 

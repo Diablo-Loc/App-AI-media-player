@@ -31,7 +31,8 @@ if sys.stderr is None or not hasattr(sys.stderr, 'isatty'):
 
 import time
 import traceback
-import multiprocessing 
+import multiprocessing
+import os
 from PySide6.QtCore import QThread, Signal
 
 # =========================================================================
@@ -42,6 +43,12 @@ def _ai_process_wrapper(input_path, output_dir, media_id, queue):
     Process con: Load Torch -> Chạy -> Trả về -> Tự hủy -> GPU được giải phóng.
     """
     try:
+        import os
+        os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("MKL_NUM_THREADS", "1")
+        os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
         # --- CÁC HÀM CALLBACK ---
         def proxy_progress_cb(percent, message):
             queue.put(("progress", percent, message))
@@ -88,19 +95,21 @@ class AIWorker(QThread):
     progress = Signal(int, str)     
     data_ready = Signal(str, list)    
     failed = Signal(str, str)       
-
+    
     def __init__(self, media_id: str, input_path: str, output_dir: str, parent=None):
         super().__init__(parent)
         self.media_id = media_id
         self.input_path = input_path
-        self.output_dir = output_dir 
+        self.output_dir = output_dir
         self._cancelled = False
-        self._process = None 
-
+        self._process = None
+        self._queue = None
+                    
     def run(self):
         self.started.emit(self.media_id)
         
         queue = multiprocessing.Queue()
+        self._queue = queue
         ctx = multiprocessing.get_context('spawn') # Bắt buộc cho PyTorch/Windows
 
         # Khởi tạo Process con
@@ -172,9 +181,35 @@ class AIWorker(QThread):
             self.wait()                 # 3. CHỜ (Block) cho đến khi run() thoát hẳn
             
     def _cleanup_process(self):
-        """Giết process con và thu hồi tài nguyên"""
-        if self._process:
-            if self._process.is_alive():
-                self._process.terminate() # Kill process con
-            self._process.join()          # Chờ OS dọn dẹp
+        """Dừng process con an toàn và giải phóng queue/refs."""
+        process = self._process
+        queue = self._queue
+
+        try:
+            if process is not None:
+                if getattr(process, "is_alive", lambda: False)():
+                    try:
+                        process.terminate()
+                    except Exception:
+                        try:
+                            process.kill()
+                        except Exception:
+                            pass
+                try:
+                    process.join(timeout=3)
+                except Exception:
+                    pass
+        finally:
+            if queue is not None:
+                try:
+                    queue.close()
+                except Exception:
+                    pass
+                try:
+                    queue.join_thread()
+                except Exception:
+                    pass
+
             self._process = None
+            self._queue = None
+            self._cancelled = False

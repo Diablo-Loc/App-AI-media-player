@@ -26,8 +26,16 @@ class ImageLoader(QRunnable):
         self.target_w = target_w
         self.target_h = target_h
         self.signals = LoaderSignals()
+        self._is_cancelled = False
 
+    def cancel(self):
+        """Hàm để bên ngoài ra lệnh dừng luồng"""
+        self._is_cancelled = True
+    
     def run(self):
+        # ✅ Kiểm tra 1: Trước khi bắt đầu làm việc nặng
+        if self._is_cancelled: return
+        
         try:
             reader = QImageReader(self.path)
             reader.setAutoTransform(True)
@@ -43,7 +51,15 @@ class ImageLoader(QRunnable):
             # Chỉ đọc kích thước cần thiết (Tiết kiệm RAM cực lớn)
             reader.setScaledSize(scaled_size)
             
+            # ✅ Kiểm tra 2: Ngay trước khi đọc ảnh (IO nặng)
+            if self._is_cancelled: return
+            
             image = reader.read()
+            
+            # ✅ Kiểm tra 3: Sau khi đọc xong, nếu đã bị cancel thì không gửi kết quả về
+            if self._is_cancelled or image.isNull():
+                return
+            
             if not image.isNull():
                 pixmap = QPixmap.fromImage(image)
                 # Gửi hàng về cho Main Thread (kèm đường dẫn để định danh)
@@ -69,6 +85,7 @@ class MediaCard(QFrame):
         self.metadata = metadata
         self._is_active = False
         self._is_loaded = False # Cờ đánh dấu đã load xong chưa
+        self._current_worker = None #Theo dõi worker hiện tại
         
         # Tạo Cache Key khởi tạo
         self._update_cache_key()
@@ -174,7 +191,13 @@ class MediaCard(QFrame):
             self.thumb_label.setScaledContents(False)
             return 
 
-        # 2. Nếu không có Cache -> Đọc ổ cứng
+        # 2. Quản lý luồng cũ
+        if self._current_worker:
+            try:
+                self._current_worker.cancel()
+            except Exception:
+                pass
+
         if not Path(path).exists(): return
 
         w = self.thumb_label.width() if self.thumb_label.width() > 0 else 200
@@ -183,15 +206,22 @@ class MediaCard(QFrame):
         
         # Truyền cache_key vào Worker để đảm bảo tính nhất quán
         loader = ImageLoader(self.cache_key, str(path), int(w * pixel_ratio), int(h * pixel_ratio))
-        loader.signals.finished.connect(self._on_thumbnail_loaded)
+        try:
+            loader.signals.finished.connect(self._on_thumbnail_loaded)
+        except RuntimeError:
+            pass
+        self._current_worker = loader  # Lưu lại worker hiện tại để có thể hủy nếu cần
         MediaCard.thread_pool.start(loader)
 
     def _on_thumbnail_loaded(self, incoming_key, pixmap):
         """
         Nhận ảnh từ Worker.
         """
+        self._current_worker = None  # Xong việc thì giải phóng tham chiếu
         try:
-            # 1. Nếu ảnh lỗi hoặc rỗng thì dừng luôn
+            if not isinstance(pixmap, QPixmap):
+                return
+
             if pixmap.isNull():
                 return
 
@@ -201,15 +231,17 @@ class MediaCard(QFrame):
             QPixmapCache.insert(incoming_key, pixmap)
 
             # 3. Safety Check: Widget còn sống không?
-            if not self.parent(): return
+            if not self.parent():
+                return
 
             # 4. Tính nhất quán: Chỉ hiển thị nếu Key trả về KHỚP với Key hiện tại
             if incoming_key == self.cache_key:
+                self.thumb_label.clear()
                 self.thumb_label.setPixmap(pixmap)
                 self.thumb_label.setScaledContents(False)
-                    
+
         except RuntimeError:
-            pass # Widget đã bị xóa
+            pass  # Widget đã bị xóa
 
     def show_default_icon(self):
         self.thumb_label.clear()

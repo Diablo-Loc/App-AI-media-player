@@ -1,14 +1,30 @@
 import os
 from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtWidgets import QDialog, QMessageBox
 # Không cần import gc hay torch ở đây nữa vì Worker xử lý ở Process riêng
 # from worker import AIWorker # <--- Đảm bảo import đúng đường dẫn worker của bạn
 from worker import AIWorker # Ví dụ nếu bạn để file worker trong control
+
+_RESOURCE_CHECK_CACHE = {"checked": False, "ready": False}
+
+
+def _set_resource_cache_state(checked: bool, ready: bool):
+    _RESOURCE_CHECK_CACHE["checked"] = checked
+    _RESOURCE_CHECK_CACHE["ready"] = ready
+    AIWorker._is_ai_cached_ready = ready
+
+
+def _get_resource_cache_state() -> dict:
+    return _RESOURCE_CHECK_CACHE
+
 
 class AIController(QObject):
     """
     AIController
     - Quản lý vòng đời của AIWorker.
     - Đảm bảo Worker cũ tắt hẳn trước khi chạy cái mới.
+    - CHẶN ĐẦU ĐẦU LÒNG: Tự động phát hiện thiếu thư viện và gọi UI cài đặt,
+      bất kể là do bấm nút hay do hệ thống tự động chuyển bài gọi tới.
     """
 
     # =========================
@@ -24,26 +40,83 @@ class AIController(QObject):
         self.output_dir = output_dir
         self._worker: AIWorker | None = None
         self._current_media_id: str | None = None
+        self._resource_checked = _RESOURCE_CHECK_CACHE["checked"]
+        self._resource_ready = _RESOURCE_CHECK_CACHE["ready"]
 
     # =========================
     # PUBLIC API
     # =========================
     def start(self, media_id: str, input_path: str):
         """
-        Bắt đầu job mới. Nếu có job cũ đang chạy, nó sẽ bị HUỶ và CHỜ TẮT.
+        Bắt đầu job mới. Cửa ngõ trung tâm kiểm soát an toàn hệ thống.
         """
+        # 🌟 Luồng check nhẹ theo cờ + cache đúng 1 lần cho mỗi phiên chạy.
+        from download_core.download_source_app import check_resource_status, _set_resource_ready_flag, _get_resource_ready_flag
+
+        self._resource_checked = _RESOURCE_CHECK_CACHE["checked"]
+        self._resource_ready = _RESOURCE_CHECK_CACHE["ready"]
+
+        if not self._resource_checked:
+            status = check_resource_status()
+            self._resource_ready = bool(status.get("ready", False))
+            self._resource_checked = True
+
+            if self._resource_ready:
+                _set_resource_ready_flag(True)
+                _set_resource_cache_state(True, True)
+            else:
+                flag_ready = _get_resource_ready_flag()
+                if flag_ready:
+                    _set_resource_ready_flag(False)
+                _set_resource_cache_state(True, False)
+                QMessageBox.warning(
+                    None, "Chưa cài đặt Core AI",
+                    "Hệ thống phát hiện thiết bị chưa cài đặt cấu hình AI xử lý phụ đề (Torch/Whisper).\n\n"
+                    "Ứng dụng sẽ tự động kích hoạt Trình cấu hình di động ngay bây giờ!"
+                )
+                try:
+                    from download_core.download_source_app import ResourceDownloadDialog
+                    dialog = ResourceDownloadDialog()
+                    if dialog.exec() != QDialog.Accepted:
+                        self._resource_checked = False
+                        self._resource_ready = False
+                        _set_resource_cache_state(False, False)
+                        self.job_failed.emit(media_id, "Yêu cầu xử lý bị hủy do thiếu thư viện Core AI.")
+                        return
+                except Exception as e:
+                    self._resource_checked = False
+                    self._resource_ready = False
+                    _set_resource_cache_state(False, False)
+                    QMessageBox.critical(None, "Lỗi khởi tạo", f"Không thể nạp giao diện cài đặt: {str(e)}")
+                    return
+        elif not self._resource_ready:
+            self.job_failed.emit(media_id, "Yêu cầu xử lý bị hủy do thiếu thư viện Core AI.")
+            return
+
+        # ---------------------------------------------------------
+        # KHU VỰC CHẠY AN TOÀN (CHỈ ĐẾN ĐƯỢC ĐÂY KHI LIBS ĐÃ ĐẦY ĐỦ)
+        # ---------------------------------------------------------
         # 1. Xử lý Worker cũ (QUAN TRỌNG ĐỂ SỬA LỖI CRASH)
         if self._worker is not None:
-            if self._worker.isRunning():
-                self.status_changed.emit(
-                    self._current_media_id, 
-                    "⚠️ Đang dừng tác vụ cũ..."
-                )
-                # Gọi hàm stop() (có wait()) để đảm bảo Thread cũ thoát vòng lặp
-                self._worker.stop() 
-            
-            # Xóa object cũ
-            self._worker.deleteLater()
+            try:
+                if self._worker.isRunning():
+                    self.status_changed.emit(
+                        self._current_media_id,
+                        "⚠️ Đang dừng tác vụ cũ..."
+                    )
+                    self._worker.stop()
+            except RuntimeError:
+                pass
+
+            try:
+                self._worker.disconnect()
+            except Exception:
+                pass
+
+            try:
+                self._worker.deleteLater()
+            except Exception:
+                pass
             self._worker = None
 
         # 2. Thiết lập trạng thái mới
@@ -58,13 +131,15 @@ class AIController(QObject):
         )
 
         # 4. Kết nối tín hiệu
-        self._worker.started.connect(self._on_started)
-        self._worker.progress.connect(self._on_progress)
-        self._worker.data_ready.connect(self._on_data_ready)
-        self._worker.failed.connect(self._on_failed)
-
-        self._worker.finished.connect(self._worker.deleteLater)
-        self._worker.finished.connect(self._on_thread_stopped)
+        try:
+            self._worker.started.connect(self._on_started)
+            self._worker.progress.connect(self._on_progress)
+            self._worker.data_ready.connect(self._on_data_ready)
+            self._worker.failed.connect(self._on_failed)
+            self._worker.finished.connect(self._worker.deleteLater)
+            self._worker.finished.connect(self._on_thread_stopped)
+        except RuntimeError:
+            pass
         # 5. Chạy
         self._worker.start()
 
@@ -91,19 +166,17 @@ class AIController(QObject):
         return self._worker is not None and self._worker.isRunning()
 
     def abort_all_jobs(self):
-        """Hàm này được gọi khi tắt App"""
-        # Nếu bạn đang giữ biến thread, hãy stop nó
-        if hasattr(self, "worker_thread") and self.worker_thread.isRunning():
+        """Hàm này được gọi khi tắt App để dừng worker AI một cách an toàn."""
+        if self._worker and self._worker.isRunning():
             print("🛑 Controller: Đang yêu cầu dừng Worker Thread...")
-            
-            # 1. Yêu cầu dừng nhẹ nhàng (kiểm tra cờ isInterruptionRequested)
-            self.worker_thread.requestInterruption()
-            
-            # 2. Ép dừng (Nếu cần thiết - Thread AI thường cứng đầu)
-            self.worker_thread.quit()
-            self.worker_thread.wait(100) # Chờ 100ms
-            
-            # Nếu vẫn lỳ không chịu tắt -> Force Kill bằng code đóng App
+            self._worker.cancel()
+            self._worker.stop()
+
+        if self._worker is not None:
+            self._worker.deleteLater()
+            self._worker = None
+
+        self._current_media_id = None
     # =========================
     # WORKER CALLBACKS
     # =========================

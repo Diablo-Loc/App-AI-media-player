@@ -1,31 +1,150 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QHBoxLayout, 
                                QPushButton, QScrollArea, QLineEdit, QFrame, 
-                               QSizePolicy)
-from PySide6.QtCore import Qt, QSize, Signal, QTimer, QEvent, QRect, QPoint,QRectF
-from PySide6.QtGui import QPixmap, QImage, QPainter, QPainterPath, QColor, QPen
+                               QSizePolicy,QGraphicsOpacityEffect)
+from PySide6.QtCore import Qt, Signal, QTimer,  QRect, QPoint, QRectF, QThreadPool
+from PySide6.QtGui import QPixmap, QPainter, QPainterPath, QColor, QPen, QPixmapCache
 import os
 import random
-from functools import lru_cache # [TỐI ƯU] Import thêm để cache ảnh
+# --------------------------------------------------
+# helper widget for lazy-loading thumbnails in playlist
+class LazyThumb(QLabel):
+    def __init__(self, item_data, width, height, parent=None):
+        super().__init__(parent)
+        self.item_data = item_data
+        self.setFixedSize(width, height)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet("background-color: #222; border: none;")
+        # placeholder icon until loaded
+        self.setText("🎵")
+        self.setStyleSheet(self.styleSheet() + " color: #555; font-size: 24px;")
+        self._is_loaded = False
+        self._build_cache_key()
+        self._current_worker = None
+        
+    def _build_cache_key(self):
+        path = getattr(self.item_data, 'thumbnail', None) or getattr(self.item_data, 'thumbnail_path', None)
+        mtime = getattr(self.item_data, 'mtime', 0)
+        self.cache_key = f"lazy_rounded_{path}_{self.width()}x{self.height()}_{mtime}"
+        self._thumb_path = path
 
-# ==========================================
-# [TỐI ƯU] CACHE ẢNH THUMBNAIL
-# Giúp cuộn danh sách mượt hơn, không đọc lại ổ cứng liên tục
-# ==========================================
-@lru_cache(maxsize=100)
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._is_loaded and self._thumb_path:
+            # Chỉ load khi thực sự hiển thị trên màn hình
+            QTimer.singleShot(50, self._start_async_loading)
+
+    def _start_async_loading(self):
+        if self._is_loaded or not self.isVisible(): return
+        path = self._thumb_path
+        if not path or not os.path.exists(path):
+            return
+        
+        # 1. Kiểm tra cache: Tìm cái ĐÃ BO GÓC trước
+        # Lưu ý: cache_key ở đây đã có chữ "lazy_rounded" từ hàm _build_cache_key
+        cached = QPixmapCache.find(self.cache_key)
+        if cached:
+            self._apply_image(cached) # Hàm helper để apply đẹp
+            return
+        try:
+            from ui.media_card import ImageLoader
+        except ImportError:
+            return
+        
+        if self._current_worker:
+            self._current_worker.cancel()
+            
+        w, h = self.width(), self.height()
+        dpr = self.devicePixelRatioF() # Hỗ trợ màn hình tỉ lệ lẻ (1.25, 1.5)
+        
+        loader = ImageLoader(self.cache_key, str(path), int(w * dpr), int(h * dpr))
+        loader.signals.finished.connect(self._on_loaded)
+        self._current_worker = loader
+        QThreadPool.globalInstance().start(loader)
+
+    def _on_loaded(self, incoming_key, pixmap):
+        try:
+            if not self or incoming_key != self.cache_key or pixmap.isNull(): return
+            if not self.isVisible(): return
+            w = self.width()
+            h = self.height()
+            dpr = self.devicePixelRatio()
+            
+            # 1. Tạo canvas chuẩn với dpr để không bị mờ trên màn hình cao cấp
+            final_pixmap = QPixmap(w * dpr, h * dpr)
+            final_pixmap.fill(Qt.transparent)
+            final_pixmap.setDevicePixelRatio(dpr)
+            
+            painter = QPainter(final_pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform)
+            
+            # 2. Tạo Path bo góc chuẩn radius 8
+            path = QPainterPath()
+            # Dùng RectF(0, 0, w, h) để khớp hoàn toàn với widget
+            rect = QRectF(0, 0, w, h)
+            path.addRoundedRect(rect, 8, 8)
+            painter.setClipPath(path)
+            
+            # 3. LOGIC CROP GIỮA: Tính toán trực tiếp từ ảnh gốc (pixmap) 
+            # Cách này chính xác hơn là scale trung gian rồi mới crop
+            img_w = pixmap.width()
+            img_h = pixmap.height()
+            
+            # Tính toán tỷ lệ để phủ kín khung 140x78
+            scale = max(w * dpr / img_w, h * dpr / img_h)
+            draw_w = img_w * scale
+            draw_h = img_h * scale
+            
+            # Căn giữa ảnh trong khung
+            off_x = (w * dpr - draw_w) / 2.0
+            off_y = (h * dpr - draw_h) / 2.0
+            
+            # Vẽ trực tiếp ảnh gốc vào khung đã được set ClipPath (bo góc)
+            # Tọa độ ở đây tính theo pixel thực tế (nhân dpr) vì painter đang vẽ trên final_pixmap
+            painter.drawPixmap(off_x / dpr, off_y / dpr, draw_w / dpr, draw_h / dpr, pixmap)
+            
+            # 4. Vẽ viền mờ (Border) để thumbnail nổi bật trên nền đen
+            pen = QPen(QColor(255, 255, 255, 25)) 
+            pen.setWidth(1)
+            painter.setPen(pen)
+            painter.drawPath(path)
+            
+            painter.end()
+            
+            # Cập nhật và lưu cache
+            self._apply_image(final_pixmap)
+            QPixmapCache.insert(self.cache_key, final_pixmap)
+        except (RuntimeError, Exception):
+            pass
+
+    def _apply_image(self, pixmap):
+        """Hàm helper để xóa placeholder và hiện ảnh"""
+        self.setStyleSheet("background: transparent; border: none;")
+        self.setText("") 
+        self.setPixmap(pixmap)
+    
+# --------------------------------------------------
+# 1. TỐI ƯU HÀM LOAD ẢNH (Sử dụng Cache tốt hơn)
+# --------------------------------------------------
 def load_and_scale_image_rounded(path, w, h, radius=8):
     """
     Load ảnh, scale, crop giữa, và bo tròn góc.
-    radius: Độ bo tròn (mặc định 8px)
     """
     if not path or not os.path.exists(path):
         return None
     
+    # 0. Kiểm tra cache của Qt trước
+    cache_key = f"rounded_{path}_{w}x{h}_{radius}"
+    cached_pixmap = QPixmapCache.find(cache_key)
+    if cached_pixmap:
+        return cached_pixmap
+
     # 1. Load ảnh gốc
     src_pixmap = QPixmap(path)
     if src_pixmap.isNull():
         return None
 
-    # 2. Scale và Center Crop (Logic cũ của bác để chống bè hình)
+    # 2. Scale và Center Crop
     scaled_src = src_pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation)
     x = (scaled_src.width() - w) // 2
     y = (scaled_src.height() - h) // 2
@@ -37,29 +156,26 @@ def load_and_scale_image_rounded(path, w, h, radius=8):
 
     # 4. Bắt đầu vẽ (QPainter)
     painter = QPainter(dest_pixmap)
-    # Bật chế độ khử răng cưa cho góc tròn mịn màng
     painter.setRenderHint(QPainter.Antialiasing) 
     painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
-    # Tạo đường dẫn hình chữ nhật bo tròn
-    path = QPainterPath()
-    # Điều chỉnh nhẹ rect để viền không bị cắt (inset 0.5px)
+    path_obj = QPainterPath() # Đổi tên biến path -> path_obj để không trùng với parameter 'path'
     rect = QRectF(0.5, 0.5, w - 1, h - 1)
-    path.addRoundedRect(rect, radius, radius)
+    path_obj.addRoundedRect(rect, radius, radius)
 
-    # Cắt khung vẽ theo hình bo tròn
-    painter.setClipPath(path)
-    # Vẽ ảnh đã crop vào khung
+    painter.setClipPath(path_obj)
     painter.drawPixmap(0, 0, cropped_src)
 
-    # (Tùy chọn) Vẽ thêm viền mỏng màu xám cho đẹp
-    pen = QPen(QColor("#333")) # Màu viền
-    pen.setWidth(1)            # Độ dày viền
+    pen = QPen(QColor("#333")) 
+    pen.setWidth(1)            
     painter.setPen(pen)
     painter.setBrush(Qt.NoBrush)
-    painter.drawPath(path)
+    painter.drawPath(path_obj)
 
     painter.end()
+    
+    # 5. Lưu kết quả vào QPixmapCache trước khi return
+    QPixmapCache.insert(cache_key, dest_pixmap)
     
     return dest_pixmap
 # ==========================================
@@ -179,7 +295,9 @@ class ForYouPage(QWidget):
     
     def __init__(self):
         super().__init__()
+        QPixmapCache.setCacheLimit(204800) # 200MB cache limit
         # --- QUẢN LÝ DỮ LIỆU LAZY LOAD ---
+        self.master_data = []
         self.all_items_data = []    
         self.original_data = []
         self.cards_map = {} 
@@ -212,7 +330,7 @@ class ForYouPage(QWidget):
         lbl_logo.setStyleSheet("color: white; font-weight: bold; font-size: 16px;")
         
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Tìm kiếm bài hát, ca sĩ...")
+        self.search_input.setPlaceholderText("🔍 Tìm kiếm bài hát...")
         self.search_input.setFixedSize(500, 40)
         self.search_input.setStyleSheet("""
             QLineEdit { 
@@ -236,11 +354,15 @@ class ForYouPage(QWidget):
         
         self.page_layout.addWidget(self.header_container)
 
+        self.search_timer = QTimer()
+        self.search_timer.setSingleShot(True) # Chỉ chạy 1 lần mỗi khi gọi
+        self.search_timer.timeout.connect(self.execute_filter)
+        
         # --- 3. BODY CONTAINER ---
         self.body_container = QWidget()
         self.body_container.setStyleSheet("background-color: #000000;")
         self.main_layout = QHBoxLayout(self.body_container)
-        self.main_layout.setContentsMargins(16, 8, 16, 8)
+        self.main_layout.setContentsMargins(16, 8, 8, 8)
         self.main_layout.setSpacing(24) 
 
         # CỘT TRÁI
@@ -260,7 +382,7 @@ class ForYouPage(QWidget):
         self.info_container = QWidget()
         self.info_container.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         info_layout = QVBoxLayout(self.info_container)
-        info_layout.setContentsMargins(0, 5, 0, 20)
+        info_layout.setContentsMargins(0, 5, 0, 5)
         info_layout.setSpacing(5)
         
         self.title_label = QLabel("Đang chờ bài hát...")
@@ -273,7 +395,7 @@ class ForYouPage(QWidget):
         info_layout.addWidget(self.title_label)
         info_layout.addWidget(self.artist_label)
 
-        self.left_column_layout.addWidget(self.video_container, 1)
+        self.left_column_layout.addWidget(self.video_container, 5)
         self.left_column_layout.addWidget(self.info_container, 0)
         self.left_column_layout.addStretch()
 
@@ -357,8 +479,8 @@ class ForYouPage(QWidget):
         self.left_scroll_area.verticalScrollBar().setStyleSheet(scrollbar_style)
         self.playlist_scroll.verticalScrollBar().setStyleSheet(scrollbar_style)
         
-        self.search_input.textChanged.connect(self.filter_playlist)
-        
+        self.search_input.textChanged.connect(self.on_search_text_changed)
+                
     # ==========================================
     # LOGIC XỬ LÝ (LAZY LOAD, UPDATE UI)
     # ==========================================
@@ -367,48 +489,48 @@ class ForYouPage(QWidget):
         self.loaded_count = 0
         self.is_loading = False
         
-        # [TỐI ƯU] Xóa widget an toàn hơn
+        self.cards_map = {}   
+         
+        # Xóa widget cũ
         while self.playlist_items_layout.count():
             item = self.playlist_items_layout.takeAt(0)
             if item.widget(): 
-                item.widget().deleteLater()
-                
-        self.cards_map = {}    
+                item.widget().deleteLater() 
         
+        # Tìm bài đang phát trong list mới (đã filter)
+        target_idx = -1
         if self.current_playing_id:
-             # Tìm vị trí của bài đang phát
-            target_idx = -1
             for idx, item in enumerate(self.all_items_data):
                 if item.id == self.current_playing_id:
                     target_idx = idx
                     break
-            
-            # *** FIX: Load lần lượt cho đến khi đủ item được click ***
-            while self.loaded_count <= target_idx and self.loaded_count < len(self.all_items_data):
+        
+        if target_idx != -1:
+            # Load đến vị trí bài đang phát
+            required_batch_end = ((target_idx // self.batch_size) + 1) * self.batch_size
+            while self.loaded_count < required_batch_end and self.loaded_count < len(self.all_items_data):
                 self.load_next_batch()
-            
-            # Sau đó highlight
             self.mark_playing_item(self.current_playing_id)
         else:
             self.update_playing_status(0, len(self.all_items_data))
             self.load_next_batch()
         
     def on_scroll_changed(self, value):
-        if self.is_loading: return
+        if self.is_loading:
+            return
         scrollbar = self.playlist_scroll.verticalScrollBar()
-        # [TỐI ƯU] Thêm kiểm tra > 0 để tránh load khi danh sách rỗng
-        if scrollbar.maximum() > 0 and value > scrollbar.maximum() * 0.9:
-            self.load_next_batch()
+        if scrollbar.maximum() - value < 300:
+            if not self.is_loading:
+                self.load_next_batch()
 
     def create_playlist_card(self, index, title, author, thumb_path_input, item_data):
         card = QPushButton()
         card.setFixedHeight(88)
         card.setCursor(Qt.CursorShape.PointingHandCursor)
-        # [TỐI ƯU] Dùng biến tĩnh
         card.setStyleSheet(self.CARD_STYLE_NORMAL)
         
         layout = QHBoxLayout(card)
-        layout.setContentsMargins(8,4,8,4)
+        layout.setContentsMargins(8, 4, 8, 4)
         
         # 1. Index
         lbl_idx = QLabel(str(index))
@@ -416,38 +538,25 @@ class ForYouPage(QWidget):
         lbl_idx.setFixedWidth(24)
         
         # 2. Thumbnail
-        lbl_thumb = QLabel()
         w_thumb, h_thumb = 140, 78 
-        lbl_thumb.setFixedSize(w_thumb, h_thumb)
-        lbl_thumb.setStyleSheet("background-color: #222; border: none;")
-        lbl_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        actual_thumb = getattr(item_data, 'thumbnail', None) or getattr(item_data, 'thumbnail_path', None)
+        lbl_thumb = LazyThumb(item_data, w_thumb, h_thumb)        
         
-        # [TỐI ƯU] Sử dụng hàm cache ảnh
-        pixmap = load_and_scale_image_rounded(actual_thumb,w_thumb, h_thumb, radius=8)
-        if pixmap:
-            lbl_thumb.setPixmap(pixmap)
-        else:
-            lbl_thumb.setText("🎵")
-            lbl_thumb.setAlignment(Qt.AlignCenter)
-            lbl_thumb.setStyleSheet("background-color: #282828; color: #555; border-radius: 8px; border: 1px solid #333;")
-            
         # 3. Info
         info = QVBoxLayout()
         info.setSpacing(2)
         info.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         t = QLabel(title)
         t.setProperty("is_title", True)
-        t.setStyleSheet("color:white; font-weight:bold; border:none; font-size: 13px;")
-        t.setWordWrap(True)               # 1. Cho phép xuống dòng
-        t.setAlignment(Qt.AlignTop | Qt.AlignLeft) # 2. Căn lên trên cùng bên trái
-        t.setMaximumHeight(38)            # 3. Chiều cao tối đa (tương đương 2 dòng)
-        
+        t.setStyleSheet("color:white; font-weight:600; border:none; font-size: 13px;")
+        t.setWordWrap(True)
+        t.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        t.setMaximumHeight(38)
         t.setToolTip(title)
         
         a = QLabel(author)
         a.setStyleSheet("color:#aaa; font-size: 12px; border:none; margin-top: 4px;")
-        info.addWidget(t); info.addWidget(a)
+        info.addWidget(t)
+        info.addWidget(a)
         
         layout.addWidget(lbl_idx)
         layout.addWidget(lbl_thumb)
@@ -456,7 +565,7 @@ class ForYouPage(QWidget):
         layout.addStretch()
         
         if item_data:
-            card.clicked.connect(lambda: self.playlist_item_clicked.emit(item_data))
+            card.clicked.connect(lambda _, data=item_data: self.playlist_item_clicked.emit(data))
             
         return card
 
@@ -471,14 +580,9 @@ class ForYouPage(QWidget):
         self.lbl_count.setText(f"Bài hát - {current_index}/{total_count}")
 
     def toggle_shuffle(self):
-        # Khi bấm nút trên màn hình -> Gửi tín hiệu về MainWindow xử lý
         self.shuffle_req_signal.emit()
     
     def set_shuffle_visual(self, is_active):
-        """
-        Hàm này để MainWindow gọi xuống.
-        Nhiệm vụ: Đổi màu nút và cập nhật biến cờ.
-        """
         self.is_shuffle = is_active
         if self.is_shuffle:
             self.btn_shuffle.setStyleSheet("QPushButton { font-size: 20px; color: #3ea6ff; border: none; background: #222; border-radius: 20px; }")
@@ -486,21 +590,17 @@ class ForYouPage(QWidget):
             self.btn_shuffle.setStyleSheet("QPushButton { font-size: 20px; color: white; border: none; } QPushButton:hover { background: #333; border-radius: 20px; }")
     
     def get_shuffled_list(self):
-        """Helper: Trả về danh sách đã trộn để MainWindow dùng"""
-        if not self.original_data: return []
+        if not self.master_data: return []
         
-        # Logic trộn bài nằm ở đây (hoặc đưa ra MainWindow cũng được)
-        shuffled = list(self.original_data)
-        import random
+        shuffled = list(self.master_data)
         random.shuffle(shuffled)
         
-        # (Mẹo) Đưa bài đang hát lên đầu
         if self.current_playing_id:
-             for i, item in enumerate(shuffled):
-                 if item.id == self.current_playing_id:
-                     shuffled.pop(i)
-                     shuffled.insert(0, item)
-                     break
+            for i, item in enumerate(shuffled):
+                if item.id == self.current_playing_id:
+                    shuffled.pop(i)
+                    shuffled.insert(0, item)
+                    break
         return shuffled
     
     def toggle_repeat(self):
@@ -513,15 +613,32 @@ class ForYouPage(QWidget):
 
     def load_playlist(self, playlist_data):
         if not playlist_data: return
-        self.original_data = list(playlist_data) 
-        self.all_items_data = list(playlist_data)
+        
+        # 1. Khóa dữ liệu vào Master (Nguồn sự thật nguyên bản)
+        self.master_data = list(playlist_data).copy() 
+        self.original_data = self.master_data.copy()
+        self.all_items_data = self.master_data.copy() 
+                    
+        if self.is_shuffle:
+            random.shuffle(self.all_items_data)
+            if self.current_playing_id:
+                for i, item in enumerate(self.all_items_data):
+                    if item.id == self.current_playing_id:
+                        self.all_items_data.insert(0, self.all_items_data.pop(i))
+                        break
+            
         self.refresh_playlist_ui()
+        if hasattr(self, 'playlist_scroll'):
+            self.playlist_scroll.verticalScrollBar().setValue(0)
         
     def load_next_batch(self):
-        if self.loaded_count >= len(self.all_items_data): return
+        if self.loaded_count >= len(self.all_items_data):
+            return
         self.is_loading = True
         
         end_idx = min(self.loaded_count + self.batch_size, len(self.all_items_data))
+        self.playlist_items_widget.setUpdatesEnabled(False)
+
         for i in range(self.loaded_count, end_idx):
             item = self.all_items_data[i]
             card = self.create_playlist_card(i + 1, item.title, getattr(item, 'artist', 'Unknown'), None, item)
@@ -531,22 +648,52 @@ class ForYouPage(QWidget):
                 self.set_card_active_style(card)
                 
             self.playlist_items_layout.addWidget(card)
-            
+        
         self.loaded_count = end_idx
         self.is_loading = False
-    
-    def filter_playlist(self, text):
-        search_text = text.lower().strip()
-        if not search_text:
-            if not self.is_shuffle:
-                self.all_items_data = list(self.original_data)
+        self.playlist_items_widget.setUpdatesEnabled(True)
+
+    # ==========================================
+    # CỬA SỔ TÌM KIẾM ĐÃ ĐƯỢC CHỈNH SỬA
+    # ==========================================
+    def on_search_text_changed(self, text):
+        """Khi gõ phím: dừng timer cũ, áp hiệu ứng mờ nhẹ và hẹn giờ 300ms"""
+        self.search_timer.stop()
+        
+        opacity_effect = QGraphicsOpacityEffect(self.playlist_items_widget)
+        opacity_effect.setOpacity(0.35)
+        self.playlist_items_widget.setGraphicsEffect(opacity_effect)
+        
+        self.search_timer.start(300)
+
+    def execute_filter(self):
+        """Thực thi lọc dữ liệu từ master_data sau khi dừng gõ phím 300ms"""
+        query = self.search_input.text().strip().lower()
+        
+        self.playlist_items_widget.setUpdatesEnabled(False)
+        
+        if not query:
+            # Khi xóa hết từ khóa: Lấy lại TOÀN BỘ từ master_data
+            self.all_items_data = list(self.master_data)
+            self.original_data = list(self.master_data)
+            if self.is_shuffle:
+                random.shuffle(self.all_items_data)
         else:
+            # Lọc trực tiếp từ master_data nguyên bản
             self.all_items_data = [
-                item for item in self.original_data 
-                if search_text in item.title.lower() or search_text in getattr(item, 'artist', '').lower()
+                item for item in self.master_data 
+                if query in getattr(item, 'title', '').lower() or query in getattr(item, 'artist', '').lower()
             ]
+            self.original_data = list(self.all_items_data)
+
+        self.playlist_scroll.verticalScrollBar().setValue(0)
         self.refresh_playlist_ui()
-    
+        
+        # Mở lại UI và loại bỏ hiệu ứng mờ
+        self.playlist_items_widget.setGraphicsEffect(None)
+        self.playlist_items_widget.setUpdatesEnabled(True)
+        self.playlist_items_widget.update()
+
     def set_card_active_style(self, card):
         card.setStyleSheet(self.CARD_STYLE_ACTIVE)
         for label in card.findChildren(QLabel):
@@ -560,82 +707,88 @@ class ForYouPage(QWidget):
                 label.setStyleSheet("color: #efefef; font-weight: 600; font-size: 13px; border: none;")
     
     def mark_playing_item(self, media_id):
-        # *** FIX: Nếu item chưa được load, hãy load batches cho đến khi tìm thấy ***
+        old_id = self.current_playing_id
+
         if media_id not in self.cards_map:
-            # Item chưa load, tìm vị trí và load batches
             target_idx = -1
             for idx, item in enumerate(self.all_items_data):
                 if item.id == media_id:
                     target_idx = idx
                     break
             
-            # Load batches cho đến khi đủ item
-            while self.loaded_count <= target_idx and self.loaded_count < len(self.all_items_data):
-                self.load_next_batch()
+            if target_idx != -1:
+                required_batch_end = ((target_idx // self.batch_size) + 1) * self.batch_size
+                while self.loaded_count < required_batch_end and self.loaded_count < len(self.all_items_data):
+                    self.load_next_batch()
         
-        # 1. Xử lý Style thẻ cũ
-        if self.current_playing_id in self.cards_map:
+        if old_id in self.cards_map:
             try:
-                self.set_card_normal_style(self.cards_map[self.current_playing_id])
+                self.set_card_normal_style(self.cards_map[old_id])
             except RuntimeError:
                 pass 
 
         self.current_playing_id = media_id
 
-        # 2. Highlight thẻ mới
         if media_id in self.cards_map:
             active_card = self.cards_map[media_id]
             self.set_card_active_style(active_card)
-            QTimer.singleShot(100, lambda: self.playlist_scroll.ensureWidgetVisible(active_card))
-            
+            def safe_ensure_visible():
+                try:
+                    if active_card and active_card.parent():
+                        self.playlist_scroll.ensureWidgetVisible(active_card)
+                except (RuntimeError, ReferenceError):
+                    pass
 
-        # --- [MỚI] TÍNH TOÁN SỐ THỨ TỰ ĐỂ CẬP NHẬT LABEL 0/0 ---
+            QTimer.singleShot(100, safe_ensure_visible)
+
         current_index = -1
-        # Duyệt qua danh sách hiện tại (đã shuffle hoặc filter) để tìm vị trí
         for idx, item in enumerate(self.all_items_data):
             if item.id == media_id:
-                current_index = idx + 1 # +1 vì đếm từ 1
+                current_index = idx + 1
                 break
         
         total = len(self.all_items_data)
-        
-        # Nếu tìm thấy bài thì hiện "5/100", không thấy thì hiện "0/100"
         display_idx = current_index if current_index != -1 else 0
         self.update_playing_status(display_idx, total)
-        # -------------------------------------------------------
-    
+
+    # ==========================================
+    # CÁC SỰ KIỆN HIỂN THỊ / ẨN (ĐÃ DỌN ĐÙNG HÀM LẶP)
+    # ==========================================
     def showEvent(self, event):
+        win = self.window()
+        if not win or win.isMinimized():
+            event.ignore()
+            return
+            
         super().showEvent(event)
 
-        win = self.window()
-        if not win:
-            return
+        if hasattr(win, 'sub_layer') and win.sub_layer:
+            if hasattr(win, 'media_player') and win.media_player.player.playbackState() == 1:
+                win.sub_layer.show()
+                win.sub_layer.raise_()
 
-        # 1. Lưu trạng thái cũ (Giữ nguyên code của bạn)
         if self._prev_window_state is None:
-            if win.isFullScreen():
-                self._prev_window_state = "fullscreen"
-            elif win.isMaximized():
-                self._prev_window_state = "max"
-            else:
-                self._prev_window_state = "normal"
+            if win.isFullScreen(): self._prev_window_state = "fullscreen"
+            elif win.isMaximized(): self._prev_window_state = "max"
+            else: self._prev_window_state = "normal"
 
-        # 2. Phóng to màn hình
-        if not win.isFullScreen():
+        if not win.isFullScreen() and not win.isMaximized():
             win.showMaximized()
 
     def hideEvent(self, event):
-        super().hideEvent(event)
-
         win = self.window()
+        if win and win.isMinimized():
+            if hasattr(win, 'sub_layer') and win.sub_layer:
+                win.sub_layer.hide()
+            super().hideEvent(event)
+            return
+
+        super().hideEvent(event)
         if not win or self._prev_window_state is None:
             return
 
-        if self._prev_window_state == "normal":
-            win.showNormal()
-        elif self._prev_window_state == "max":
-            win.showMaximized()
-        elif self._prev_window_state == "fullscreen":
-            win.showFullScreen()
+        if self._prev_window_state == "normal": win.showNormal()
+        elif self._prev_window_state == "max": win.showMaximized()
+        elif self._prev_window_state == "fullscreen": win.showFullScreen()
 
         self._prev_window_state = None

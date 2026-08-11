@@ -29,6 +29,7 @@ class WorkerSignals(QObject):
 class ThumbnailWorker(QRunnable):
     def __init__(self, video_path: str, output_path: str):
         super().__init__()
+        self.setAutoDelete(True)
         self.video_path = video_path
         self.output_path = output_path
         self.signals = WorkerSignals()
@@ -105,10 +106,15 @@ class JobManager(QObject):
 
         worker = ThumbnailWorker(str(video_path), str(output_path))
 
-        worker.signals.finished.connect(
-            lambda p: self.thumbnail_done.emit(media_id, p)
-        )
+        def on_finished(path: str):
+            try:
+                self.thumbnail_done.emit(media_id, path)
+            except RuntimeError:
+                pass
+            finally:
+                worker.signals.finished.disconnect(on_finished)
 
+        worker.signals.finished.connect(on_finished)
         self.thread_pool.start(worker)
 
     # ========================================================
@@ -261,6 +267,19 @@ class JobManager(QObject):
 
     def stop(self):
         self._running = False
-        self.ai_queue.put(None)
+        try:
+            self.ai_queue.put_nowait(None)
+        except Exception:
+            pass
         if self.ai_thread.is_alive():
             self.ai_thread.join(timeout=2)
+
+        try:
+            self.ai_queue.put_nowait(None)
+        except Exception:
+            pass
+
+        try:
+            self.ai_queue.join()
+        except Exception:
+            pass

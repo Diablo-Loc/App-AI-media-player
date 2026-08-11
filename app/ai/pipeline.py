@@ -14,21 +14,24 @@ os.environ["HF_HUB_OFFLINE"] = "1"
 # 🔥 FIX NVIDIA DLL (LAZY: gọi khi cần)
 # ================================================================
 def fix_nvidia_dlls():
-    for path in sys.path:
-        if "site-packages" in path:
-            nvidia_path = os.path.join(path, "nvidia")
-            if os.path.exists(nvidia_path):
-                bins = [
-                    os.path.join(nvidia_path, "cublas", "bin"),
-                    os.path.join(nvidia_path, "cudnn", "bin"),
-                ]
-                for b in bins:
-                    if os.path.exists(b):
-                        try:
-                            os.add_dll_directory(b)
-                        except Exception:
-                            pass
-                        os.environ["PATH"] = b + os.pathsep + os.environ.get("PATH", "")
+    current_file_path = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file_path)
+    app_root = os.path.dirname(os.path.dirname(current_dir))
+    portable_libs = os.path.join(app_root, "app_resources", "libs")
+    
+    # Kích hoạt ghim thư mục DLL hệ thống cho Windows
+    if os.path.exists(portable_libs):
+        paths_to_check = [
+            os.path.join(portable_libs, "ctranslate2"),
+            os.path.join(portable_libs, "torch", "lib")
+        ]
+        for p in paths_to_check:
+            if os.path.exists(p):
+                try:
+                    os.add_dll_directory(p)
+                except Exception:
+                    pass
+                os.environ["PATH"] = p + os.pathsep + os.environ.get("PATH", "")
 
 # ================================================================
 # LIGHTWEIGHT IMPORTS (chỉ bản nhẹ)
@@ -44,7 +47,7 @@ from subtitle.storage import save_subtitles
 from subtitle.mode import SubtitleMode
 from subtitle.config import SubtitleConfig
 from pipeline.utils import TempFileManager,is_connected
-
+from pipeline.lyric_corrector import correct_raw_segments_online
 # ================================================================
 # 🔹 HELPERS
 # ================================================================
@@ -115,6 +118,12 @@ def run_ai_pipeline(
     output_dir.mkdir(parents=True, exist_ok=True)
     song_title_raw = input_path.stem
     
+    current_file_path = os.path.abspath(__file__)
+    current_dir = os.path.dirname(current_file_path)
+    app_root = os.path.dirname(os.path.dirname(current_dir))
+    local_model_path = os.path.join(app_root, "app_resources", "whisper_models", saved_model)
+    fallback_model_path = os.path.join(app_root, "app_resources", "whisper_models", "medium")
+    
     temp_wav_path = None
     try:
         # ============================================================
@@ -133,24 +142,57 @@ def run_ai_pipeline(
             raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
         time.sleep(0.5)
         # ============================================================
-        # 2️⃣ LOAD WHISPER MODEL
+        # 2️⃣ LOAD WHISPER MODEL (ĐÃ THÁO XÍCH MẠNG KHI FALLBACK CPU)
         # ============================================================
         _report(progress_cb, 15, f"🧠 Nạp Whisper ({saved_model})")
         _check_cancel(cancel_cb)
 
         model = None
         try:
-            actual_device = "cuda" if saved_device == "cuda" and torch.cuda.is_available() else "cpu"
+            has_cuda = False
+            try: has_cuda = torch.cuda.is_available()
+            except AttributeError: has_cuda = False
+                
+            actual_device = "cuda" if saved_device == "cuda" and has_cuda else "cpu"
             compute_type = "float16" if actual_device == "cuda" else "int8"
+            
             if device_policy == "cpu":
                 raise RuntimeError("Force CPU")
-            print(f"⚡ Chạy Whisper {saved_model} trên {actual_device}")
-            model = WhisperModel(saved_model, device=actual_device, compute_type=compute_type)
+
+            # Trường hợp 1: Có file offline local -> Khóa mạng, chạy offline hoàn toàn
+            if os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "model.bin")):
+                print(f"⚡ Đang chạy Model từ nguồn Local tuyệt đối: {local_model_path}")
+                model = WhisperModel(
+                    local_model_path, 
+                    device=actual_device, 
+                    compute_type=compute_type,
+                    local_files_only=True
+                )
+            else:
+                # Trường hợp 2: Local trống -> Mở xích mạng tạm thời để tải tự động hoặc đọc cache hệ thống
+                print(f"🌐 Sẵn sàng đồng bộ trực tuyến cho model: {saved_model}")
+                os.environ["HF_HUB_OFFLINE"] = "0" # Mở khóa mạng
+                os.environ["TRANSFORMERS_OFFLINE"] = "0"
+                
+                model = WhisperModel(
+                    saved_model, 
+                    device=actual_device, 
+                    compute_type=compute_type,
+                    local_files_only=False
+                )
 
         except Exception as e:
-            print(f"⚠️ Load model lỗi, Fallback về Medium CPU: {e}")
-            model = WhisperModel("medium", device="cpu", compute_type="int8")
-
+            print(f"⚠️ Luồng chính lỗi, kích hoạt Fallback CPU cứu vãn: {e}")
+            
+            # Mở khóa mạng tối đa để chế độ CPU có thể tự kết nối tải file cứu app
+            os.environ["HF_HUB_OFFLINE"] = "0"
+            os.environ["TRANSFORMERS_OFFLINE"] = "0"
+            
+            if os.path.exists(fallback_model_path) and os.path.exists(os.path.join(fallback_model_path, "model.bin")):
+                model = WhisperModel(fallback_model_path, device="cpu", compute_type="int8", local_files_only=True)
+            else:
+                print("📡 Đang tải tự động model 'medium' từ Hugging Face về máy qua CPU...")
+                model = WhisperModel("medium", device="cpu", compute_type="int8", local_files_only=False)
         # ============================================================
         # 3️⃣ TRANSCRIBE
         # ============================================================
@@ -198,7 +240,7 @@ def run_ai_pipeline(
         # Dọn dẹp Model
         del model
         gc.collect()
-        if torch.cuda.is_available():
+        if hasattr(torch, "cuda") and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         _check_cancel(cancel_cb)
@@ -234,7 +276,7 @@ def run_ai_pipeline(
 
         if not raw_segments:
             raise RuntimeError("⚠️ Không tìm thấy lời thoại nào.")
-        
+                        
         # ============================================================
         # 5️⃣ REFINE SEGMENTS & EXPORT RAW
         # ============================================================
@@ -319,7 +361,7 @@ def run_ai_pipeline(
         # Giải phóng bộ nhớ
         clear_translator() 
         gc.collect()
-        if torch.cuda.is_available():
+        if hasattr(torch, "cuda") and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
         # ============================================================

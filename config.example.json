@@ -1,0 +1,9 @@
+{
+  "description": "Copy file này thành config.json và điền các giá trị của bạn",
+  "api_key": "sk-...", 
+  "provider": "OpenAI (GPT-4o)",
+  "genius_key": "xxxxxxxxxxx",
+  "use_genius": "Tắt (Nhanh)",
+  "version_url": "https://raw.githubusercontent.com/Diablo-Loc/App-AI-media-player/main/version.json",
+  "update_url": "https://example.com/releases/latest.zip"
+}

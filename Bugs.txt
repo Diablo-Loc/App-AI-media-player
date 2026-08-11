@@ -1,0 +1,9 @@
+1. khi lướt grid bên for you thì bị khựng khung hình video khi cái grid load. fix
+2. khi thoát ra ngoài thì quay lại( ko phải mini_player) . fix
+3. chữ trong grid playlist của for you hơi nhỏ(titile với tác giả)
+4. bị flicking, nhấp nháy sub
+5. ko sài dc chế dộ minimum. fix
+6. bij lechj khung nhỏ chỉ khi chuyển bài bên libary
+7. khi màn hình tắt thì ko chạy trong nền 
+8. looi khi o larrge or full screen thi chuyen bai khung video lech(video ko khớp voi cua so)
+9. !!!! Lỗi search .. đã fix

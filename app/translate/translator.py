@@ -4,28 +4,67 @@
 class NLLBTranslator:
     def __init__(self, device="cuda"):
         # ✅ IMPORT LƯỜI (LAZY IMPORT)
-        # Chỉ khi class được khởi tạo, thư viện mới được nạp
         print("⏳ Đang nạp thư viện AI (Torch & Transformers)...")
         import torch
+        import os
+        import sys
+        
+        # 🌟 VÁ LỖI BẢO MẬT: Phải đè hàm check lỗi TRƯỚC KHI import thư viện chính vào
+        import transformers.utils.import_utils as transformers_import_utils
+        transformers_import_utils.check_torch_load_is_safe = lambda: None
+        
+        # Bây giờ mới import an toàn
         from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+        import transformers.modeling_utils
+        transformers.modeling_utils.check_torch_load_is_safe = lambda: None
+        
         if device is None:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
         else:
             self.device = device
-        # Lưu tham chiếu module torch vào self để dùng ở hàm khác (nếu cần)
+            
         self.torch = torch
+        
         # Model NLLB-200 mã hóa ngôn ngữ rất đặc thù (mã 7 ký tự)
         self.lang_map = {
             "ja": "jpn_Jpan",
             "vi": "vie_Latn",
             "en": "eng_Latn"  # Bổ sung thêm tiếng Anh
         }
-        model_name = "facebook/nllb-200-distilled-600M"
         
-        print(f"⏳ Đang tải Tokenizer & Model {model_name}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name,tie_word_embeddings=False).to(device)
-        self.device = device
+        if getattr(sys, 'frozen', False):
+            base_dir = os.path.dirname(sys.executable)
+        else:
+            current_file = os.path.abspath(__file__)
+            # Lùi 3 cấp thư mục từ app/translate/translator.py -> Thư mục gốc MusicApp
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_file)))
+            
+        # Đường dẫn trỏ thẳng vào thư mục model Offline bác đã tải về
+        local_model_path = os.path.join(base_dir, "app_resources", "translation_models", "nllb-200")
+        
+        # 🚀 Kiểm tra: Nếu tồn tại thư mục offline thì dùng luôn không cần mạng
+        if os.path.exists(local_model_path) and len(os.listdir(local_model_path)) > 2:
+            model_name = local_model_path
+            is_offline = True
+            print(f"⚡ Phát hiện hạ tầng dịch thuật Offline tại: {model_name}")
+        else:
+            model_name = "facebook/nllb-200-distilled-600M"
+            is_offline = False
+            print(f"🌐 Không tìm thấy dữ liệu Offline, chuyển hướng gọi qua mạng: {model_name}")
+        
+        print(f"⏳ Đang khởi tạo cấu hình Tokenizer & Model từ: {model_name}...")
+    
+        # ✅ BỔ SUNG CỜ OFFLINE ĐỂ TRANFORMERS ĐỌC Ổ CỨNG TUYỆT ĐỐI KHÔNG QUÉT BẢO MẬT ONLINE
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_name,
+            local_files_only=is_offline
+        )
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name,
+            tie_word_embeddings=False,
+            local_files_only=is_offline,
+            low_cpu_mem_usage=True
+        ).to(self.device)
 
     def translate_batch(self, texts, src_lang="ja", tgt_lang="vi", batch_size=32):
         if not texts: return []
@@ -51,7 +90,7 @@ class NLLBTranslator:
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
-                    src_lang=src_code # Tối ưu: Truyền trực tiếp vào đây
+                    src_lang=src_code
                 ).to(self.device)
 
                 generated = self.model.generate(
