@@ -1,5 +1,33 @@
 # Tài liệu hiện hành sau khi khôi phục
 
+- [Tối ưu đã triển khai: batch thumbnail, hai decoder và grid Library theo viewport; số đo và bảo toàn dữ liệu](RESOURCE_PERFORMANCE_FIX.md).
+
+- [Audit CPU/RAM/I/O toàn app: cache thumbnail, grid Library, decoder và lộ trình giữ nguyên chức năng](APP_PERFORMANCE_REVIEW.md).
+
+- [Sửa lyric nhẹ theo ưu tiên hiệu năng: credit/CPU, dữ liệu cũ và những hướng nặng đã bỏ](LYRIC_ACCURACY_LIGHTWEIGHT.md).
+
+- [Rà soát Whisper/lyric: giới hạn accuracy, credit filter và phase đối chứng đề xuất](ASR_ACCURACY_REVIEW.md).
+
+- [Typography động kiểu edit: 8 chuyển cảnh mạnh, preview, cache/DPR và bảo toàn luồng cũ](SUBTITLE_KINETIC.md).
+
+- [Ẩn chữ sau phi tiêu/vệt quét: cách bật, bảo toàn dữ liệu và kiểm tra pixel/DPI](SUBTITLE_SWEEP.md).
+
+- [Phi tiêu, sao lấp lánh và 9 bộ mẫu phụ đề: preview, Unicode, giới hạn hạt và kiểm chứng](SUBTITLE_PARTICLES.md).
+
+- [Hiệu ứng phụ đề tùy chọn, cách dùng, hiệu năng và bảo toàn timing/dữ liệu](SUBTITLE_EFFECTS.md).
+
+- [Sửa import direct-entry, quét toàn cây và kiểm tra process cô lập](RUNTIME_IMPORT_FIX.md).
+
+- [Sửa tải giữ audio nguồn: codec/fallback/container, preset cũ và kiểm chứng](DOWNLOAD_QUALITY_FIX.md).
+
+- [Rà soát chất lượng tải YouTube: giữ nguồn, chuyển mã và lỗi selector cần sửa](DOWNLOAD_QUALITY_REVIEW.md).
+
+- [Nhớ âm lượng, Cài đặt phần trăm và build EXE không xóa bản cũ](VOLUME_AND_BUILD.md).
+
+- [Thông tin file đúng, đọc metadata nền, cache/cancel/shutdown và bảo toàn dữ liệu cũ](MEDIA_INFO_FIX.md).
+
+- [Rà soát toàn app sau chốt audio: kiểm chứng hiện hành và lỗi metadata/popup còn sót](FINAL_FLOW_REVIEW.md).
+
 - [Dễ nghe cho loa/tai nghe và commit chốt phần âm thanh, giữ preset/dữ liệu cũ](AUDIO_EASY_LISTENING.md).
 
 - [Chất âm Ấm và Tai nghe: EQ nhẹ/crossfeed tùy chọn, giữ âm gốc khi tắt](AUDIO_LISTENING_STYLES.md).

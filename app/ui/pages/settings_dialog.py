@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QVBoxLayout, QFormLayout, QComboBox,
 from PySide6.QtCore import Qt, Signal # Thêm Signal ở đây
 from ..icons import button_icon, INK
 from ..design_system import FORM_STYLE
+from download_core.download_options import ORIGINAL, QUALITIES, quality_note
 
 class SettingMenu(QFrame):
     # Tạo tín hiệu để báo ra ngoài khi lưu xong
@@ -12,7 +13,7 @@ class SettingMenu(QFrame):
         super().__init__(parent)
         # Check kỹ: full_settings phải là dict chứa cả ['appearance'] và ['download']
         self.settings = full_settings
-        self.all_qualities = ["Extreme (320k)", "High (Opus)", "Standard (M4A-ACC)", "Low (128k)"]
+        self.all_qualities = list(QUALITIES)
         self.init_ui()
         self.hide()
 
@@ -52,7 +53,7 @@ class SettingMenu(QFrame):
         self.on_format_changed(self.format_combo.currentText())
         
         # Ép lại lựa chọn chất lượng đã lưu trong file JSON
-        saved_quality = dl_data.get("quality", "Extreme (320k)")
+        saved_quality = dl_data.get("quality", ORIGINAL)
         if self.quality_combo.findText(saved_quality) != -1:
             self.quality_combo.setCurrentText(saved_quality)
             
@@ -63,10 +64,12 @@ class SettingMenu(QFrame):
         
         layout.addLayout(form)
 
-        self.label_note = QLabel("Lưu ý: Chất lượng 'Standard (M4A-ACC)' sẽ giữ nguyên chất âm gốc-ổn định nhất cho MP4")
+        self.label_note = QLabel()
         self.label_note.setWordWrap(True)
         self.label_note.setStyleSheet("font-size: 11px; color: #888888; font-style: italic;")
         layout.addWidget(self.label_note)
+        self.quality_combo.currentTextChanged.connect(self.update_quality_note)
+        self.update_quality_note()
         # 4. Checkbox (Khóa cứng luôn Bật)
         self.auto_update_cb = QCheckBox("Tự động cập nhật bộ máy (Luôn bật)")
         self.auto_update_cb.setChecked(True)       # Ép luôn tích xanh
@@ -103,13 +106,20 @@ class SettingMenu(QFrame):
 
         if selected_format == "Video MKV":
             # Nếu là MKV -> Chỉ cho phép Opus
-            self.quality_combo.addItems(["High (Opus)"])
+            self.quality_combo.addItems([ORIGINAL, "High (Opus)"])
         else:
             # Nếu là MP4, MP3 -> Thêm full 4 tùy chọn
             self.quality_combo.addItems(self.all_qualities)
 
         if self.quality_combo.findText(current_quality) != -1:
             self.quality_combo.setCurrentText(current_quality)
+
+        self.update_quality_note()
+
+    def update_quality_note(self, *_):
+        if hasattr(self, "label_note"):
+            self.label_note.setText(quality_note(self.format_combo.currentText(),
+                                                 self.quality_combo.currentText()))
             
     def save_settings(self):
         try:

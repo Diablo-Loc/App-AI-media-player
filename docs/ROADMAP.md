@@ -1,5 +1,33 @@
 # Roadmap sau khi khôi phục app gốc
 
+Tối ưu tài nguyên 05/10/2026: **P1/P2/P3 đã triển khai và đối chứng**: batch thumbnail 20 path/2 giây + flush cuối, hai decoder visible, Library grid tái sử dụng card quanh viewport. Full queue/search cũ, For You/sub/audio giữ nguyên; 821 data hashes khớp. Đã đo workload before/after và chạy regression/DPI; native FPS/GPU/EXE riêng. Chưa mở P4 cache budget hoặc editor/sub optimization. Xem [RESOURCE_PERFORMANCE_FIX.md](RESOURCE_PERFORMANCE_FIX.md); audit ngay dưới là mốc trước sửa.
+
+Audit hiệu năng 05/10/2026: **đã quét/đo, chưa sửa production**. 122 Python/21.795 dòng/1.018 hàm và source giữ nguyên; workload cô lập xác nhận cache thumbnail ghi toàn DB mỗi ảnh, Library giữ mọi card và decoder Library dùng giới hạn mặc định 20 trên máy đo. Ưu tiên batch cache → bounded decoder → virtualized Library, giữ mọi ID/order/UI/playback/sub/audio. For You 10.000 metadata chỉ realized 11 hàng; không áp sửa grid vào logic search đã chốt. Hash đầu 819/819 khớp; kiểm tra cuối ghi riêng cache/index/file mới phát sinh trong phiên, 49 file phụ đề/output/video đã tồn tại vẫn khớp. Native CPU/GPU/FPS/EXE cần đo riêng. Xem [APP_PERFORMANCE_REVIEW.md](APP_PERFORMANCE_REVIEW.md).
+
+Lyric nhẹ 04/10/2026: hoàn thành triển khai policy credit và CPU options; các kiểm chứng cuối ghi ở [LYRIC_ACCURACY_LIGHTWEIGHT.md](LYRIC_ACCURACY_LIGHTWEIGHT.md). User hoãn nhận dạng lại, phục hồi câu lặp thiếu ở model và alignment/vocal separation. Không tự kéo đuôi ngân hoặc thay phụ đề đã lưu; tính năng khác cần phạm vi riêng.
+
+Audit Whisper 04/10/2026: hoàn tất kiểm tra read-only, chưa mở phase sửa accuracy. Ưu tiên tiếp theo là credit filter có thể xóa lời thật, đối chứng lyrics/timing, rồi mới retry confidence/ngôn ngữ/CPU options. Không tăng model/beam hoặc đổi phụ đề cũ một cách mặc định. Xem [ASR_ACCURACY_REVIEW.md](ASR_ACCURACY_REVIEW.md).
+
+Typography 04/10/2026: đã triển khai 8 bộ mẫu chuyển cảnh mạnh (mưa chữ/domino/bung/xoáy/lật/sóng/máy chữ/nhịp), lực/chia cụm và cache bounded. Giữ cơ chế sub/video/timing trước; entry gốc được reuse, không thêm engine/worker hoặc dependency. Nghiệm thu native/EXE riêng. Xem [SUBTITLE_KINETIC.md](SUBTITLE_KINETIC.md).
+
+Vệt quét 04/10/2026: triển khai ẩn chữ sau emitter và tan dần từ hiện tại, checkbox riêng và 4 bộ mẫu chọn mới bật sẵn. Câu mới/tua/OFF phục hồi hình vẽ theo media time; không đổi cue hoặc video source. Native/EXE vẫn riêng. Xem [SUBTITLE_SWEEP.md](SUBTITLE_SWEEP.md).
+
+Hiệu ứng hạt theo câu 04/10/2026: hoàn thành 9 style/9 bộ mẫu/3 entry mới trên renderer hiện có; giới hạn tài nguyên và giữ OFF/data/timing. 357 pass +11 historical skip, 48 DPI/27 checkout gates và 814 hashes giữ nguyên. Video Qt thật kiểm tra clock/seek/pause/rate; native màn hình/GPU/EXE cần nghiệm thu riêng. Không thêm word alignment hay ASR trong phase này. Xem [SUBTITLE_PARTICLES.md](SUBTITLE_PARTICLES.md).
+
+Hiệu ứng sub 04/10/2026: đã triển khai nhóm OFF mặc định, chuyển động/màu/mờ/ánh sáng kết hợp, preview và scroll có giới hạn màn hình. Bảo toàn renderer OFF/cues/timing/data; native playback/DPI nhiều màn hình/EXE vẫn nghiệm thu riêng. Xem [SUBTITLE_EFFECTS.md](SUBTITLE_EFFECTS.md).
+
+Nghiệm thu tự động: 343 pass +11 skip lịch sử; 44 DPI/26 checkout gates và 814 hashes giữ nguyên. Không còn việc triển khai trong phase này; nghiệm thu app/EXE thật vẫn riêng.
+
+Import 04/10/2026: sửa prefix gây lỗi direct entry và resource-cache lazy; audit 117 Python/215 local references, child import checks không leak repo root. 325 pass +11 skip, 24 checkout gates và 42 data hashes đạt. Helper/test thủ công legacy được ghi rõ; native Qt runner từng bị dừng, rerun đạt, nguyên nhân chưa xác định; GUI/EXE riêng. Không architectural refactor/data migration. Xem [RUNTIME_IMPORT_FIX.md](RUNTIME_IMPORT_FIX.md).
+
+Downloader 04/10/2026: **hoàn thành phase giữ audio nguồn**; legacy MP4 Extreme/High sửa chuyển mã, selector/container/giới hạn rõ ràng; MP3/Low tùy chọn còn giữ. 321 pass +11 skip, 20 DPI, 23 checkout gates và 42 protected hashes không đổi. Live YouTube/JS/accounts/EXE và đồng bộ title engine còn riêng. Xem [DOWNLOAD_QUALITY_FIX.md](DOWNLOAD_QUALITY_FIX.md).
+
+Âm lượng/build 04/10/2026: hoàn thành lưu/khôi phục 50%/mức cuối và Cài đặt đồng bộ. Chốt preset hiện có, không thêm Moondrop. Build script không xóa bản cũ, resource/paths đã kiểm tra; cần cài tool đóng gói rồi build/smoke EXE thật. 11 focused +22 source gates, không chạy full suite theo yêu cầu. Xem [VOLUME_AND_BUILD.md](VOLUME_AND_BUILD.md).
+
+Metadata 04/10/2026: **hoàn thành R1/R2 theo phạm vi**, source information thật và đọc nền/cancel/cache/shutdown. Không thêm DSP, migration hoặc architectural refactor; sau regression có thể chuyển tính năng mới. Hook Qt và batch thumbnail/library grid vẫn là các phase riêng khi được yêu cầu. Xem [MEDIA_INFO_FIX.md](MEDIA_INFO_FIX.md).
+
+Audit sau chốt audio 04/10/2026: 114 Python sources compile; 284 pass +11 skip ở cả DPI thường/200%, 19 checkout gates và 31 saved hashes đạt. Xác nhận popup Codec hiển thị thông số cố định sai và description ffprobe đồng bộ GUI; nên sửa chung phase metadata nền trước tính năng lớn. Hook startup vẫn trong phạm vi loại trừ trước; batch thumbnail/library virtualization là tùy chọn cần profile. Chỉ audit, chưa sửa production/commit thêm. Xem [FINAL_FLOW_REVIEW.md](FINAL_FLOW_REVIEW.md).
+
 Dễ nghe/commit 04/10/2026: **đã thêm hai preset loa/tai nghe riêng**; bass shelf nhẹ, preamp, Meier stereo tùy chọn và post-chain peak/fixed gain hiện có. Năm tone cũ/OFF/preferences giữ nguyên. 284 pass +11 historical skip, 114 DPI tests. Chốt audio theo phạm vi; tính năng tiếp theo cần yêu cầu riêng. EQ theo mẫu thiết bị, chỉnh tay 5 dải, denoise và A/B tự động vẫn là đề xuất. Xem [AUDIO_EASY_LISTENING.md](AUDIO_EASY_LISTENING.md).
 
 Chất âm 04/10/2026: **đã thêm hai style tùy chọn Ấm/Tai nghe**, cut EQ và crossfeed nhẹ bằng FFmpeg có sẵn, không sửa preset/file gốc hoặc thêm engine/dependency. 277 pass +11 historical skip, 107 DPI tests; cần nghe A/B trên thiết bị user để chọn preset phù hợp. EQ 5 dải chỉnh tay/denoise/A-B tự động vẫn chưa làm; không tự bật lọc nhiễu hay tăng chất âm bằng AI toàn thư viện. Xem [AUDIO_LISTENING_STYLES.md](AUDIO_LISTENING_STYLES.md).
@@ -53,10 +81,10 @@ Baseline: 87 file Python / 16.517 dòng, Git `4148c13`. Xem [đánh giá từng 
 | Bước | Công việc | Cổng kiểm chứng | Trạng thái |
 | --- | --- | --- | --- |
 | 0 | Snapshot, audit từng thư mục, probe hợp đồng | AST/compile/hash/diff; app/EXE thực tế làm chuẩn | Audit/probe xong; hiệu năng và chất lượng thực tế chưa đo |
-| 1 | Lazy NLLB sau cache miss | Cùng text/layers/timing/cache; all-hit không load model | Chưa sửa |
-| 2 | Batch ghi cache thumbnail | Cùng ảnh/path/JSON cuối; write count; flush complete/cancel/error/shutdown | Chưa sửa |
+| 1 | Lazy NLLB sau cache miss | Cùng text/layers/timing/cache; all-hit không load model | Đã triển khai ở reliability phase; audit hiện tại xác nhận nhánh to_translate |
+| 2 | Batch ghi cache thumbnail | Cùng ảnh/path/JSON cuối; write count; flush complete/cancel/error/shutdown | Đã triển khai 05/10/2026; workload 50 → 3 saves, JSON cuối exact |
 | 3 | Cache thời gian editor | Cùng precision/row active; seek/overlap/unsorted/edit/undo | Chưa sửa |
-| 4 | Profile scan/grid rồi đổi orchestration nếu cần | Cùng metadata/ID/order; GUI heartbeat; save concurrency/lifecycle | Chưa sửa |
+| 4 | Profile scan/grid rồi đổi orchestration nếu cần | Cùng metadata/ID/order; GUI heartbeat; save concurrency/lifecycle | Scan nền ở reliability; Library virtualized/two decoders 05/10, source/legacy queue/10k bounds đạt; native FPS riêng |
 | 5 | Accuracy/completeness riêng | Reference, coverage/fallback, timestamp boundaries; migration nếu đổi cache context | Đã sửa coverage và timing/chia câu/lặp ở đường tạo mới; human reference/CER/WER, dịch và native/EXE còn chờ |
 | 6 | Tách MainWindow/dialog/AI theo trách nhiệm | API/signals/ownership/modes/EXE tương đương | Chưa sửa |
 | 7 | Kiểm chứng bản xuất | Full checklist media/model/provider/download/native trên runtime hiện hành | Chưa chạy trong audit |
@@ -64,3 +92,10 @@ Baseline: 87 file Python / 16.517 dòng, Git `4148c13`. Xem [đánh giá từng 
 Giữ ASR parameters, prompts, heuristics, model format/workaround, fallback và schema/key/path. Thay đổi các hợp đồng đó cần quality gate riêng, không làm kèm refactor. Tách file không tự chứng minh app nhanh hoặc chính xác hơn.
 
 UI mới đã triển khai riêng theo yêu cầu mới; phần parity thực tế còn chờ ở `UI_REFRESH.md`. Upgrade dependency vẫn hoãn. Kết quả 52 test/benchmark trước thuộc bản đã rollback, không áp cho roadmap hiện tại.
+# Audit downloader (04/10/2026)
+
+Đã rà soát chất lượng audio và kiểm tra offline 12 command +12 tổ hợp selector;
+**chưa sửa luồng tải**. MP4 Standard giữ nguồn AAC; Extreme/High MP4 chuyển mã,
+fallback có thể vượt độ phân giải hoặc thiếu định dạng và command lặp URL.
+Phase tiếp theo cần giữ nguồn, tách lựa chọn chuyển mã, sửa selector/container
+và ownership file tạm. Xem [DOWNLOAD_QUALITY_REVIEW.md](DOWNLOAD_QUALITY_REVIEW.md).

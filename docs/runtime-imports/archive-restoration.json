@@ -1,0 +1,8 @@
+[
+  {
+    "path": "docs\\download-quality\\reviewed\\app\\download_core\\download_worker.py",
+    "prior_hash": "e69a080c7d5ba0abf99b7d73c2d020d730f01fa397382568740aef87effaaaa7",
+    "restored_hash": "c56130604c62cfd40247755a271d4ba5e66ba7720afbd9d5698022b3c36f124c",
+    "method": "replay approved patch against hash-verified original"
+  }
+]

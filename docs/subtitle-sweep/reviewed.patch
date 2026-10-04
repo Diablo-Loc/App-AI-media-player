@@ -1,0 +1,294 @@
+--- before/app/ui/subtitle_effects.py
++++ after/app/ui/subtitle_effects.py
+@@ -21,18 +21,18 @@
+ )
+ DEFAULTS = dict(enabled=False, entrance='drop', color='original',
+                 soft_fade=True, glow=False, shimmer=False, duration=320,
+-                trail='none', intensity='gentle')
++                trail='none', intensity='gentle', erase_passed=False)
+ 
+ PRESETS = (
+     ('custom', 'Tùy chỉnh', {}),
+-    ('ninja', 'Phi tiêu ánh bạc', dict(entrance='burst', color='ocean', trail='shuriken', intensity='normal')),
+-    ('stars', 'Bầu trời sao', dict(entrance='burst', color='mint', trail='sparkles', intensity='normal')),
+-    ('comet', 'Sao băng xanh', dict(entrance='rise', color='ocean', trail='comet', intensity='normal')),
++    ('ninja', 'Phi tiêu ánh bạc', dict(entrance='burst', color='ocean', trail='shuriken', intensity='normal', erase_passed=True)),
++    ('stars', 'Bầu trời sao', dict(entrance='burst', color='mint', trail='sparkles', intensity='normal', erase_passed=True)),
++    ('comet', 'Sao băng xanh', dict(entrance='rise', color='ocean', trail='comet', intensity='normal', erase_passed=True)),
+     ('garden', 'Vườn đom đóm', dict(entrance='flutter', color='mint', trail='fireflies', intensity='gentle')),
+     ('sakura', 'Cánh hoa hoàng hôn', dict(entrance='flutter', color='sunset', trail='petals', intensity='normal')),
+     ('winter', 'Tuyết pha lê', dict(entrance='drop', color='ocean', trail='snow', intensity='gentle')),
+     ('bubble', 'Bong bóng mơ màng', dict(entrance='zoom', color='pastel', trail='bubbles', intensity='gentle')),
+-    ('crystal', 'Tinh thể tím', dict(entrance='swing', color='pastel', trail='diamonds', intensity='normal')),
++    ('crystal', 'Tinh thể tím', dict(entrance='swing', color='pastel', trail='diamonds', intensity='normal', erase_passed=True)),
+     ('aurora', 'Cực quang', dict(entrance='rise', color='mint', trail='ribbon', intensity='normal')),
+ )
+ 
+@@ -41,7 +41,7 @@
+     """Validate one new preference subtree without rewriting legacy settings."""
+     value = value if isinstance(value, dict) else {}
+     result = dict(DEFAULTS)
+-    for key in ('enabled', 'soft_fade', 'glow', 'shimmer'):
++    for key in ('enabled', 'soft_fade', 'glow', 'shimmer', 'erase_passed'):
+         if isinstance(value.get(key), bool):
+             result[key] = value[key]
+     for key, choices in (('entrance', ENTRANCES), ('color', COLORS),
+@@ -358,8 +358,28 @@
+                       and self.cue[2]-self.cue[1] >= 160)
+         if decorative and self.cue is not None:
+             self.particles.prepare(max(0, self.cue[2]-self.cue[1]))
+-        regions = self.particles.morph_regions(self.scan_progress, trail,
+-            self.options['intensity']) if decorative else []
++        regions = [(QRegion(rect.toAlignedRect()), alpha) for rect, alpha in
++            self.particles.morph_regions(self.scan_progress, trail,
++            self.options['intensity'])] if decorative else []
++        hidden = QRegion()
++        erase_sweep = decorative and trail != 'none' and self.options['erase_passed']
++        if erase_sweep:
++            if self.scan_progress >= 1.0:
++                # Skip all glyph passes, including DPR-scaled glow outside the
++                # contents rect. The existing widget background/fade stays owned.
++                self.particles.last_draw_count = 0
++                painter.restore()
++                return True
++            hidden, regions = self.particles.sweep_masks(self.scan_progress)
++
++        def draw_shimmer():
++            if self.options['shimmer'] and p < 1.0:
++                x = bounds.left() + (bounds.width() + 60) * p - 30
++                gradient = QLinearGradient(x-24, 0, x+24, 0)
++                gradient.setColorAt(0, QColor(255, 255, 255, 0))
++                gradient.setColorAt(.5, QColor(255, 255, 255, 125))
++                gradient.setColorAt(1, QColor(255, 255, 255, 0))
++                painter.fillPath(path, gradient)
+ 
+         def draw_letters():
+             if sprite is not None:
+@@ -368,30 +388,27 @@
+                 self._draw_static(painter, path, bounds)
+             if self.options['color'] == 'shift':
+                 painter.fillPath(path, self._brush(bounds, QColor(self.label.current_color)))
+-
+-        if regions:
++            if erase_sweep:
++                draw_shimmer()
++
++        if regions or not hidden.isEmpty():
+             painter.save()
+-            visible = QRegion(self.label.rect())
+-            for rect, alpha in regions:
+-                visible = visible.subtracted(QRegion(rect.toAlignedRect()))
++            visible = QRegion(self.label.rect()).subtracted(hidden)
++            for mask, alpha in regions:
++                visible = visible.subtracted(mask)
+             painter.setClipRegion(visible, Qt.ClipOperation.IntersectClip)
+             draw_letters()
+             painter.restore()
+-            for rect, alpha in regions:
++            for mask, alpha in regions:
+                 painter.save()
+-                painter.setClipRect(rect.toAlignedRect(), Qt.ClipOperation.IntersectClip)
++                painter.setClipRegion(mask, Qt.ClipOperation.IntersectClip)
+                 painter.setOpacity(painter.opacity()*alpha)
+                 draw_letters()
+                 painter.restore()
+         else:
+             draw_letters()
+-        if self.options['shimmer'] and p < 1.0:
+-            x = bounds.left() + (bounds.width() + 60) * p - 30
+-            gradient = QLinearGradient(x-24, 0, x+24, 0)
+-            gradient.setColorAt(0, QColor(255, 255, 255, 0))
+-            gradient.setColorAt(.5, QColor(255, 255, 255, 125))
+-            gradient.setColorAt(1, QColor(255, 255, 255, 0))
+-            painter.fillPath(path, gradient)
++        if not erase_sweep:
++            draw_shimmer()
+         if decorative:
+             self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
+                                  p, burst=mode == 'burst')
+--- before/app/ui/subtitle_effects_panel.py
++++ after/app/ui/subtitle_effects_panel.py
+@@ -43,11 +43,15 @@
+                              'Câu dày tự gom vùng; dấu, emoji và chữ gốc vẫn giữ nguyên.')
+         self.intensity = self._choice(layout, 'Mật độ', INTENSITIES)
+         self.intensity.setToolTip('Nhẹ 8 / Vừa 16 / Rực rỡ 24 hạt tối đa, không tăng theo độ dài câu.')
++        self.erase_passed = QCheckBox('Ẩn chữ sau vệt quét')
++        self.erase_passed.setToolTip('Từ đã quét sẽ ẩn tới hết câu; từ đang quét tan dần.\n'
++                                    'Sang câu mới hoặc tua lại thì chữ hiện lại theo vị trí phát.\n'
++                                    'Chỉ tác động hình vẽ, không sửa nội dung hoặc timing sub.')
+         self.soft_fade = QCheckBox('Mờ dần khi vào câu')
+         self.soft_fade.setToolTip('Mờ nhẹ phần chữ khi vào câu; Fade gốc vẫn điều khiển hiện/ẩn khung.')
+         self.glow = QCheckBox('Ánh sáng viền nhẹ')
+         self.shimmer = QCheckBox('Dải sáng lướt một lần')
+-        for widget in (self.soft_fade, self.glow, self.shimmer):
++        for widget in (self.erase_passed, self.soft_fade, self.glow, self.shimmer):
+             layout.addWidget(widget)
+             widget.toggled.connect(self._edited)
+         self.duration = self._choice(layout, 'Độ dài', ((220, 'Nhanh · 220 ms'),
+@@ -89,12 +93,12 @@
+             color=self.color.currentData(), soft_fade=self.soft_fade.isChecked(),
+             glow=self.glow.isChecked(), shimmer=self.shimmer.isChecked(),
+             duration=self.duration.currentData(), trail=self.trail.currentData(),
+-            intensity=self.intensity.currentData()))
++            intensity=self.intensity.currentData(), erase_passed=self.erase_passed.isChecked()))
+ 
+     def sync_options(self, value):
+         options = normalize_options(value)
+         widgets = (self, self.presets, self.entrance, self.color, self.duration, self.trail, self.intensity,
+-                   self.soft_fade, self.glow, self.shimmer)
++                   self.soft_fade, self.glow, self.shimmer, self.erase_passed)
+         blockers = [QSignalBlocker(widget) for widget in widgets]
+         self.setChecked(options['enabled'])
+         for combo, key in ((self.entrance, 'entrance'), (self.color, 'color'),
+@@ -105,7 +109,8 @@
+             self.duration.addItem(f"Tùy chỉnh · {options['duration']} ms", options['duration'])
+             index = self.duration.findData(options['duration'])
+         self.duration.setCurrentIndex(index)
+-        for widget, key in ((self.soft_fade, 'soft_fade'), (self.glow, 'glow'), (self.shimmer, 'shimmer')):
++        for widget, key in ((self.soft_fade, 'soft_fade'), (self.glow, 'glow'),
++                            (self.shimmer, 'shimmer'), (self.erase_passed, 'erase_passed')):
+             widget.setChecked(options[key])
+         del blockers
+         self._sync_preset()
+@@ -120,7 +125,8 @@
+         options = self.options()
+         selected = 0
+         for index, (name, title, settings) in enumerate(PRESETS):
+-            if settings and all(options[key] == value for key, value in settings.items()):
++            if (settings and all(options[key] == value for key, value in settings.items())
++                    and options['erase_passed'] == settings.get('erase_passed', False)):
+                 selected = index
+                 break
+         blocker = QSignalBlocker(self.presets)
+@@ -130,6 +136,7 @@
+         if index == 0:
+             return
+         options = self.options()
++        options['erase_passed'] = False
+         options.update(PRESETS[index][2])
+         options.update(soft_fade=True, shimmer=False, glow=False)
+         self.sync_options(options)
+--- before/app/ui/subtitle_particles.py
++++ after/app/ui/subtitle_particles.py
+@@ -3,7 +3,7 @@
+ from typing import NamedTuple
+ 
+ from PySide6.QtCore import QTextBoundaryFinder, QRectF, Qt
+-from PySide6.QtGui import QColor, QPainterPath, QPen, QTextLayout, QTextOption
++from PySide6.QtGui import QColor, QPainterPath, QPen, QTextLayout, QTextOption, QRegion
+ 
+ TRAILS = (
+     ('none', 'Không'), ('sparkles', 'Sao lấp lánh theo câu'),
+@@ -128,6 +128,8 @@
+         self.label = label
+         self.key = None
+         self.rows = []
++        self._sweep_cells = []
++        self._sweep_prefix = []
+         self.star = _star(4, .18)
+         self.shuriken = _star(4, .38)
+         self.diamond = _star(4, .62)
+@@ -141,6 +143,8 @@
+     def clear(self):
+         self.key = None
+         self.rows = []
++        self._sweep_cells = []
++        self._sweep_prefix = []
+         self.last_draw_count = 0
+ 
+     def prepare(self, duration_ms):
+@@ -149,6 +153,57 @@
+         if key != self.key:
+             self.key = key
+             self.rows = build_regions(self.label, duration_ms)
++            self._sweep_cells, self._sweep_prefix = [], []
++
++    def _prepare_sweep(self):
++        # Partition the existing text viewport, including outline/shadow space.
++        # Logical region order stays intact for RTL; physical cells never overlap,
++        # so hiding an earlier word cannot redraw or dim a neighbouring cell.
++        self._sweep_cells, self._sweep_prefix = [], []
++        viewport = QRectF(self.label.contentsRect())
++        for row_index, row in enumerate(self.rows):
++            top = viewport.top() if row_index == 0 else (
++                self.rows[row_index-1][0].rect.bottom()+row[0].rect.top()) / 2
++            bottom = viewport.bottom() if row_index == len(self.rows)-1 else (
++                row[0].rect.bottom()+self.rows[row_index+1][0].rect.top()) / 2
++            visual = sorted(range(len(row)), key=lambda i: row[i].rect.center().x())
++            edges = [viewport.left()]
++            edges.extend((row[a].rect.right()+row[b].rect.left())/2
++                         for a, b in zip(visual, visual[1:]))
++            edges.append(viewport.right())
++            # Degenerate bidi/ligature positions still have monotonic cell edges.
++            edges = [min(viewport.right(), max(viewport.left(), edge)) for edge in edges]
++            for i in range(1, len(edges)):
++                edges[i] = max(edges[i], edges[i-1])
++            cells = [QRegion() for _ in row]
++            for position, logical in enumerate(visual):
++                left, right = math.floor(edges[position]), math.floor(edges[position+1])
++                band_top, band_bottom = math.floor(top), math.floor(bottom)
++                cells[logical] = QRegion(left, band_top, max(0, right-left),
++                                        max(0, band_bottom-band_top))
++            prefix = [QRegion()]
++            for cell in cells:
++                prefix.append(prefix[-1].united(cell))
++            self._sweep_cells.append(cells)
++            self._sweep_prefix.append(prefix)
++
++    def sweep_masks(self, progress):
++        """Pure media-time mask: passed words stay hidden until a new cue/seek."""
++        progress = min(1.0, max(0.0, progress))
++        if not self._sweep_cells and self.rows:
++            self._prepare_sweep()
++        if progress >= 1:
++            return QRegion(self.label.contentsRect()), []
++        hidden, active = QRegion(), []
++        for cells, prefix in zip(self._sweep_cells, self._sweep_prefix):
++            position = progress * len(cells)
++            index = min(len(cells)-1, int(position))
++            local = min(1.0, position-index)
++            hidden = hidden.united(prefix[index])
++            # Smoothly dissolve the current word into its emitter; no hard blink.
++            alpha = 1-local*local*(3-2*local)
++            active.append((cells[index], alpha))
++        return hidden, active
+ 
+     def targets(self, progress):
+         result = []
+@@ -174,7 +229,7 @@
+         if (style == 'none' and not burst) or not self.rows:
+             return
+         progress = min(1.0, max(0.0, progress))
+-        # End-of-cue is always complete text without leftover particles.
++        # No particles remain at cue end; the renderer owns optional glyph hiding.
+         envelope = min(1.0, progress*12, (1-progress)*12)
+         if burst and entry_progress < 1:
+             envelope = max(envelope, math.sin(entry_progress*math.pi))
+--- before/tests/subtitle_particles_contracts.py
++++ after/tests/subtitle_particles_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_particle_changes(relative, raw=False):
+-    current = (ROOT / relative).read_bytes()
++    from tests.subtitle_sweep_contracts import before_sweep_changes
++    current = before_sweep_changes(relative, raw=True)
+     manifest = json.loads((ROOT / 'docs/subtitle-particles/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/test_subtitle_particles.py
++++ after/tests/test_subtitle_particles.py
+@@ -303,9 +303,11 @@
+             self.assertEqual(hashlib.sha256(current.replace(b'\r\n', b'\n')).hexdigest(), digest, relative)
+         helpers = json.loads((ROOT/'docs/subtitle-particles/helper-hash.json').read_text())
+         for relative, digest in helpers.items():
+-            self.assertEqual(hashlib.sha256((ROOT/relative).read_bytes()).hexdigest(), digest)
++            from tests.subtitle_sweep_contracts import before_sweep_changes
++            self.assertEqual(hashlib.sha256(before_sweep_changes(relative, raw=True)).hexdigest(), digest)
+         before = ast.parse(before_particle_changes('app/ui/subtitle_effects.py'))
+-        after = ast.parse((ROOT/'app/ui/subtitle_effects.py').read_bytes())
++        from tests.subtitle_sweep_contracts import before_sweep_changes
++        after = ast.parse(before_sweep_changes('app/ui/subtitle_effects.py', raw=True))
+         a, b = functions(before), functions(after)
+         for name in ('install_subtitle_effects', 'SubtitleEffects._brush',
+                      'SubtitleEffects._draw_static', 'SubtitleEffects._static_sprite',

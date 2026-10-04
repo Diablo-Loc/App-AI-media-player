@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt, QPoint, QRect, QPropertyAnimation, QEasingCurve, 
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from subtitle.mode import SubtitleMode 
 from ui.subtitle_presentation import SubtitlePresentationGuard
+from ui.subtitle_effects import SubtitleEffects
 
 class DraggableSubtitle(QLabel):
     def __init__(self, parent=None):
@@ -181,6 +182,11 @@ class DraggableSubtitle(QLabel):
         else:
             path = self._cached_path
 
+        effects = getattr(self, '_subtitle_effects', None)
+        if effects is not None and effects.paint(painter, path):
+            painter.end()
+            return
+
         # 3. Vẽ Bóng (Shadow)
         if getattr(self, 'use_shadow', True):
             alpha = getattr(self, 'shadow_alpha', 160)
@@ -259,6 +265,7 @@ class SubtitleLayer(DraggableSubtitle):
         self._start_times = []
         self.mode = initial_mode
         self._current_ms_cache = -1
+        self._subtitle_effects = SubtitleEffects(self)
         
         # --- CẤU HÌNH CÔNG TẮC FADE IN / OUT ---
         self.use_fade_effect = True
@@ -304,6 +311,7 @@ class SubtitleLayer(DraggableSubtitle):
             self.set_opacity(1.0)
 
     def load_subtitles(self, segments): 
+        self._subtitle_effects.clear()
         self.subtitles = []
         for seg in segments:
             orig_text = seg.get('orig', '') or seg.get('jp', '') or seg.get('text', '')
@@ -407,6 +415,8 @@ class SubtitleLayer(DraggableSubtitle):
             self._smart_hide(instant=False)
             return
 
+        self._subtitle_effects.sync((idx, active_sub['start'], active_sub['end'], new_text), pts_ms)
+
         # Nếu chữ giống hệt đang hiển thị -> Giữ nguyên
         if not self.isHidden() and self.text() == new_text:
             if (self.fade_anim.state() == QAbstractAnimation.State.Running
@@ -457,6 +467,7 @@ class SubtitleLayer(DraggableSubtitle):
 
     def _smart_hide(self, instant=False):
         """Ẩn sub an toàn"""
+        self._subtitle_effects.clear()
         if self.isHidden():
             if instant:
                 self.fade_anim.stop()

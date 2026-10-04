@@ -1,0 +1,155 @@
+{
+  "videos": [
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\A Small Miracle(short).mp4",
+      "sha256": "dc7301664612974578cfbe3f7a40e5769ce68ead5f8fbce866247ce1cbd126f6",
+      "unchanged": true,
+      "submission_ms": 0.505299998621922,
+      "completion_ms": 91.15989999554586,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1080 × 1080",
+        "fps": "25 FPS (trung bình)",
+        "aspect": "1:1",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Brand New Sky.mp4",
+      "sha256": "1e280cf21c8ce1d069d3183ccc23497afcf268fec704f76f8e35458722ec7a99",
+      "unchanged": true,
+      "submission_ms": 0.33569999504834414,
+      "completion_ms": 58.52969999978086,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1080 × 1080",
+        "fps": "25 FPS (trung bình)",
+        "aspect": "1:1",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Empty old City - Looma.mp4",
+      "sha256": "1024a88f7b7840f6ada2fed6ee5306d12705a71af3bbd7a4c1d1ae1552aad9c9",
+      "unchanged": true,
+      "submission_ms": 0.31620000663679093,
+      "completion_ms": 87.3453000021982,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Google VP9",
+        "resolution": "1920 × 1080",
+        "fps": "24 FPS (trung bình)",
+        "aspect": "16:9",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "sha256": "b7d2691624aedefae28623e81dddf928841463837c8316f0674bdf91323529f1",
+      "unchanged": true,
+      "submission_ms": 0.3408999982639216,
+      "completion_ms": 105.19709999789484,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+        "resolution": "1280 × 720",
+        "fps": "29.97 FPS (trung bình)",
+        "aspect": "16:9",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "125.6 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unwavering Startorch.mp4",
+      "sha256": "fe9b96d0af56c20582dcaa3eb765f41494c383a68225b999f4601b9ade344f62",
+      "unchanged": true,
+      "submission_ms": 0.415000002249144,
+      "completion_ms": 66.29019999672892,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1080 × 1080",
+        "fps": "25 FPS (trung bình)",
+        "aspect": "1:1",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "305.4 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "sha256": "44e419faabac247b964870459124e64a8e4215c63f192330dedd9a5ae0df1669",
+      "unchanged": true,
+      "submission_ms": 0.4118999931961298,
+      "completion_ms": 59.92309999419376,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1920 × 1080",
+        "fps": "24 FPS (trung bình)",
+        "aspect": "16:9",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "sha256": "652cb32ec57aa50b76e8965a4dec04b655863a482fa74f939fd07ff52a1f47c8",
+      "unchanged": true,
+      "submission_ms": 0.3364000003784895,
+      "completion_ms": 50.87669999920763,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1920 × 1080",
+        "fps": "24 FPS (trung bình)",
+        "aspect": "16:9",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    },
+    {
+      "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\人生エンドロール.mp4",
+      "sha256": "94dd21600d9dfe32203877a04e9ab45e09e045b9a7f8b8a510706526525c970d",
+      "unchanged": true,
+      "submission_ms": 0.3589000043575652,
+      "completion_ms": 65.3253999989829,
+      "cached_reopen_probe_calls": 0,
+      "fields": {
+        "v_codec": "Alliance for Open Media AV1",
+        "resolution": "1080 × 1080",
+        "fps": "25 FPS (trung bình)",
+        "aspect": "1:1",
+        "a_codec": "AAC (Advanced Audio Coding)",
+        "sample_rate": "44100 Hz",
+        "channels": "2 kênh (stereo)",
+        "bitrate": "128.0 kbps"
+      }
+    }
+  ],
+  "probe_calls": 8,
+  "slow_reader": {
+    "injected_reader_ms": 250,
+    "submission_ms": 0.25850000383798033,
+    "completion_ms": 257.29259999934584,
+    "gui_10ms_ticks": 25
+  }
+}

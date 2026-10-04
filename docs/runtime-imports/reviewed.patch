@@ -1,0 +1,231 @@
+--- before/app/download_core/download_source_app.py
++++ after/app/download_core/download_source_app.py
+@@ -317,7 +317,7 @@
+             self.progress_value_signal.emit(100)
+             _set_resource_ready_flag(True)
+             try:
+-                from app.control.ai_controller import _set_resource_cache_state
++                from control.ai_controller import _set_resource_cache_state
+                 _set_resource_cache_state(True, True)
+             except Exception:
+                 pass
+@@ -328,7 +328,7 @@
+             tb_str = traceback.format_exc()
+             _set_resource_ready_flag(False)
+             try:
+-                from app.control.ai_controller import _set_resource_cache_state
++                from control.ai_controller import _set_resource_cache_state
+                 _set_resource_cache_state(False, False)
+             except Exception:
+                 pass
+@@ -491,7 +491,7 @@
+                 if PORTABLE_LIBS_DIR not in sys.path:
+                     sys.path.insert(0, PORTABLE_LIBS_DIR)
+                 try:
+-                    from app.control.ai_controller import _set_resource_cache_state
++                    from control.ai_controller import _set_resource_cache_state
+                     _set_resource_cache_state(True, True)
+                 except Exception:
+                     pass
+@@ -529,7 +529,7 @@
+             if PORTABLE_LIBS_DIR not in sys.path:
+                 sys.path.insert(0, PORTABLE_LIBS_DIR)
+             try:
+-                from app.control.ai_controller import _set_resource_cache_state
++                from control.ai_controller import _set_resource_cache_state
+                 _set_resource_cache_state(True, True)
+             except Exception:
+                 pass
+@@ -538,7 +538,7 @@
+             self.accept()
+         else:
+             try:
+-                from app.control.ai_controller import _set_resource_cache_state
++                from control.ai_controller import _set_resource_cache_state
+                 _set_resource_cache_state(False, False)
+             except Exception:
+                 pass
+--- before/app/download_core/download_worker.py
++++ after/app/download_core/download_worker.py
+@@ -3,7 +3,7 @@
+ from PySide6.QtCore import QThread, Signal
+ from .yt_dlp import ensure_ytdlp_exists
+ from control.worker_lifecycle import OwnedProcesses
+-from app.download_core.download_options import ORIGINAL, build_download_command, download_options, quality_note
++from download_core.download_options import ORIGINAL, build_download_command, download_options, quality_note
+ 
+ class DownloadWorker(QThread):
+     progress_signal = Signal(int, int)   # Báo cáo số lượng thành công
+@@ -19,7 +19,7 @@
+         self.names = names
+         self.save_path = save_path
+         self.options = options if options else {
+-            "quality": ORIGINAL,
++            "quality": ORIGINAL,
+             "format": "Video MP4", 
+             "resolution": "1080p",
+             "auto_update": True
+--- before/app/downloader.py
++++ after/app/downloader.py
+@@ -1,7 +1,7 @@
+ import os
+ import requests
+ from pathlib import Path
+-from app.paths import models_dir
++from .paths import models_dir
+ 
+ 
+ def download_model_if_needed(model_name, save_dir: str | None = None):
+--- before/app/ui/pages/settings_dialog.py
++++ after/app/ui/pages/settings_dialog.py
+@@ -1,9 +1,9 @@
+ from PySide6.QtWidgets import (QVBoxLayout, QFormLayout, QComboBox, 
+                              QCheckBox, QPushButton, QHBoxLayout, QLabel, QFrame)
+-from PySide6.QtCore import Qt, Signal # Thêm Signal ở đây
+-from ..icons import button_icon, INK
+-from ..design_system import FORM_STYLE
+-from app.download_core.download_options import ORIGINAL, QUALITIES, quality_note
++from PySide6.QtCore import Qt, Signal # Thêm Signal ở đây
++from ..icons import button_icon, INK
++from ..design_system import FORM_STYLE
++from download_core.download_options import ORIGINAL, QUALITIES, quality_note
+ 
+ class SettingMenu(QFrame):
+     # Tạo tín hiệu để báo ra ngoài khi lưu xong
+@@ -13,7 +13,7 @@
+         super().__init__(parent)
+         # Check kỹ: full_settings phải là dict chứa cả ['appearance'] và ['download']
+         self.settings = full_settings
+-        self.all_qualities = list(QUALITIES)
++        self.all_qualities = list(QUALITIES)
+         self.init_ui()
+         self.hide()
+ 
+@@ -21,18 +21,18 @@
+         # Giữ nguyên Style xịn của bác
+ 
+         layout = QVBoxLayout(self)
+-        layout.setContentsMargins(24, 24, 24, 24)
+-        layout.setSpacing(18)
++        layout.setContentsMargins(24, 24, 24, 24)
++        layout.setSpacing(18)
+ 
+         lbl_title = QLabel("CÀI ĐẶT TẢI XUỐNG")
+         lbl_title.setStyleSheet("font-size: 18px; color: white; margin-bottom: 5px;")
+         layout.addWidget(lbl_title, alignment=Qt.AlignmentFlag.AlignCenter)
+ 
+-        form = QFormLayout()
+-        form.setHorizontalSpacing(14)
+-        form.setVerticalSpacing(12)
+-        form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+-        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
++        form = QFormLayout()
++        form.setHorizontalSpacing(14)
++        form.setVerticalSpacing(12)
++        form.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
++        form.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+ 
+         # Truy cập an toàn vào nhánh ['download']
+         dl_data = self.settings.get("download", {})
+@@ -53,7 +53,7 @@
+         self.on_format_changed(self.format_combo.currentText())
+         
+         # Ép lại lựa chọn chất lượng đã lưu trong file JSON
+-        saved_quality = dl_data.get("quality", ORIGINAL)
++        saved_quality = dl_data.get("quality", ORIGINAL)
+         if self.quality_combo.findText(saved_quality) != -1:
+             self.quality_combo.setCurrentText(saved_quality)
+             
+@@ -64,12 +64,12 @@
+         
+         layout.addLayout(form)
+ 
+-        self.label_note = QLabel()
++        self.label_note = QLabel()
+         self.label_note.setWordWrap(True)
+         self.label_note.setStyleSheet("font-size: 11px; color: #888888; font-style: italic;")
+-        layout.addWidget(self.label_note)
+-        self.quality_combo.currentTextChanged.connect(self.update_quality_note)
+-        self.update_quality_note()
++        layout.addWidget(self.label_note)
++        self.quality_combo.currentTextChanged.connect(self.update_quality_note)
++        self.update_quality_note()
+         # 4. Checkbox (Khóa cứng luôn Bật)
+         self.auto_update_cb = QCheckBox("Tự động cập nhật bộ máy (Luôn bật)")
+         self.auto_update_cb.setChecked(True)       # Ép luôn tích xanh
+@@ -91,13 +91,13 @@
+ 
+         btn_layout.addWidget(btn_cancel)
+         btn_layout.addWidget(btn_save)
+-        layout.addLayout(btn_layout)
+-        self.setStyleSheet(FORM_STYLE + "QFrame { background: #151C26; border: 1px solid #405267; border-radius: 12px; } QLabel { border: none; background: transparent; } QCheckBox { background: transparent; } QComboBox { min-height: 36px; padding: 0px 12px; font-size: 13px; } QPushButton { min-height: 22px; }")
+-        for combo in (self.format_combo, self.quality_combo, self.res_combo):
+-            combo.setMinimumHeight(38)
+-        self.setFixedWidth(380)
+-        btn_save.setProperty("role", "primary")
+-        button_icon(btn_save, "save", "Lưu cài đặt tải xuống", color=INK, size=16, icon_only=False)
++        layout.addLayout(btn_layout)
++        self.setStyleSheet(FORM_STYLE + "QFrame { background: #151C26; border: 1px solid #405267; border-radius: 12px; } QLabel { border: none; background: transparent; } QCheckBox { background: transparent; } QComboBox { min-height: 36px; padding: 0px 12px; font-size: 13px; } QPushButton { min-height: 22px; }")
++        for combo in (self.format_combo, self.quality_combo, self.res_combo):
++            combo.setMinimumHeight(38)
++        self.setFixedWidth(380)
++        btn_save.setProperty("role", "primary")
++        button_icon(btn_save, "save", "Lưu cài đặt tải xuống", color=INK, size=16, icon_only=False)
+ 
+     def on_format_changed(self, selected_format):
+         current_quality = self.quality_combo.currentText()
+@@ -106,20 +106,20 @@
+ 
+         if selected_format == "Video MKV":
+             # Nếu là MKV -> Chỉ cho phép Opus
+-            self.quality_combo.addItems([ORIGINAL, "High (Opus)"])
++            self.quality_combo.addItems([ORIGINAL, "High (Opus)"])
+         else:
+             # Nếu là MP4, MP3 -> Thêm full 4 tùy chọn
+             self.quality_combo.addItems(self.all_qualities)
+ 
+-        if self.quality_combo.findText(current_quality) != -1:
+-            self.quality_combo.setCurrentText(current_quality)
+-
+-        self.update_quality_note()
+-
+-    def update_quality_note(self, *_):
+-        if hasattr(self, "label_note"):
+-            self.label_note.setText(quality_note(self.format_combo.currentText(),
+-                                                 self.quality_combo.currentText()))
++        if self.quality_combo.findText(current_quality) != -1:
++            self.quality_combo.setCurrentText(current_quality)
++
++        self.update_quality_note()
++
++    def update_quality_note(self, *_):
++        if hasattr(self, "label_note"):
++            self.label_note.setText(quality_note(self.format_combo.currentText(),
++                                                 self.quality_combo.currentText()))
+             
+     def save_settings(self):
+         try:
+--- before/tests/download_quality_contracts.py
++++ after/tests/download_quality_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_download_changes(relative, raw=False):
+-    current = (ROOT / relative).read_bytes()
++    from tests.runtime_import_contracts import before_import_changes
++    current = before_import_changes(relative, raw=True)
+     manifest = json.loads((ROOT / 'docs/download-quality/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/test_download_quality.py
++++ after/tests/test_download_quality.py
+@@ -301,7 +301,8 @@
+         normalized = json.loads((ROOT/'docs/download-quality/app-normalized-before.json').read_text(encoding='utf-8-sig'))
+         for item in baseline:
+             if item['path'] not in allowed:
+-                current = (ROOT/item['path']).read_bytes()
++                from tests.runtime_import_contracts import before_import_changes
++                current = before_import_changes(item['path'], raw=True)
+                 if item['path'].endswith('.py'):
+                     self.assertEqual(hashlib.sha256(current.replace(b'\r\n',b'\n')).hexdigest(), normalized[item['path']], item['path'])
+                 else:

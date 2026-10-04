@@ -1,0 +1,35 @@
+test_elapsed_checkpoint_and_final_flush (tests.test_resource_performance.CacheBatchTests.test_elapsed_checkpoint_and_final_flush) ... ok
+test_fifty_changes_three_saves_and_identical_json (tests.test_resource_performance.CacheBatchTests.test_fifty_changes_three_saves_and_identical_json) ... ok
+test_missing_and_unchanged_ids_do_not_make_cache_dirty (tests.test_resource_performance.CacheBatchTests.test_missing_and_unchanged_ids_do_not_make_cache_dirty) ... ok
+test_old_synchronous_update_still_saves_immediately (tests.test_resource_performance.CacheBatchTests.test_old_synchronous_update_still_saves_immediately) ... ok
+test_parallel_snapshot_save_cannot_drop_staged_records (tests.test_resource_performance.CacheBatchTests.test_parallel_snapshot_save_cannot_drop_staged_records) ... ok
+test_worker_finally_flushes_on_error_and_cancel (tests.test_resource_performance.CacheBatchTests.test_worker_finally_flushes_on_error_and_cancel) ... ok
+test_write_failure_keeps_dirty_then_retry_preserves_old_cache (tests.test_resource_performance.CacheBatchTests.test_write_failure_keeps_dirty_then_retry_preserves_old_cache) ... ❌ Save library failed: fixture disk error
+ok
+test_failed_decode_does_not_retry_on_each_paint_and_update_recovers (tests.test_resource_performance.LibraryDecoderTests.test_failed_decode_does_not_retry_on_each_paint_and_update_recovers) ... ok
+test_only_two_decoders_and_shutdown_reaps_cancelled_jobs (tests.test_resource_performance.LibraryDecoderTests.test_only_two_decoders_and_shutdown_reaps_cancelled_jobs) ... ok
+test_qimage_worker_qpixmap_gui_and_fractional_dpr_context (tests.test_resource_performance.LibraryDecoderTests.test_qimage_worker_qpixmap_gui_and_fractional_dpr_context) ... ok
+test_recycle_rejects_stale_image_and_cancel_is_nonblocking (tests.test_resource_performance.LibraryDecoderTests.test_recycle_rejects_stale_image_and_cancel_is_nonblocking) ... ok
+test_resize_invalidates_old_image_before_queued_result (tests.test_resource_performance.LibraryDecoderTests.test_resize_invalidates_old_image_before_queued_result) ... ok
+test_hidden_resize_reload_clear_do_not_leave_old_cards (tests.test_resource_performance.LibraryGridTests.test_hidden_resize_reload_clear_do_not_leave_old_cards) ... ok
+test_main_window_queue_uses_all_metadata_after_search (tests.test_resource_performance.LibraryGridTests.test_main_window_queue_uses_all_metadata_after_search) ... ok
+test_queue_order_matches_legacy_grid_with_and_without_search (tests.test_resource_performance.LibraryGridTests.test_queue_order_matches_legacy_grid_with_and_without_search) ... ok
+test_scroll_rebinds_click_metadata_and_preserves_queue (tests.test_resource_performance.LibraryGridTests.test_scroll_rebinds_click_metadata_and_preserves_queue) ... ok
+test_search_latest_query_empty_clear_and_full_queue (tests.test_resource_performance.LibraryGridTests.test_search_latest_query_empty_clear_and_full_queue) ... ok
+test_ten_thousand_metadata_only_viewport_widgets (tests.test_resource_performance.LibraryGridTests.test_ten_thousand_metadata_only_viewport_widgets) ... ok
+test_all_non_resource_main_window_and_card_methods_remain_identical (tests.test_resource_performance.ResourceSourceGates.test_all_non_resource_main_window_and_card_methods_remain_identical) ... ok
+test_only_reviewed_resource_modules_change_and_helpers_are_pinned (tests.test_resource_performance.ResourceSourceGates.test_only_reviewed_resource_modules_change_and_helpers_are_pinned) ... ok
+test_removing_only_grid_adapters_restores_entire_main_window_ast (tests.test_resource_performance.ResourceSourceGates.test_removing_only_grid_adapters_restores_entire_main_window_ast) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 2.968s
+
+OK
+📋 Playlist Library: Đã chốt 10000 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4

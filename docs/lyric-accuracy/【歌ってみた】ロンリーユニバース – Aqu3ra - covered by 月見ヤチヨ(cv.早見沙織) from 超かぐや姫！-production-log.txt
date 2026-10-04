@@ -1,0 +1,48 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:41.426
+INFO:faster_whisper:Detected language 'ja' with probability 0.99
+📡 Ngôn ngữ phát hiện: ja (99.5%)
+50 🧹 Làm sạch dữ liệu (ja)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 173.9–185.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 192.9–204.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 202.9–214.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 205.5–217.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 201.6–212.7s
+INFO:faster_whisper:Processing audio with duration 00:11.072
+57 🛠 Kiểm tra lời bị thiếu: 211.4–216.7s
+INFO:faster_whisper:Processing audio with duration 00:05.312
+🛠 Kiểm tra coverage: thêm 0 dòng, 6 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(175.86, 177.104), (194.94, 201.68), (203.632, 205.95), (207.52, 210.704), (213.424, 214.736)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 22.8–33.0s
+INFO:faster_whisper:Processing audio with duration 00:10.180
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 22.1–32.7s
+INFO:faster_whisper:Processing audio with duration 00:10.580
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 49.7–60.9s
+INFO:faster_whisper:Processing audio with duration 00:11.140
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 49.0–60.6s
+INFO:faster_whisper:Processing audio with duration 00:11.540
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 110.4–121.8s
+INFO:faster_whisper:Processing audio with duration 00:11.420
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 109.7–121.5s
+INFO:faster_whisper:Processing audio with duration 00:11.820
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 203.4–211.0s
+INFO:faster_whisper:Processing audio with duration 00:07.570
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 202.8–210.7s
+INFO:faster_whisper:Processing audio with duration 00:07.970
+🎵 Đối chiếu lyric: 8 lượt, []
+⚠️ Đối chiếu lyric chưa hoàn tất: {'attempts': [{'start': 22.83, 'end': 33.010000000000005, 'reason': 'short_gap'}, {'start': 22.13, 'end': 32.71000000000001, 'reason': 'short_gap'}, {'start': 49.71, 'end': 60.85, 'reason': 'short_gap'}, {'start': 49.01, 'end': 60.550000000000004, 'reason': 'short_gap'}, {'start': 110.37, 'end': 121.79, 'reason': 'short_gap'}, {'start': 109.67, 'end': 121.49000000000001, 'reason': 'short_gap'}, {'start': 203.45, 'end': 211.02, 'reason': 'uncertain_tail'}, {'start': 202.75, 'end': 210.72, 'reason': 'uncertain_tail'}], 'changes': [], 'duration': 221.4255, 'budget_exhausted': True, 'decoded_audio_seconds': 82.22000000000006, 'seconds': 5.640999999995984}
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 60 [{'start': 0.0, 'end': 9.95, 'text': '🐯 Sound Hod ori 사 운드 호돌 이 サウンドゥホドリ Inst'}, {'start': 9.95, 'end': 10.81, 'text': 'agram & Twitter ホドリ Inst agram & Twitter ホドリ'}, {'start': 10.81, 'end': 12.57, 'text': 'Inst agram & Twitter ホドリ'}]
+QUALITY: {"attempts": [{"start": 22.83, "end": 33.010000000000005, "reason": "short_gap"}, {"start": 22.13, "end": 32.71000000000001, "reason": "short_gap"}, {"start": 49.71, "end": 60.85, "reason": "short_gap"}, {"start": 49.01, "end": 60.550000000000004, "reason": "short_gap"}, {"start": 110.37, "end": 121.79, "reason": "short_gap"}, {"start": 109.67, "end": 121.49000000000001, "reason": "short_gap"}, {"start": 203.45, "end": 211.02, "reason": "uncertain_tail"}, {"start": 202.75, "end": 210.72, "reason": "uncertain_tail"}], "changes": [], "duration": 221.4255, "budget_exhausted": true, "decoded_audio_seconds": 82.22000000000006, "seconds": 5.640999999995984}
+80-90: [(78.79, 82.05, '今もまだキラキラ輝いているよ'), (82.05, 84.37, '夢の中のアイランド'), (84.37, 86.75, '魔法をかけてスローリー'), (86.75, 88.37, 'ありがとうとさよなら'), (88.37, 89.91, '繰り返していく'), (89.91, 91.61, 'またページをめくる')]

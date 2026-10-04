@@ -1,0 +1,9 @@
+test_all_local_imports_in_runtime_graph_resolve_statically (tests.test_runtime_imports.EntryImportTests.test_all_local_imports_in_runtime_graph_resolve_statically) ... ok
+test_direct_entry_without_repository_root_or_preview_stubs (tests.test_runtime_imports.EntryImportTests.test_direct_entry_without_repository_root_or_preview_stubs) ... ok
+test_frozen_import_layout_without_repository_root (tests.test_runtime_imports.EntryImportTests.test_frozen_import_layout_without_repository_root) ... ok
+test_only_import_names_and_exact_source_gate_adapters_changed (tests.test_runtime_imports.ImportScopeTests.test_only_import_names_and_exact_source_gate_adapters_changed) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 3.777s
+
+OK

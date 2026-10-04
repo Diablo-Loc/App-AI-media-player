@@ -1,0 +1,252 @@
+{
+  "source": "\u590f\u7a7a\u30e1\u30c9\u30ec\u30fc-Tell Your World \u00d7 \u305f\u3060\u98a8\u3092\u8ffd\u3044\u304b\u3051\u3066 - \u521d\u97f3\u30df\u30af\uff06\u30ed\u30d3\u30f3\u3010\u5d29\u58ca-\u30b9\u30bf\u30fc\u30ec\u30a4\u30eb\u3011.mp4",
+  "source_hash_unchanged": true,
+  "decoded_frames": 73,
+  "paused_frozen": true,
+  "reverse_seek": true,
+  "resumed_at_rate_2": true,
+  "stopped_cleanly": true,
+  "samples": [
+    {
+      "media_ms": 0,
+      "effect_phase": 1.0,
+      "timer_active": false
+    },
+    {
+      "media_ms": 0,
+      "effect_phase": 1.0,
+      "timer_active": false
+    },
+    {
+      "media_ms": 0,
+      "effect_phase": 1.0,
+      "timer_active": false
+    },
+    {
+      "media_ms": 42,
+      "effect_phase": 0.035,
+      "timer_active": true
+    },
+    {
+      "media_ms": 83,
+      "effect_phase": 0.06916666666666667,
+      "timer_active": true
+    },
+    {
+      "media_ms": 125,
+      "effect_phase": 0.10416666666666667,
+      "timer_active": true
+    },
+    {
+      "media_ms": 167,
+      "effect_phase": 0.13916666666666666,
+      "timer_active": true
+    },
+    {
+      "media_ms": 208,
+      "effect_phase": 0.17333333333333334,
+      "timer_active": true
+    },
+    {
+      "media_ms": 292,
+      "effect_phase": 0.24333333333333335,
+      "timer_active": true
+    },
+    {
+      "media_ms": 333,
+      "effect_phase": 0.2775,
+      "timer_active": true
+    },
+    {
+      "media_ms": 375,
+      "effect_phase": 0.3125,
+      "timer_active": true
+    },
+    {
+      "media_ms": 417,
+      "effect_phase": 0.3475,
+      "timer_active": true
+    },
+    {
+      "media_ms": 458,
+      "effect_phase": 0.38166666666666665,
+      "timer_active": true
+    },
+    {
+      "media_ms": 542,
+      "effect_phase": 0.45166666666666666,
+      "timer_active": true
+    },
+    {
+      "media_ms": 583,
+      "effect_phase": 0.48583333333333334,
+      "timer_active": true
+    },
+    {
+      "media_ms": 625,
+      "effect_phase": 0.5208333333333334,
+      "timer_active": true
+    },
+    {
+      "media_ms": 667,
+      "effect_phase": 0.5558333333333333,
+      "timer_active": true
+    },
+    {
+      "media_ms": 708,
+      "effect_phase": 0.59,
+      "timer_active": true
+    },
+    {
+      "media_ms": 708,
+      "effect_phase": 0.5941666666666666,
+      "timer_active": true
+    },
+    {
+      "media_ms": 792,
+      "effect_phase": 0.6616666666666666,
+      "timer_active": true
+    },
+    {
+      "media_ms": 833,
+      "effect_phase": 0.6958333333333333,
+      "timer_active": true
+    },
+    {
+      "media_ms": 875,
+      "effect_phase": 0.7291666666666666,
+      "timer_active": true
+    },
+    {
+      "media_ms": 917,
+      "effect_phase": 0.7641666666666667,
+      "timer_active": true
+    },
+    {
+      "media_ms": 958,
+      "effect_phase": 0.7983333333333333,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1042,
+      "effect_phase": 0.8683333333333333,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1083,
+      "effect_phase": 0.9025,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1125,
+      "effect_phase": 0.9375,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1167,
+      "effect_phase": 0.9725,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1250,
+      "effect_phase": 0.007206942197381968,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1292,
+      "effect_phase": 0.01338432122370937,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1333,
+      "effect_phase": 0.019414619797028975,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1375,
+      "effect_phase": 0.025591998823356377,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1417,
+      "effect_phase": 0.031769377849683776,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1417,
+      "effect_phase": 0.03338726283276953,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1458,
+      "effect_phase": 0.03779967642300338,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1542,
+      "effect_phase": 0.05030151492866598,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1583,
+      "effect_phase": 0.05662597440800118,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1625,
+      "effect_phase": 0.06236211207530519,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1667,
+      "effect_phase": 0.0685394911016326,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1708,
+      "effect_phase": 0.0745697896749522,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1792,
+      "effect_phase": 0.08692454772760701,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1833,
+      "effect_phase": 0.09295484630092661,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1875,
+      "effect_phase": 0.099132225327254,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1917,
+      "effect_phase": 0.10530960435358142,
+      "timer_active": true
+    },
+    {
+      "media_ms": 1958,
+      "effect_phase": 0.11133990292690102,
+      "timer_active": true
+    },
+    {
+      "media_ms": 2042,
+      "effect_phase": 0.12369466097955582,
+      "timer_active": true
+    },
+    {
+      "media_ms": 2083,
+      "effect_phase": 0.1297249595528754,
+      "timer_active": true
+    },
+    {
+      "media_ms": 2125,
+      "effect_phase": 0.13590233857920284,
+      "timer_active": true
+    }
+  ],
+  "limitation": "Actual QMediaPlayer/QVideoSink in offscreen process, no screen/native audio/GPU/EXE parity claim."
+}

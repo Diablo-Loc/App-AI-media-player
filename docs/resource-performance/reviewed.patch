@@ -1,0 +1,527 @@
+--- before/app/core/media_library.py
++++ after/app/core/media_library.py
+@@ -180,7 +180,7 @@
+         self.save()
+         logger.info(f"💾 Đã lưu path thumbnail cho {media_id}")
+ 
+-    def cleanup(self):
++    def cleanup(self):
+         """
+         Xóa các mục trong DB mà file thực tế không còn tồn tại.
+         Nên gọi hàm này khi khởi động App hoặc định kỳ.
+@@ -198,7 +198,16 @@
+             
+         if removed_count > 0:
+             logger.info(f"🧹 Đã dọn dẹp {removed_count} file rác khỏi thư viện.")
+-            self.save()
++            self.save()
++
++    def stage_thumbnail_in_db(self, media_id, thumb_path):
++        """RAM update for the owned batch worker; the synchronous API stays intact."""
++        with self.lock:
++            item = self.items.get(media_id)
++            if item is None or item.thumbnail == thumb_path:
++                return False
++            item.thumbnail = thumb_path
++            return True
+ 
+     def save(self):
+         """
+@@ -206,7 +215,8 @@
+         """
+         # 1. Dùng Lock để đảm bảo chỉ 1 luồng được ghi file tại 1 thời điểm
+         with self._save_lock:
+-            try:
++            self._last_save_succeeded = False
++            try:
+                 self.db_path.parent.mkdir(parents=True, exist_ok=True)
+                 
+                 # Convert data sang dict
+@@ -240,9 +250,10 @@
+                             # Xóa file tạm cho đỡ rác
+                             if temp_path.exists():
+                                 os.remove(temp_path)
+-                            raise
++                            raise
++                self._last_save_succeeded = True
+                             
+-            except Exception as e:
++            except Exception as e:
+                 logger.error(f"❌ Save library failed: {e}")
+ 
+     def load(self):
+--- before/app/thumbnail/thumbnail_workers.py
++++ after/app/thumbnail/thumbnail_workers.py
+@@ -1,6 +1,7 @@
+ import os
+ from PySide6.QtCore import QThread, Signal
+-from thumbnail.thumbnail_manager import ThumbnailManager
++from thumbnail.thumbnail_manager import ThumbnailManager
++from thumbnail.cache_batch import ThumbnailCacheBatch
+ 
+ class ThumbnailWorker(QThread):
+     # Signal trả về: (ID_video, Đường_dẫn_ảnh)
+@@ -14,9 +15,16 @@
+         self.queue = list(media_library.items.values())
+         self.is_running = True
+ 
+-    def run(self):
+-        for item in self.queue:
+-            if not self.is_running: break
++    def run(self):
++        batch = ThumbnailCacheBatch(self.library)
++        try:
++            self._scan(batch)
++        finally:
++            batch.flush()
++
++    def _scan(self, batch):
++        for item in self.queue:
++            if not self.is_running: break
+             
+             # 1. TỐI ƯU: Nếu trong Metadata đã có đường dẫn & file tồn tại -> Emit luôn
+             # (Không cần gọi Manager làm gì cho tốn hàm)
+@@ -31,7 +39,7 @@
+             if thumb_path:
+                 # 3. 🔥 QUAN TRỌNG: Lưu ngược đường dẫn vào Database (JSON)
+                 # Để lần sau mở App lên là load ngay lập tức
+-                self.library.update_thumbnail_in_db(item.id, thumb_path)
++                batch.stage(item.id, thumb_path)
+ 
+                 # 4. Gửi tín hiệu để UI hiển thị
+                 self.thumbnail_ready.emit(item.id, thumb_path)
+--- before/app/ui/media_card.py
++++ after/app/ui/media_card.py
+@@ -2,10 +2,11 @@
+ from pathlib import Path
+ 
+ # Thêm QCache để quản lý bộ nhớ đệm
+-from PySide6.QtGui import QImageReader, QPixmap, QPixmapCache
+-from PySide6.QtCore import Qt, QSize, Signal, QThreadPool, QRunnable, QObject
+-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QSizePolicy, QFrame)
++from PySide6.QtGui import QImage, QImageReader, QPixmap, QPixmapCache
++from PySide6.QtCore import Qt, QSize, Signal, QThreadPool, QRunnable, QObject, QPoint, QRect, QEvent
++from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QSizePolicy, QFrame, QAbstractScrollArea, QApplication)
+ from .icons import label_icon
++from .library_thumbnail_queue import library_thumbnail_queue
+ 
+ QPixmapCache.setCacheLimit(102400)
+ # =========================================================
+@@ -14,7 +15,8 @@
+ class LoaderSignals(QObject):
+     """Tín hiệu để gửi kết quả từ luồng ngầm về giao diện chính"""
+     # Gửi kèm đường dẫn (str) để làm Key lưu vào Cache
+-    finished = Signal(str, QPixmap)
++    finished = Signal(str, QImage)
++    done = Signal(object)
+ 
+ class ImageLoader(QRunnable):
+     """
+@@ -27,7 +29,8 @@
+         self.target_w = target_w
+         self.target_h = target_h
+         self.signals = LoaderSignals()
+-        self._is_cancelled = False
++        self._is_cancelled = False
++        self._completed = False
+ 
+     def cancel(self):
+         """Hàm để bên ngoài ra lệnh dừng luồng"""
+@@ -35,9 +38,8 @@
+     
+     def run(self):
+         # ✅ Kiểm tra 1: Trước khi bắt đầu làm việc nặng
+-        if self._is_cancelled: return
+-        
+-        try:
++        try:
++            if self._is_cancelled: return
+             reader = QImageReader(self.path)
+             reader.setAutoTransform(True)
+             orig_size = reader.size()
+@@ -61,13 +63,15 @@
+             if self._is_cancelled or image.isNull():
+                 return
+             
+-            if not image.isNull():
+-                pixmap = QPixmap.fromImage(image)
+-                # Gửi hàng về cho Main Thread (kèm đường dẫn để định danh)
+-                self.signals.finished.emit(self.cache_key, pixmap)
++            if not image.isNull():
++                # Gửi hàng về cho Main Thread (kèm đường dẫn để định danh)
++                self.signals.finished.emit(self.cache_key, image)
+                 
+-        except Exception:
+-            pass # Lỗi đọc file thì bỏ qua
++        except Exception:
++            pass # Lỗi đọc file thì bỏ qua
++        finally:
++            self._completed = True
++            self.signals.done.emit(self)
+ 
+ # =========================================================
+ # 🎬 MAIN UI: MEDIA CARD (FINAL VERSION: ASYNC + CACHE)
+@@ -76,7 +80,8 @@
+     clicked = Signal(object)
+     
+     # Hồ bơi Thread dùng chung cho TOÀN BỘ app (Quản lý CPU)
+-    thread_pool = QThreadPool()
++    thread_pool = QThreadPool()
++    thread_pool.setMaxThreadCount(2)
+     
+     def __init__(self, metadata, parent=None):
+         super().__init__(parent)
+@@ -86,7 +91,8 @@
+         self.metadata = metadata
+         self._is_active = False
+         self._is_loaded = False # Cờ đánh dấu đã load xong chưa
+-        self._current_worker = None #Theo dõi worker hiện tại
++        self._current_worker = None #Theo dõi worker hiện tại
++        self._attempt_key = None
+         
+         # Tạo Cache Key khởi tạo
+         self._update_cache_key()
+@@ -104,10 +110,20 @@
+         # Mặc định hiện icon, chưa load ảnh ngay
+         self.show_default_icon()
+ 
+-    def _update_cache_key(self):
+-        """Tạo định danh duy nhất dựa trên Path + Thời gian sửa file"""
+-        mtime = getattr(self.metadata, 'mtime', 0)
+-        self.cache_key = f"{self.metadata.thumbnail}::{mtime}"
++    def _update_cache_key(self):
++        """RAM-only decoded-image context; persistent thumbnail paths stay unchanged."""
++        mtime = getattr(self.metadata, 'mtime', 0)
++        path = self.metadata.thumbnail
++        try:
++            stat = Path(path).stat() if path else None
++        except OSError:
++            stat = None
++        signature = (stat.st_mtime_ns, stat.st_size) if stat else None
++        label = getattr(self, 'thumb_label', None)
++        w = label.width() if label and label.width() > 0 else 200
++        h = label.height() if label and label.height() > 0 else 125
++        dpr = self.devicePixelRatioF()
++        self.cache_key = f"library_scaled_{path}::{mtime}::{signature}::{int(w*dpr)}x{int(h*dpr)}::{dpr}"
+     
+     def _setup_ui(self):
+         layout = QVBoxLayout(self)
+@@ -157,9 +173,8 @@
+         super().paintEvent(event)
+         
+         # Nếu chưa load và có đường dẫn -> Bắt đầu quy trình load
+-        if not self._is_loaded and self.metadata.thumbnail:
+-            self._start_async_loading() # ✅ Gọi trơn thôi
+-            self._is_loaded = True 
++        if not self._is_loaded and self.metadata.thumbnail:
++            self._start_async_loading() # ✅ Gọi trơn thôi
+ 
+     def update_thumbnail(self, path):
+         """
+@@ -171,39 +186,41 @@
+              self._update_cache_key()
+         
+         # Reset cờ load để nó biết là cần load lại
+-        self._is_loaded = False
++        self._is_loaded = False
++        self._attempt_key = None
++        self._cancel_thumbnail()
+         
+         # Nếu đang hiển thị thì load luôn, nếu không để paintEvent lo
+-        if self.isVisible():
+-            self._start_async_loading()
+-            self._is_loaded = True
++        if self._can_load_thumbnail():
++            self._start_async_loading()
+         else:
+             self.show_default_icon()
+ 
+-    def _start_async_loading(self):
+-        path = self.metadata.thumbnail
+-        if not path: return
++    def _start_async_loading(self):
++        path = self.metadata.thumbnail
++        if not path or not self._can_load_thumbnail(): return
++        self._update_cache_key()
++        if self._attempt_key == self.cache_key:
++            return
+ 
+         # 1. Check Cache RAM (Nhanh như điện)
+         # Tìm chính xác theo Key (Path + mtime)
+         cached_pixmap = QPixmapCache.find(self.cache_key)
+         if cached_pixmap:
+             self.thumb_label.setPixmap(cached_pixmap)
+-            self.thumb_label.setScaledContents(False)
+-            return 
++            self.thumb_label.setScaledContents(False)
++            self._is_loaded = True
++            self._attempt_key = self.cache_key
++            return
+ 
+         # 2. Quản lý luồng cũ
+-        if self._current_worker:
+-            try:
+-                self._current_worker.cancel()
+-            except Exception:
+-                pass
++        self._cancel_thumbnail()
+ 
+         if not Path(path).exists(): return
+ 
+         w = self.thumb_label.width() if self.thumb_label.width() > 0 else 200
+         h = self.thumb_label.height() if self.thumb_label.height() > 0 else 125
+-        pixel_ratio = self.devicePixelRatio()
++        pixel_ratio = self.devicePixelRatioF()
+         
+         # Truyền cache_key vào Worker để đảm bảo tính nhất quán
+         loader = ImageLoader(self.cache_key, str(path), int(w * pixel_ratio), int(h * pixel_ratio))
+@@ -211,22 +228,32 @@
+             loader.signals.finished.connect(self._on_thumbnail_loaded)
+         except RuntimeError:
+             pass
+-        self._current_worker = loader  # Lưu lại worker hiện tại để có thể hủy nếu cần
+-        MediaCard.thread_pool.start(loader)
++        self._current_worker = loader  # Lưu lại worker hiện tại để có thể hủy nếu cần
++        self._attempt_key = self.cache_key
++        library_thumbnail_queue(MediaCard.thread_pool).submit(self, loader)
+ 
+     def _on_thumbnail_loaded(self, incoming_key, pixmap):
+         """
+         Nhận ảnh từ Worker.
+         """
+-        self._current_worker = None  # Xong việc thì giải phóng tham chiếu
+-        try:
+-            if not isinstance(pixmap, QPixmap):
++        try:
++            if incoming_key != self.cache_key:
++                return
++            worker = self._current_worker
++            if worker is not None and self.sender() is not worker.signals:
++                return
++            self._current_worker = None
++            if not self._can_load_thumbnail():
++                return
++            if isinstance(pixmap, QImage):
++                pixmap = QPixmap.fromImage(pixmap)
++            if not isinstance(pixmap, QPixmap):
+                 return
+ 
+             if pixmap.isNull():
+                 return
+ 
+-            pixmap.setDevicePixelRatio(self.devicePixelRatio())
++            pixmap.setDevicePixelRatio(self.devicePixelRatioF())
+ 
+             # 2. Luôn lưu vào Cache (để lần sau dùng lại)
+             QPixmapCache.insert(incoming_key, pixmap)
+@@ -239,10 +266,74 @@
+             if incoming_key == self.cache_key:
+                 self.thumb_label.clear()
+                 self.thumb_label.setPixmap(pixmap)
+-                self.thumb_label.setScaledContents(False)
+-
+-        except RuntimeError:
+-            pass  # Widget đã bị xóa
++                self.thumb_label.setScaledContents(False)
++                self._is_loaded = True
++
++        except RuntimeError:
++            pass  # Widget đã bị xóa
++
++    def _can_load_thumbnail(self):
++        if not self.isVisible():
++            return False
++        ancestor = self.parentWidget()
++        while ancestor is not None:
++            if isinstance(ancestor, QAbstractScrollArea):
++                viewport = ancestor.viewport()
++                return QRect(self.mapTo(viewport, QPoint()), self.size()).intersects(viewport.rect())
++            ancestor = ancestor.parentWidget()
++        return True
++
++    def _cancel_thumbnail(self):
++        queue = getattr(QApplication.instance(), '_library_thumbnail_queue', None)
++        if queue:
++            queue.cancel(self)
++        if self._current_worker:
++            self._current_worker.cancel()
++            self._current_worker = None
++
++    def hideEvent(self, event):
++        self._cancel_thumbnail()
++        self._attempt_key = None
++        self._is_loaded = False
++        super().hideEvent(event)
++
++    def resizeEvent(self, event):
++        if hasattr(self, '_current_worker'):
++            self._cancel_thumbnail()
++        self._is_loaded = False
++        self._attempt_key = None
++        super().resizeEvent(event)
++        if hasattr(self, 'thumb_label'):
++            self.layout().activate()
++            self._update_cache_key()
++
++    def event(self, event):
++        if event.type() == QEvent.Type.DevicePixelRatioChange and hasattr(self, '_current_worker'):
++            self._cancel_thumbnail()
++            self._attempt_key = None
++            self._is_loaded = False
++            self._update_cache_key()
++            self.update()
++        return super().event(event)
++
++    def bind_media(self, metadata):
++        """Reuse a presentation card; emitted selection always uses current metadata."""
++        self._cancel_thumbnail()
++        self.media_item = self.metadata = metadata
++        self.id = metadata.id
++        self._is_loaded = False
++        self._attempt_key = None
++        self.title_label.setText(metadata.title)
++        raw_date = getattr(metadata, 'mtime', None)
++        date_text = raw_date if isinstance(raw_date, str) else ''
++        if isinstance(raw_date, (float, int)) and raw_date > 0:
++            try:
++                date_text = datetime.fromtimestamp(raw_date).strftime('%d/%m/%Y')
++            except Exception:
++                pass
++        self.date_label.setText(date_text)
++        self._update_cache_key()
++        self.show_default_icon()
+ 
+     def show_default_icon(self):
+         self.thumb_label.clear()
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -34,7 +34,8 @@
+ from core.media_library import MediaLibrary
+ 
+ #Import pages for app
+-from ui.pages.mode_manager import HomePage, LibraryPage
++from ui.pages.mode_manager import HomePage, LibraryPage
++from ui.library_grid_view import library_grid
+ from ui.pages.content_manager import ContentController
+ from ui.pages.for_you import ForYouPage
+ from ui.pages.download import DownloadPage
+@@ -952,10 +953,14 @@
+         if self.pending_items:
+             QTimer.singleShot(10, self.load_next_batch)
+             
+-    def refresh_grid(self):
++    def refresh_grid(self):
+         """Tự động xếp lại card khi kích thước cửa sổ thay đổi"""
+         # 1. Xác định trang mục tiêu
+-        current_page = self.content_stack.currentWidget()
++        current_page = self.content_stack.currentWidget()
++        virtual = getattr(current_page, '_library_grid_view', None)
++        if virtual is not None:
++            virtual.schedule()
++            return
+         
+         # Kiểm tra an toàn: trang phải tồn tại và có grid_container
+         if not current_page or not hasattr(current_page, 'grid_container'):
+@@ -1180,12 +1185,16 @@
+                 print(f"📋 Playlist ForYou: Đã chốt {len(self.active_playlist)} bài.")
+ 
+             # TRƯỜNG HỢP 2: Các trang cũ (Dùng Grid Layout như Home/Library)
+-            elif current_page and hasattr(current_page, 'grid_layout'):
+-                layout = current_page.grid_layout
+-                for i in range(layout.count()):
+-                    widget = layout.itemAt(i).widget()
+-                    if widget and hasattr(widget, 'media_item'):
+-                        self.active_playlist.append(widget.media_item)
++            elif current_page and hasattr(current_page, 'grid_layout'):
++                layout = current_page.grid_layout
++                virtual = getattr(current_page, '_library_grid_view', None)
++                if virtual is not None:
++                    self.active_playlist = virtual.get_playback_playlist()
++                else:
++                    for i in range(layout.count()):
++                        widget = layout.itemAt(i).widget()
++                        if widget and hasattr(widget, 'media_item'):
++                            self.active_playlist.append(widget.media_item)
+                 print(f"📋 Playlist Library: Đã chốt {len(self.active_playlist)} bài.")
+ 
+             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
+@@ -1640,17 +1649,29 @@
+             # 3. Dọn dẹp grid hiện tại
+             self.clear_grid() 
+ 
+-            # 4. Gán danh sách chờ
+-            self.media_items = media_items
+-            self.pending_items = media_items.copy() # Quan trọng: phải gán ở đây
++            # 4. Gán danh sách chờ
++            self.media_items = media_items
++            if current_page is self.library_page:
++                self.pending_items = []
++                library_grid(self, current_page).load(media_items)
++                return
++            self.pending_items = media_items.copy() # Quan trọng: phải gán ở đây
+ 
+             # 5. Bắt đầu nạp
+             self.load_next_batch()
+         else:
+             print("⚠️ Không tìm thấy Grid Layout!")
+     
+-    def clear_grid(self):
+-        """Xóa sạch Grid một cách êm ái và an toàn"""
++    def clear_grid(self):
++        """Xóa sạch Grid một cách êm ái và an toàn"""
++        virtual = getattr(getattr(self, 'library_page', None), '_library_grid_view', None)
++        if virtual is not None and getattr(self, 'grid_layout', None) is virtual.layout:
++            self.pending_items = []
++            virtual.clear()
++            if hasattr(self, 'search_input'):
++                self.search_input.clear()
++            self.scroll_area.verticalScrollBar().setValue(0)
++            return
+         
+         # 1. Ngắt mạch nạp dữ liệu cũ (QUAN TRỌNG NHẤT)
+         # Để hàm load_next_batch đang chạy dở sẽ tự dừng lại
+@@ -1804,13 +1825,17 @@
+         self.update_timer.start(1500)
+     
+     #Logic tìm kiếm 
+-    def filter_grid(self, text):
++    def filter_grid(self, text):
+         """Lọc video và xếp lại Grid dựa trên trang hiện tại"""
+         search_text = text.lower().strip()
+         
+         # 1. Lấy trang đang hiển thị
+-        current_page = self.content_stack.currentWidget()
+-        if not current_page: return
++        current_page = self.content_stack.currentWidget()
++        if not current_page: return
++        virtual = getattr(current_page, '_library_grid_view', None)
++        if virtual is not None:
++            virtual.filter(text)
++            return
+ 
+         # 2. Thu thập các card hiện có trong grid của trang đó
+         visible_cards = []
+--- before/tests/lyric_accuracy_contracts.py
++++ after/tests/lyric_accuracy_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_accuracy_changes(relative, raw=False):
+-    current = (ROOT / relative).read_bytes()
++    from tests.resource_performance_contracts import before_resource_changes
++    current = before_resource_changes(relative, raw=True)
+     manifest = json.loads((ROOT / 'docs/lyric-accuracy/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/test_subtitle_effects.py
++++ after/tests/test_subtitle_effects.py
+@@ -335,7 +335,8 @@
+         }
+         for relative, methods in allowed.items():
+             before = before_effect_changes(relative)
+-            after = (ROOT/relative).read_text(encoding='utf-8-sig')
++            from tests.resource_performance_contracts import before_resource_changes
++            after = before_resource_changes(relative)
+             a, b = functions(ast.parse(before)), functions(ast.parse(after))
+             for name in a:
+                 if name not in methods:

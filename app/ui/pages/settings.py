@@ -222,6 +222,8 @@ class SettingsPage(QWidget):
             self.api_key_input.clear()
             self.combo_genius_mode.setCurrentText("Tắt (Nhanh)")
             self.genius_key_input.clear()
+            if hasattr(self, 'volume_percent'):
+                self.volume_percent.setValue(50)
             self.save_settings_silent()
             QMessageBox.information(self, "Hoàn tất", "🔄 Đã reset cài đặt về mặc định!")
 

@@ -1,0 +1,27 @@
+test_only_two_effect_helpers_change_and_prior_sources_owners_preserved (tests.test_subtitle_kinetic.KineticScopeTests.test_only_two_effect_helpers_change_and_prior_sources_owners_preserved) ... ok
+test_cropped_source_preserves_glyph_pixels_at_identity_transform (tests.test_subtitle_kinetic.KineticTests.test_cropped_source_preserves_glyph_pixels_at_identity_transform) ... ok
+test_entry_pause_rate_seek_repeat_hide_clear_uses_existing_owner (tests.test_subtitle_kinetic.KineticTests.test_entry_pause_rate_seek_repeat_hide_clear_uses_existing_owner) ... ok
+test_grapheme_cursive_dense_and_multiline_plans_bounded (tests.test_subtitle_kinetic.KineticTests.test_grapheme_cursive_dense_and_multiline_plans_bounded) ... ok
+test_heavy_combinations_reduce_tiles_and_oversized_sprite_falls_back (tests.test_subtitle_kinetic.KineticTests.test_heavy_combinations_reduce_tiles_and_oversized_sprite_falls_back) ... ok
+test_motion_strong_finite_deterministic_and_finishes_exactly (tests.test_subtitle_kinetic.KineticTests.test_motion_strong_finite_deterministic_and_finishes_exactly) ... ok
+test_old_effect_pixels_stay_equal_to_preceding_renderer (tests.test_subtitle_kinetic.KineticTests.test_old_effect_pixels_stay_equal_to_preceding_renderer) ... ok
+test_presets_options_roundtrip_emit_once_and_legacy_defaults (tests.test_subtitle_kinetic.KineticTests.test_presets_options_roundtrip_emit_once_and_legacy_defaults) ... ok
+test_real_settings_popup_editor_reset_preserve_subtitle_dispatch (tests.test_subtitle_kinetic.KineticTests.test_real_settings_popup_editor_reset_preserve_subtitle_dispatch) ... ok
+test_render_matrix_text_geometry_limits_and_cache_reuse (tests.test_subtitle_kinetic.KineticTests.test_render_matrix_text_geometry_limits_and_cache_reuse) ... ok
+test_settled_pixels_equal_static_glyphs_and_short_cues_stay_readable (tests.test_subtitle_kinetic.KineticTests.test_settled_pixels_equal_static_glyphs_and_short_cues_stay_readable) ... ok
+test_sweep_combination_masks_end_and_off_restores (tests.test_subtitle_kinetic.KineticTests.test_sweep_combination_masks_end_and_off_restores) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.581s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

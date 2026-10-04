@@ -1,0 +1,288 @@
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -19,6 +19,7 @@
+ from ui.design_system import apply_shell, ICON_BUTTON_STYLE
+ from ui.overlay_input_guard import OverlayInputGuard
+ from control.audio_effects import install_audio_effects
++from control.volume_settings import install_volume_settings
+ from ui.media_card import MediaCard
+ from ui.subs_ui.subtitle_layer import SubtitleLayer
+ from ui.subs_ui.sub_panel import SettingsPanel
+@@ -286,6 +287,7 @@
+         self.media_manager = SystemMediaManager(self)
+         self.audio_devices = QMediaDevices()
+         self.audio_effects = install_audio_effects(self)
++        self._volume_settings = install_volume_settings(self)
+ 
+         self._system_media_connected = False
+         self.audio_devices.audioOutputsChanged.connect(
+@@ -427,6 +429,8 @@
+             if hasattr(self, '_folder_scan_queue'):
+                 self._folder_scan_queue.shutdown()
+             if hasattr(self, 'audio_effects'):
++                if hasattr(self, '_volume_settings'):
++                    self._volume_settings.shutdown()
+                 self.audio_effects.shutdown()
+             if hasattr(self, 'download_page'):
+                 self.download_page.shutdown_workers()
+@@ -822,7 +826,7 @@
+         y = btn_pos.y() - popup_h - 15
+         
+         # 5. Cập nhật giá trị và hiển thị
+-        current_vol = int(self.audio_effects.volume() * 100)
++        current_vol = int(round(self.audio_effects.volume() * 100))
+         self.vol_popup.set_value(current_vol)
+         
+         self.vol_popup.move(x, y)
+@@ -843,7 +847,7 @@
+         current_vol = self.audio_effects.volume()
+         new_vol = max(0.0, min(1.0, current_vol + delta))
+         self.audio_effects.set_volume(new_vol)
+-        self.vol_popup.set_value(int(new_vol * 100))
++        self.vol_popup.set_value(int(round(new_vol * 100)))
+         self.playback_bar.update_volume_icon(new_vol)
+ 
+     def seek_relative(self, ms):
+--- before/app/ui/pages/settings.py
++++ after/app/ui/pages/settings.py
+@@ -221,8 +221,10 @@
+             self.combo_online_ai.setCurrentText("Local Default")
+             self.api_key_input.clear()
+             self.combo_genius_mode.setCurrentText("Tắt (Nhanh)")
+-            self.genius_key_input.clear()
+-            self.save_settings_silent()
++            self.genius_key_input.clear()
++            if hasattr(self, 'volume_percent'):
++                self.volume_percent.setValue(50)
++            self.save_settings_silent()
+             QMessageBox.information(self, "Hoàn tất", "🔄 Đã reset cài đặt về mặc định!")
+ 
+     # Hàm phụ để lưu mà không hiện pop-up (tránh làm phiền khi Reset)
+--- before/build_app.py
++++ after/build_app.py
+@@ -1,100 +1,113 @@
+-import PyInstaller.__main__
+-import os
+-import shutil
+-
+-APP_NAME = "BoTube"
+-
+-# 1. Dọn dẹp không gian build cũ
+-print("🧹 Đang dọn dẹp không gian build cũ...")
+-for folder in ['build', 'dist']:
+-    if os.path.exists(folder):
+-        shutil.rmtree(folder)
+-
+-# 2. Lệnh build TINH GỌN - Đóng gói lõi giao diện và các cổng kết nối độc lập
+-params = [
+-    'app/run_app.py',
+-    '--paths=.',
+-    f'--name={APP_NAME}',
+-    '--onedir',         # Xuất ra thư mục để dễ làm bộ cài Inno Setup
+-    '--windowed',       # Ẩn console đen khi chạy
+-    '--noconfirm',
+-    '--clean',
+-    '--icon=icon/app_icon.ico',
+-    
+-    # Gom toàn bộ mã nguồn của app vào trong gói
+-    '--add-data=app;app',
+-    
+-    # --- HIDDEN IMPORTS CHỐT CHẶN (Không để sót bất kỳ cổng kết nối nào từ file cũ) ---
+-    '--hidden-import=PySide6',
+-    '--hidden-import=PySide6.QtCore',
+-    '--hidden-import=PySide6.QtGui',
+-    '--hidden-import=PySide6.QtWidgets',
+-    '--hidden-import=ctypes',
+-    '--hidden-import=multiprocessing',
+-    '--hidden-import=requests',
+-    '--hidden-import=urllib3',
+-    '--hidden-import=bs4',              # beautifulsoup4
+-    '--hidden-import=yt_dlp',
+-    '--hidden-import=lyricsgenius',
+-    '--hidden-import=google.genai',
+-    '--hidden-import=av',               # PyAV xử lý âm thanh/video
+-    '--hidden-import=psutil',
+-    '--hidden-import=cryptography',
+-    '--hidden-import=websockets',
+-    '--hidden-import=tenacity',
+-    
+-    # Thư viện mồi bắt buộc để Download Manager tự download AI runtime sau đó
+-    '--hidden-import=huggingface_hub',
+-    '--hidden-import=filelock',
+-    '--hidden-import=fsspec',
+-    
+-    # 🎯 FIX TRIỆT ĐỂ LÕI HỆ THỐNG CHO TORCH / WHISPER CẮM NGOÀI
+-    '--hidden-import=pickletools',
+-    '--hidden-import=pickle',
+-    '--hidden-import=struct',
+-    '--hidden-import=difflib',
+-    '--hidden-import=ast', 
+-    '--hidden-import=cProfile',
+-    '--hidden-import=profile',
+-    '--hidden-import=pstats',
+-    '--hidden-import=modulefinder', 
+-    '--hidden-import=pkgutil',
+-    '--hidden-import=importlib.metadata',
+-]
+-
+-print("🚀 Bắt đầu đóng gói khung ứng dụng (PyInstaller)...")
+-PyInstaller.__main__.run(params)
+-
+-# =====================================================================
+-# 3. QUY TRÌNH ĐỒNG BỘ TÀI NGUYÊN (CHUẨN PORTABLE RỜI - CẠNH FILE EXE)
+-# =====================================================================
+-dist_path = f'dist/{APP_NAME}'
+-print("\n📦 Đang ghim các tài nguyên môi trường ngoài cạnh file EXE...")
+-
+-# 🔹 1. ĐỒNG BỘ THƯ MỤC ICON (Chỉ đặt ngoài cạnh file EXE cho Portable / Inno Setup)
+-if os.path.exists('icon'):
+-    shutil.copytree('icon', os.path.join(dist_path, 'icon'), dirs_exist_ok=True)
+-    print("  ✅ Đã đồng bộ cấu trúc Icon rời nằm cạnh file EXE.")
+-
+-# 🔹 2. ĐỒNG BỘ NATIVE DLL C++ (Chỉ đặt ngoài cạnh file EXE)
+-if os.path.exists('native'):
+-    shutil.copytree('native', os.path.join(dist_path, 'native'), dirs_exist_ok=True)
+-    print("  ✅ Đã đồng bộ cấu trúc Native DLL C++ nằm cạnh file EXE.")
+-
+-# 🔹 3. ĐỒNG BỘ BỘ CÔNG CỤ GIẢI MÃ ÂM THANH HỆ THỐNG (bin/ffmpeg, bin/ffprobe)
+-if os.path.exists('bin'):
+-    shutil.copytree('bin', os.path.join(dist_path, 'bin'), dirs_exist_ok=True)
+-    print("  ✅ Đã ghim bộ giải mã độc lập (bin/ffmpeg.exe, bin/ffprobe.exe) cạnh file EXE.")
+-
+-# 🔹 4. ĐỒNG BỘ LÕI TẢI yt-dlp.exe
+-yt_dlp_src = 'app/download_core/yt-dlp.exe'
+-if os.path.exists(yt_dlp_src):
+-    shutil.copy2(yt_dlp_src, os.path.join(dist_path, 'yt-dlp.exe'))
+-    print("  ✅ Đã đồng bộ lõi tải yt-dlp.exe nằm cạnh file EXE.")
+-
+-# 🔹 5. TẠO SẴN KÉN RỖNG CHO AI RUNTIME DỰ PHÒNG
+-os.makedirs(os.path.join(dist_path, 'app_resources', 'libs'), exist_ok=True)
+-print("  ✅ Đã tạo sẵn cấu hình thư mục động cho AI Runtime: app_resources/libs.")
+-
+-print(f"\n🎉 HOÀN THÀNH QUY TRÌNH ĐÓNG GÓI CHUẨN SENIOR!")
+-print(f"📁 Thư mục sản phẩm siêu sạch: {os.path.abspath(dist_path)}")
++"""Build the portable Windows app without deleting previous builds or user data."""
++import argparse
++from datetime import datetime
++import importlib.metadata
++import json
++import os
++from pathlib import Path
++import shutil
++import sys
++
++APP_NAME = 'BoTube'
++ROOT = Path(__file__).resolve().parent
++HIDDEN_IMPORTS = (
++    'PySide6', 'PySide6.QtCore', 'PySide6.QtGui', 'PySide6.QtWidgets',
++    'PySide6.QtMultimedia', 'PySide6.QtMultimediaWidgets', 'PySide6.QtSvg', 'PySide6.QtNetwork',
++    'ctypes', 'multiprocessing', 'requests', 'urllib3', 'bs4', 'yt_dlp', 'lyricsgenius',
++    'google.genai', 'av', 'psutil', 'cryptography', 'websockets', 'tenacity',
++    'huggingface_hub', 'filelock', 'fsspec', 'pickletools', 'pickle', 'struct',
++    'difflib', 'ast', 'cProfile', 'profile', 'pstats', 'modulefinder', 'pkgutil', 'importlib.metadata',
++)
++
++
++def build_plan(root=ROOT, dist_dir=None, stamp=None):
++    root = Path(root).resolve()
++    stamp = stamp or datetime.now().strftime('%Y%m%d-%H%M%S-%f')
++    output = Path(dist_dir).resolve() if dist_dir else root / 'dist'
++    # A prior portable folder may contain saved settings/media: never overwrite it.
++    if (output / APP_NAME).exists():
++        if dist_dir:
++            raise ValueError(f'Output đã tồn tại: {output / APP_NAME}. Chọn --dist-dir mới.')
++        output = root / 'dist' / ('release-' + stamp)
++    if (output / APP_NAME).exists():
++        raise ValueError('Output đã tồn tại; chọn thư mục khác.')
++    work = root / 'build' / ('release-' + stamp)
++    if work.exists():
++        raise ValueError('Work directory đã tồn tại; chạy lại để dùng timestamp mới.')
++    params = [str(root / 'app/run_app.py'), f'--paths={root}', f'--paths={root / "app"}',
++        f'--name={APP_NAME}', '--onedir', '--windowed', '--noconfirm',
++        f'--distpath={output}', f'--workpath={work}', f'--specpath={work}',
++        f'--icon={root / "icon/app_icon.ico"}', '--add-data=app;app']
++    params += ['--hidden-import=' + name for name in HIDDEN_IMPORTS]
++    return {'root': str(root), 'output': str(output / APP_NAME), 'work': str(work), 'params': params}
++
++
++def validate_sources(plan):
++    root = Path(plan['root'])
++    required = ('app/run_app.py', 'app/control/volume_settings.py', 'app/ui/media_info_probe.py',
++        'app/ui/assets/icons/LICENSE', 'app/native/AudioEngineNative.dll',
++        'icon/app_icon.ico', 'bin/ffmpeg.exe', 'bin/ffprobe.exe')
++    missing = [name for name in required if not (root / name).is_file()]
++    if not list((root / 'app/ui/assets/icons').glob('*.svg')):
++        missing.append('app/ui/assets/icons/*.svg')
++    if missing:
++        raise FileNotFoundError('Thiếu tài nguyên đóng gói: ' + ', '.join(missing))
++
++
++def copy_portable_resources(plan):
++    root, destination = Path(plan['root']), Path(plan['output'])
++    if not (destination / (APP_NAME + '.exe')).is_file():
++        raise FileNotFoundError('PyInstaller chưa tạo được BoTube.exe; không sao chép tài nguyên.')
++    for name in ('icon', 'native', 'bin'):
++        source = root / name
++        if source.is_dir():
++            shutil.copytree(source, destination / name, dirs_exist_ok=True)
++    # app/native is already included under _internal/app by --add-data.
++    downloader = root / 'app/download_core/yt-dlp.exe'
++    if downloader.is_file():
++        shutil.copy2(downloader, destination / 'yt-dlp.exe')
++    (destination / 'app_resources/libs').mkdir(parents=True, exist_ok=True)
++    # Models/libs and user storage remain separate, as in the existing portable build.
++
++
++def main(argv=None):
++    for stream in (sys.stdout, sys.stderr):
++        if hasattr(stream, 'reconfigure'):
++            stream.reconfigure(encoding='utf-8', errors='replace')
++    parser = argparse.ArgumentParser(description='Đóng gói BoTube portable, giữ nguyên bản build cũ.')
++    parser.add_argument('--dry-run', action='store_true', help='Kiểm tra cấu hình/tài nguyên, không build hoặc xóa file.')
++    parser.add_argument('--dist-dir', help='Thư mục xuất mới (chứa thư mục BoTube).')
++    args = parser.parse_args(argv)
++    if os.name != 'nt':
++        parser.error('Build EXE phải chạy trên Windows bằng môi trường Python của dự án.')
++    plan = build_plan(dist_dir=args.dist_dir)
++    validate_sources(plan)
++    versions = {}
++    for name in ('PyInstaller', 'PySide6'):
++        try:
++            versions[name] = importlib.metadata.version(name)
++        except importlib.metadata.PackageNotFoundError:
++            versions[name] = None
++    print(json.dumps({'versions': versions, **plan}, ensure_ascii=False, indent=2))
++    if args.dry_run:
++        print('DRY_RUN_OK: không build, không xóa output, không sửa dữ liệu.')
++        if versions['PyInstaller'] is None:
++            print('BUILD_NOT_READY: môi trường này chưa có PyInstaller; cần cài công cụ đóng gói trước khi xuất EXE.')
++        return
++    if any(value is None for value in versions.values()):
++        raise SystemExit('Môi trường build thiếu PyInstaller/PySide6. Dùng Python 3.11 của dự án và cài công cụ đóng gói còn thiếu.')
++    import PyInstaller.__main__
++    Path(plan['work']).mkdir(parents=True)
++    previous_directory = Path.cwd()
++    try:
++        os.chdir(plan['root'])  # Resolve the existing app;app data mapping from the project root.
++        PyInstaller.__main__.run(plan['params'])
++    finally:
++        os.chdir(previous_directory)
++    copy_portable_resources(plan)
++    print(f'Đã xuất: {Path(plan["output"]) / (APP_NAME + ".exe")}')
++    print('Giữ toàn bộ thư mục BoTube cùng _internal/bin/icon khi chạy hoặc phân phối.')
++
++
++if __name__ == '__main__':
++    main()
+--- before/tests/test_media_info.py
++++ after/tests/test_media_info.py
+@@ -338,7 +338,8 @@
+             self.assertEqual(manifest[relative]['changed_functions'], changed)
+             self.assertEqual(manifest[relative]['added_functions'], added)
+             before = ast.parse(before_media_info_changes(relative))
+-            after = ast.parse((ROOT / relative).read_bytes())
++            from tests.volume_build_contracts import before_volume_changes
++            after = ast.parse(before_volume_changes(relative))
+             old_classes = {n.name: n for n in before.body if isinstance(n, ast.ClassDef)}
+             for cls in [n for n in after.body if isinstance(n, ast.ClassDef)]:
+                 old_methods = {n.name: n for n in old_classes[cls.name].body if isinstance(n, ast.FunctionDef)}

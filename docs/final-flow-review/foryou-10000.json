@@ -1,0 +1,47 @@
+{
+  "before": false,
+  "items": 10000,
+  "rounds": 3,
+  "records": [
+    {
+      "load_ms": 29.504499998438405,
+      "filter_ms": 88.88220000153524,
+      "clear_ms": 93.0752999993274,
+      "filter_submit_ms": 0.032899999496294186,
+      "clear_submit_ms": 0.43200000072829425,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 46.7110000026878
+    },
+    {
+      "load_ms": 21.589500000118278,
+      "filter_ms": 85.45719999892754,
+      "clear_ms": 93.12209999916377,
+      "filter_submit_ms": 0.05160000000614673,
+      "clear_submit_ms": 0.436399997852277,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 45.1279999979306
+    },
+    {
+      "load_ms": 25.047399998584297,
+      "filter_ms": 86.67599999898812,
+      "clear_ms": 92.71999999691616,
+      "filter_submit_ms": 0.03529999958118424,
+      "clear_submit_ms": 0.3966999975091312,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 46.89420000067912
+    }
+  ],
+  "medians": {
+    "load_ms": 25.047399998584297,
+    "filter_ms": 86.67599999898812,
+    "clear_ms": 93.0752999993274,
+    "filter_submit_ms": 0.03529999958118424,
+    "clear_submit_ms": 0.43200000072829425,
+    "clear_cards_created": 0,
+    "live_cards": 8,
+    "scroll_with_40ms_pump": 46.7110000026878
+  }
+}

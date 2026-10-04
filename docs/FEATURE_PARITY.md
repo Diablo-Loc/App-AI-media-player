@@ -1,5 +1,33 @@
 # Hợp đồng tính năng của baseline đã khôi phục
 
+Tối ưu tài nguyên 05/10/2026: đã triển khai batch thumbnail, queue hai decoder visible và Library card theo viewport. Giữ full queue/thứ tự search Library cũ, Home/For You, sub/audio/player/data; 821/821 data hashes giữ nguyên. Exact source snapshots phase mới nối lại gate cũ, không recapture lịch sử. Workload 1.000 metadata: 1.000 → 25 card, RSS grid khoảng 121 → 5,2 MiB; cache 50 → 3 saves và JSON cuối exact. Kiểm chứng/giới hạn native/EXE ở [RESOURCE_PERFORMANCE_FIX.md](RESOURCE_PERFORMANCE_FIX.md). Đoạn audit bên dưới là trạng thái trước triển khai.
+
+Audit tài nguyên 05/10/2026: không đổi production/logic/UI/sub/audio. AST/compile toàn 122 Python đạt; workload Qt/cached JSON cô lập xác nhận cơ hội batch-cache/virtualized Library/bounded decoder. Source và 49 file phụ đề/output/video đã tồn tại giữ nguyên; các thay đổi cache/index/file mới giữa lần hash đầu và cuối được ghi riêng, không rollback. Chưa triển khai tối ưu và chưa đo native CPU/GPU/EXE; không nâng phạm vi parity từ các probe tổng hợp. Xem [APP_PERFORMANCE_REVIEW.md](APP_PERFORMANCE_REVIEW.md).
+
+Lyric nhẹ 04/10/2026: sửa credit substring có thể xóa lời thật và đồng nhất decode CPU với primary, không thêm lượt Whisper theo yêu cầu cuối. Dedup/lặp/tail/grouping/coverage/data/UI/owners giữ nguyên. 385 pass +11 historical skip, 90 focused/31 checkout gates; 24 captured replays khớp exact và 817 saved hashes giữ nguyên. Brand New Sky thiếu câu ở ASR vẫn là giới hạn được giữ, không dùng retry thử làm kết quả bản cuối. Xem [LYRIC_ACCURACY_LIGHTWEIGHT.md](LYRIC_ACCURACY_LIGHTWEIGHT.md).
+
+Audit Whisper 04/10/2026: production/ASR/model/cue/data không đổi. 24 captured-ASR replays khớp kết quả phrase đã lưu, 82 focused checks và full 377 pass +11 historical skip đạt, 39 saved subtitle hashes giữ nguyên trong probe. Phát hiện nguy cơ mất lời do credit substring và giới hạn gap/confidence/CPU options; chưa xác nhận gần lyrics ground truth. Xem [ASR_ACCURACY_REVIEW.md](ASR_ACCURACY_REVIEW.md).
+
+Typography 04/10/2026: thêm 8 entry/bộ mẫu có chuyển động từng vùng chữ và tùy chọn lực/chia cụm. Reuse entry animation/glyph cache, <=16 tile hoặc 6 ở phối hợp nặng; old-effect pixel và cue/clock/data/owners giữ nguyên. Không word alignment/3D hoặc mở rộng cửa sổ. Kiểm chứng và giới hạn frame lạnh/native/EXE: [SUBTITLE_KINETIC.md](SUBTITLE_KINETIC.md).
+
+Vệt quét 04/10/2026: tùy chọn ẩn chữ đã quét tới hết câu cho Phi tiêu/Sao/Sao băng/Tinh thể; timing/text/data/load/save/owners và renderer cũ khi bỏ chọn giữ nguyên. Chỉ ba helper presentation, cached mask và timer cũ. Regression pixel/seek/câu lặp/DPI/glow và snapshot riêng; không migrate preference cũ. Xem [SUBTITLE_SWEEP.md](SUBTITLE_SWEEP.md).
+
+Hiệu ứng theo câu 04/10/2026: thêm 9 phong cách hạt/phi tiêu, 9 bộ mẫu, 3 entry mới; OFF, cue/timing/data và chủ sở hữu cũ giữ nguyên. Quét trang trí theo thời lượng câu, không giả word timing. Giới hạn hạt/layout, pause/seek/editor, Unicode/bidi và câu ngắn được kiểm tra. 357 pass +11 skip lịch sử, 48 DPI, 27 checkout gates; 814 hashes dữ liệu không đổi. Native/EXE vẫn riêng. Xem [SUBTITLE_PARTICLES.md](SUBTITLE_PARTICLES.md).
+
+Hiệu ứng sub 04/10/2026: nhóm tùy chọn OFF mặc định, chuyển động/màu/mờ/ánh sáng và preview; giữ renderer gốc khi tắt, cue/timing/data/ASR/dịch và guard video/editor. Có regression pixel/geometry/seek/câu lặp/pause/settings, source snapshots riêng và hash dữ liệu. Native/EXE riêng. Xem [SUBTITLE_EFFECTS.md](SUBTITLE_EFFECTS.md).
+
+Kết quả phase hiệu ứng: **343 pass +11 historical skip**, 44 DPI tests, 26 checkout gates, 814 file dữ liệu giữ hash. Không quy kết thành full native/GPU/EXE parity.
+
+Import 04/10/2026: sửa namespace downloader/resource-cache theo entry gốc, không đổi xử lý/data. Giữ user edits, không áp refactor app.* hoặc sửa helper/test legacy không được gọi. Startup import kiểm chứng bằng process mới không có repo root; 325 pass +11 skip, 24 checkout gates và 42 data hashes đạt. Simulated frozen chưa phải EXE thật; một native runner crash trước rerun chưa xác định nguyên nhân. Xem [RUNTIME_IMPORT_FIX.md](RUNTIME_IMPORT_FIX.md).
+
+Downloader 04/10/2026: giữ audio nguồn là cải thiện chủ ý cho file tải mới, không thay file cũ. Legacy keys/options, MP3/Low còn giữ; bounded selector/remux/UTF-8 settings. Production ngoài ba module không đổi; 42 data hashes đạt. 321 pass +11 skip, 20 DPI, 23 checkout gates; không suy ra live network/EXE parity. Xem [DOWNLOAD_QUALITY_FIX.md](DOWNLOAD_QUALITY_FIX.md).
+
+Âm lượng/build 04/10/2026: nhớ mức người dùng, mặc định lần đầu 50%, ô phần trăm trong Cài đặt và reset; gain/DSP/nguồn/owners cũ giữ nguyên. 11 focused checks và 22 source gates đạt; không full suite theo yêu cầu. Build script đã sửa/dry-run kiểm tra, venv thiếu PyInstaller nên EXE thật chưa nghiệm thu. Xem [VOLUME_AND_BUILD.md](VOLUME_AND_BUILD.md).
+
+Metadata 04/10/2026: **R1/R2 đã sửa**: thông số file gốc thật, đọc sidecar/ffprobe nền, một latest owned worker, RAM-only cache và shutdown. Giữ player/audio/video/lyric/ASR/save-data; không sửa hook Qt hoặc batch cache. Kiểm chứng và giới hạn nghiệm thu ở [MEDIA_INFO_FIX.md](MEDIA_INFO_FIX.md); audit phía dưới là trạng thái trước sửa.
+
+Audit sau commit audio 04/10/2026: regression hiện hành đạt 284 pass +11 historical skip ở DPI thường/200%, 19 checkout gates, 31/31 saved hashes; entry import với portable libs đạt. Vẫn có metadata Codec hardcode và description GUI blocking đã tái hiện; hook pre-Qt còn NameError trong nhánh lỗi và được giữ ngoài scope cũ. Không gọi kết quả này là zero-bug/full native/GPU/network/EXE parity. Chưa đổi production hoặc saved data. Xem [FINAL_FLOW_REVIEW.md](FINAL_FLOW_REVIEW.md).
+
 Dễ nghe 04/10/2026: thêm riêng hai tone loa/tai nghe, preamp −1,5 dB, EQ nhẹ và Meier stereo tùy chọn. Năm tone/filter/gain/cache key/version cũ giữ nguyên, không tự đổi normalize/target hoặc saved data. 284 pass +11 historical skip, 114 DPI tests; commit chốt chuỗi audio hiện hành theo yêu cầu. Không thêm limiter/compressor hay cam kết phục hồi 128k. Xem [AUDIO_EASY_LISTENING.md](AUDIO_EASY_LISTENING.md).
 
 Chất âm 04/10/2026: thêm **Ấm** (EQ cut nhỏ) và **Tai nghe** (Ấm + crossfeed nhẹ cho stereo), OFF/preset/filter/gain/cache key cũ giữ nguyên. Không đổi player/controller/prefetch/ASR/dữ liệu cũ; không nén động hoặc giả vang/AI/denoise. 277 pass +11 skip, 107 DPI tests, 31/31 saved hashes; decoder thật giữ seek/pause/rate/volume/owners và quay về gốc. Cảm nhận nghe lâu/chất lượng vẫn cần nghe A/B thiết bị thật. Xem [AUDIO_LISTENING_STYLES.md](AUDIO_LISTENING_STYLES.md).
@@ -67,3 +95,8 @@ Giai đoạn UI: kiểm tra hash mọi source ngoài `app/ui`, chữ ký API/sig
 Không có status full parity pass từ audit. `restored-app-baseline.json` ghi source hashes/calls/imports; `restored-contract-probes.json` ghi probe cô lập. Không xóa module legacy/demo khi chưa biết caller.
 
 Quy trình: fixture hành vi cũ → patch nhỏ → so sánh data/API/signals/lifecycle → measurement → actual-media/EXE checks phù hợp. Patch giữ đầu ra khác patch sửa accuracy; ghi riêng lý do và kết quả.
+# Audit downloader (04/10/2026)
+
+Luồng tải/preset/settings/engine và media cũ chưa đổi. Kiểm tra offline 12
+command và 12 fixture selector phát hiện các vấn đề chất lượng/chọn format;
+chưa có xác nhận live YouTube hoặc EXE. Xem [DOWNLOAD_QUALITY_REVIEW.md](DOWNLOAD_QUALITY_REVIEW.md).

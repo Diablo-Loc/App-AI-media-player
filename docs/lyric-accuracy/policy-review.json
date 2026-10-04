@@ -1,0 +1,283 @@
+{
+  "reference": "Captured ASR replay and synthetic text benchmark; no fresh ASR/human ground truth",
+  "comparisons": [
+    {
+      "dataset": "A Small Miracle(short)-round-1.json",
+      "old_cues": 25,
+      "new_cues": 25,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "A Small Miracle(short)-round-2.json",
+      "old_cues": 25,
+      "new_cues": 25,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "A Small Miracle(short)-round-3.json",
+      "old_cues": 25,
+      "new_cues": 25,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Brand New Sky-round-1.json",
+      "old_cues": 49,
+      "new_cues": 49,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Brand New Sky-round-2.json",
+      "old_cues": 49,
+      "new_cues": 49,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Brand New Sky-round-3.json",
+      "old_cues": 49,
+      "new_cues": 49,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Empty old City - Looma-round-1.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Empty old City - Looma-round-2.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Empty old City - Looma-round-3.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-1.json",
+      "old_cues": 43,
+      "new_cues": 43,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-2.json",
+      "old_cues": 43,
+      "new_cues": 43,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-3.json",
+      "old_cues": 43,
+      "new_cues": 43,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unwavering Startorch-round-1.json",
+      "old_cues": 35,
+      "new_cues": 35,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unwavering Startorch-round-2.json",
+      "old_cues": 35,
+      "new_cues": 35,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "Unwavering Startorch-round-3.json",
+      "old_cues": 35,
+      "new_cues": 35,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json",
+      "old_cues": 44,
+      "new_cues": 44,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-2.json",
+      "old_cues": 44,
+      "new_cues": 44,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-3.json",
+      "old_cues": 44,
+      "new_cues": 44,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json",
+      "old_cues": 55,
+      "new_cues": 55,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-2.json",
+      "old_cues": 55,
+      "new_cues": 55,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-3.json",
+      "old_cues": 55,
+      "new_cues": 55,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "人生エンドロール-round-1.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "人生エンドロール-round-2.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    },
+    {
+      "dataset": "人生エンドロール-round-3.json",
+      "old_cues": 28,
+      "new_cues": 28,
+      "exact_old_output_equal": true,
+      "previous_character_inventory_retained": true,
+      "added_characters": 0,
+      "no_overlap": true,
+      "in_bounds": true,
+      "newly_accepted_text": []
+    }
+  ],
+  "filter_benchmark": {
+    "old_credit_policy": {
+      "calls": 10000,
+      "median_ms": 78.2653999995091,
+      "accepted": 3750
+    },
+    "new_credit_policy": {
+      "calls": 10000,
+      "median_ms": 37.12700000323821,
+      "accepted": 6250
+    }
+  },
+  "saved_files": 817,
+  "changed_saved_files": []
+}

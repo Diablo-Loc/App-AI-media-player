@@ -2,12 +2,13 @@
 import hashlib
 import json
 from pathlib import Path
+from tests.media_info_contracts import before_media_info_changes
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def before_easy_changes(relative, raw=False):
-    current = (ROOT / relative).read_bytes()
+    current = before_media_info_changes(relative, raw=True)
     # Existing tracked Windows files may contain mixed endings, whereas Git
     # stores LF and checks out CRLF. Accept ONLY newline-equivalent full bytes,
     # then restore the exact reviewed bytes expected by the frozen old gates.

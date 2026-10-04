@@ -1,6 +1,7 @@
 import os
 from PySide6.QtCore import QThread, Signal
 from thumbnail.thumbnail_manager import ThumbnailManager
+from thumbnail.cache_batch import ThumbnailCacheBatch
 
 class ThumbnailWorker(QThread):
     # Signal trả về: (ID_video, Đường_dẫn_ảnh)
@@ -15,6 +16,13 @@ class ThumbnailWorker(QThread):
         self.is_running = True
 
     def run(self):
+        batch = ThumbnailCacheBatch(self.library)
+        try:
+            self._scan(batch)
+        finally:
+            batch.flush()
+
+    def _scan(self, batch):
         for item in self.queue:
             if not self.is_running: break
             
@@ -31,7 +39,7 @@ class ThumbnailWorker(QThread):
             if thumb_path:
                 # 3. 🔥 QUAN TRỌNG: Lưu ngược đường dẫn vào Database (JSON)
                 # Để lần sau mở App lên là load ngay lập tức
-                self.library.update_thumbnail_in_db(item.id, thumb_path)
+                batch.stage(item.id, thumb_path)
 
                 # 4. Gửi tín hiệu để UI hiển thị
                 self.thumbnail_ready.emit(item.id, thumb_path)

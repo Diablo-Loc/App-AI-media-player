@@ -1,0 +1,231 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "logical_cpus": 20,
+  "grid": [
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 19.761099996685516,
+      "completion_ms": 2654.7277999998187,
+      "cpu_ms": 1000.0,
+      "rss_delta_mib": 120.81640625,
+      "resident_cards": 1000,
+      "run": 0
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 41.94489999645157,
+      "completion_ms": 138.03000000189058,
+      "cpu_ms": 15.625,
+      "rss_delta_mib": 5.328125,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 15.625,
+          "wall_ms": 46.979900005680975,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 0.0,
+          "wall_ms": 45.27260000031674,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 15.625,
+          "wall_ms": 48.27600000135135,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 15.625,
+          "wall_ms": 45.23879999760538,
+          "cards": 25
+        }
+      ],
+      "run": 0
+    },
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 23.842100003093947,
+      "completion_ms": 2654.3597000054433,
+      "cpu_ms": 718.75,
+      "rss_delta_mib": 121.234375,
+      "resident_cards": 1000,
+      "run": 1
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 39.649300000746734,
+      "completion_ms": 138.51449999492615,
+      "cpu_ms": 15.625,
+      "rss_delta_mib": 5.03515625,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.188500000629574,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 0.0,
+          "wall_ms": 46.01659999752883,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 15.625,
+          "wall_ms": 47.09229999571107,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.550900002534036,
+          "cards": 25
+        }
+      ],
+      "run": 1
+    },
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 18.955699997604825,
+      "completion_ms": 2563.321100002213,
+      "cpu_ms": 875.0,
+      "rss_delta_mib": 121.18359375,
+      "resident_cards": 1000,
+      "run": 2
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 34.401299999444745,
+      "completion_ms": 140.7554999968852,
+      "cpu_ms": 0.0,
+      "rss_delta_mib": 5.18359375,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 0.0,
+          "wall_ms": 45.06989999936195,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.940700002072845,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.4608000004082,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 15.625,
+          "wall_ms": 47.059900003660005,
+          "cards": 25
+        }
+      ],
+      "run": 2
+    }
+  ],
+  "cache": [
+    {
+      "mode": "before",
+      "run": 0,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 1828.8190000021132,
+      "cpu_ms": 171.875,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 0,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 118.03040000086185,
+      "cpu_ms": 31.25,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "before",
+      "run": 1,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 1880.175699996471,
+      "cpu_ms": 468.75,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 1,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 106.80259999935515,
+      "cpu_ms": 0.0,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "before",
+      "run": 2,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 1860.4636000018218,
+      "cpu_ms": 406.25,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 2,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 93.87070000229869,
+      "cpu_ms": 46.875,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    }
+  ],
+  "production_sha256": {
+    "app/core/media_library.py": "47d4dd025661c92cad8e60519cd2928be5afe90f239e21927a1c5886524707a9",
+    "app/thumbnail/thumbnail_workers.py": "c05b7490da4fb87afbaec15c59123e5d71984b4443b70d2c7728bd63ab9a0513",
+    "app/ui/media_card.py": "d219200dfd54d79c0d8a9cc9d43b0665cda7a93f4cf3c7c572847efd78db57a9",
+    "app/ui/main_window.py": "f4ddb6bfe5294a4a898d617911c354f0faab3a280a42fbc8adaba4d1b4581e46",
+    "app/thumbnail/cache_batch.py": "f442055f2e775a94585aa17ab37fcd9cc15dd7109ca413cff1f3d013cba9944f",
+    "app/ui/library_thumbnail_queue.py": "dd1a59bf5ec647c6365dca9e8cfeef05725b4936765fa4ec9c375607d8fa6637",
+    "app/ui/library_grid_view.py": "35d7bf1f16805dad40ce1cf33d1558ad7255e013d015af6efd3fb45eb0fd0ac0"
+  },
+  "limitations": "Offscreen Qt, synthetic metadata, no images/native video/AI/GPU/network/EXE; CPU timer quantized."
+}

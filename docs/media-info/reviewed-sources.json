@@ -1,0 +1,38 @@
+{
+  "app/ui/main_window.py": {
+    "before_sha256": "4f0c0ecd2a42c72612d1a693225ee5f9a2304984e8cf1d9b98e0e19cf249334c",
+    "after_sha256": "2968c0061622d44157b6230c9c3a244ca22abfdf1a89e8078a1fe33ce73db340",
+    "changed_functions": [
+      "MainWindow.closeEvent"
+    ],
+    "added_functions": []
+  },
+  "app/ui/playback_bar.py": {
+    "before_sha256": "9088153def81389a2838ed943ee756d13c0f36954ddf9bb3752e848ce18e91e3",
+    "after_sha256": "44c84eba7ab750fc2d891d6a6b6aee229bf5f0903a3502b3ea9366f689ac1473",
+    "changed_functions": [
+      "PlaybackBar.set_media_info"
+    ],
+    "added_functions": []
+  },
+  "app/ui/video_info_popup.py": {
+    "before_sha256": "398209afb826bdb0dffff52ae03e9204d49c104d45c7174e20eecbcd58d9b23e",
+    "after_sha256": "bafeda30aa43a29e639a5fc679a299cacd5d77cd997c142f179b01b9b48ca752",
+    "changed_functions": [
+      "VideoInfoPopup.__init__",
+      "VideoInfoPopup.update_info",
+      "VideoInfoPopup.get_description_for_item"
+    ],
+    "added_functions": [
+      "VideoInfoPopup._apply_info"
+    ]
+  },
+  "tests/test_ui_media_surface.py": {
+    "before_sha256": "c50427f12ec232587a6abcd44cac2534ec7f59c0fcd539e89aae44360cb3b39e",
+    "after_sha256": "8ee532db1a046dbf143ea449326fa4b8bea8446d39e875cf3cf662dd6a7826ec",
+    "changed_functions": [
+      "PresentationAdapterSourceGate.test_original_functions_remain_identical_after_removing_only_adapters"
+    ],
+    "added_functions": []
+  }
+}

@@ -1,0 +1,3 @@
+✅ [Hệ thống] Đã khóa mục tiêu môi trường AI di động: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\libs
+✅ [Hệ thống] Đã đồng bộ bộ công cụ xử lý âm thanh tự động: D:\HocTap\11_MusicApp\App-AI-media-player\bin
+ENTRY_IMPORT_OK Qt=6.10.1

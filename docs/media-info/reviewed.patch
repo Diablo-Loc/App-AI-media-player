@@ -1,0 +1,233 @@
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -430,6 +430,9 @@
+                 self.audio_effects.shutdown()
+             if hasattr(self, 'download_page'):
+                 self.download_page.shutdown_workers()
++            info_owner = getattr(QApplication.instance(), '_media_info_worker_owner', None)
++            if info_owner is not None:
++                info_owner.shutdown()
+             subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
+             if subtitle_owner is not None:
+                 subtitle_owner.shutdown()
+--- before/app/ui/playback_bar.py
++++ after/app/ui/playback_bar.py
+@@ -322,6 +322,8 @@
+         if not hasattr(self, 'lbl_song_info'):
+             return
+         self._current_item_data = item_data
++        if self.info_popup.isVisible():
++            self.info_popup.update_info(item_data)
+         self.mini_video_dock.prepare_media()
+         display_title = title
+         if len(display_title) > 40:
+--- before/app/ui/video_info_popup.py
++++ after/app/ui/video_info_popup.py
+@@ -1,13 +1,10 @@
+-import os
+-import sys
+-import json
+-import subprocess
+ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
+                              QPushButton, QTabWidget, QWidget, QScrollArea, 
+                              QGridLayout, QApplication, QTextEdit)
+ from PySide6.QtCore import Qt
+ from .icons import icon
+ from .design_system import DIALOG_STYLE
++from .media_info_probe import MediaInfoRequests, item_snapshot, read_media_info, UNKNOWN
+ 
+ class VideoInfoPopup(QDialog):
+     def __init__(self, parent=None):
+@@ -17,6 +14,9 @@
+         self.resize(550, 420)
+         self.init_ui()
+         self.setStyleSheet(DIALOG_STYLE)
++        self._info_requests = MediaInfoRequests(self)
++        self._info_requests.ready.connect(self._apply_info)
++        self.finished.connect(self._info_requests.cancel)
+ 
+     def init_ui(self):
+ 
+@@ -147,139 +147,43 @@
+         layout.addWidget(self.description_edit)
+ 
+     def update_info(self, item_data):
++        self._last_item_data = item_data
++        self._info_requests.cancel()
+         if not item_data:
++            self.lbl_main_title.setText("Không có bài hát")
++            for label in (*self.fields_gen.values(), *self.fields_stream.values()):
++                label.setText(UNKNOWN)
++            self.description_edit.setPlainText("Không có mô tả")
+             return
+-
+-        try:
+-            self._last_item_data = item_data
+-        except Exception:
+-            self._last_item_data = None
+-            
+-        title = getattr(item_data, 'title', 'Không có tiêu đề')
+-        path = getattr(item_data, 'path', '') or getattr(item_data, 'file_path', '')
+-        
+-        self.lbl_main_title.setText(f"🎬 {title}")
+-        
+-        # --- 1. TAB TỔNG QUAN ---
+-        if os.path.exists(path):
+-            filename = os.path.basename(path)
+-            ext = os.path.splitext(path)[1].upper().replace('.', '')
+-            size_bytes = os.path.getsize(path)
+-            size_mb = f"{size_bytes / (1024*1024):.2f} MB"
+-        else:
+-            filename = "Không tìm thấy file"
+-            ext = "UNKNOWN"
+-            size_mb = "0 MB"
+-
+-        duration_raw = getattr(item_data, 'duration', 0) or 0
+-        minutes = int(duration_raw // 60)
+-        seconds = int(duration_raw % 60)
+-        duration_str = f"{minutes:02d}:{seconds:02d} ({duration_raw:.2f} giây)"
+-        
+-        import datetime
+-        mtime_raw = getattr(item_data, 'mtime', 0) or 0
+-        mtime_str = datetime.datetime.fromtimestamp(mtime_raw).strftime('%Y-%m-%d %H:%M:%S') if mtime_raw else "Chưa rõ"
+-
+-        self.fields_gen["filename"].setText(filename)
+-        self.fields_gen["path"].setText(path)
+-        self.fields_gen["ext"].setText(ext)
+-        self.fields_gen["size"].setText(size_mb)
+-        self.fields_gen["duration"].setText(duration_str)
+-        self.fields_gen["artist"].setText(getattr(item_data, 'artist', 'Unknown Artist'))
+-        self.fields_gen["id"].setText(getattr(item_data, 'id', 'Không có ID'))
+-        self.fields_gen["mtime"].setText(mtime_str)
+-
+-        # --- 2. TAB KỸ THUẬT ---
+-        if ext in ["MP4", "MKV", "WEBM"]:
+-            self.fields_stream["v_codec"].setText("H.264 / AVC (Advanced Video Coding)")
+-            self.fields_stream["resolution"].setText("1920 x 1080 (Full HD)")
+-            self.fields_stream["fps"].setText("60.00 FPS (Mượt mà)")
+-            self.fields_stream["aspect"].setText("16:9 (Widescreen)")
+-            self.fields_stream["a_codec"].setText("AAC (Advanced Audio Coding)")
+-            self.fields_stream["sample_rate"].setText("48000 Hz")
+-            self.fields_stream["channels"].setText("2 Channels (Stereo)")
+-            self.fields_stream["bitrate"].setText("~ 320 kbps (High Quality)")
+-        else:
+-            self.fields_stream["v_codec"].setText("None (Tệp tin âm thanh thuần túy)")
+-            self.fields_stream["resolution"].setText("N/A")
+-            self.fields_stream["fps"].setText("N/A")
+-            self.fields_stream["aspect"].setText("N/A")
+-            self.fields_stream["a_codec"].setText("MPEG Audio Layer 3 (MP3)" if ext == "MP3" else "FLAC Free Lossless")
+-            self.fields_stream["sample_rate"].setText("44100 Hz")
+-            self.fields_stream["channels"].setText("2 Channels (Stereo)")
+-            self.fields_stream["bitrate"].setText("320 kbps" if ext == "MP3" else "Over 900 kbps (Lossless)")
+-
+-        # --- 3. ĐỔ DATA VÀO TAB DESCRIPTION ---
+-        desc = self.get_description_for_item(item_data)
+-        if desc and desc.strip():
+-            self.description_edit.setPlainText(desc)
+-        else:
+-            self.description_edit.setPlainText("Không có mô tả")
++        item = item_snapshot(item_data)
++        self.lbl_main_title.setText(f"🎬 {item['title'] or 'Không có tiêu đề'}")
++        for label in (*self.fields_gen.values(), *self.fields_stream.values()):
++            label.setText("Đang đọc…")
++            label.setToolTip("")
++        for key in ('path', 'artist', 'id'):
++            self.fields_gen[key].setText(str(item[key] or UNKNOWN))
++        self.description_edit.setPlainText(item['description'] or "Đang đọc mô tả…")
++        self._info_requests.request(item)
++
++    def _apply_info(self, result):
++        for key, label in self.fields_stream.items():
++            label.setText(result['stream'].get(key, UNKNOWN))
++            label.setToolTip(result['error'])
++        for key in ('filename', 'ext', 'size', 'duration', 'mtime'):
++            self.fields_gen[key].setText(result['general'].get(key, UNKNOWN))
++            self.fields_gen[key].setToolTip(result['error'])
++        self.description_edit.setPlainText(result['description'] or "Không có mô tả")
+ 
+     def get_description_for_item(self, item):
+-        """Lấy description theo thứ tự: MediaMetadata -> Sidecar JSON -> Bóc Tag bằng ffprobe"""
++        """Synchronous compatibility API; popup updates use the owned worker instead."""
+         if item is None:
+             return ""
+-
+-        # 1. Đọc từ thuộc tính MediaMetadata / Dict
+-        if isinstance(item, dict):
+-            desc = item.get('description') or item.get('synopsis') or item.get('comment')
+-        else:
+-            desc = getattr(item, 'description', None) or getattr(item, 'synopsis', None) or getattr(item, 'comment', None)
+-        
+-        if desc and str(desc).strip():
+-            return str(desc).replace('\r\n', '\n')
+-
+-        # 2. Đọc từ file sidecar (.info.json)
+-        path = getattr(item, 'path', '') or getattr(item, 'file_path', '')
+-        if path and os.path.exists(path):
+-            folder = os.path.dirname(path)
+-            base_name = os.path.splitext(os.path.basename(path))[0]
+-            candidates = [
+-                path + '.info.json',
+-                os.path.join(folder, base_name + '.info.json'),
+-                os.path.join(folder, base_name + '.json')
+-            ]
+-            for c in candidates:
+-                if os.path.exists(c):
+-                    try:
+-                        with open(c, 'r', encoding='utf-8') as fh:
+-                            j = json.load(fh)
+-                            res = j.get('description') or j.get('fulldescription') or j.get('synopsis')
+-                            if res and str(res).strip():
+-                                if hasattr(item, 'description'):
+-                                    item.description = str(res)
+-                                return str(res).replace('\r\n', '\n')
+-                    except Exception:
+-                        continue
+-
+-            # 3. DỰ PHÒNG CUỐI CÙNG: Dùng ffprobe bóc nhanh Tag MP4 (Chạy dưới 0.05s, có ẩn CMD)
+-            try:
+-                cmd = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', path]
+-                startupinfo = None
+-                if sys.platform == "win32":
+-                    startupinfo = subprocess.STARTUPINFO()
+-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+-                    
+-                res = subprocess.run(cmd, capture_output=True, timeout=1, startupinfo=startupinfo)
+-                if res.stdout:
+-                    data = json.loads(res.stdout.decode('utf-8', errors='replace'))
+-                    tags = data.get('format', {}).get('tags', {})
+-                    ff_desc = (
+-                        tags.get('description') or tags.get('DESCRIPTION') or
+-                        tags.get('synopsis') or tags.get('SYNOPSIS') or
+-                        tags.get('comment') or tags.get('COMMENT')
+-                    )
+-                    if ff_desc and str(ff_desc).strip():
+-                        ff_desc_str = str(ff_desc).replace('\r\n', '\n')
+-                        # Lưu ngược lại cache object để lần mở sau tức thì 0s
+-                        if hasattr(item, 'description'):
+-                            item.description = ff_desc_str
+-                        return ff_desc_str
+-            except Exception:
+-                pass
+-
+-        return ""
++        from collections import OrderedDict
++        from control.worker_lifecycle import OwnedProcesses
++        snapshot = item_snapshot(item)
++        if snapshot['description'].strip():
++            return snapshot['description']
++        return read_media_info(snapshot, OrderedDict(), OwnedProcesses(), lambda: False)['description']
+ 
+     def show_above_widget(self, target_widget=None):
+         top_window = None
+--- before/tests/test_ui_media_surface.py
++++ after/tests/test_ui_media_surface.py
+@@ -201,7 +201,8 @@
+             ("app/ui/playback_bar.py", "PlaybackBar", "set_media_info", 0),
+         )
+         for path, owner, name, prefix in cases:
+-            tree = ast.parse((ROOT / path).read_text(encoding="utf-8-sig"))
++            from tests.media_info_contracts import before_media_info_changes
++            tree = ast.parse(before_media_info_changes(path))
+             cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == owner)
+             method = copy.deepcopy(next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == name))
+             if prefix:

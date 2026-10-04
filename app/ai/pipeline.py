@@ -231,9 +231,11 @@ def run_ai_pipeline(
                 print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
                 del model
                 torch.cuda.empty_cache()
-                model = WhisperModel("medium", device="cpu", compute_type="int8")
+                model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
+                                     else "medium", device="cpu", compute_type="int8")
                 # Chạy lại với file temp
-                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), word_timestamps=True)
+                from pipeline.lyric_accuracy import primary_options
+                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
                 segments_list = list(segments_generator)
                 detected_lang = fallback_info.language
             else:

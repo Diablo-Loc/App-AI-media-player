@@ -1,7 +1,7 @@
 import os
 import requests
 from pathlib import Path
-from app.paths import models_dir
+from .paths import models_dir
 
 
 def download_model_if_needed(model_name, save_dir: str | None = None):

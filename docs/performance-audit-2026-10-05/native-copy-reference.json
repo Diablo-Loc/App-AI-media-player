@@ -1,0 +1,35 @@
+{
+  "samples": [
+    {
+      "run": 0,
+      "callbacks": 10000,
+      "frames": 480,
+      "channels": 2,
+      "sample_rate": 48000,
+      "copied_bytes": 38400000,
+      "cpu_ms": 0.0,
+      "wall_ms": 20.18409999436699
+    },
+    {
+      "run": 1,
+      "callbacks": 10000,
+      "frames": 480,
+      "channels": 2,
+      "sample_rate": 48000,
+      "copied_bytes": 38400000,
+      "cpu_ms": 0.0,
+      "wall_ms": 19.989000000350643
+    },
+    {
+      "run": 2,
+      "callbacks": 10000,
+      "frames": 480,
+      "channels": 2,
+      "sample_rate": 48000,
+      "copied_bytes": 38400000,
+      "cpu_ms": 0.0,
+      "wall_ms": 19.701299999724142
+    }
+  ],
+  "limitations": "Synthetic pointer/callback only; no DLL, WASAPI capture, Qt signal dispatch or native CPU measurement."
+}

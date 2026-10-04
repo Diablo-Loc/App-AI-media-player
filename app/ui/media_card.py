@@ -2,10 +2,11 @@ from datetime import datetime
 from pathlib import Path
 
 # Thêm QCache để quản lý bộ nhớ đệm
-from PySide6.QtGui import QImageReader, QPixmap, QPixmapCache
-from PySide6.QtCore import Qt, QSize, Signal, QThreadPool, QRunnable, QObject
-from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QSizePolicy, QFrame)
+from PySide6.QtGui import QImage, QImageReader, QPixmap, QPixmapCache
+from PySide6.QtCore import Qt, QSize, Signal, QThreadPool, QRunnable, QObject, QPoint, QRect, QEvent
+from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QSizePolicy, QFrame, QAbstractScrollArea, QApplication)
 from .icons import label_icon
+from .library_thumbnail_queue import library_thumbnail_queue
 
 QPixmapCache.setCacheLimit(102400)
 # =========================================================
@@ -14,7 +15,8 @@ QPixmapCache.setCacheLimit(102400)
 class LoaderSignals(QObject):
     """Tín hiệu để gửi kết quả từ luồng ngầm về giao diện chính"""
     # Gửi kèm đường dẫn (str) để làm Key lưu vào Cache
-    finished = Signal(str, QPixmap)
+    finished = Signal(str, QImage)
+    done = Signal(object)
 
 class ImageLoader(QRunnable):
     """
@@ -28,6 +30,7 @@ class ImageLoader(QRunnable):
         self.target_h = target_h
         self.signals = LoaderSignals()
         self._is_cancelled = False
+        self._completed = False
 
     def cancel(self):
         """Hàm để bên ngoài ra lệnh dừng luồng"""
@@ -35,9 +38,8 @@ class ImageLoader(QRunnable):
     
     def run(self):
         # ✅ Kiểm tra 1: Trước khi bắt đầu làm việc nặng
-        if self._is_cancelled: return
-        
         try:
+            if self._is_cancelled: return
             reader = QImageReader(self.path)
             reader.setAutoTransform(True)
             orig_size = reader.size()
@@ -62,12 +64,14 @@ class ImageLoader(QRunnable):
                 return
             
             if not image.isNull():
-                pixmap = QPixmap.fromImage(image)
                 # Gửi hàng về cho Main Thread (kèm đường dẫn để định danh)
-                self.signals.finished.emit(self.cache_key, pixmap)
+                self.signals.finished.emit(self.cache_key, image)
                 
         except Exception:
             pass # Lỗi đọc file thì bỏ qua
+        finally:
+            self._completed = True
+            self.signals.done.emit(self)
 
 # =========================================================
 # 🎬 MAIN UI: MEDIA CARD (FINAL VERSION: ASYNC + CACHE)
@@ -77,6 +81,7 @@ class MediaCard(QFrame):
     
     # Hồ bơi Thread dùng chung cho TOÀN BỘ app (Quản lý CPU)
     thread_pool = QThreadPool()
+    thread_pool.setMaxThreadCount(2)
     
     def __init__(self, metadata, parent=None):
         super().__init__(parent)
@@ -87,6 +92,7 @@ class MediaCard(QFrame):
         self._is_active = False
         self._is_loaded = False # Cờ đánh dấu đã load xong chưa
         self._current_worker = None #Theo dõi worker hiện tại
+        self._attempt_key = None
         
         # Tạo Cache Key khởi tạo
         self._update_cache_key()
@@ -105,9 +111,19 @@ class MediaCard(QFrame):
         self.show_default_icon()
 
     def _update_cache_key(self):
-        """Tạo định danh duy nhất dựa trên Path + Thời gian sửa file"""
+        """RAM-only decoded-image context; persistent thumbnail paths stay unchanged."""
         mtime = getattr(self.metadata, 'mtime', 0)
-        self.cache_key = f"{self.metadata.thumbnail}::{mtime}"
+        path = self.metadata.thumbnail
+        try:
+            stat = Path(path).stat() if path else None
+        except OSError:
+            stat = None
+        signature = (stat.st_mtime_ns, stat.st_size) if stat else None
+        label = getattr(self, 'thumb_label', None)
+        w = label.width() if label and label.width() > 0 else 200
+        h = label.height() if label and label.height() > 0 else 125
+        dpr = self.devicePixelRatioF()
+        self.cache_key = f"library_scaled_{path}::{mtime}::{signature}::{int(w*dpr)}x{int(h*dpr)}::{dpr}"
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
@@ -159,7 +175,6 @@ class MediaCard(QFrame):
         # Nếu chưa load và có đường dẫn -> Bắt đầu quy trình load
         if not self._is_loaded and self.metadata.thumbnail:
             self._start_async_loading() # ✅ Gọi trơn thôi
-            self._is_loaded = True 
 
     def update_thumbnail(self, path):
         """
@@ -172,17 +187,21 @@ class MediaCard(QFrame):
         
         # Reset cờ load để nó biết là cần load lại
         self._is_loaded = False
+        self._attempt_key = None
+        self._cancel_thumbnail()
         
         # Nếu đang hiển thị thì load luôn, nếu không để paintEvent lo
-        if self.isVisible():
+        if self._can_load_thumbnail():
             self._start_async_loading()
-            self._is_loaded = True
         else:
             self.show_default_icon()
 
     def _start_async_loading(self):
         path = self.metadata.thumbnail
-        if not path: return
+        if not path or not self._can_load_thumbnail(): return
+        self._update_cache_key()
+        if self._attempt_key == self.cache_key:
+            return
 
         # 1. Check Cache RAM (Nhanh như điện)
         # Tìm chính xác theo Key (Path + mtime)
@@ -190,20 +209,18 @@ class MediaCard(QFrame):
         if cached_pixmap:
             self.thumb_label.setPixmap(cached_pixmap)
             self.thumb_label.setScaledContents(False)
-            return 
+            self._is_loaded = True
+            self._attempt_key = self.cache_key
+            return
 
         # 2. Quản lý luồng cũ
-        if self._current_worker:
-            try:
-                self._current_worker.cancel()
-            except Exception:
-                pass
+        self._cancel_thumbnail()
 
         if not Path(path).exists(): return
 
         w = self.thumb_label.width() if self.thumb_label.width() > 0 else 200
         h = self.thumb_label.height() if self.thumb_label.height() > 0 else 125
-        pixel_ratio = self.devicePixelRatio()
+        pixel_ratio = self.devicePixelRatioF()
         
         # Truyền cache_key vào Worker để đảm bảo tính nhất quán
         loader = ImageLoader(self.cache_key, str(path), int(w * pixel_ratio), int(h * pixel_ratio))
@@ -212,21 +229,31 @@ class MediaCard(QFrame):
         except RuntimeError:
             pass
         self._current_worker = loader  # Lưu lại worker hiện tại để có thể hủy nếu cần
-        MediaCard.thread_pool.start(loader)
+        self._attempt_key = self.cache_key
+        library_thumbnail_queue(MediaCard.thread_pool).submit(self, loader)
 
     def _on_thumbnail_loaded(self, incoming_key, pixmap):
         """
         Nhận ảnh từ Worker.
         """
-        self._current_worker = None  # Xong việc thì giải phóng tham chiếu
         try:
+            if incoming_key != self.cache_key:
+                return
+            worker = self._current_worker
+            if worker is not None and self.sender() is not worker.signals:
+                return
+            self._current_worker = None
+            if not self._can_load_thumbnail():
+                return
+            if isinstance(pixmap, QImage):
+                pixmap = QPixmap.fromImage(pixmap)
             if not isinstance(pixmap, QPixmap):
                 return
 
             if pixmap.isNull():
                 return
 
-            pixmap.setDevicePixelRatio(self.devicePixelRatio())
+            pixmap.setDevicePixelRatio(self.devicePixelRatioF())
 
             # 2. Luôn lưu vào Cache (để lần sau dùng lại)
             QPixmapCache.insert(incoming_key, pixmap)
@@ -240,9 +267,73 @@ class MediaCard(QFrame):
                 self.thumb_label.clear()
                 self.thumb_label.setPixmap(pixmap)
                 self.thumb_label.setScaledContents(False)
+                self._is_loaded = True
 
         except RuntimeError:
             pass  # Widget đã bị xóa
+
+    def _can_load_thumbnail(self):
+        if not self.isVisible():
+            return False
+        ancestor = self.parentWidget()
+        while ancestor is not None:
+            if isinstance(ancestor, QAbstractScrollArea):
+                viewport = ancestor.viewport()
+                return QRect(self.mapTo(viewport, QPoint()), self.size()).intersects(viewport.rect())
+            ancestor = ancestor.parentWidget()
+        return True
+
+    def _cancel_thumbnail(self):
+        queue = getattr(QApplication.instance(), '_library_thumbnail_queue', None)
+        if queue:
+            queue.cancel(self)
+        if self._current_worker:
+            self._current_worker.cancel()
+            self._current_worker = None
+
+    def hideEvent(self, event):
+        self._cancel_thumbnail()
+        self._attempt_key = None
+        self._is_loaded = False
+        super().hideEvent(event)
+
+    def resizeEvent(self, event):
+        if hasattr(self, '_current_worker'):
+            self._cancel_thumbnail()
+        self._is_loaded = False
+        self._attempt_key = None
+        super().resizeEvent(event)
+        if hasattr(self, 'thumb_label'):
+            self.layout().activate()
+            self._update_cache_key()
+
+    def event(self, event):
+        if event.type() == QEvent.Type.DevicePixelRatioChange and hasattr(self, '_current_worker'):
+            self._cancel_thumbnail()
+            self._attempt_key = None
+            self._is_loaded = False
+            self._update_cache_key()
+            self.update()
+        return super().event(event)
+
+    def bind_media(self, metadata):
+        """Reuse a presentation card; emitted selection always uses current metadata."""
+        self._cancel_thumbnail()
+        self.media_item = self.metadata = metadata
+        self.id = metadata.id
+        self._is_loaded = False
+        self._attempt_key = None
+        self.title_label.setText(metadata.title)
+        raw_date = getattr(metadata, 'mtime', None)
+        date_text = raw_date if isinstance(raw_date, str) else ''
+        if isinstance(raw_date, (float, int)) and raw_date > 0:
+            try:
+                date_text = datetime.fromtimestamp(raw_date).strftime('%d/%m/%Y')
+            except Exception:
+                pass
+        self.date_label.setText(date_text)
+        self._update_cache_key()
+        self.show_default_icon()
 
     def show_default_icon(self):
         self.thumb_label.clear()

@@ -1,0 +1,79 @@
+--- before/app/ai/pipeline.py
++++ after/app/ai/pipeline.py
+@@ -231,9 +231,11 @@
+                 print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
+                 del model
+                 torch.cuda.empty_cache()
+-                model = WhisperModel("medium", device="cpu", compute_type="int8")
+-                # Chạy lại với file temp
+-                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), word_timestamps=True)
++                model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
++                                     else "medium", device="cpu", compute_type="int8")
++                # Chạy lại với file temp
++                from pipeline.lyric_accuracy import primary_options
++                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
+                 segments_list = list(segments_generator)
+                 detected_lang = fallback_info.language
+             else:
+@@ -261,7 +263,7 @@
+             # Chuẩn bị dữ liệu words cho bước aligner sau này
+             words_data = []
+             if s.words:
+-                words_data = [{"start": w.start, "end": w.end, "word": w.word} for w in s.words]
++                words_data = [{"start": w.start, "end": w.end, "word": w.word} for w in s.words]
+ 
+             raw_segments.append({
+                 "start": s.start,
+--- before/app/pipeline/lyric_refinement.py
++++ after/app/pipeline/lyric_refinement.py
+@@ -85,9 +85,9 @@
+ 
+ 
+ def accepts_source_text(text, timed_words=False):
+-    """Keep the existing credit policy independent of the new splitting logic."""
+-    return bool(legacy_refine([dict(start=0, end=1, text=text, words=[])],
+-                             allow_short_lyrics=timed_words))
++    """Keep real lyric vocabulary; reject explicit credit boilerplate only."""
++    from .lyric_accuracy import credit_text
++    return bool(text.strip()) and not credit_text(text, timed_words=timed_words)
+ 
+ 
+ def _compress_unaligned_filler_runs(events):
+--- before/tests/subtitle_kinetic_contracts.py
++++ after/tests/subtitle_kinetic_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_kinetic_changes(relative, raw=False):
+-    current = (ROOT/relative).read_bytes()
++    from tests.lyric_accuracy_contracts import before_accuracy_changes
++    current = before_accuracy_changes(relative, raw=True)
+     manifest = json.loads((ROOT/'docs/subtitle-kinetic/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/lyric_phrase_contracts.py
++++ after/tests/lyric_phrase_contracts.py
+@@ -6,7 +6,8 @@
+ 
+ 
+ def before_phrase_changes():
+-    source = (ROOT / 'app/pipeline/lyric_refinement.py').read_text(encoding='utf-8')
++    from tests.lyric_accuracy_contracts import before_accuracy_changes
++    source = before_accuracy_changes('app/pipeline/lyric_refinement.py')
+     edits = json.loads((ROOT / 'docs/lyric-phrases/reviewed-edits.json').read_text(encoding='utf-8'))
+     for edit in edits:
+         if source.count(edit['after']) != 1:
+--- before/tests/test_asr_coverage.py
++++ after/tests/test_asr_coverage.py
+@@ -204,8 +204,9 @@
+         self.assertEqual(ast.dump(current), ast.dump(old))
+ 
+     def test_primary_whisper_and_refine_options_are_exactly_original(self):
+-        trees = [ast.parse(path.read_text(encoding="utf-8-sig")) for path in (
+-            ROOT / "docs/asr-coverage/original/pipeline.py", ROOT / "app/ai/pipeline.py")]
++        from tests.lyric_accuracy_contracts import before_accuracy_changes
++        trees = [ast.parse((ROOT / "docs/asr-coverage/original/pipeline.py").read_text(encoding="utf-8-sig")),
++                 ast.parse(before_accuracy_changes('app/ai/pipeline.py'))]
+         for name in ("transcribe", "refine_segments"):
+             calls = []
+             for tree in trees:

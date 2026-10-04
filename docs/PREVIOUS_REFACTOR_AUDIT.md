@@ -1,5 +1,31 @@
 # Kiểm tra đợt refactor trước
 
+Tối ưu tài nguyên 05/10/2026: không áp architectural refactor. Chỉ bốn module tài nguyên/UI và ba helper mới; gỡ đúng năm grid adapters/import phục hồi toàn AST MainWindow trước phase. Giữ worktree edits, sub/audio/ASR/dữ liệu và frozen manifests. Snapshot/adapter mới phục hồi gate lịch sử; phạm vi và đo trước/sau ghi ở [RESOURCE_PERFORMANCE_FIX.md](RESOURCE_PERFORMANCE_FIX.md).
+
+Audit tài nguyên 05/10/2026: chỉ thêm báo cáo/probe/snapshot mới, không áp refactor hoặc sửa code app. Quét cả tám ví dụ Python ignored; không thực thi chúng. Cache/grid được đo bằng production methods trong môi trường cô lập; toàn source và 49 file phụ đề/output/video đã tồn tại giữ nguyên. Hash 819/819 đầu probe đạt; kiểm tra cuối có cache/index/file mới cập nhật trong phiên và ghi riêng, không khẳng định cả storage bất biến. Những manifest cũ và worktree edits có sẵn không được recapture/rollback. Xem [APP_PERFORMANCE_REVIEW.md](APP_PERFORMANCE_REVIEW.md).
+
+Lyric nhẹ 04/10/2026: chỉ hai production adapters và một pure policy helper; không refactor player/AI lifecycle/import namespaces. Gỡ toàn bộ retry/consensus thử theo yêu cầu ưu tiên hiệu năng; original/reviewed snapshots phase mới phục hồi gates cũ, không recapture lịch sử. Xem [LYRIC_ACCURACY_LIGHTWEIGHT.md](LYRIC_ACCURACY_LIGHTWEIGHT.md).
+
+Audit Whisper 04/10/2026: không refactor hoặc thay tham số nhận dạng; chỉ thêm probe read-only và báo cáo riêng. Snapshot/manifest lịch sử, dữ liệu lưu và worktree edits giữ nguyên. Phân biệt regression với lyrics/timing ground truth ở [ASR_ACCURACY_REVIEW.md](ASR_ACCURACY_REVIEW.md).
+
+Typography 04/10/2026: thêm một kinetic painter và sửa hai effect helpers, không architectural refactor. Baseline/manifest phase cũ giữ nguyên, source gates phục hồi exact qua adapter mới; legacy pixel, timer/decoder/window ownership và persisted sub giữ nguyên. Xem [SUBTITLE_KINETIC.md](SUBTITLE_KINETIC.md).
+
+Vệt quét 04/10/2026: người dùng cho phép ẩn phần chữ đã quét, riêng tùy chọn presentation. Không refactor/subtitle migration; ba helper hiện có, preset/settings và masks được chụp trong phase mới, các manifest trước giữ nguyên. Pixel effect cũ khi bỏ chọn đối chiếu snapshot, cue/clock/owners unchanged. Xem [SUBTITLE_SWEEP.md](SUBTITLE_SWEEP.md).
+
+Hiệu ứng hạt 04/10/2026: chỉ mở rộng hai helper presentation và thêm particle painter, không refactor pipeline/owners hoặc đổi dữ liệu cũ. Giữ renderer OFF; exact adapters phục hồi source trước phase để chạy toàn bộ gates cũ, không recapture manifest lịch sử. 357 pass +11 skip, 48 DPI, 27 checkout gates; giới hạn native/EXE và frame lạnh ghi tại [SUBTITLE_PARTICLES.md](SUBTITLE_PARTICLES.md).
+
+Hiệu ứng sub 04/10/2026: thêm presentation tùy chọn, không áp refactor hoặc đổi pipeline. Chỉ ba UI adapters và hai helpers, toàn source SubtitleLayer khớp trước khi bỏ hook mới; OFF pixel comparison và source gates giữ hợp đồng cũ. Xem [SUBTITLE_EFFECTS.md](SUBTITLE_EFFECTS.md).
+
+Import 04/10/2026: prefix app.* ở policy là lỗi đưa vào downloader phase, được sửa theo top-level namespace của baseline. Không có thay đổi entry/sys.path hoặc xử lý audio/AI. Quét thêm 5 lazy imports trỏ controller/cache thật; child process -I bắt lỗi mà test root-path cũ che. Xem [RUNTIME_IMPORT_FIX.md](RUNTIME_IMPORT_FIX.md).
+
+Downloader 04/10/2026: pure policy +ba adapter nhỏ, không architectural refactor. Giữ codec nguồn thay vì ép AAC ở Extreme/High video, bounded fallback/remux và giữ partial của tác vụ khác. Snapshot mới restore volume phase; historical manifests, GetTitleWorker/updater/DSP/ASR/playback không đổi. Xem [DOWNLOAD_QUALITY_FIX.md](DOWNLOAD_QUALITY_FIX.md).
+
+Âm lượng/build 04/10/2026: helper lưu user volume + UI/reset adapters được duyệt, không đổi audio DSP/controller/gain hoặc kiến trúc cũ. Exact adapter mới restore metadata phase; historical manifests frozen. Build script giữ hidden imports/data mapping và bỏ xóa output cũ, không nâng/cài runtime. Xem [VOLUME_AND_BUILD.md](VOLUME_AND_BUILD.md).
+
+Metadata 04/10/2026: sửa riêng hai lỗi baseline R1/R2 được user duyệt, không reapply refactor. Three existing UI modules + one helper, exact new source snapshots và adapter cho gate trực tiếp; không recapture manifest lịch sử hoặc migrate data. Xem [MEDIA_INFO_FIX.md](MEDIA_INFO_FIX.md).
+
+Audit sau commit audio 04/10/2026: AST của popup update_info/description và hook startup hiện tại khớp baseline `4148c13`; thông số Codec cố định, GUI ffprobe và pre-Qt NameError là vấn đề tồn tại từ code cũ, không chứng cứ audio/UI mới phá các hàm này. Full regression/DPI/checkout gates và saved hashes đạt; chưa sửa production hoặc architectural imports. Xem [FINAL_FLOW_REVIEW.md](FINAL_FLOW_REVIEW.md).
+
 Dễ nghe/commit 04/10/2026: chỉ policy/popup production đổi trong phase mới; năm tone/filter/gain/key cũ giữ nguyên, không tái áp architectural refactor. Archive raw bytes và adapter newline-only đối chiếu toàn file giúp Git checkout không phá gate hash cũ; không recapture prior manifests. Commit theo yêu cầu gom chuỗi audio chưa commit và tiền đề import đã có; để build/spec/requirements/log thay đổi của user ngoài phạm vi. Xem [AUDIO_EASY_LISTENING.md](AUDIO_EASY_LISTENING.md).
 
 Chất âm 04/10/2026: thay đổi được user cho phép chỉ ở ba production module policy/prepare/popup. Hai tone token mới không đổi profile/cache keys cũ, truyền channels trong analysis/render để không downmix mono/surround. Exact new snapshot gates phục hồi code trước style trước khi test gate lịch sử; một test raw-hash realtime dùng adapter này thay vì bỏ kiểm tra. Không architectural refactor, model/ASR/lifecycle/source-data changes. Xem [AUDIO_LISTENING_STYLES.md](AUDIO_LISTENING_STYLES.md).

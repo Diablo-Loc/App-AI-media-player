@@ -1,5 +1,11 @@
 # App-AI-media-player (BoTube)
 
+Phụ đề có 8 bộ mẫu typography mạnh: Mưa chữ, Domino, Bung chữ, Xoáy, Lật 2D, Sóng, Máy chữ và Nhịp chữ; chọn lực/chia cụm riêng trong Cài đặt phụ đề. [GIF và phạm vi kiểm chứng](docs/SUBTITLE_KINETIC.md).
+
+Hiệu ứng sub: chọn lại bộ mẫu Phi tiêu/Sao/Sao băng/Tinh thể hoặc bật **Ẩn chữ sau vệt quét** để chữ đã qua giữ ẩn tới hết câu. File/timing sub không đổi. [Preview và cách dùng](docs/SUBTITLE_SWEEP.md).
+
+Phụ đề: 9 bộ mẫu phi tiêu/sao/cánh hoa và các hiệu ứng theo câu, OFF mặc định, chỉnh riêng mật độ/chuyển động/màu trong Cài đặt phụ đề. [Preview và phạm vi kiểm chứng](docs/SUBTITLE_PARTICLES.md).
+
 For You: gutter/search cân đối 12 px, thanh tiêu đề native đồng bộ màu trên Windows hỗ trợ. Giữ PySide6 và các luồng cửa sổ/video hiện có. [Báo cáo UI](docs/FORYOU_SPACING_AND_CAPTION.md).
 
 Lyric: cải thiện chia câu cho phụ đề tạo mới, giữ nguyên các bài đã lưu. [Phạm vi sửa và kiểm chứng](docs/LYRIC_PHRASE_GROUPING.md).
@@ -88,7 +94,8 @@ appropriate helper script (`update_helper.bat` or `.sh`) to apply the update.
 
 ## Building
 
-- `python build_app.py` produces the full `BoTube.exe` in `dist/BoTube`.
+- Install the packaging tool with `.\venv\Scripts\python.exe -m pip install -r requirements-build.txt`, then run `.\venv\Scripts\python.exe build_app.py --dry-run` and `.\venv\Scripts\python.exe build_app.py`.
+- Output is `dist/BoTube/BoTube.exe` when that folder is new; an existing portable build is preserved and the new output goes to `dist/release-<timestamp>/BoTube/BoTube.exe`. The script prints the final path. Keep the whole portable folder, including `_internal` and `bin`. See [volume/build verification and limits](docs/VOLUME_AND_BUILD.md).
 - `python patch_build.py` creates a tiny `BoTube_patch.exe` and an accompanying
   `update.zip` containing the patcher plus current `version.json`.
 

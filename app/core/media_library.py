@@ -200,12 +200,22 @@ class MediaLibrary:
             logger.info(f"🧹 Đã dọn dẹp {removed_count} file rác khỏi thư viện.")
             self.save()
 
+    def stage_thumbnail_in_db(self, media_id, thumb_path):
+        """RAM update for the owned batch worker; the synchronous API stays intact."""
+        with self.lock:
+            item = self.items.get(media_id)
+            if item is None or item.thumbnail == thumb_path:
+                return False
+            item.thumbnail = thumb_path
+            return True
+
     def save(self):
         """
         Lưu file JSON với cơ chế chống lỗi WinError 5 (Access Denied)
         """
         # 1. Dùng Lock để đảm bảo chỉ 1 luồng được ghi file tại 1 thời điểm
         with self._save_lock:
+            self._last_save_succeeded = False
             try:
                 self.db_path.parent.mkdir(parents=True, exist_ok=True)
                 
@@ -241,6 +251,7 @@ class MediaLibrary:
                             if temp_path.exists():
                                 os.remove(temp_path)
                             raise
+                self._last_save_succeeded = True
                             
             except Exception as e:
                 logger.error(f"❌ Save library failed: {e}")

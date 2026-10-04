@@ -19,8 +19,10 @@ from ui.icons import button_icon, icon
 from ui.design_system import apply_shell, ICON_BUTTON_STYLE
 from ui.overlay_input_guard import OverlayInputGuard
 from control.audio_effects import install_audio_effects
+from control.volume_settings import install_volume_settings
 from ui.media_card import MediaCard
 from ui.subs_ui.subtitle_layer import SubtitleLayer
+from ui.subtitle_effects import install_subtitle_effects
 from ui.subs_ui.sub_panel import SettingsPanel
 from subtitle.mode import SubtitleMode 
 from ui.vol_panel import VolumePopup
@@ -33,6 +35,7 @@ from core.media_library import MediaLibrary
 
 #Import pages for app
 from ui.pages.mode_manager import HomePage, LibraryPage
+from ui.library_grid_view import library_grid
 from ui.pages.content_manager import ContentController
 from ui.pages.for_you import ForYouPage
 from ui.pages.download import DownloadPage
@@ -221,6 +224,7 @@ class MainWindow(QMainWindow):
         self.subsettings_panel.shadow_changed.connect(self._on_shadow_changed)
         self.subsettings_panel.reset_requested.connect(self._reset_defaults)
         self.subsettings_panel.fade_effect_changed.connect(self.set_fade_enabled)
+        install_subtitle_effects(self)
         # Nút mở settings
         self.playback_bar.btn_subseting.clicked.connect(self.toggle_subsettings_panel)
         self.playback_bar.subtitle_tools_clicked.connect(self.open_subtitle_tools_dialog)
@@ -286,6 +290,7 @@ class MainWindow(QMainWindow):
         self.media_manager = SystemMediaManager(self)
         self.audio_devices = QMediaDevices()
         self.audio_effects = install_audio_effects(self)
+        self._volume_settings = install_volume_settings(self)
 
         self._system_media_connected = False
         self.audio_devices.audioOutputsChanged.connect(
@@ -427,9 +432,14 @@ class MainWindow(QMainWindow):
             if hasattr(self, '_folder_scan_queue'):
                 self._folder_scan_queue.shutdown()
             if hasattr(self, 'audio_effects'):
+                if hasattr(self, '_volume_settings'):
+                    self._volume_settings.shutdown()
                 self.audio_effects.shutdown()
             if hasattr(self, 'download_page'):
                 self.download_page.shutdown_workers()
+            info_owner = getattr(QApplication.instance(), '_media_info_worker_owner', None)
+            if info_owner is not None:
+                info_owner.shutdown()
             subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
             if subtitle_owner is not None:
                 subtitle_owner.shutdown()
@@ -819,7 +829,7 @@ class MainWindow(QMainWindow):
         y = btn_pos.y() - popup_h - 15
         
         # 5. Cập nhật giá trị và hiển thị
-        current_vol = int(self.audio_effects.volume() * 100)
+        current_vol = int(round(self.audio_effects.volume() * 100))
         self.vol_popup.set_value(current_vol)
         
         self.vol_popup.move(x, y)
@@ -840,7 +850,7 @@ class MainWindow(QMainWindow):
         current_vol = self.audio_effects.volume()
         new_vol = max(0.0, min(1.0, current_vol + delta))
         self.audio_effects.set_volume(new_vol)
-        self.vol_popup.set_value(int(new_vol * 100))
+        self.vol_popup.set_value(int(round(new_vol * 100)))
         self.playback_bar.update_volume_icon(new_vol)
 
     def seek_relative(self, ms):
@@ -947,6 +957,10 @@ class MainWindow(QMainWindow):
         """Tự động xếp lại card khi kích thước cửa sổ thay đổi"""
         # 1. Xác định trang mục tiêu
         current_page = self.content_stack.currentWidget()
+        virtual = getattr(current_page, '_library_grid_view', None)
+        if virtual is not None:
+            virtual.schedule()
+            return
         
         # Kiểm tra an toàn: trang phải tồn tại và có grid_container
         if not current_page or not hasattr(current_page, 'grid_container'):
@@ -1173,10 +1187,14 @@ class MainWindow(QMainWindow):
             # TRƯỜNG HỢP 2: Các trang cũ (Dùng Grid Layout như Home/Library)
             elif current_page and hasattr(current_page, 'grid_layout'):
                 layout = current_page.grid_layout
-                for i in range(layout.count()):
-                    widget = layout.itemAt(i).widget()
-                    if widget and hasattr(widget, 'media_item'):
-                        self.active_playlist.append(widget.media_item)
+                virtual = getattr(current_page, '_library_grid_view', None)
+                if virtual is not None:
+                    self.active_playlist = virtual.get_playback_playlist()
+                else:
+                    for i in range(layout.count()):
+                        widget = layout.itemAt(i).widget()
+                        if widget and hasattr(widget, 'media_item'):
+                            self.active_playlist.append(widget.media_item)
                 print(f"📋 Playlist Library: Đã chốt {len(self.active_playlist)} bài.")
 
             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
@@ -1633,6 +1651,10 @@ class MainWindow(QMainWindow):
 
             # 4. Gán danh sách chờ
             self.media_items = media_items
+            if current_page is self.library_page:
+                self.pending_items = []
+                library_grid(self, current_page).load(media_items)
+                return
             self.pending_items = media_items.copy() # Quan trọng: phải gán ở đây
 
             # 5. Bắt đầu nạp
@@ -1642,6 +1664,14 @@ class MainWindow(QMainWindow):
     
     def clear_grid(self):
         """Xóa sạch Grid một cách êm ái và an toàn"""
+        virtual = getattr(getattr(self, 'library_page', None), '_library_grid_view', None)
+        if virtual is not None and getattr(self, 'grid_layout', None) is virtual.layout:
+            self.pending_items = []
+            virtual.clear()
+            if hasattr(self, 'search_input'):
+                self.search_input.clear()
+            self.scroll_area.verticalScrollBar().setValue(0)
+            return
         
         # 1. Ngắt mạch nạp dữ liệu cũ (QUAN TRỌNG NHẤT)
         # Để hàm load_next_batch đang chạy dở sẽ tự dừng lại
@@ -1802,6 +1832,10 @@ class MainWindow(QMainWindow):
         # 1. Lấy trang đang hiển thị
         current_page = self.content_stack.currentWidget()
         if not current_page: return
+        virtual = getattr(current_page, '_library_grid_view', None)
+        if virtual is not None:
+            virtual.filter(text)
+            return
 
         # 2. Thu thập các card hiện có trong grid của trang đó
         visible_cards = []

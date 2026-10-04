@@ -37,3 +37,48 @@ app/ui/playlist_loading_overlay.py -text
 app/ui/playlist_thumbnail.py -text
 app/ui/playlist_thumbnail_queue.py -text
 app/ui/track_label.py -text
+app/ui/media_info_probe.py -text
+docs/media-info/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/media-info/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/media-info/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/control/volume_settings.py -text
+docs/volume-build/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/volume-build/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/volume-build/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/download_core/download_options.py -text
+docs/download-quality/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/download-quality/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/download-quality/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/runtime-imports/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/runtime-imports/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/runtime-imports/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-effects/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-effects/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-effects/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/ui/subtitle_effects.py -text
+app/ui/subtitle_effects_panel.py -text
+app/ui/subtitle_particles.py -text
+docs/subtitle-particles/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-particles/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-particles/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-sweep/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-sweep/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-sweep/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/ui/subtitle_kinetic.py -text
+docs/subtitle-kinetic/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-kinetic/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-kinetic/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/pipeline/lyric_accuracy.py -text
+docs/lyric-accuracy/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/lyric-accuracy/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/lyric-accuracy/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/lyric-accuracy/production/**/*.srt whitespace=-blank-at-eof
+app/thumbnail/cache_batch.py -text
+app/ui/library_thumbnail_queue.py -text
+app/ui/library_grid_view.py -text
+docs/resource-performance/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/resource-performance/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/resource-performance/*.log -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/asr-accuracy-review/test-results.txt -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/final-flow-review/test-results.txt -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/final-flow-review/dpi-200-tests.txt -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol

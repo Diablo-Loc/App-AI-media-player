@@ -1,0 +1,15 @@
+warning: in the working copy of '.gitattributes', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'AGENTS.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'BoTube.spec', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ui/main_window.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ui/playback_bar.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'app/ui/video_info_popup.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build_app.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build_app_for_update.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/FEATURE_PARITY.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/PREVIOUS_REFACTOR_AUDIT.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/ROADMAP.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/audio_easy_contracts.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'tests/test_ui_media_surface.py', LF will be replaced by CRLF the next time Git touches it

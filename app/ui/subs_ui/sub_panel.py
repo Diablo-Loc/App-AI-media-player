@@ -1,9 +1,10 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                                QSlider, QPushButton, QFrame, QComboBox, 
-                               QColorDialog, QCheckBox)
+                               QColorDialog, QCheckBox, QScrollArea)
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 from subtitle.mode import SubtitleMode
+from ui.subtitle_effects_panel import SubtitleEffectsPanel
 
 class SettingsPanel(QWidget):
     # --- Tín hiệu (Signals) ---
@@ -41,9 +42,28 @@ class SettingsPanel(QWidget):
             QSlider::handle:horizontal { background: #1DB954; width: 16px; margin: -5px 0; border-radius: 8px; }
             QPushButton#btn_reset { background-color: #8B0000; color: white; font-weight: bold; }
             QPushButton#btn_reset:hover { background-color: #FF4500; }
+            QWidget#subtitleSettingsContent { border: none; }
+            QCheckBox { border: none; background: transparent; padding: 2px 0; spacing: 7px; }
+            QScrollArea { border: none; }
+            QScrollBar:vertical { background: #151C26; width: 6px; margin: 6px 0; border: none; }
+            QScrollBar::handle:vertical { background: #405267; min-height: 28px; border-radius: 3px; }
+            QScrollBar::handle:vertical:hover { background: #74DFC2; }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }
         """)
         
-        layout = QVBoxLayout(self)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        self.settings_scroll = QScrollArea(self)
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        content = QWidget()
+        content.setObjectName('subtitleSettingsContent')
+        self.settings_scroll.setWidget(content)
+        outer.addWidget(self.settings_scroll)
+        self.setFixedHeight(640)
+        layout = QVBoxLayout(content)
         layout.setSpacing(10)
         layout.setContentsMargins(15, 15, 15, 15)
 
@@ -158,6 +178,7 @@ class SettingsPanel(QWidget):
         # --- 4. TỐC ĐỘ PHÁT ---
         layout.addWidget(QLabel("Tốc độ phát"))
         speed_layout = QHBoxLayout()
+        speed_layout.setSpacing(3)
         speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
         
         for speed in speeds:
@@ -194,6 +215,8 @@ class SettingsPanel(QWidget):
         other_options_layout.addWidget(self.chk_fade)
         
         layout.addLayout(other_options_layout)
+        self.effects_panel = SubtitleEffectsPanel(self)
+        layout.addWidget(self.effects_panel)
         
         # Nút Đặt lại (Reset)
         bottom_layout = QHBoxLayout()
@@ -280,6 +303,7 @@ class SettingsPanel(QWidget):
                 btn.setStyleSheet("background-color: transparent; border: 1px solid #555;")
 
     def _on_reset_clicked(self):
+        self.effects_panel.sync_options(None)
         self.blockSignals(True)
         
         idx_en_vi = self.combo_mode.findData(SubtitleMode.EN_VI)
@@ -308,6 +332,7 @@ class SettingsPanel(QWidget):
         self.reset_requested.emit()
 
     def sync_ui(self, config):
+        self.effects_panel.sync_options(config.get('subtitle_effects') if config else None)
         if not config: return
         
         self.blockSignals(True)
@@ -358,3 +383,10 @@ class SettingsPanel(QWidget):
         idx = self.combo_mode.findData(mode_enum)
         if idx != -1:
             self.combo_mode.setCurrentIndex(idx)
+
+    def showEvent(self, event):
+        screen = self.screen().availableGeometry()
+        self.setFixedHeight(min(640, max(100, screen.height() - 24)))
+        self.move(max(screen.left(), min(self.x(), screen.right() - self.width() + 1)),
+                  max(screen.top() + 8, min(self.y(), screen.bottom() - self.height() - 7)))
+        super().showEvent(event)

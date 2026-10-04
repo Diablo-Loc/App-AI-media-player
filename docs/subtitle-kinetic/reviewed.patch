@@ -1,0 +1,255 @@
+--- before/app/ui/subtitle_effects.py
++++ after/app/ui/subtitle_effects.py
+@@ -2,9 +2,10 @@
+ import math
+ 
+ from PySide6.QtCore import (QObject, QEvent, QVariantAnimation, QEasingCurve,
+-                           QAbstractAnimation, Qt, QPointF, QTimer, QElapsedTimer)
++                           QAbstractAnimation, Qt, QPointF, QRectF, QTimer, QElapsedTimer)
+ from PySide6.QtGui import QColor, QLinearGradient, QPen, QTransform, QImage, QPainter, QRegion
+ from ui.subtitle_particles import ParticlePainter, TRAILS, INTENSITIES
++from ui.subtitle_kinetic import KineticPainter, KINETIC_ENTRANCES, KINETIC_MODES, STRENGTHS, PARTS
+ 
+ ENTRANCES = (
+     ('none', 'Không chuyển động'), ('drop', 'Chữ rơi nhẹ'),
+@@ -13,7 +14,7 @@
+     ('bounce', 'Nảy nhẹ'), ('reveal', 'Mở từ giữa'),
+     ('burst', 'Bừng sao khi vào câu'), ('swing', 'Lắc nhẹ rồi ổn định'),
+     ('flutter', 'Lượn nhẹ khi vào câu'),
+-)
++) + KINETIC_ENTRANCES
+ COLORS = (
+     ('original', 'Màu chữ gốc'), ('shift', 'Chuyển sang ngọc lam'),
+     ('mint', 'Gradient ngọc lam'), ('sunset', 'Gradient hoàng hôn'),
+@@ -21,7 +22,8 @@
+ )
+ DEFAULTS = dict(enabled=False, entrance='drop', color='original',
+                 soft_fade=True, glow=False, shimmer=False, duration=320,
+-                trail='none', intensity='gentle', erase_passed=False)
++                trail='none', intensity='gentle', erase_passed=False,
++                kinetic_strength='normal', kinetic_parts='auto')
+ 
+ PRESETS = (
+     ('custom', 'Tùy chỉnh', {}),
+@@ -34,6 +36,22 @@
+     ('bubble', 'Bong bóng mơ màng', dict(entrance='zoom', color='pastel', trail='bubbles', intensity='gentle')),
+     ('crystal', 'Tinh thể tím', dict(entrance='swing', color='pastel', trail='diamonds', intensity='normal', erase_passed=True)),
+     ('aurora', 'Cực quang', dict(entrance='rise', color='mint', trail='ribbon', intensity='normal')),
++    ('rain', 'Mưa chữ mạnh', dict(entrance='kinetic_drop', color='ocean', trail='sparkles',
++        intensity='normal', kinetic_strength='bold', kinetic_parts='glyph', duration=480, soft_fade=False)),
++    ('domino', 'Domino bật nảy', dict(entrance='kinetic_spring', color='mint', trail='diamonds',
++        intensity='gentle', kinetic_strength='bold', kinetic_parts='word', duration=480, soft_fade=False)),
++    ('explosion', 'Bùng nổ typography', dict(entrance='kinetic_scatter', color='sunset', trail='sparkles',
++        intensity='normal', kinetic_strength='bold', kinetic_parts='auto', duration=480, soft_fade=False)),
++    ('galaxy', 'Xoáy ngân hà', dict(entrance='kinetic_vortex', color='pastel', trail='ribbon',
++        intensity='normal', kinetic_strength='normal', kinetic_parts='word', duration=480, soft_fade=False)),
++    ('cinema', 'Lật chữ điện ảnh', dict(entrance='kinetic_flip', color='ocean', trail='diamonds',
++        intensity='gentle', kinetic_strength='normal', kinetic_parts='word', duration=480, soft_fade=False)),
++    ('waves', 'Sóng chữ neon', dict(entrance='kinetic_wave', color='mint', trail='comet',
++        intensity='gentle', kinetic_strength='bold', kinetic_parts='auto', duration=480, soft_fade=False)),
++    ('typewriter', 'Máy chữ ánh sáng', dict(entrance='kinetic_type', color='pastel', trail='fireflies',
++        intensity='gentle', kinetic_strength='normal', kinetic_parts='glyph', duration=480, soft_fade=False)),
++    ('impact', 'Nhịp chữ mạnh', dict(entrance='kinetic_slam', color='sunset', trail='sparkles',
++        intensity='normal', kinetic_strength='bold', kinetic_parts='word', duration=480, soft_fade=False)),
+ )
+ 
+ 
+@@ -45,7 +63,8 @@
+         if isinstance(value.get(key), bool):
+             result[key] = value[key]
+     for key, choices in (('entrance', ENTRANCES), ('color', COLORS),
+-                         ('trail', TRAILS), ('intensity', INTENSITIES)):
++                         ('trail', TRAILS), ('intensity', INTENSITIES),
++                         ('kinetic_strength', STRENGTHS), ('kinetic_parts', PARTS)):
+         if isinstance(value.get(key), str) and value[key] in {choice[0] for choice in choices}:
+             result[key] = value[key]
+     duration = value.get('duration')
+@@ -68,6 +87,7 @@
+         self._sprite = None
+         self._sprite_origin = QPointF()
+         self.particles = ParticlePainter(label)
++        self.kinetic = KineticPainter(label)
+         self.scan_progress = 1.0
+         self._scan_ms = None
+         self._native_raw = None
+@@ -107,6 +127,7 @@
+         self.settle()
+         self._particle_timer.stop()
+         self.particles.clear()
++        self.kinetic.clear()
+         self.scan_progress = 1.0
+         self._scan_ms = None
+         self._native_raw = None
+@@ -381,9 +402,17 @@
+                 gradient.setColorAt(1, QColor(255, 255, 255, 0))
+                 painter.fillPath(path, gradient)
+ 
+-        def draw_letters():
++        def draw_letters(crop=None):
+             if sprite is not None:
+-                painter.drawImage(self._sprite_origin, sprite)
++                if crop is None:
++                    painter.drawImage(self._sprite_origin, sprite)
++                else:
++                    dpr = sprite.devicePixelRatio()
++                    target = crop.intersected(QRectF(self._sprite_origin.x(), self._sprite_origin.y(),
++                        sprite.width()/dpr, sprite.height()/dpr))
++                    source = QRectF((target.left()-self._sprite_origin.x())*dpr,
++                        (target.top()-self._sprite_origin.y())*dpr, target.width()*dpr, target.height()*dpr)
++                    painter.drawImage(target, sprite, source)
+             else:
+                 self._draw_static(painter, path, bounds)
+             if self.options['color'] == 'shift':
+@@ -391,24 +420,34 @@
+             if erase_sweep:
+                 draw_shimmer()
+ 
+-        if regions or not hidden.isEmpty():
+-            painter.save()
+-            visible = QRegion(self.label.rect()).subtracted(hidden)
+-            for mask, alpha in regions:
+-                visible = visible.subtracted(mask)
+-            painter.setClipRegion(visible, Qt.ClipOperation.IntersectClip)
+-            draw_letters()
+-            painter.restore()
+-            for mask, alpha in regions:
++        def draw_masked_letters(crop=None):
++            if regions or not hidden.isEmpty():
+                 painter.save()
+-                painter.setClipRegion(mask, Qt.ClipOperation.IntersectClip)
+-                painter.setOpacity(painter.opacity()*alpha)
+-                draw_letters()
++                visible = QRegion(self.label.rect()).subtracted(hidden)
++                for mask, alpha in regions:
++                    visible = visible.subtracted(mask)
++                painter.setClipRegion(visible, Qt.ClipOperation.IntersectClip)
++                draw_letters(crop)
+                 painter.restore()
+-        else:
+-            draw_letters()
+-        if not erase_sweep:
+-            draw_shimmer()
++                for mask, alpha in regions:
++                    painter.save()
++                    painter.setClipRegion(mask, Qt.ClipOperation.IntersectClip)
++                    painter.setOpacity(painter.opacity()*alpha)
++                    draw_letters(crop)
++                    painter.restore()
++            else:
++                draw_letters(crop)
++            if not erase_sweep:
++                draw_shimmer()
++
++        self.kinetic.last_draw_count = 0
++        entry_ms = min(self.options['duration'], max(0, (self.cue[2]-self.cue[1])/2)) if self.cue else 0
++        animated = (mode in KINETIC_MODES and self.kinetic.paint(painter, sprite, self._sprite_origin,
++            mode, p, self.options['kinetic_strength'], self.options['kinetic_parts'],
++            entry_ms, draw_masked_letters,
++            limit=6 if (erase_sweep or self.options['color'] == 'shift' or self.options['shimmer']) else 16))
++        if not animated:
++            draw_masked_letters()
+         if decorative:
+             self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
+                                  p, burst=mode == 'burst')
+--- before/app/ui/subtitle_effects_panel.py
++++ after/app/ui/subtitle_effects_panel.py
+@@ -5,6 +5,7 @@
+ 
+ from ui.subtitle_effects import SubtitleEffects, ENTRANCES, COLORS, PRESETS, normalize_options
+ from ui.subtitle_particles import TRAILS, INTENSITIES
++from ui.subtitle_kinetic import STRENGTHS, PARTS, KINETIC_MODES
+ 
+ 
+ class SubtitleEffectsPanel(QGroupBox):
+@@ -36,7 +37,13 @@
+         layout.addLayout(preset_row)
+         self.presets.currentIndexChanged.connect(self._preset_changed)
+         self.entrance = self._choice(layout, 'Chuyển động', ENTRANCES)
+-        self.entrance.setToolTip('Chuyển động cả câu, giữ nguyên nét chữ và dấu của mọi ngôn ngữ.')
++        self.entrance.setToolTip('Kiểu cũ chuyển động cả câu; kiểu typography chuyển động từng vùng chữ.\n'
++                                'Nét chữ/dấu vẫn lấy từ cả dòng Qt đã shape; không đổi timing.')
++        self.kinetic_strength = self._choice(layout, 'Lực chuyển động', STRENGTHS)
++        self.kinetic_parts = self._choice(layout, 'Chia chuyển động', PARTS)
++        self.kinetic_strength.setToolTip('Áp dụng cho 8 kiểu typography mới; Mạnh cho rơi/nhảy/xoáy rõ hơn.')
++        self.kinetic_parts.setToolTip('Tối đa 16 cụm; câu dày tự gom nhóm.\n'
++                                     'Dấu và emoji không bị tách rời; chữ cursive/RTL giữ cụm từ.')
+         self.color = self._choice(layout, 'Màu chữ', COLORS)
+         self.trail = self._choice(layout, 'Dọc câu', TRAILS)
+         self.trail.setToolTip('Quét theo thời lượng câu, không phải timing lời hát từng từ.\n'
+@@ -93,16 +100,19 @@
+             color=self.color.currentData(), soft_fade=self.soft_fade.isChecked(),
+             glow=self.glow.isChecked(), shimmer=self.shimmer.isChecked(),
+             duration=self.duration.currentData(), trail=self.trail.currentData(),
+-            intensity=self.intensity.currentData(), erase_passed=self.erase_passed.isChecked()))
++            intensity=self.intensity.currentData(), erase_passed=self.erase_passed.isChecked(),
++            kinetic_strength=self.kinetic_strength.currentData(), kinetic_parts=self.kinetic_parts.currentData()))
+ 
+     def sync_options(self, value):
+         options = normalize_options(value)
+         widgets = (self, self.presets, self.entrance, self.color, self.duration, self.trail, self.intensity,
+-                   self.soft_fade, self.glow, self.shimmer, self.erase_passed)
++                   self.soft_fade, self.glow, self.shimmer, self.erase_passed,
++                   self.kinetic_strength, self.kinetic_parts)
+         blockers = [QSignalBlocker(widget) for widget in widgets]
+         self.setChecked(options['enabled'])
+         for combo, key in ((self.entrance, 'entrance'), (self.color, 'color'),
+-                           (self.trail, 'trail'), (self.intensity, 'intensity')):
++                           (self.trail, 'trail'), (self.intensity, 'intensity'),
++                           (self.kinetic_strength, 'kinetic_strength'), (self.kinetic_parts, 'kinetic_parts')):
+             combo.setCurrentIndex(combo.findData(options[key]))
+         index = self.duration.findData(options['duration'])
+         if index < 0:
+@@ -114,12 +124,19 @@
+             widget.setChecked(options[key])
+         del blockers
+         self._sync_preset()
++        self._sync_kinetic_controls()
+         self.preview._subtitle_effects.configure(options)
+ 
+     def _edited(self, *args):
+         self._sync_preset()
++        self._sync_kinetic_controls()
+         self.preview._subtitle_effects.configure(self.options())
+         self.changed.emit(self.options())
++
++    def _sync_kinetic_controls(self):
++        active = self.entrance.currentData() in KINETIC_MODES
++        self.kinetic_strength.setEnabled(active)
++        self.kinetic_parts.setEnabled(active)
+ 
+     def _sync_preset(self):
+         options = self.options()
+@@ -137,8 +154,8 @@
+             return
+         options = self.options()
+         options['erase_passed'] = False
++        options.update(soft_fade=True, shimmer=False, glow=False)
+         options.update(PRESETS[index][2])
+-        options.update(soft_fade=True, shimmer=False, glow=False)
+         self.sync_options(options)
+         self.changed.emit(self.options())
+         self.play_preview()
+--- before/tests/subtitle_sweep_contracts.py
++++ after/tests/subtitle_sweep_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_sweep_changes(relative, raw=False):
+-    current = (ROOT/relative).read_bytes()
++    from tests.subtitle_kinetic_contracts import before_kinetic_changes
++    current = before_kinetic_changes(relative, raw=True)
+     manifest = json.loads((ROOT/'docs/subtitle-sweep/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/test_subtitle_sweep.py
++++ after/tests/test_subtitle_sweep.py
+@@ -202,7 +202,8 @@
+         manifest = json.loads((ROOT/'docs/subtitle-sweep/reviewed-sources.json').read_text())
+         self.assertEqual({p for p in manifest if p.startswith('app/')}, allowed)
+         before = ast.parse(before_sweep_changes('app/ui/subtitle_effects.py'))
+-        after = ast.parse((ROOT/'app/ui/subtitle_effects.py').read_bytes())
++        from tests.subtitle_kinetic_contracts import before_kinetic_changes
++        after = ast.parse(before_kinetic_changes('app/ui/subtitle_effects.py', raw=True))
+         methods = ('bind_player', 'clear', 'sync', '_sync_particles', '_arm_particles',
+                    '_tick_particles', '_state_changed', '_source_changed', '_media_status_changed')
+         for name in methods:

@@ -1,0 +1,38 @@
+test_aac_opus_source_packets_and_video_survive_merge_and_metadata (tests.test_download_quality.DownloadMediaTests.test_aac_opus_source_packets_and_video_survive_merge_and_metadata) ... ok
+test_audio_opus_and_aac_extract_keep_packet_payloads (tests.test_download_quality.DownloadMediaTests.test_audio_opus_and_aac_extract_keep_packet_payloads) ... ok
+test_low_encodes_once_only_in_metadata_and_preserves_video (tests.test_download_quality.DownloadMediaTests.test_low_encodes_once_only_in_metadata_and_preserves_video) ... WARNING: Your yt-dlp version (2026.06.09) is older than 90 days!
+         It is strongly recommended to always use the latest version.
+         You installed yt-dlp with pip or using the wheel from PyPi; Use that to update.
+         To suppress this warning, add --no-update to your command/config.
+ok
+test_progressive_remux_preserves_packets_and_expected_container (tests.test_download_quality.DownloadMediaTests.test_progressive_remux_preserves_packets_and_expected_container) ... ok
+test_all_presets_parse_and_source_modes_have_no_lossy_override (tests.test_download_quality.DownloadPolicyTests.test_all_presets_parse_and_source_modes_have_no_lossy_override) ... ok
+test_audio_codec_preserving_modes_do_not_fall_back_to_lossy_encoding (tests.test_download_quality.DownloadPolicyTests.test_audio_codec_preserving_modes_do_not_fall_back_to_lossy_encoding) ... ok
+test_bounded_fallback_never_selects_1080_for_720 (tests.test_download_quality.DownloadPolicyTests.test_bounded_fallback_never_selects_1080_for_720) ... ok
+test_flat_nested_options_default_and_input_are_unchanged (tests.test_download_quality.DownloadPolicyTests.test_flat_nested_options_default_and_input_are_unchanged) ... ok
+test_original_and_legacy_preferences_select_separate_source_audio (tests.test_download_quality.DownloadPolicyTests.test_original_and_legacy_preferences_select_separate_source_audio) ... ok
+test_video_sources_without_aac_fall_back_to_opus_without_transcoding (tests.test_download_quality.DownloadPolicyTests.test_video_sources_without_aac_fall_back_to_opus_without_transcoding) ... ok
+test_default_source_mode_and_notes_update_without_writing_settings (tests.test_download_quality.DownloadSettingsTests.test_default_source_mode_and_notes_update_without_writing_settings) ... ok
+test_legacy_presets_survive_ui_save_and_utf8_load (tests.test_download_quality.DownloadSettingsTests.test_legacy_presets_survive_ui_save_and_utf8_load) ... ok
+test_exact_snapshots_and_only_approved_production_methods_changed (tests.test_download_quality.DownloadSourceScopeTests.test_exact_snapshots_and_only_approved_production_methods_changed) ... ok
+test_batch_signals_command_failure_and_resume_files (tests.test_download_quality.DownloadWorkerTests.test_batch_signals_command_failure_and_resume_files) ... ok
+test_cancel_registration_race_terminates_newly_owned_process (tests.test_reliability.WorkerShutdownTests.test_cancel_registration_race_terminates_newly_owned_process) ... ok
+test_close_main_window_waits_for_download_and_editor_workers (tests.test_reliability.WorkerShutdownTests.test_close_main_window_waits_for_download_and_editor_workers) ... ok
+test_dialog_owner_retains_cancelled_translation_until_thread_finishes (tests.test_reliability.WorkerShutdownTests.test_dialog_owner_retains_cancelled_translation_until_thread_finishes) ... ok
+test_download_and_title_shutdown_kill_actual_owned_update_process (tests.test_reliability.WorkerShutdownTests.test_download_and_title_shutdown_kill_actual_owned_update_process) ... ok
+test_no_late_editor_callbacks_after_close (tests.test_reliability.WorkerShutdownTests.test_no_late_editor_callbacks_after_close) ... ok
+test_stop_during_actual_download_stage_reaps_owned_process (tests.test_reliability.WorkerShutdownTests.test_stop_during_actual_download_stage_reaps_owned_process) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 3.846s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

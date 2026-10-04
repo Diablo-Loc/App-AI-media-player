@@ -542,7 +542,7 @@ class DownloadPage(QWidget):
     
     def load_full_config(self):
         try:
-            with open(self.settings_file, "r") as f:
+            with open(self.settings_file, "r", encoding="utf-8-sig") as f:
                 return json.load(f)
         except:
             return {}

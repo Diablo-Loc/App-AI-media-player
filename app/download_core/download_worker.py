@@ -3,6 +3,7 @@ import subprocess
 from PySide6.QtCore import QThread, Signal
 from .yt_dlp import ensure_ytdlp_exists
 from control.worker_lifecycle import OwnedProcesses
+from download_core.download_options import ORIGINAL, build_download_command, download_options, quality_note
 
 class DownloadWorker(QThread):
     progress_signal = Signal(int, int)   # Báo cáo số lượng thành công
@@ -18,7 +19,7 @@ class DownloadWorker(QThread):
         self.names = names
         self.save_path = save_path
         self.options = options if options else {
-            "quality": "Extreme (320k)", 
+            "quality": ORIGINAL,
             "format": "Video MP4", 
             "resolution": "1080p",
             "auto_update": True
@@ -97,144 +98,15 @@ class DownloadWorker(QThread):
             self.log_signal.emit(f"📥 BẮT ĐẦU TẢI {i+1}/{total}: {name}")
             self.log_signal.emit(f"==========================================")
 
-            # 1. Lấy thông số từ UI
-            dl_opts = self.options.get("download", self.options)
+            # Keep the existing batch/worker lifecycle; only command policy changes.
+            dl_opts = download_options(self.options)
             fmt_choice = dl_opts.get("format", "Video MP4")
             res_choice = dl_opts.get("resolution", "1080p")
-            quality_choice = dl_opts.get("quality", "Extreme (320k)")
-            # --------------------
-
+            quality_choice = dl_opts.get("quality", ORIGINAL)
             self.log_signal.emit(f"⚙️ Cấu hình: {fmt_choice} | {res_choice} | {quality_choice}")
+            self.log_signal.emit(quality_note(fmt_choice, quality_choice))
+            cmd = build_download_command(self.ytdlp_exe, self.save_path, name, link, self.options)
 
-            # 2. Xử lý các biến cơ bản (Chỉ giữ lại biến đường dẫn và độ phân giải Video)
-            res_map = {"4K": "2160", "2K": "1440", "1080p": "1080", "720p": "720"}
-            target_res = res_map.get(res_choice, "1080")
-            out_path = os.path.join(self.save_path, f"{name}.%(ext)s")
-            
-            cmd = []
-            
-            # 3. PHÂN NHÁNH CMD THEO LỰA CHỌN ĐỊNH DẠNG
-            
-            # 🔥 Đưa biến format lên TRƯỚC chuỗi if-elif để tránh lỗi SyntaxError của Python
-            video_fmt_any = f"bv*[height<={target_res}]+ba/b"
-            video_fmt_safe_mp4 = f"bv*[height<={target_res}]+ba[ext=m4a]/b[ext=mp4]/b"
-
-            # =========================================================
-            # NHÓM A: TẢI ÂM THANH (AUDIO)
-            # =========================================================
-            if "Audio" in fmt_choice and "Opus" in quality_choice:
-                # Nhánh A1: Audio Opus gốc (Không convert)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-metadata", 
-                    "-f", "ba",
-                    "-x", "--audio-format", "opus", 
-                    "--no-keep-video",
-                    "-o", out_path, link
-                ]
-            elif "Audio" in fmt_choice and "Extreme" in quality_choice:
-                # Nhánh A2: Nhạc 320k (Ghi cứng 320k)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata",
-                    "-f", "ba",
-                    "-x", "--audio-format", "mp3", "--audio-quality", "320K",
-                    "--postprocessor-args", "ExtractAudio:-b:a 320k", # Lệnh bài ép cứng
-                    "--no-keep-video",
-                    "-o", out_path, link
-                ]
-            elif "Audio" in fmt_choice and "Standard" in quality_choice:
-                # Nhánh A3: Nhạc 192k (Ghi cứng 192k)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata",
-                    "-f", "ba[ext=m4a]", # Chỉ định lấy luôn bản m4a của YouTube
-                    "-x", "--audio-format", "m4a",
-                    "--no-keep-video",
-                    "-o", out_path, link
-                ]
-            elif "Audio" in fmt_choice:
-                # Nhánh A4: Nhạc 128k (Cơ bản)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata",
-                    "-f", "ba",
-                    "-x", "--audio-format", "mp3", "--audio-quality", "128K",
-                    "--postprocessor-args", "ExtractAudio:-b:a 128k", # Lệnh bài ép cứng
-                    "--no-keep-video",
-                    "-o", out_path, link
-                ]
-            
-            # =========================================================
-            # NHÓM B: TẢI VIDEO MKV (GIỮ NGUYÊN BẢN 100% TỪ YOUTUBE) - [MỚI THÊM]
-            # =========================================================
-            elif "Video MKV" in fmt_choice:
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata", "--parse-metadata", "playlist_index:%(n)s",
-                    "-f", video_fmt_any, 
-                    "--merge-output-format", "mkv",
-                    "-o", out_path, link
-                ]
-              
-            # =========================================================
-            # NHÓM C: TẢI VIDEO MP4 (TƯƠNG THÍCH MỌI THIẾT BỊ)
-            # =========================================================            
-            elif "Video MP4" in fmt_choice and "Opus" in quality_choice:
-                # 🎧 B1: BEST (AAC 320k)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata", "--parse-metadata", "playlist_index:%(n)s",
-                    "-f", video_fmt_safe_mp4,
-                    "--merge-output-format", "mp4",
-                    "--postprocessor-args", "ffmpeg:-c:a aac -b:a 160k",
-                    "-o", out_path, link
-                ]
-
-            elif "Video MP4" in fmt_choice and "Extreme" in quality_choice:
-                # 🔥 B2: EXTREME (AAC ~192k)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata", "--parse-metadata", "playlist_index:%(n)s",
-                    "-f", video_fmt_safe_mp4,
-                    "--merge-output-format", "mp4",
-                    "--postprocessor-args", "ffmpeg:-c:a aac -b:a 320k",
-                    "-o", out_path, link
-                ]
-
-            # ⚖ B3: STANDARD (MP4 + M4A Gốc - KHÔNG CONVERT)
-            elif "Video MP4" in fmt_choice and "Standard" in quality_choice:
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata", "--parse-metadata", "playlist_index:%(n)s",
-                    "-f", video_fmt_safe_mp4,
-                    "--merge-output-format", "mp4",
-                    "-o", out_path, link
-                ]
-
-            elif "Video MP4" in fmt_choice and "Low" in quality_choice:
-                # 📉 B4: LOW (AAC ~128k)
-                cmd = [
-                    self.ytdlp_exe,
-                    "--no-mtime", "--no-playlist", "--clean-infojson",
-                    "--embed-thumbnail", "--embed-metadata", "--parse-metadata", "playlist_index:%(n)s",
-                    "-f", video_fmt_any,
-                    "--merge-output-format", "mp4",
-                    "--postprocessor-args", "ffmpeg:-c:a aac -b:a 128k",
-                    "-o", out_path, link
-                ]
-            
-            # 5. Đường dẫn lưu file
-            cmd += ["-o", os.path.join(self.save_path, f"{name}.%(ext)s"), link]
-            
             try:
                 process = self._processes.track(subprocess.Popen(
                     cmd,
@@ -264,7 +136,7 @@ class DownloadWorker(QThread):
                 if return_code == 0 and self.is_running:
                     success_count += 1
                     self.progress_signal.emit(success_count, total)
-                    self.log_signal.emit(f"✅ THÀNH CÔNG: Đã lưu {name}.mp4")
+                    self.log_signal.emit(f"✅ THÀNH CÔNG: Đã lưu {name} ({fmt_choice}; định dạng theo nguồn/chất lượng đã chọn)")
                 elif self.is_running:
                     fail_count += 1
                     self.fail_signal.emit(fail_count, total)
@@ -290,18 +162,5 @@ class DownloadWorker(QThread):
             pass
     
     def cleanup_temp_files(self):
-        """Quét thư mục lưu trữ và xóa các file tạm dở dang"""
-        self.log_signal.emit("🧹 [HỆ THỐNG] Đang dọn dẹp file tạm...")
-        temp_extensions = (".part", ".ytdl", ".temp")
-        try:
-            for file in os.listdir(self.save_path):
-                if file.endswith(temp_extensions):
-                    file_path = os.path.join(self.save_path, file)
-                    try:
-                        os.remove(file_path)
-                        self.log_signal.emit(f"🗑️ Đã xóa file tạm: {file}")
-                    except Exception as e:
-                        # File có thể đang bị tiến trình khác chiếm dụng, bỏ qua
-                        continue
-        except Exception as e:
-            self.log_signal.emit(f"⚠️ Lỗi khi dọn dẹp: {e}")
+        """Retain resumable files; this job does not own other folder contents."""
+        self.log_signal.emit("ℹ️ Giữ file tải dở để có thể tiếp tục; không xóa file tạm của tác vụ khác.")

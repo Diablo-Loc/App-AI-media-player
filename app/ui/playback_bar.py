@@ -322,6 +322,8 @@ class PlaybackBar(QFrame):
         if not hasattr(self, 'lbl_song_info'):
             return
         self._current_item_data = item_data
+        if self.info_popup.isVisible():
+            self.info_popup.update_info(item_data)
         self.mini_video_dock.prepare_media()
         display_title = title
         if len(display_title) > 40:

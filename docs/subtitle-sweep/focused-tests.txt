@@ -1,0 +1,13 @@
+test_exact_three_helper_scope_and_all_prior_app_sources_preserved (tests.test_subtitle_sweep.SweepScopeTests.test_exact_three_helper_scope_and_all_prior_app_sources_preserved) ... ok
+test_legacy_effect_pixels_equal_preceding_renderer_when_erase_off (tests.test_subtitle_sweep.SweepTests.test_legacy_effect_pixels_equal_preceding_renderer_when_erase_off) ... ok
+test_masks_are_monotonic_disjoint_bounded_and_reused (tests.test_subtitle_sweep.SweepTests.test_masks_are_monotonic_disjoint_bounded_and_reused) ... ok
+test_native_clock_pause_seek_source_and_no_extra_timer (tests.test_subtitle_sweep.SweepTests.test_native_clock_pause_seek_source_and_no_extra_timer) ... ok
+test_passed_word_pixels_hide_future_stays_and_end_never_resurrects (tests.test_subtitle_sweep.SweepTests.test_passed_word_pixels_hide_future_stays_and_end_never_resurrects) ... ok
+test_presets_checkbox_and_legacy_settings_do_not_migrate (tests.test_subtitle_sweep.SweepTests.test_presets_checkbox_and_legacy_settings_do_not_migrate) ... ok
+test_seek_back_repeated_next_cue_and_toggle_off_restore_glyphs (tests.test_subtitle_sweep.SweepTests.test_seek_back_repeated_next_cue_and_toggle_off_restore_glyphs) ... ok
+test_single_word_short_cues_and_all_trails_preserve_cue_data (tests.test_subtitle_sweep.SweepTests.test_single_word_short_cues_and_all_trails_preserve_cue_data) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 11.938s
+
+OK

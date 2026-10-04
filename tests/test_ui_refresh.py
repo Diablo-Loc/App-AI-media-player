@@ -76,7 +76,8 @@ class OriginalSourceGates(unittest.TestCase):
 
     def test_every_original_ui_api_and_signal_signature_survives(self):
         for name, original in UI_CONTRACTS["files"].items():
-            current = contracts((ROOT / name).read_text(encoding="utf-8-sig"))
+            from tests.subtitle_effects_contracts import before_effect_changes
+            current = contracts(before_effect_changes(name))
             with self.subTest(path=name):
                 self.assertEqual(current["signals"], original["signals"])
                 for method, signature in original["methods"].items():

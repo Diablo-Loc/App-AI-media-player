@@ -1,0 +1,43 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Main,MS UI Gothic,45,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,1,2,30,30,50,1
+Style: Sub,Arial,28,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,1,2,30,30,15,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.67,0:00:05.10,Main,,0,0,0,,Muse over the antique memories
+Dialogue: 0,0:00:06.31,0:00:12.56,Main,,0,0,0,,Realize again every fragment shown to know why
+Dialogue: 0,0:00:13.39,0:00:18.94,Main,,0,0,0,,On my ugly dress in the millions of laughs occurs
+Dialogue: 0,0:00:19.97,0:00:25.54,Main,,0,0,0,,Fool me but I could and I act like show is luxury
+Dialogue: 0,0:00:28.55,0:00:29.95,Main,,0,0,0,,A
+Dialogue: 0,0:00:29.95,0:00:31.48,Main,,0,0,0,,A fantasy
+Dialogue: 0,0:00:41.89,0:00:49.01,Main,,0,0,0,,For a long time, this body burned in the fire
+Dialogue: 0,0:00:49.01,0:00:51.18,Main,,0,0,0,,Asking for the meaning of the truth
+Dialogue: 0,0:00:55.57,0:00:58.14,Main,,0,0,0,,本当の二十歳の意味を尋ねて本当の二十歳の意味を尋ねて
+Dialogue: 0,0:01:02.09,0:01:03.62,Main,,0,0,0,,それが人の汲めた呪いでもそれが人の汲めた呪いでも
+Dialogue: 0,0:01:07.85,0:01:13.17,Main,,0,0,0,,心が夢る名は咲かせましょう心が夢る名は咲かせましょう
+Dialogue: 0,0:01:13.17,0:01:19.24,Main,,0,0,0,,それでも世が愛しい神様らは悪い
+Dialogue: 0,0:01:23.15,0:01:26.08,Main,,0,0,0,,壊れたと想像するほど生命線が座ってばかりで
+Dialogue: 0,0:01:29.19,0:01:32.12,Main,,0,0,0,,花びらが柔らかい毒薬の味が
+Dialogue: 0,0:01:32.41,0:01:36.64,Main,,0,0,0,,忘れられておられるまで
+Dialogue: 0,0:01:37.61,0:01:40.54,Main,,0,0,0,,忘れられておられるまで囚われていたい
+Dialogue: 0,0:01:53.35,0:01:58.62,Main,,0,0,0,,Chantelle, egg, flowers, pick from my balm
+Dialogue: 0,0:02:01.03,0:02:05.40,Main,,0,0,0,,Hitoriko, tsumuete no kurishin
+Dialogue: 0,0:02:06.13,0:02:12.42,Main,,0,0,0,,My love for Brazil, your vital human heart
+Dialogue: 0,0:02:13.33,0:02:18.16,Main,,0,0,0,,Mayu no naka de umarete kita, nagai wa doku
+Dialogue: 0,0:02:26.71,0:02:28.24,Main,,0,0,0,,声も目黒もないこの場所で
+Dialogue: 0,0:02:33.31,0:02:34.84,Main,,0,0,0,,朧に映る影に見とれてる
+Dialogue: 0,0:02:39.89,0:02:41.42,Main,,0,0,0,,それが人の喰うまた呪いでも
+Dialogue: 0,0:02:43.25,0:02:48.45,Main,,0,0,0,,私にくれる Let's make it bloom
+Dialogue: 0,0:02:48.45,0:02:52.40,Main,,0,0,0,,Even so, I don't know
+Dialogue: 0,0:02:53.95,0:02:56.49,Main,,0,0,0,,God's words and love
+Dialogue: 0,0:02:56.49,0:03:01.13,Main,,0,0,0,,The more I think about it The more I can't live
+Dialogue: 0,0:03:01.13,0:03:05.85,Main,,0,0,0,,The petals are soft
+Dialogue: 0,0:03:05.85,0:03:08.43,Main,,0,0,0,,The taste of poison
+Dialogue: 0,0:03:08.43,0:03:17.78,Main,,0,0,0,,Thank you so much for watching this video, and I'll see you in the next video!

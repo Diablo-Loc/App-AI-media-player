@@ -1,0 +1,233 @@
+test_build_handoff_uses_project_directory_and_restores_callers_directory (tests.test_volume_build.BuildConfigurationTests.test_build_handoff_uses_project_directory_and_restores_callers_directory) ... ok
+test_existing_portable_and_build_outputs_remain_and_hidden_imports_survive (tests.test_volume_build.BuildConfigurationTests.test_existing_portable_and_build_outputs_remain_and_hidden_imports_survive) ... ok
+test_real_assets_valid_and_copy_keeps_runtime_empty_user_data_out (tests.test_volume_build.BuildConfigurationTests.test_real_assets_valid_and_copy_keeps_runtime_empty_user_data_out) ... ok
+test_first_start_fifty_popup_keyboard_settings_and_coalesced_save (tests.test_volume_build.VolumePersistenceTests.test_first_start_fifty_popup_keyboard_settings_and_coalesced_save) ... ok
+test_gain_ramp_mute_and_device_refresh_do_not_save_effective_volume (tests.test_volume_build.VolumePersistenceTests.test_gain_ramp_mute_and_device_refresh_do_not_save_effective_volume) ... ok
+test_invalid_settings_default_and_read_only_failure_retry (tests.test_volume_build.VolumePersistenceTests.test_invalid_settings_default_and_read_only_failure_retry) ... WARNING:root:Unable to save playback volume
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app\control\volume_settings.py", line 90, in flush
+    atomic_bytes(self.path, json.dumps({'volume_percent': self.percent}, indent=2).encode('utf-8'))
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1108, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1112, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\mock.py", line 1167, in _execute_mock_call
+    raise effect
+PermissionError: read only
+ok
+test_new_window_restores_last_level_including_zero_and_hundred (tests.test_volume_build.VolumePersistenceTests.test_new_window_restores_last_level_including_zero_and_hundred) ... ok
+test_settings_reset_confirmed_restores_fifty_without_changing_audio_profile (tests.test_volume_build.VolumePersistenceTests.test_settings_reset_confirmed_restores_fifty_without_changing_audio_profile) ... ok
+test_only_approved_main_settings_adapters_and_helper_changed (tests.test_volume_build.VolumeSourceScopeTests.test_only_approved_main_settings_adapters_and_helper_changed) ... ok
+test_volume_ui_shortcuts_mute_device_and_off_preserve_user_level (tests.test_audio_realtime.ActualNativePlayerTests.test_volume_ui_shortcuts_mute_device_and_off_preserve_user_level) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpkh_7k42r/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_device_refresh_during_gain_ramp_does_not_rewrite_user_volume (tests.test_audio_realtime.ActualNativePlayerTests.test_device_refresh_during_gain_ramp_does_not_rewrite_user_volume) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpkh_7k42r/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 6.953s
+
+OK
+{
+  "versions": {
+    "PyInstaller": "fixture",
+    "PySide6": "fixture"
+  },
+  "root": "C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f",
+  "output": "C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\dist\\BoTube",
+  "work": "C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\build\\release-handoff",
+  "params": [
+    "C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\app\\run_app.py",
+    "--paths=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f",
+    "--paths=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\app",
+    "--name=BoTube",
+    "--onedir",
+    "--windowed",
+    "--noconfirm",
+    "--distpath=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\dist",
+    "--workpath=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\build\\release-handoff",
+    "--specpath=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\build\\release-handoff",
+    "--icon=C:\\Users\\DIABLO\\AppData\\Local\\Temp\\tmpxgeie54f\\icon\\app_icon.ico",
+    "--add-data=app;app",
+    "--hidden-import=PySide6",
+    "--hidden-import=PySide6.QtCore",
+    "--hidden-import=PySide6.QtGui",
+    "--hidden-import=PySide6.QtWidgets",
+    "--hidden-import=PySide6.QtMultimedia",
+    "--hidden-import=PySide6.QtMultimediaWidgets",
+    "--hidden-import=PySide6.QtSvg",
+    "--hidden-import=PySide6.QtNetwork",
+    "--hidden-import=ctypes",
+    "--hidden-import=multiprocessing",
+    "--hidden-import=requests",
+    "--hidden-import=urllib3",
+    "--hidden-import=bs4",
+    "--hidden-import=yt_dlp",
+    "--hidden-import=lyricsgenius",
+    "--hidden-import=google.genai",
+    "--hidden-import=av",
+    "--hidden-import=psutil",
+    "--hidden-import=cryptography",
+    "--hidden-import=websockets",
+    "--hidden-import=tenacity",
+    "--hidden-import=huggingface_hub",
+    "--hidden-import=filelock",
+    "--hidden-import=fsspec",
+    "--hidden-import=pickletools",
+    "--hidden-import=pickle",
+    "--hidden-import=struct",
+    "--hidden-import=difflib",
+    "--hidden-import=ast",
+    "--hidden-import=cProfile",
+    "--hidden-import=profile",
+    "--hidden-import=pstats",
+    "--hidden-import=modulefinder",
+    "--hidden-import=pkgutil",
+    "--hidden-import=importlib.metadata"
+  ]
+}
+Đã xuất: C:\Users\DIABLO\AppData\Local\Temp\tmpxgeie54f\dist\BoTube\BoTube.exe
+Giữ toàn bộ thư mục BoTube cùng _internal/bin/icon khi chạy hoặc phân phối.
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔊 Switching audio device: Speakers (Realtek(R) Audio)
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔊 Switching audio device: Speakers (Realtek(R) Audio)
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

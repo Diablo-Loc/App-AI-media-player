@@ -1,0 +1,10 @@
+{
+  "load_ms": 25.047399998584297,
+  "filter_ms": 86.67599999898812,
+  "clear_ms": 93.0752999993274,
+  "filter_submit_ms": 0.03529999958118424,
+  "clear_submit_ms": 0.43200000072829425,
+  "clear_cards_created": 0,
+  "live_cards": 8,
+  "scroll_with_40ms_pump": 46.7110000026878
+}

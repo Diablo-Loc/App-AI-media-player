@@ -1,0 +1,2153 @@
+{
+  "source_count": 117,
+  "local_import_count": 215,
+  "local_imports": [
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 40,
+      "module": "pipeline.extractor",
+      "names": [
+        "extract_audio"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 41,
+      "module": "pipeline.lyric_refinement",
+      "names": [
+        "refine_lyrics",
+        "finalize_cue_times",
+        "mark_final_timing"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 42,
+      "module": "pipeline.asr_coverage",
+      "names": [
+        "repair_missing_subtitles"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 43,
+      "module": "pipeline.lyric_formatter",
+      "names": [
+        "export_srt",
+        "export_lrc"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 44,
+      "module": "pipeline.jp_normalizer",
+      "names": [
+        "normalize_japanese",
+        "universal_text_reconstruct"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 46,
+      "module": "subtitle.converter",
+      "names": [
+        "refined_to_subtitles"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 47,
+      "module": "subtitle.storage",
+      "names": [
+        "save_subtitles"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 48,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 49,
+      "module": "subtitle.config",
+      "names": [
+        "SubtitleConfig"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 50,
+      "module": "pipeline.utils",
+      "names": [
+        "TempFileManager",
+        "is_connected"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 51,
+      "module": "pipeline.lyric_corrector",
+      "names": [
+        "correct_raw_segments_online"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 96,
+      "module": "subtitle.ass.renderer",
+      "names": [
+        "render_ass"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 97,
+      "module": "translate.pipeline",
+      "names": [
+        "TranslateMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 343,
+      "module": "translate.pipeline",
+      "names": [
+        "translate_pipeline",
+        "clear_translator"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ai/pipeline.py",
+      "line": 344,
+      "module": "translate.online_logic",
+      "names": [
+        "translate_online_pipeline"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/config.py",
+      "line": 4,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/ai_controller.py",
+      "line": 6,
+      "module": "worker",
+      "names": [
+        "AIWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/ai_controller.py",
+      "line": 61,
+      "module": "download_core.download_source_app",
+      "names": [
+        "check_resource_status",
+        "_set_resource_ready_flag",
+        "_get_resource_ready_flag"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/ai_controller.py",
+      "line": 85,
+      "module": "download_core.download_source_app",
+      "names": [
+        "ResourceDownloadDialog"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/ai_process_manager.py",
+      "line": 4,
+      "module": "worker",
+      "names": [
+        "AIWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/app_controller.py",
+      "line": 9,
+      "module": "core.subtitle_manager",
+      "names": [
+        "SubtitleStatus"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/app_controller.py",
+      "line": 10,
+      "module": "thumbnail.thumbnail_workers",
+      "names": [
+        "ThumbnailWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 9,
+      "module": "core.audio_profile",
+      "names": [
+        "AudioProfile"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 10,
+      "module": "core.audio_effects",
+      "names": [
+        "AudioPlaybackCache",
+        "AudioPreparationCancelled",
+        "prepare_audio"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 11,
+      "module": "core.audio_loudness",
+      "names": [
+        "LoudnessCache",
+        "measure_loudness",
+        "native_gain",
+        "valid_measurement",
+        "DEFAULT_TARGET",
+        "TARGETS"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 12,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 13,
+      "module": "control.audio_volume",
+      "names": [
+        "AudioVolumeControl"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 14,
+      "module": "control.audio_prefetch",
+      "names": [
+        "NextAudioPrefetch"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 15,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "OwnedProcesses"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 16,
+      "module": "ui.audio_effects_panel",
+      "names": [
+        "AudioEffectsPanel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 17,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "TEXT",
+        "ACCENT"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_effects.py",
+      "line": 644,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_prefetch.py",
+      "line": 9,
+      "module": "core.audio_profile",
+      "names": [
+        "AudioProfile"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/audio_prefetch.py",
+      "line": 150,
+      "module": "control.audio_effects",
+      "names": [
+        "AudioPreparationWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/control/volume_settings.py",
+      "line": 9,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_effects.py",
+      "line": 15,
+      "module": "core.audio_profile",
+      "names": [
+        "PROCESSOR_VERSION",
+        "choose_gain",
+        "tone_filter",
+        "render_filter"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_effects.py",
+      "line": 16,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_effects.py",
+      "line": 29,
+      "module": "paths",
+      "names": [
+        "project_root",
+        "asset_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_loudness.py",
+      "line": 10,
+      "module": "core.audio_effects",
+      "names": [
+        "source_signature",
+        "cache_key",
+        "find_tool",
+        "run_tool",
+        "OWNER_MARKER"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_loudness.py",
+      "line": 11,
+      "module": "core.audio_profile",
+      "names": [
+        "AudioProfile",
+        "PEAK_CEILING_DB",
+        "MAX_BOOST_DB"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/audio_loudness.py",
+      "line": 12,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/media_library.py",
+      "line": 13,
+      "module": "core.subtitle_manager",
+      "names": [
+        "SubtitleManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/subtitle_manager.py",
+      "line": 9,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/subtitle_manager.py",
+      "line": 10,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes",
+        "publish",
+        "recover"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/subtitle_manager.py",
+      "line": 94,
+      "module": "core.subtitle_renderer",
+      "names": [
+        "ASSRenderer"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/subtitle_manager.py",
+      "line": 288,
+      "module": "core.subtitle_renderer",
+      "names": [
+        "ASSRenderer"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/core/subtitle_renderer.py",
+      "line": 3,
+      "module": "subtitle.timing_format",
+      "names": [
+        "ass_time"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_source_app.py",
+      "line": 320,
+      "module": "control.ai_controller",
+      "names": [
+        "_set_resource_cache_state"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_source_app.py",
+      "line": 532,
+      "module": "control.ai_controller",
+      "names": [
+        "_set_resource_cache_state"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_source_app.py",
+      "line": 541,
+      "module": "control.ai_controller",
+      "names": [
+        "_set_resource_cache_state"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_source_app.py",
+      "line": 331,
+      "module": "control.ai_controller",
+      "names": [
+        "_set_resource_cache_state"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_source_app.py",
+      "line": 494,
+      "module": "control.ai_controller",
+      "names": [
+        "_set_resource_cache_state"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_worker.py",
+      "line": 4,
+      "module": "download_core.yt_dlp",
+      "names": [
+        "ensure_ytdlp_exists"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_worker.py",
+      "line": 5,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "OwnedProcesses"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/download_worker.py",
+      "line": 6,
+      "module": "download_core.download_options",
+      "names": [
+        "ORIGINAL",
+        "build_download_command",
+        "download_options",
+        "quality_note"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/get_title_worker.py",
+      "line": 7,
+      "module": "download_core.utils",
+      "names": [
+        "sanitize_folder_name"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/get_title_worker.py",
+      "line": 8,
+      "module": "download_core.yt_dlp",
+      "names": [
+        "ensure_ytdlp_exists"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/download_core/get_title_worker.py",
+      "line": 9,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "OwnedProcesses"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/downloader.py",
+      "line": 4,
+      "module": "paths",
+      "names": [
+        "models_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/job/job_manager.py",
+      "line": 13,
+      "module": "job.job_state",
+      "names": [
+        "JobState"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/job/job_manager.py",
+      "line": 14,
+      "module": "core.subtitle_manager",
+      "names": [
+        "SubtitleStatus"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/job/job_manager.py",
+      "line": 15,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/job/job_manager.py",
+      "line": 192,
+      "module": "ai.whisper_engine",
+      "names": [
+        "run_ai_pipeline"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/job/job_manager.py",
+      "line": 193,
+      "module": "core.subtitle_renderer",
+      "names": [
+        "ASSRenderer"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/asr_coverage.py",
+      "line": 5,
+      "module": "pipeline.aligner",
+      "names": [
+        "refine_segments"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/asr_coverage.py",
+      "line": 6,
+      "module": "pipeline.jp_normalizer",
+      "names": [
+        "universal_text_reconstruct"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/lyric_formatter.py",
+      "line": 2,
+      "module": "subtitle.timing_format",
+      "names": [
+        "srt_time",
+        "lrc_time"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/lyric_phrases.py",
+      "line": 4,
+      "module": "pipeline.aligner",
+      "names": [
+        "visual_len"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/lyric_refinement.py",
+      "line": 10,
+      "module": "pipeline.aligner",
+      "names": [
+        "is_cjk",
+        "refine_segments",
+        "visual_len"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/lyric_refinement.py",
+      "line": 11,
+      "module": "pipeline.lyric_phrases",
+      "names": [
+        "group_words"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/pipeline/utils.py",
+      "line": 5,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 92,
+      "module": "pipeline.utils",
+      "names": [
+        "TempFileManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 93,
+      "module": "paths",
+      "names": [
+        "storage_dir",
+        "get_icon_path",
+        "asset_dir",
+        "project_root"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 96,
+      "module": "core.media_library",
+      "names": [
+        "MediaLibrary"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 97,
+      "module": "core.subtitle_manager",
+      "names": [
+        "SubtitleManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 100,
+      "module": "control.ai_controller",
+      "names": [
+        "AIController"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 101,
+      "module": "control.app_controller",
+      "names": [
+        "AppController"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/run_app.py",
+      "line": 104,
+      "module": "ui.main_window",
+      "names": [
+        "MainWindow"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/ass/renderer.py",
+      "line": 2,
+      "module": "subtitle.ass.utils",
+      "names": [
+        "sec_to_ass",
+        "_escape"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/ass/renderer.py",
+      "line": 3,
+      "module": "subtitle.config",
+      "names": [
+        "SubtitleConfig",
+        "LineStyle"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/ass/renderer.py",
+      "line": 4,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/converter.py",
+      "line": 1,
+      "module": "subtitle.model",
+      "names": [
+        "Subtitle",
+        "SubtitleLine"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/engine.py",
+      "line": 2,
+      "module": "subtitle.model",
+      "names": [
+        "SubtitleLine"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/profile.py",
+      "line": 6,
+      "module": "subtitle.model",
+      "names": [
+        "Subtitle",
+        "SubtitleLine",
+        "SubtitleStyle"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/profile.py",
+      "line": 7,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/subtitle/storage.py",
+      "line": 6,
+      "module": "subtitle.model",
+      "names": [
+        "Subtitle",
+        "SubtitleLine",
+        "SubtitleStyle"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 34,
+      "module": "pipeline.extractor",
+      "names": [
+        "extract_audio"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 35,
+      "module": "pipeline.aligner",
+      "names": [
+        "refine_segments"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 36,
+      "module": "pipeline.lyric_formatter",
+      "names": [
+        "export_srt",
+        "export_lrc"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 37,
+      "module": "pipeline.jp_normalizer",
+      "names": [
+        "normalize_japanese"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 38,
+      "module": "subtitle.ass.renderer",
+      "names": [
+        "render_ass"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 39,
+      "module": "translate.translator",
+      "names": [
+        "NLLBTranslator"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 40,
+      "module": "subtitle.converter",
+      "names": [
+        "refined_to_subtitles"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 41,
+      "module": "subtitle.storage",
+      "names": [
+        "save_subtitles"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 42,
+      "module": "subtitle.model",
+      "names": [
+        "SubtitleLine"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 43,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 44,
+      "module": "subtitle.config",
+      "names": [
+        "SubtitleConfig"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/main.py",
+      "line": 45,
+      "module": "translate.pipeline",
+      "names": [
+        "translate_pipeline",
+        "TranslateMode",
+        "clear_translator"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test.py",
+      "line": 11,
+      "module": "ui.main_window",
+      "names": [
+        "MainWindow"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test.py",
+      "line": 12,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test.py",
+      "line": 17,
+      "module": "paths",
+      "names": [
+        "get_input_path",
+        "temp_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_ai.py",
+      "line": 4,
+      "module": "paths",
+      "names": [
+        "get_input_path",
+        "temp_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_ai.py",
+      "line": 31,
+      "module": "worker",
+      "names": [
+        "AIWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_ai.py",
+      "line": 33,
+      "module": "worker",
+      "names": [
+        "AIWorker"
+      ],
+      "qualified_app": true
+    },
+    {
+      "file": "app/test/test_ai_controller.py",
+      "line": 6,
+      "module": "core.subtitle_manager",
+      "names": [
+        "SubtitleManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_ai_controller.py",
+      "line": 7,
+      "module": "control.ai_controller",
+      "names": [
+        "AIController"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_aligner_optimizations.py",
+      "line": 3,
+      "module": "pipeline.aligner",
+      "names": [
+        "stabilize_initial_segment"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_pipeline.py",
+      "line": 2,
+      "module": "ai.pipeline",
+      "names": [
+        "run_ai_pipeline"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test/test_worker.py",
+      "line": 4,
+      "module": "worker",
+      "names": [
+        "AIWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/test_build_app.py",
+      "line": 19,
+      "module": "run_app",
+      "names": [
+        "main"
+      ],
+      "qualified_app": true
+    },
+    {
+      "file": "app/thumbnail/thumbnail_manager.py",
+      "line": 5,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/thumbnail/thumbnail_workers.py",
+      "line": 3,
+      "module": "thumbnail.thumbnail_manager",
+      "names": [
+        "ThumbnailManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/cache.py",
+      "line": 5,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/online_logic.py",
+      "line": 5,
+      "module": "subtitle.model",
+      "names": [
+        "SubtitleLine"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/pipeline.py",
+      "line": 4,
+      "module": "subtitle.model",
+      "names": [
+        "SubtitleLine",
+        "Subtitle"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/pipeline.py",
+      "line": 5,
+      "module": "translate.cache",
+      "names": [
+        "TranslationCache"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/pipeline.py",
+      "line": 18,
+      "module": "translate.translator",
+      "names": [
+        "NLLBTranslator"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/translate/pipeline.py",
+      "line": 169,
+      "module": "translate.online_logic",
+      "names": [
+        "translate_online_pipeline"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/audio_effects_panel.py",
+      "line": 5,
+      "module": "ui.design_system",
+      "names": [
+        "DIALOG_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/design_system.py",
+      "line": 126,
+      "module": "ui.foryou_spacing",
+      "names": [
+        "install_for_you_spacing"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/design_system.py",
+      "line": 127,
+      "module": "ui.native_frame_style",
+      "names": [
+        "install_native_frame"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/foryou_playlist_view.py",
+      "line": 8,
+      "module": "ui.elided_label",
+      "names": [
+        "ElidedLabel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/foryou_playlist_view.py",
+      "line": 9,
+      "module": "ui.icons",
+      "names": [
+        "label_icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/foryou_playlist_view.py",
+      "line": 10,
+      "module": "ui.playlist_loading_overlay",
+      "names": [
+        "PlaylistLoadingOverlay"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/icons.py",
+      "line": 21,
+      "module": "paths",
+      "names": [
+        "asset_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 16,
+      "module": "paths",
+      "names": [
+        "project_root",
+        "storage_dir",
+        "get_icon_path"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 17,
+      "module": "ui.playback_bar",
+      "names": [
+        "PlaybackBar"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 18,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 19,
+      "module": "ui.design_system",
+      "names": [
+        "apply_shell",
+        "ICON_BUTTON_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 20,
+      "module": "ui.overlay_input_guard",
+      "names": [
+        "OverlayInputGuard"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 21,
+      "module": "control.audio_effects",
+      "names": [
+        "install_audio_effects"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 22,
+      "module": "control.volume_settings",
+      "names": [
+        "install_volume_settings"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 23,
+      "module": "ui.media_card",
+      "names": [
+        "MediaCard"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 24,
+      "module": "ui.subs_ui.subtitle_layer",
+      "names": [
+        "SubtitleLayer"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 25,
+      "module": "ui.subs_ui.sub_panel",
+      "names": [
+        "SettingsPanel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 26,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 27,
+      "module": "ui.vol_panel",
+      "names": [
+        "VolumePopup"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 28,
+      "module": "pipeline.utils",
+      "names": [
+        "TempFileManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 31,
+      "module": "config",
+      "names": [
+        "ConfigManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 33,
+      "module": "core.media_library",
+      "names": [
+        "MediaLibrary"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 36,
+      "module": "ui.pages.mode_manager",
+      "names": [
+        "HomePage",
+        "LibraryPage"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 37,
+      "module": "ui.pages.content_manager",
+      "names": [
+        "ContentController"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 38,
+      "module": "ui.pages.for_you",
+      "names": [
+        "ForYouPage"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 39,
+      "module": "ui.pages.download",
+      "names": [
+        "DownloadPage"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 40,
+      "module": "ui.pages.settings",
+      "names": [
+        "SettingsPage"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 41,
+      "module": "ui.pages.dynamic_island",
+      "names": [
+        "MiniPlayer"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 42,
+      "module": "ui.nav.sidebar",
+      "names": [
+        "Sidebar"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 43,
+      "module": "ui.system_media_manager",
+      "names": [
+        "SystemMediaManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 44,
+      "module": "ui.subs_ui.lyric_settings_dialog",
+      "names": [
+        "SubtitleToolsDialog"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 47,
+      "module": "updater",
+      "names": [
+        "download_and_install"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 886,
+      "module": "config",
+      "names": [
+        "ConfigManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 1491,
+      "module": "config",
+      "names": [
+        "ConfigManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/main_window.py",
+      "line": 1738,
+      "module": "control.library_scan",
+      "names": [
+        "LibraryScanQueue"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/media_card.py",
+      "line": 8,
+      "module": "ui.icons",
+      "names": [
+        "label_icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/media_info_probe.py",
+      "line": 15,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "OwnedProcesses",
+        "WorkerOwner"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/media_info_probe.py",
+      "line": 102,
+      "module": "paths",
+      "names": [
+        "project_root",
+        "asset_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/nav/sidebar.py",
+      "line": 5,
+      "module": "ui.icons",
+      "names": [
+        "icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/nav/sidebar.py",
+      "line": 6,
+      "module": "ui.design_system",
+      "names": [
+        "SIDEBAR_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 8,
+      "module": "download_core.download_worker",
+      "names": [
+        "DownloadWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 9,
+      "module": "download_core.get_title_worker",
+      "names": [
+        "GetTitleWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 11,
+      "module": "paths",
+      "names": [
+        "storage_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 12,
+      "module": "ui.pages.settings_dialog",
+      "names": [
+        "SettingMenu"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 13,
+      "module": "config",
+      "names": [
+        "ConfigManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 14,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "INK"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 15,
+      "module": "ui.design_system",
+      "names": [
+        "FORM_STYLE",
+        "DOWNLOAD_PANEL_STYLE",
+        "ICON_BUTTON_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 321,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "WorkerOwner"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/download.py",
+      "line": 466,
+      "module": "config",
+      "names": [
+        "ConfigManager"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/dynamic_island.py",
+      "line": 4,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "label_icon",
+        "ACCENT"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 9,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "label_icon",
+        "icon",
+        "ACCENT",
+        "TEXT"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 10,
+      "module": "ui.design_system",
+      "names": [
+        "ICON_BUTTON_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 11,
+      "module": "ui.elided_label",
+      "names": [
+        "ElidedLabel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 12,
+      "module": "ui.playlist_thumbnail",
+      "names": [
+        "PlaylistThumbnailLoader"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 13,
+      "module": "ui.foryou_playlist_view",
+      "names": [
+        "playlist_view"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 14,
+      "module": "ui.playlist_thumbnail_queue",
+      "names": [
+        "thumbnail_queue"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/for_you.py",
+      "line": 15,
+      "module": "ui.foryou_spacing",
+      "names": [
+        "PAGE_GUTTER"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings.py",
+      "line": 5,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "INK"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings.py",
+      "line": 6,
+      "module": "ui.design_system",
+      "names": [
+        "FORM_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings.py",
+      "line": 8,
+      "module": "download_core.download_source_app",
+      "names": [
+        "ResourceDownloadDialog",
+        "check_resource_status"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings_dialog.py",
+      "line": 4,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "INK"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings_dialog.py",
+      "line": 5,
+      "module": "ui.design_system",
+      "names": [
+        "FORM_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/pages/settings_dialog.py",
+      "line": 6,
+      "module": "download_core.download_options",
+      "names": [
+        "ORIGINAL",
+        "QUALITIES",
+        "quality_note"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playback_bar.py",
+      "line": 4,
+      "module": "ui.video_info_popup",
+      "names": [
+        "VideoInfoPopup"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playback_bar.py",
+      "line": 5,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "ACCENT",
+        "TEXT",
+        "INK"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playback_bar.py",
+      "line": 6,
+      "module": "ui.design_system",
+      "names": [
+        "PLAYBACK_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playback_bar.py",
+      "line": 7,
+      "module": "ui.track_label",
+      "names": [
+        "TrackLabel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playback_bar.py",
+      "line": 8,
+      "module": "ui.mini_video_dock",
+      "names": [
+        "MiniVideoDock"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/playlist_loading_overlay.py",
+      "line": 8,
+      "module": "ui.icons",
+      "names": [
+        "ACCENT"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "line": 10,
+      "module": "ui.subs_ui.subtitle_model",
+      "names": [
+        "SubtitleTableModel"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "line": 11,
+      "module": "ui.subs_ui.subtitle_dialog_logic",
+      "names": [
+        "SubtitleToolsDialogLogic"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "line": 12,
+      "module": "ui.icons",
+      "names": [
+        "button_icon",
+        "icon",
+        "INK"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "line": 13,
+      "module": "ui.design_system",
+      "names": [
+        "DIALOG_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/sub_panel.py",
+      "line": 6,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 9,
+      "module": "ui.subs_ui.subtitle_utils",
+      "names": [
+        "_parse_time_str",
+        "_format_time",
+        "_get_app_root"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 10,
+      "module": "ui.subs_ui.subtitle_io",
+      "names": [
+        "load_subs",
+        "save_subs"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 11,
+      "module": "ui.subs_ui.subtitle_model",
+      "names": [
+        "SnapshotCommand"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 12,
+      "module": "ui.subs_ui.subtitle_commands",
+      "names": [
+        "InsertRowsCommand",
+        "RemoveRowsCommand",
+        "ReplaceSegmentsCommand",
+        "BatchShiftCommand",
+        "SplitRowCommand",
+        "MergeRowsCommand"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 16,
+      "module": "ui.subs_ui.subtitle_workers",
+      "names": [
+        "AlignWorker",
+        "TranslationWorker"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 147,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "editor_worker_owner"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 936,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "line": 939,
+      "module": "core.subtitle_persistence",
+      "names": [
+        "atomic_bytes"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_editor.py",
+      "line": 4,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_layer.py",
+      "line": 7,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_layer.py",
+      "line": 8,
+      "module": "ui.subtitle_presentation",
+      "names": [
+        "SubtitlePresentationGuard"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_model.py",
+      "line": 5,
+      "module": "ui.subs_ui.subtitle_utils",
+      "names": [
+        "_format_time",
+        "_parse_time_str"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_workers.py",
+      "line": 192,
+      "module": "translate.pipeline",
+      "names": [
+        "translate_pipeline",
+        "clear_translator"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subs_ui/subtitle_workers.py",
+      "line": 193,
+      "module": "translate.online_logic",
+      "names": [
+        "translate_online_pipeline"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/subtitle_presentation.py",
+      "line": 7,
+      "module": "subtitle.mode",
+      "names": [
+        "SubtitleMode"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/system_media_manager.py",
+      "line": 86,
+      "module": "paths",
+      "names": [
+        "asset_dir"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/video_info_popup.py",
+      "line": 5,
+      "module": "ui.icons",
+      "names": [
+        "icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/video_info_popup.py",
+      "line": 6,
+      "module": "ui.design_system",
+      "names": [
+        "DIALOG_STYLE"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/video_info_popup.py",
+      "line": 7,
+      "module": "ui.media_info_probe",
+      "names": [
+        "MediaInfoRequests",
+        "item_snapshot",
+        "read_media_info",
+        "UNKNOWN"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/video_info_popup.py",
+      "line": 182,
+      "module": "control.worker_lifecycle",
+      "names": [
+        "OwnedProcesses"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/ui/vol_panel.py",
+      "line": 3,
+      "module": "ui.icons",
+      "names": [
+        "label_icon"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/updater.py",
+      "line": 9,
+      "module": "paths",
+      "names": [
+        "storage_dir",
+        "project_root",
+        "project_root"
+      ],
+      "qualified_app": false
+    },
+    {
+      "file": "app/worker.py",
+      "line": 61,
+      "module": "ai.pipeline",
+      "names": [
+        "run_ai_pipeline"
+      ],
+      "qualified_app": false
+    }
+  ],
+  "issues": [
+    {
+      "file": "app/downloader.py",
+      "line": 4,
+      "issue": "relative import without a direct-entry package"
+    },
+    {
+      "file": "app/downloader.py",
+      "line": 4,
+      "issue": "local attribute needs review: paths.models_dir"
+    },
+    {
+      "file": "app/test/test.py",
+      "line": 17,
+      "issue": "local attribute needs review: paths.temp_dir"
+    },
+    {
+      "file": "app/test/test_ai.py",
+      "line": 4,
+      "issue": "local attribute needs review: paths.temp_dir"
+    },
+    {
+      "file": "app/test/test_ai.py",
+      "line": 33,
+      "issue": "app.* requires repository root absent in direct entry"
+    }
+  ],
+  "runtime_reachable_modules": [
+    "ai.pipeline",
+    "config",
+    "control.ai_controller",
+    "control.app_controller",
+    "control.audio_effects",
+    "control.audio_prefetch",
+    "control.audio_volume",
+    "control.library_scan",
+    "control.volume_settings",
+    "control.worker_lifecycle",
+    "core.audio_effects",
+    "core.audio_loudness",
+    "core.audio_profile",
+    "core.media_library",
+    "core.subtitle_manager",
+    "core.subtitle_persistence",
+    "core.subtitle_renderer",
+    "download_core.download_options",
+    "download_core.download_source_app",
+    "download_core.download_worker",
+    "download_core.get_title_worker",
+    "download_core.utils",
+    "download_core.yt_dlp",
+    "paths",
+    "pipeline.aligner",
+    "pipeline.asr_coverage",
+    "pipeline.extractor",
+    "pipeline.jp_normalizer",
+    "pipeline.lyric_corrector",
+    "pipeline.lyric_formatter",
+    "pipeline.lyric_phrases",
+    "pipeline.lyric_refinement",
+    "pipeline.utils",
+    "run_app",
+    "subtitle.ass.renderer",
+    "subtitle.ass.utils",
+    "subtitle.config",
+    "subtitle.converter",
+    "subtitle.mode",
+    "subtitle.model",
+    "subtitle.storage",
+    "subtitle.timing_format",
+    "thumbnail.thumbnail_manager",
+    "thumbnail.thumbnail_workers",
+    "translate.cache",
+    "translate.online_logic",
+    "translate.pipeline",
+    "translate.translator",
+    "ui.audio_effects_panel",
+    "ui.design_system",
+    "ui.elided_label",
+    "ui.foryou_playlist_view",
+    "ui.foryou_spacing",
+    "ui.icons",
+    "ui.main_window",
+    "ui.media_card",
+    "ui.media_info_probe",
+    "ui.mini_video_dock",
+    "ui.native_frame_style",
+    "ui.nav.sidebar",
+    "ui.overlay_input_guard",
+    "ui.pages.content_manager",
+    "ui.pages.download",
+    "ui.pages.dynamic_island",
+    "ui.pages.for_you",
+    "ui.pages.mode_manager",
+    "ui.pages.settings",
+    "ui.pages.settings_dialog",
+    "ui.playback_bar",
+    "ui.playlist_loading_overlay",
+    "ui.playlist_thumbnail",
+    "ui.playlist_thumbnail_queue",
+    "ui.subs_ui.lyric_settings_dialog",
+    "ui.subs_ui.sub_panel",
+    "ui.subs_ui.subtitle_commands",
+    "ui.subs_ui.subtitle_dialog_logic",
+    "ui.subs_ui.subtitle_io",
+    "ui.subs_ui.subtitle_layer",
+    "ui.subs_ui.subtitle_model",
+    "ui.subs_ui.subtitle_utils",
+    "ui.subs_ui.subtitle_workers",
+    "ui.subtitle_presentation",
+    "ui.system_media_manager",
+    "ui.track_label",
+    "ui.video_info_popup",
+    "ui.vol_panel",
+    "updater",
+    "worker"
+  ],
+  "runtime_issues": [],
+  "limitation": "Static local names only; optional external dependencies/dynamic targets need actual execution."
+}

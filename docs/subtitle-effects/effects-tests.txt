@@ -1,0 +1,60 @@
+test_all_prior_app_sources_unchanged_outside_three_ui_adapters (tests.test_subtitle_effects.EffectScopeTests.test_all_prior_app_sources_unchanged_outside_three_ui_adapters) ... ok
+test_only_painter_and_settings_adapters_change_old_production (tests.test_subtitle_effects.EffectScopeTests.test_only_painter_and_settings_adapters_change_old_production) ... ok
+test_all_modes_render_unicode_and_stable_geometry (tests.test_subtitle_effects.EffectTests.test_all_modes_render_unicode_and_stable_geometry) ... ok
+test_complete_animation_is_finite_and_reset_restores_original_pixels (tests.test_subtitle_effects.EffectTests.test_complete_animation_is_finite_and_reset_restores_original_pixels) ... ok
+test_hidden_off_empty_and_load_cancel_animation (tests.test_subtitle_effects.EffectTests.test_hidden_off_empty_and_load_cancel_animation) ... ok
+test_off_pixels_and_cues_equal_captured_renderer (tests.test_subtitle_effects.EffectTests.test_off_pixels_and_cues_equal_captured_renderer) ... ok
+test_options_off_by_default_and_validate_corrupt_input (tests.test_subtitle_effects.EffectTests.test_options_off_by_default_and_validate_corrupt_input) ... ok
+test_player_pause_resume_stop_and_rate (tests.test_subtitle_effects.EffectTests.test_player_pause_resume_stop_and_rate) ... ok
+test_same_cue_does_not_restart_and_identical_next_cue_does (tests.test_subtitle_effects.EffectTests.test_same_cue_does_not_restart_and_identical_next_cue_does) ... ok
+test_seek_midcue_is_complete_and_seek_back_uses_media_offset (tests.test_subtitle_effects.EffectTests.test_seek_midcue_is_complete_and_seek_back_uses_media_offset) ... ok
+test_short_cues_never_extend_timing_or_consume_whole_cue (tests.test_subtitle_effects.EffectTests.test_short_cues_never_extend_timing_or_consume_whole_cue) ... ok
+test_static_gradient_has_no_animation_and_path_reused (tests.test_subtitle_effects.EffectTests.test_static_gradient_has_no_animation_and_path_reused) ... ok
+test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay (tests.test_subtitle_effects.PanelTests.test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay) ... ok
+test_popup_scroll_all_controls_reachable_and_inside_screen (tests.test_subtitle_effects.PanelTests.test_popup_scroll_all_controls_reachable_and_inside_screen) ... ok
+test_preview_uses_production_painter_and_stops_on_hide (tests.test_subtitle_effects.PanelTests.test_preview_uses_production_painter_and_stops_on_hide) ... ok
+test_saved_effects_loaded_at_startup_without_rewriting_preferences (tests.test_subtitle_effects.PanelTests.test_saved_effects_loaded_at_startup_without_rewriting_preferences) ... ok
+test_shell_persists_only_appearance_and_reset_off (tests.test_subtitle_effects.PanelTests.test_shell_persists_only_appearance_and_reset_off) ... ok
+test_sync_does_not_emit_and_options_can_combine (tests.test_subtitle_effects.PanelTests.test_sync_does_not_emit_and_options_can_combine) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 2.374s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
