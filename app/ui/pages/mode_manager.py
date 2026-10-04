@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QGridLayout
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QGridLayout, QLabel
 from PySide6.QtCore import Qt
 
 class BaseVideoPage(QWidget):
@@ -7,6 +7,12 @@ class BaseVideoPage(QWidget):
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0) # Sát lề cho đẹp
+        heading = QLabel("Thư viện của bạn" if type(self).__name__ == "LibraryPage" else "Khám phá thư viện")
+        heading.setStyleSheet("font-size: 25px; font-weight: 700; color: #EDF3FA; padding: 2px 8px;")
+        description = QLabel("Video và âm nhạc của bạn, luôn sẵn sàng để phát.")
+        description.setStyleSheet("font-size: 13px; color: #9AAABC; padding: 0 8px 14px 8px;")
+        self.layout.addWidget(heading)
+        self.layout.addWidget(description)
 
         self.scroll_area = QScrollArea() # Đặt tên trùng với MainWindow để dễ trỏ
         self.scroll_area.setWidgetResizable(True)

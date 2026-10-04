@@ -1,0 +1,37 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Main,MS UI Gothic,45,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,1,2,30,30,50,1
+Style: Sub,Arial,28,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,1,2,30,30,15,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:04.50,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:04.59,0:00:12.27,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm
+Dialogue: 0,0:00:12.27,0:00:14.68,Main,,0,0,0,,sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:14.97,0:00:15.11,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:15.11,0:00:19.07,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:19.07,0:00:19.32,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:19.39,0:00:22.57,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:22.57,0:00:22.63,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:22.63,0:00:25.16,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,
+Dialogue: 0,0:00:25.27,0:00:29.98,Main,,0,0,0,,I'm sorry, I'm sorry, I'm sorry, I'm sorry
+Dialogue: 0,0:00:38.87,0:00:43.08,Main,,0,0,0,,Isn't it so incredible
+Dialogue: 0,0:00:43.57,0:00:50.64,Main,,0,0,0,,We're here sharing the same tired space
+Dialogue: 0,0:00:50.89,0:00:55.73,Main,,0,0,0,,In your eyes, the stars look like
+Dialogue: 0,0:00:55.73,0:00:58.99,Main,,0,0,0,,Thousands of bright stars
+Dialogue: 0,0:00:58.99,0:01:03.23,Main,,0,0,0,,I have gazed at four thousands of time
+Dialogue: 0,0:01:03.23,0:01:07.67,Main,,0,0,0,,Da da da, da da da
+Dialogue: 0,0:01:07.67,0:01:10.78,Main,,0,0,0,,Da da da
+Dialogue: 0,0:01:24.77,0:01:29.51,Main,,0,0,0,,You build a world of miracles
+Dialogue: 0,0:01:29.51,0:01:35.33,Main,,0,0,0,,Some wanting the precious This dream of shimmering daily moments
+Dialogue: 0,0:01:35.33,0:01:41.49,Main,,0,0,0,,Return way to my soul Stop me from drifting in my feet
+Dialogue: 0,0:01:41.49,0:01:44.85,Main,,0,0,0,,That solid ground I stand So I sing together
+Dialogue: 0,0:01:44.85,0:01:49.19,Main,,0,0,0,,Every light I'm giving all goes back to you
+Dialogue: 0,0:01:49.19,0:01:51.56,Main,,0,0,0,,Goes back to you
+Dialogue: 0,0:02:15.05,0:02:22.78,Main,,0,0,0,,Terima kasih telah menonton!

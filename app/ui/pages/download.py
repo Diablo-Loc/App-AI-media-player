@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                              QPushButton, QFrame, QTextEdit, QProgressBar, 
-                             QComboBox, QSpacerItem, QSizePolicy, QFileDialog)
+                             QComboBox, QSpacerItem, QSizePolicy, QFileDialog, QGridLayout)
 import os 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QTextCursor
@@ -11,6 +11,8 @@ import json
 from paths import storage_dir
 from .settings_dialog import SettingMenu
 from config import ConfigManager
+from ..icons import button_icon, INK
+from ..design_system import FORM_STYLE, DOWNLOAD_PANEL_STYLE, ICON_BUTTON_STYLE
 
 class SmartLinkPasteTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -54,46 +56,36 @@ class DownloadPage(QWidget):
         # Tạo Menu cài đặt và đặt nó làm con của DownloadPage
         self.setting_menu = SettingMenu(self, self.full_config)
         self.setting_menu.settings_saved.connect(self.update_status_label)
-        # Đặt kích thước cố định cho menu nổi
-        self.setting_menu.setFixedSize(320, 350)
+        # Chiều cao theo layout/font, tránh ép nhỏ làm cắt chữ trong combobox.
+        self.setting_menu.ensurePolished()
+        self.setting_menu.adjustSize()
         
         # --- 1. SETUP MAIN LAYOUT ---
-        self.setStyleSheet("background-color: #121212; color: #FFFFFF;") # Nền xám đen cực dịu mắt
+        self.setStyleSheet(FORM_STYLE)
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(20)
 
         # --- 2. HEADER ---
-        header_layout = QHBoxLayout()
+        header_layout = self._header_layout = QGridLayout()
         
         # Tiêu đề
-        lbl_title = QLabel("TRÌNH TẢI NHẠC")
+        lbl_title = QLabel("Tải video & âm nhạc")
         lbl_title.setStyleSheet("""
-            font-size: 28px; 
-            font-weight: bold; 
-            font-family: 'Times New Roman', serif;
+            font-size: 25px;
+            font-weight: 700;
+            font-family: 'Segoe UI';
             color: #FFFFFF;
         """)
         
         # --- NÚT SETTING 
-        self.btn_settings = QPushButton("⚙️") 
+        self.btn_settings = QPushButton()
         self.btn_settings.setFixedSize(35, 35)
         self.btn_settings.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_settings.setToolTip("Cài đặt chất lượng & Hệ thống")
-        self.btn_settings.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #B3B3B3;
-                font-size: 22px;
-                border-radius: 17px;
-            }
-            QPushButton:hover {
-                background-color: #333333;
-                color: #FFFFFF;
-            }
-        """)
         # Kết nối sự kiện mở Dialog
         self.btn_settings.clicked.connect(self.open_settings_dialog)
+        button_icon(self.btn_settings, "settings", "Cài đặt tải xuống")
         
         # Nút chấm tròn (Toggle lưu thư mục)
         self.btn_toggle_path = QPushButton()
@@ -116,7 +108,10 @@ class DownloadPage(QWidget):
         self.combo_path = QComboBox()
         self.combo_path.setEditable(True)
         self.combo_path.lineEdit().setPlaceholderText("Chọn thư mục lưu video...")
-        self.combo_path.setFixedSize(250, 30)
+        self.combo_path.setMinimumWidth(160)
+        self.combo_path.setMaximumWidth(250)
+        self.combo_path.setFixedHeight(36)
+        self.combo_path.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.combo_path.setStyleSheet("""
             QComboBox {
                 background-color: #282828;
@@ -132,28 +127,23 @@ class DownloadPage(QWidget):
         """)
 
         # Nút mở thư mục
-        self.btn_browse = QPushButton("📂")
+        self.btn_browse = QPushButton()
+        button_icon(self.btn_browse, "folder-open", "Chọn thư mục lưu")
         self.btn_browse.setFixedSize(30, 30)
         self.btn_browse.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_browse.setStyleSheet("""
-            QPushButton {
-                background-color: #282828; 
-                border: 1px solid #555555;
-                border-radius: 4px;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #3E3E3E;
-            }
-        """)
         
         # Sắp xếp Header
-        header_layout.addWidget(lbl_title)
-        header_layout.addWidget(self.btn_settings)
-        header_layout.addStretch()
-        header_layout.addWidget(self.btn_toggle_path)
-        header_layout.addWidget(self.combo_path)
-        header_layout.addWidget(self.btn_browse)
+        self._path_controls = QWidget()
+        path_layout = QHBoxLayout(self._path_controls)
+        path_layout.setContentsMargins(0, 0, 0, 0)
+        path_layout.addStretch()
+        path_layout.addWidget(self.btn_toggle_path)
+        path_layout.addWidget(self.combo_path)
+        path_layout.addWidget(self.btn_browse)
+        header_layout.addWidget(lbl_title, 0, 0)
+        header_layout.addWidget(self.btn_settings, 0, 1)
+        header_layout.addWidget(self._path_controls, 0, 2)
+        header_layout.setColumnStretch(2, 1)
         
         main_layout.addLayout(header_layout)
 
@@ -162,33 +152,10 @@ class DownloadPage(QWidget):
         body_layout.setSpacing(15)
 
         # Định dạng chung cho 2 khung
-        frame_style = """
-            QFrame {
-                background-color: #1E1E1E; 
-                border: 1px solid #333333;
-                border-radius: 8px;
-            }
-            QLabel {
-                color: #B3B3B3;
-                font-size: 15px;
-                border: none;
-                font-weight: bold;
-                padding-top: 5px;
-            }
-            QTextEdit {
-                background-color: #121212; 
-                color: #FFFFFF;
-                border: 1px solid #444444;
-                border-radius: 4px;
-                font-family: Consolas, Arial, sans-serif; 
-                font-size: 13px; 
-                padding: 8px;
-            }
-        """
 
         # Cột trái: Danh sách link
         frame_left = QFrame()
-        frame_left.setStyleSheet(frame_style)
+        frame_left.setStyleSheet(DOWNLOAD_PANEL_STYLE)
         layout_left = QVBoxLayout(frame_left)
         layout_left.setContentsMargins(15, 10, 15, 15)
         
@@ -204,7 +171,7 @@ class DownloadPage(QWidget):
 
         # Cột phải: Tên video
         frame_right = QFrame()
-        frame_right.setStyleSheet(frame_style)
+        frame_right.setStyleSheet(DOWNLOAD_PANEL_STYLE)
         layout_right = QVBoxLayout(frame_right)
         layout_right.setContentsMargins(15, 10, 15, 15)
         
@@ -224,11 +191,13 @@ class DownloadPage(QWidget):
         main_layout.addLayout(body_layout, stretch=1) 
 
         # --- 4. FOOTER: PROGRESS VÀ NÚT BẤM ---
-        footer_layout = QHBoxLayout()
+        footer_layout = self._footer_layout = QGridLayout()
         footer_layout.setContentsMargins(0, 10, 0, 0)
         
         # === BÊN TRÁI (THÀNH CÔNG & STATUS) ===
-        left_footer_layout = QVBoxLayout()
+        self._left_footer = QWidget()
+        left_footer_layout = QVBoxLayout(self._left_footer)
+        left_footer_layout.setContentsMargins(0, 0, 0, 0)
         left_footer_layout.setSpacing(10)
         
         progress_layout = QHBoxLayout()
@@ -236,7 +205,9 @@ class DownloadPage(QWidget):
         lbl_progress_text.setStyleSheet("color: #B3B3B3; font-size: 14px;")
         
         self.progress_bar = QProgressBar()
-        self.progress_bar.setFixedSize(300, 20)
+        self.progress_bar.setMinimumWidth(80)
+        self.progress_bar.setMaximumWidth(300)
+        self.progress_bar.setFixedHeight(20)
         self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.progress_bar.setValue(0)
         self.progress_bar.setFormat("--/--")
@@ -250,14 +221,17 @@ class DownloadPage(QWidget):
         progress_layout.addStretch()
         
         self.lbl_status = QLabel("Đã sẵn sàng.")
-        self.lbl_status.setMinimumWidth(400)
+        self.lbl_status.setMinimumWidth(0)
+        self.lbl_status.setWordWrap(True)
         self.lbl_status.setStyleSheet("color: #1DB954; font-size: 13px; font-weight: bold; font-family: Consolas;")
         
         left_footer_layout.addLayout(progress_layout)
         left_footer_layout.addWidget(self.lbl_status)
         
         # === BÊN PHẢI (THẤT BẠI & NÚT BẤM) ===
-        right_footer_layout = QVBoxLayout()
+        self._right_footer = QWidget()
+        right_footer_layout = QVBoxLayout(self._right_footer)
+        right_footer_layout.setContentsMargins(0, 0, 0, 0)
         right_footer_layout.setSpacing(10)
         
         fail_progress_layout = QHBoxLayout()
@@ -265,7 +239,9 @@ class DownloadPage(QWidget):
         lbl_fail_text.setStyleSheet("color: #B3B3B3; font-size: 14px;")
         
         self.fail_bar = QProgressBar()
-        self.fail_bar.setFixedSize(300, 20)
+        self.fail_bar.setMinimumWidth(80)
+        self.fail_bar.setMaximumWidth(300)
+        self.fail_bar.setFixedHeight(20)
         self.fail_bar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.fail_bar.setValue(0)
         self.fail_bar.setFormat("--/--")
@@ -282,45 +258,33 @@ class DownloadPage(QWidget):
         btn_layout.setSpacing(10)
         
         # Style chuẩn cho các nút
-        base_btn_style = """
-            QPushButton { border: none; font-weight: bold; font-size: 13px; border-radius: 17px; }
-            QPushButton:disabled { background-color: #555555 !important; color: #888888 !important; }
-        """
                 
         # 1. Nút Lấy tên (Xanh dương đậm / Tối)
         self.btn_get_name = QPushButton("Lấy tên")
         self.btn_get_name.setFixedSize(90, 35)
         self.btn_get_name.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_get_name.setStyleSheet(base_btn_style + "QPushButton { background-color: #2C3E50; color: white; } QPushButton:hover { background-color: #34495E; }")
         
         # 2. Nút Bắt đầu (Trắng)
         self.btn_start = QPushButton("Bắt đầu")
         self.btn_start.setFixedSize(90, 35)
         self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_start.setStyleSheet(base_btn_style + "QPushButton { background-color: #FFFFFF; color: black; } QPushButton:hover { background-color: #E0E0E0; }")
         
         # 3. Nút Dừng (Đỏ) - Mặc định ẩn/disable khi chưa tải
         self.btn_stop = QPushButton("Dừng")
         self.btn_stop.setFixedSize(90, 35)
         self.btn_stop.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_stop.setEnabled(False) 
-        self.btn_stop.setStyleSheet(base_btn_style + "QPushButton { background-color: #E22134; color: white; } QPushButton:hover { background-color: #FF4C4C; }")
 
         # 4. Nút Clear (Xám)
         self.btn_clear = QPushButton("Clear")
         self.btn_clear.setFixedSize(90, 35)
         self.btn_clear.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_clear.setStyleSheet(base_btn_style + "QPushButton { background-color: #333333; color: white; } QPushButton:hover { background-color: #444444; }")
         
         # 5. Nút Cập nhật (Xanh lá - Chỉ hiện/enable khi tải xong)
         self.btn_refresh_all = QPushButton("Cập nhật")
         self.btn_refresh_all.setFixedSize(90, 35)
         self.btn_refresh_all.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_refresh_all.setEnabled(False) # Mặc định khóa
-        self.btn_refresh_all.setStyleSheet(base_btn_style + """
-            QPushButton { background-color: #1DB954; color: white; } 
-            QPushButton:hover { background-color: #1ed760; }
-        """)
         
         btn_layout.addStretch()
         btn_layout.addWidget(self.btn_get_name)
@@ -332,11 +296,15 @@ class DownloadPage(QWidget):
         right_footer_layout.addLayout(fail_progress_layout)
         right_footer_layout.addLayout(btn_layout)
 
-        footer_layout.addLayout(left_footer_layout)
-        footer_layout.addStretch()
-        footer_layout.addLayout(right_footer_layout)
+        footer_layout.addWidget(self._left_footer, 0, 0)
+        footer_layout.addWidget(self._right_footer, 0, 1)
+        footer_layout.setColumnStretch(0, 1)
         
         main_layout.addLayout(footer_layout)
+        self.btn_settings.setStyleSheet(ICON_BUTTON_STYLE)
+        self.btn_browse.setStyleSheet(ICON_BUTTON_STYLE)
+        self.btn_start.setProperty("role", "primary")
+        self.btn_refresh_all.setProperty("role", "secondary")
         
         
         # --- KẾT NỐI TÍN HIỆU ---
@@ -350,7 +318,30 @@ class DownloadPage(QWidget):
         self.txt_links.textChanged.connect(self.update_link_count)
         
         self.download_thread = None
+        from control.worker_lifecycle import WorkerOwner
+        self._worker_owner = WorkerOwner(self)
         self.on_toggle_path(False)
+        self._compact_layout = None
+        self._arrange_controls(self.width())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_compact_layout"):
+            self._arrange_controls(event.size().width())
+
+    def _arrange_controls(self, width):
+        compact = width < 850
+        if compact == self._compact_layout:
+            return
+        self._compact_layout = compact
+        self._header_layout.removeWidget(self._path_controls)
+        self._footer_layout.removeWidget(self._right_footer)
+        if compact:
+            self._header_layout.addWidget(self._path_controls, 1, 0, 1, 3)
+            self._footer_layout.addWidget(self._right_footer, 1, 0, 1, 2)
+        else:
+            self._header_layout.addWidget(self._path_controls, 0, 2)
+            self._footer_layout.addWidget(self._right_footer, 0, 1)
 
     # ==========================================
     # CÁC HÀM XỬ LÝ LOGIC GIAO DIỆN
@@ -494,6 +485,7 @@ class DownloadPage(QWidget):
         self.fail_bar.setValue(0)
         print(f"[DEBUG] Chuẩn bị khởi chạy Thread với {len(links)} video")
         self.download_thread = DownloadWorker(links, names, save_path, self.full_config)
+        self._worker_owner.own(self.download_thread)
 
         self.download_thread.progress_signal.connect(self.update_progress)
         self.download_thread.fail_signal.connect(self.update_fail_progress)
@@ -578,6 +570,7 @@ class DownloadPage(QWidget):
         self.txt_names.clear() 
         
         self.title_thread = GetTitleWorker(links)
+        self._worker_owner.own(self.title_thread)
         
         # Kết nối các tín hiệu cũ
         self.title_thread.title_ready_signal.connect(self.append_title_to_ui)
@@ -594,6 +587,9 @@ class DownloadPage(QWidget):
         self.txt_names.setPlainText(new_text)
         
         self.txt_names.verticalScrollBar().setValue(self.txt_names.verticalScrollBar().maximum())
+
+    def shutdown_workers(self):
+        self._worker_owner.shutdown()
 
     def get_names_finished(self):
         self.btn_get_name.setEnabled(True)

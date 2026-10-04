@@ -1,0 +1,2186 @@
+{
+  "metrics": {
+    "number": 2,
+    "language": "en",
+    "primary": {
+      "seconds": 7.906588099998771,
+      "process_cpu_seconds": 0.9375,
+      "process_rss_before_mib": 830.0546875,
+      "process_rss_peak_mib": 974.75390625,
+      "process_rss_extra_peak_mib": 144.69921875,
+      "gpu_total_memory_peak_mib": 4229.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 13
+    },
+    "coverage": {
+      "seconds": 3.7190700999999535,
+      "process_cpu_seconds": 0.59375,
+      "process_rss_before_mib": 831.01171875,
+      "process_rss_peak_mib": 861.92578125,
+      "process_rss_extra_peak_mib": 30.9140625,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 94.0,
+      "gpu_samples": 7
+    },
+    "retry_count": 6,
+    "retry_audio_seconds": 51.583999999999996,
+    "primary_cues": 33,
+    "final_cues": 33,
+    "added": 0,
+    "all_primary_text_times_unchanged": true,
+    "primary_input_unmodified": true,
+    "no_overlap": true,
+    "diagnostic": {
+      "duration": 232.9890625,
+      "gaps_before": [
+        [
+          0.0,
+          10.77
+        ],
+        [
+          80.1,
+          96.01
+        ],
+        [
+          142.86,
+          157.53
+        ],
+        [
+          207.52,
+          229.15
+        ]
+      ],
+      "attempts": [
+        {
+          "start": 0.0,
+          "end": 12.0,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 78.1,
+          "end": 90.1,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 205.52,
+          "end": 217.52,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 0.0,
+          "end": 3.7439999999999998,
+          "round": 2,
+          "added": 0
+        },
+        {
+          "start": 3.5519999999999996,
+          "end": 9.504,
+          "round": 2,
+          "added": 0
+        },
+        {
+          "start": 207.776,
+          "end": 213.664,
+          "round": 2,
+          "added": 0
+        }
+      ],
+      "added_cues": 0,
+      "speech": [
+        [
+          0.0,
+          1.744
+        ],
+        [
+          5.552,
+          7.504
+        ],
+        [
+          11.696,
+          82.96
+        ],
+        [
+          96.56,
+          139.28
+        ],
+        [
+          161.264,
+          185.488
+        ],
+        [
+          209.776,
+          211.664
+        ]
+      ],
+      "unresolved_speech": [
+        [
+          0.0,
+          1.744
+        ],
+        [
+          5.552,
+          7.504
+        ],
+        [
+          80.1,
+          82.96
+        ],
+        [
+          209.776,
+          211.664
+        ]
+      ]
+    },
+    "primary_character_inventory_preserved": true
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 10.819999999999999,
+      "end": 15.72,
+      "text": " See how far we've come together",
+      "avg_logprob": -0.2721774193548387,
+      "no_speech_prob": 0.398681640625,
+      "compression_ratio": 1.2527472527472527,
+      "words": [
+        {
+          "start": 10.819999999999999,
+          "end": 12.1,
+          "word": " See",
+          "probability": 0.525390625
+        },
+        {
+          "start": 12.1,
+          "end": 13.3,
+          "word": " how",
+          "probability": 0.7763671875
+        },
+        {
+          "start": 13.3,
+          "end": 13.76,
+          "word": " far",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 13.76,
+          "end": 14.2,
+          "word": " we've",
+          "probability": 0.9873046875
+        },
+        {
+          "start": 14.2,
+          "end": 14.42,
+          "word": " come",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 14.42,
+          "end": 15.72,
+          "word": " together",
+          "probability": 0.99658203125
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 17.0,
+      "end": 20.6,
+      "text": " And we are stronger than before",
+      "avg_logprob": -0.2721774193548387,
+      "no_speech_prob": 0.398681640625,
+      "compression_ratio": 1.2527472527472527,
+      "words": [
+        {
+          "start": 16.88,
+          "end": 17.52,
+          "word": " And",
+          "probability": 0.65869140625
+        },
+        {
+          "start": 17.52,
+          "end": 17.96,
+          "word": " we",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 17.96,
+          "end": 18.82,
+          "word": " are",
+          "probability": 0.96728515625
+        },
+        {
+          "start": 18.82,
+          "end": 19.48,
+          "word": " stronger",
+          "probability": 0.994140625
+        },
+        {
+          "start": 19.48,
+          "end": 20.02,
+          "word": " than",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 20.02,
+          "end": 20.6,
+          "word": " before",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 22.02,
+      "end": 27.8,
+      "text": " And these are memories we'll cherish more and more",
+      "avg_logprob": -0.2721774193548387,
+      "no_speech_prob": 0.398681640625,
+      "compression_ratio": 1.2527472527472527,
+      "words": [
+        {
+          "start": 22.02,
+          "end": 23.3,
+          "word": " And",
+          "probability": 0.9375
+        },
+        {
+          "start": 23.3,
+          "end": 23.72,
+          "word": " these",
+          "probability": 0.994140625
+        },
+        {
+          "start": 23.72,
+          "end": 24.58,
+          "word": " are",
+          "probability": 0.970703125
+        },
+        {
+          "start": 24.58,
+          "end": 25.36,
+          "word": " memories",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 25.36,
+          "end": 26.14,
+          "word": " we'll",
+          "probability": 0.946533203125
+        },
+        {
+          "start": 26.14,
+          "end": 26.5,
+          "word": " cherish",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 26.5,
+          "end": 27.14,
+          "word": " more",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 27.14,
+          "end": 27.4,
+          "word": " and",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 27.4,
+          "end": 27.8,
+          "word": " more",
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 27.8,
+      "end": 31.94,
+      "text": " We'll walk as one with dawn",
+      "avg_logprob": -0.23093749940395356,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 1.3307692307692307,
+      "words": [
+        {
+          "start": 27.8,
+          "end": 29.7,
+          "word": " We'll",
+          "probability": 0.48699951171875
+        },
+        {
+          "start": 29.7,
+          "end": 30.1,
+          "word": " walk",
+          "probability": 0.9677734375
+        },
+        {
+          "start": 30.1,
+          "end": 30.38,
+          "word": " as",
+          "probability": 0.95703125
+        },
+        {
+          "start": 30.38,
+          "end": 30.72,
+          "word": " one",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 30.72,
+          "end": 31.48,
+          "word": " with",
+          "probability": 0.95556640625
+        },
+        {
+          "start": 31.48,
+          "end": 31.94,
+          "word": " dawn",
+          "probability": 0.9677734375
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 33.94,
+      "end": 38.68,
+      "text": " May your courage never fail you",
+      "avg_logprob": -0.23093749940395356,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 1.3307692307692307,
+      "words": [
+        {
+          "start": 33.94,
+          "end": 34.94,
+          "word": " May",
+          "probability": 0.45751953125
+        },
+        {
+          "start": 34.94,
+          "end": 35.68,
+          "word": " your",
+          "probability": 0.84912109375
+        },
+        {
+          "start": 35.68,
+          "end": 36.66,
+          "word": " courage",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 36.66,
+          "end": 37.1,
+          "word": " never",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 37.1,
+          "end": 37.74,
+          "word": " fail",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 37.74,
+          "end": 38.68,
+          "word": " you",
+          "probability": 0.95849609375
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 38.68,
+      "end": 43.32,
+      "text": " Your future's yours alone to write",
+      "avg_logprob": -0.23093749940395356,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 1.3307692307692307,
+      "words": [
+        {
+          "start": 38.68,
+          "end": 40.16,
+          "word": " Your",
+          "probability": 0.89453125
+        },
+        {
+          "start": 40.16,
+          "end": 41.78,
+          "word": " future's",
+          "probability": 0.97900390625
+        },
+        {
+          "start": 41.78,
+          "end": 42.08,
+          "word": " yours",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 42.08,
+          "end": 42.62,
+          "word": " alone",
+          "probability": 0.77587890625
+        },
+        {
+          "start": 42.62,
+          "end": 42.9,
+          "word": " to",
+          "probability": 0.990234375
+        },
+        {
+          "start": 42.9,
+          "end": 43.32,
+          "word": " write",
+          "probability": 0.5751953125
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 44.86,
+      "end": 50.56,
+      "text": " And may our shared ideas cut through the haze of time",
+      "avg_logprob": -0.23093749940395356,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 1.3307692307692307,
+      "words": [
+        {
+          "start": 44.86,
+          "end": 45.86,
+          "word": " And",
+          "probability": 0.73828125
+        },
+        {
+          "start": 45.86,
+          "end": 46.26,
+          "word": " may",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 46.26,
+          "end": 47.22,
+          "word": " our",
+          "probability": 0.8701171875
+        },
+        {
+          "start": 47.22,
+          "end": 47.76,
+          "word": " shared",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 47.76,
+          "end": 48.26,
+          "word": " ideas",
+          "probability": 0.443359375
+        },
+        {
+          "start": 48.26,
+          "end": 48.64,
+          "word": " cut",
+          "probability": 0.662109375
+        },
+        {
+          "start": 48.64,
+          "end": 48.94,
+          "word": " through",
+          "probability": 0.998046875
+        },
+        {
+          "start": 48.94,
+          "end": 49.28,
+          "word": " the",
+          "probability": 0.91650390625
+        },
+        {
+          "start": 49.28,
+          "end": 49.9,
+          "word": " haze",
+          "probability": 0.986572265625
+        },
+        {
+          "start": 49.9,
+          "end": 50.08,
+          "word": " of",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 50.08,
+          "end": 50.56,
+          "word": " time",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 51.68,
+      "end": 54.3,
+      "text": " Amidst where stars arise",
+      "avg_logprob": -0.23093749940395356,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 1.3307692307692307,
+      "words": [
+        {
+          "start": 51.68,
+          "end": 52.68,
+          "word": " Amidst",
+          "probability": 0.8004557291666666
+        },
+        {
+          "start": 52.68,
+          "end": 52.82,
+          "word": " where",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 52.82,
+          "end": 53.24,
+          "word": " stars",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 53.24,
+          "end": 54.3,
+          "word": " arise",
+          "probability": 0.93115234375
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 56.04,
+      "end": 67.26,
+      "text": " I'll carry this light moving strong I'll tell it our hardship is to learn",
+      "avg_logprob": -0.35286457774539787,
+      "no_speech_prob": 0.7373046875,
+      "compression_ratio": 1.3937007874015748,
+      "words": [
+        {
+          "start": 56.04,
+          "end": 57.04,
+          "word": " I'll",
+          "probability": 0.52056884765625
+        },
+        {
+          "start": 57.04,
+          "end": 57.5,
+          "word": " carry",
+          "probability": 0.96875
+        },
+        {
+          "start": 57.5,
+          "end": 59.94,
+          "word": " this",
+          "probability": 0.927734375
+        },
+        {
+          "start": 59.94,
+          "end": 60.44,
+          "word": " light",
+          "probability": 0.40771484375
+        },
+        {
+          "start": 60.44,
+          "end": 60.94,
+          "word": " moving",
+          "probability": 0.89306640625
+        },
+        {
+          "start": 60.94,
+          "end": 61.6,
+          "word": " strong",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 61.6,
+          "end": 62.8,
+          "word": " I'll",
+          "probability": 0.917724609375
+        },
+        {
+          "start": 62.8,
+          "end": 63.18,
+          "word": " tell",
+          "probability": 0.86669921875
+        },
+        {
+          "start": 63.18,
+          "end": 64.6,
+          "word": " it",
+          "probability": 0.634765625
+        },
+        {
+          "start": 64.6,
+          "end": 65.42,
+          "word": " our",
+          "probability": 0.1749267578125
+        },
+        {
+          "start": 65.42,
+          "end": 66.2,
+          "word": " hardship",
+          "probability": 0.88671875
+        },
+        {
+          "start": 66.2,
+          "end": 66.72,
+          "word": " is",
+          "probability": 0.98828125
+        },
+        {
+          "start": 66.72,
+          "end": 66.86,
+          "word": " to",
+          "probability": 0.344970703125
+        },
+        {
+          "start": 66.86,
+          "end": 67.26,
+          "word": " learn",
+          "probability": 0.8447265625
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 67.26,
+      "end": 73.38,
+      "text": " We're made for this moment We're chosen and we know it",
+      "avg_logprob": -0.35286457774539787,
+      "no_speech_prob": 0.7373046875,
+      "compression_ratio": 1.3937007874015748,
+      "words": [
+        {
+          "start": 67.26,
+          "end": 68.48,
+          "word": " We're",
+          "probability": 0.91015625
+        },
+        {
+          "start": 68.48,
+          "end": 68.86,
+          "word": " made",
+          "probability": 0.73046875
+        },
+        {
+          "start": 68.86,
+          "end": 69.38,
+          "word": " for",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 69.38,
+          "end": 69.84,
+          "word": " this",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 69.84,
+          "end": 70.32,
+          "word": " moment",
+          "probability": 0.9921875
+        },
+        {
+          "start": 70.32,
+          "end": 71.32,
+          "word": " We're",
+          "probability": 0.8818359375
+        },
+        {
+          "start": 71.32,
+          "end": 71.88,
+          "word": " chosen",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 71.88,
+          "end": 72.28,
+          "word": " and",
+          "probability": 0.96044921875
+        },
+        {
+          "start": 72.28,
+          "end": 72.6,
+          "word": " we",
+          "probability": 0.998046875
+        },
+        {
+          "start": 72.6,
+          "end": 72.94,
+          "word": " know",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 72.94,
+          "end": 73.38,
+          "word": " it",
+          "probability": 0.9912109375
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 73.38,
+      "end": 80.02,
+      "text": " Today is the day we're never to fly ever so high",
+      "avg_logprob": -0.35286457774539787,
+      "no_speech_prob": 0.7373046875,
+      "compression_ratio": 1.3937007874015748,
+      "words": [
+        {
+          "start": 73.38,
+          "end": 74.2,
+          "word": " Today",
+          "probability": 0.41015625
+        },
+        {
+          "start": 74.2,
+          "end": 76.26,
+          "word": " is",
+          "probability": 0.71484375
+        },
+        {
+          "start": 76.26,
+          "end": 76.42,
+          "word": " the",
+          "probability": 0.6435546875
+        },
+        {
+          "start": 76.42,
+          "end": 76.84,
+          "word": " day",
+          "probability": 0.499755859375
+        },
+        {
+          "start": 76.84,
+          "end": 76.96,
+          "word": " we're",
+          "probability": 0.718994140625
+        },
+        {
+          "start": 76.96,
+          "end": 77.66,
+          "word": " never",
+          "probability": 0.90869140625
+        },
+        {
+          "start": 77.66,
+          "end": 78.18,
+          "word": " to",
+          "probability": 0.61279296875
+        },
+        {
+          "start": 78.18,
+          "end": 78.68,
+          "word": " fly",
+          "probability": 0.9296875
+        },
+        {
+          "start": 78.68,
+          "end": 79.24,
+          "word": " ever",
+          "probability": 0.9140625
+        },
+        {
+          "start": 79.24,
+          "end": 79.66,
+          "word": " so",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 79.66,
+          "end": 80.02,
+          "word": " high",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 96.06,
+      "end": 101.02,
+      "text": " May your courage never fail you",
+      "avg_logprob": -0.32575757575757575,
+      "no_speech_prob": 0.31201171875,
+      "compression_ratio": 1.198019801980198,
+      "words": [
+        {
+          "start": 96.06,
+          "end": 97.06,
+          "word": " May",
+          "probability": 0.399169921875
+        },
+        {
+          "start": 97.06,
+          "end": 98.06,
+          "word": " your",
+          "probability": 0.89404296875
+        },
+        {
+          "start": 98.06,
+          "end": 98.8,
+          "word": " courage",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 98.8,
+          "end": 99.24,
+          "word": " never",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 99.24,
+          "end": 99.9,
+          "word": " fail",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 99.9,
+          "end": 101.02,
+          "word": " you",
+          "probability": 0.98291015625
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 101.02,
+      "end": 105.58,
+      "text": " Your future's yours alone to write",
+      "avg_logprob": -0.32575757575757575,
+      "no_speech_prob": 0.31201171875,
+      "compression_ratio": 1.198019801980198,
+      "words": [
+        {
+          "start": 101.02,
+          "end": 102.32,
+          "word": " Your",
+          "probability": 0.6044921875
+        },
+        {
+          "start": 102.32,
+          "end": 104.06,
+          "word": " future's",
+          "probability": 0.92236328125
+        },
+        {
+          "start": 104.06,
+          "end": 104.26,
+          "word": " yours",
+          "probability": 0.9619140625
+        },
+        {
+          "start": 104.26,
+          "end": 104.76,
+          "word": " alone",
+          "probability": 0.62109375
+        },
+        {
+          "start": 104.76,
+          "end": 105.12,
+          "word": " to",
+          "probability": 0.479248046875
+        },
+        {
+          "start": 105.12,
+          "end": 105.58,
+          "word": " write",
+          "probability": 0.53271484375
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 106.98,
+      "end": 112.72,
+      "text": " And may our shared ideas come through the haze of time",
+      "avg_logprob": -0.32575757575757575,
+      "no_speech_prob": 0.31201171875,
+      "compression_ratio": 1.198019801980198,
+      "words": [
+        {
+          "start": 106.98,
+          "end": 107.98,
+          "word": " And",
+          "probability": 0.875
+        },
+        {
+          "start": 107.98,
+          "end": 108.32,
+          "word": " may",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 108.32,
+          "end": 109.38,
+          "word": " our",
+          "probability": 0.990234375
+        },
+        {
+          "start": 109.38,
+          "end": 109.84,
+          "word": " shared",
+          "probability": 0.99609375
+        },
+        {
+          "start": 109.84,
+          "end": 110.3,
+          "word": " ideas",
+          "probability": 0.6435546875
+        },
+        {
+          "start": 110.3,
+          "end": 110.76,
+          "word": " come",
+          "probability": 0.38720703125
+        },
+        {
+          "start": 110.76,
+          "end": 111.08,
+          "word": " through",
+          "probability": 0.96728515625
+        },
+        {
+          "start": 111.08,
+          "end": 111.48,
+          "word": " the",
+          "probability": 0.97119140625
+        },
+        {
+          "start": 111.48,
+          "end": 112.0,
+          "word": " haze",
+          "probability": 0.96484375
+        },
+        {
+          "start": 112.0,
+          "end": 112.14,
+          "word": " of",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 112.14,
+          "end": 112.72,
+          "word": " time",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 112.72,
+      "end": 116.48,
+      "text": " A mist where stars arise",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 112.72,
+          "end": 114.22,
+          "word": " A",
+          "probability": 0.0120849609375
+        },
+        {
+          "start": 114.22,
+          "end": 114.72,
+          "word": " mist",
+          "probability": 0.1978759765625
+        },
+        {
+          "start": 114.72,
+          "end": 115.0,
+          "word": " where",
+          "probability": 0.49169921875
+        },
+        {
+          "start": 115.0,
+          "end": 115.86,
+          "word": " stars",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 115.86,
+          "end": 116.48,
+          "word": " arise",
+          "probability": 0.53662109375
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 118.06000000000002,
+      "end": 124.0,
+      "text": " We're shining so bright as the sun",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 118.06000000000002,
+          "end": 119.16000000000001,
+          "word": " We're",
+          "probability": 0.88232421875
+        },
+        {
+          "start": 119.16000000000001,
+          "end": 120.26,
+          "word": " shining",
+          "probability": 0.984375
+        },
+        {
+          "start": 120.26,
+          "end": 121.96,
+          "word": " so",
+          "probability": 0.70068359375
+        },
+        {
+          "start": 121.96,
+          "end": 122.48,
+          "word": " bright",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 122.48,
+          "end": 123.2,
+          "word": " as",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 123.2,
+          "end": 123.44,
+          "word": " the",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 123.44,
+          "end": 124.0,
+          "word": " sun",
+          "probability": 0.9638671875
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 124.0,
+      "end": 129.58,
+      "text": " We're rising so high above the storm",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 124.0,
+          "end": 124.98,
+          "word": " We're",
+          "probability": 0.937744140625
+        },
+        {
+          "start": 124.98,
+          "end": 126.58,
+          "word": " rising",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 126.58,
+          "end": 127.68,
+          "word": " so",
+          "probability": 0.986328125
+        },
+        {
+          "start": 127.68,
+          "end": 128.2,
+          "word": " high",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 128.2,
+          "end": 128.66,
+          "word": " above",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 128.66,
+          "end": 129.12,
+          "word": " the",
+          "probability": 0.95458984375
+        },
+        {
+          "start": 129.12,
+          "end": 129.58,
+          "word": " storm",
+          "probability": 0.78466796875
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 129.58,
+      "end": 132.66,
+      "text": " In search of good and all in",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 129.58,
+          "end": 130.62,
+          "word": " In",
+          "probability": 0.58642578125
+        },
+        {
+          "start": 130.62,
+          "end": 131.08,
+          "word": " search",
+          "probability": 0.93212890625
+        },
+        {
+          "start": 131.08,
+          "end": 131.22,
+          "word": " of",
+          "probability": 0.93798828125
+        },
+        {
+          "start": 131.22,
+          "end": 131.7,
+          "word": " good",
+          "probability": 0.2734375
+        },
+        {
+          "start": 131.7,
+          "end": 132.0,
+          "word": " and",
+          "probability": 0.96337890625
+        },
+        {
+          "start": 132.0,
+          "end": 132.22,
+          "word": " all",
+          "probability": 0.6640625
+        },
+        {
+          "start": 132.22,
+          "end": 132.66,
+          "word": " in",
+          "probability": 0.33349609375
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 132.66,
+      "end": 134.96,
+      "text": " We're focusing devoted",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 132.66,
+          "end": 133.44,
+          "word": " We're",
+          "probability": 0.893798828125
+        },
+        {
+          "start": 133.44,
+          "end": 134.04,
+          "word": " focusing",
+          "probability": 0.6572265625
+        },
+        {
+          "start": 134.04,
+          "end": 134.96,
+          "word": " devoted",
+          "probability": 0.578125
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 135.72,
+      "end": 136.76,
+      "text": " Let's rise",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 135.72,
+          "end": 136.28,
+          "word": " Let's",
+          "probability": 0.94970703125
+        },
+        {
+          "start": 136.28,
+          "end": 136.76,
+          "word": " rise",
+          "probability": 0.970703125
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "start": 137.72,
+      "end": 139.52,
+      "text": " Night or daylight",
+      "avg_logprob": -0.26403357640460684,
+      "no_speech_prob": 0.71533203125,
+      "compression_ratio": 1.4047619047619047,
+      "words": [
+        {
+          "start": 137.72,
+          "end": 138.64,
+          "word": " Night",
+          "probability": 0.1915283203125
+        },
+        {
+          "start": 138.64,
+          "end": 138.98,
+          "word": " or",
+          "probability": 0.75
+        },
+        {
+          "start": 138.98,
+          "end": 139.52,
+          "word": " daylight",
+          "probability": 0.88623046875
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "start": 139.52,
+      "end": 142.78,
+      "text": " You know the light of mine",
+      "avg_logprob": -0.37171052004161637,
+      "no_speech_prob": 0.378173828125,
+      "compression_ratio": 0.9841269841269841,
+      "words": [
+        {
+          "start": 139.52,
+          "end": 140.44,
+          "word": " You",
+          "probability": 0.1015625
+        },
+        {
+          "start": 140.44,
+          "end": 140.78,
+          "word": " know",
+          "probability": 0.6298828125
+        },
+        {
+          "start": 140.78,
+          "end": 141.14,
+          "word": " the",
+          "probability": 0.89453125
+        },
+        {
+          "start": 141.14,
+          "end": 141.6,
+          "word": " light",
+          "probability": 0.94482421875
+        },
+        {
+          "start": 141.6,
+          "end": 141.84,
+          "word": " of",
+          "probability": 0.92822265625
+        },
+        {
+          "start": 141.84,
+          "end": 142.78,
+          "word": " mine",
+          "probability": 0.74609375
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "start": 157.58,
+      "end": 163.2,
+      "text": " I'll carry this light moving strong",
+      "avg_logprob": -0.37171052004161637,
+      "no_speech_prob": 0.378173828125,
+      "compression_ratio": 0.9841269841269841,
+      "words": [
+        {
+          "start": 157.58,
+          "end": 158.62,
+          "word": " I'll",
+          "probability": 0.892333984375
+        },
+        {
+          "start": 158.62,
+          "end": 159.12,
+          "word": " carry",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 159.12,
+          "end": 161.58,
+          "word": " this",
+          "probability": 0.908203125
+        },
+        {
+          "start": 161.58,
+          "end": 162.04,
+          "word": " light",
+          "probability": 0.947265625
+        },
+        {
+          "start": 162.04,
+          "end": 162.66,
+          "word": " moving",
+          "probability": 0.8408203125
+        },
+        {
+          "start": 162.66,
+          "end": 163.2,
+          "word": " strong",
+          "probability": 0.98876953125
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "start": 163.2,
+      "end": 168.96,
+      "text": " I'll tear it when hardship is too far",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 163.2,
+          "end": 164.52,
+          "word": " I'll",
+          "probability": 0.4537353515625
+        },
+        {
+          "start": 164.52,
+          "end": 164.82,
+          "word": " tear",
+          "probability": 0.256591796875
+        },
+        {
+          "start": 164.82,
+          "end": 166.28,
+          "word": " it",
+          "probability": 0.8896484375
+        },
+        {
+          "start": 166.28,
+          "end": 167.2,
+          "word": " when",
+          "probability": 0.7978515625
+        },
+        {
+          "start": 167.2,
+          "end": 167.82,
+          "word": " hardship",
+          "probability": 0.96142578125
+        },
+        {
+          "start": 167.82,
+          "end": 168.4,
+          "word": " is",
+          "probability": 0.98046875
+        },
+        {
+          "start": 168.4,
+          "end": 168.6,
+          "word": " too",
+          "probability": 0.271728515625
+        },
+        {
+          "start": 168.6,
+          "end": 168.96,
+          "word": " far",
+          "probability": 0.669921875
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "start": 168.96,
+      "end": 172.1,
+      "text": " We're waiting for this moment",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 168.96,
+          "end": 170.12,
+          "word": " We're",
+          "probability": 0.92431640625
+        },
+        {
+          "start": 170.12,
+          "end": 170.7,
+          "word": " waiting",
+          "probability": 0.7265625
+        },
+        {
+          "start": 170.7,
+          "end": 171.1,
+          "word": " for",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 171.1,
+          "end": 171.46,
+          "word": " this",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 171.46,
+          "end": 172.1,
+          "word": " moment",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "start": 172.1,
+      "end": 175.0,
+      "text": " We're chosen and we know it",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 172.1,
+          "end": 172.92,
+          "word": " We're",
+          "probability": 0.869384765625
+        },
+        {
+          "start": 172.92,
+          "end": 173.54,
+          "word": " chosen",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 173.54,
+          "end": 173.98,
+          "word": " and",
+          "probability": 0.96923828125
+        },
+        {
+          "start": 173.98,
+          "end": 174.26,
+          "word": " we",
+          "probability": 0.923828125
+        },
+        {
+          "start": 174.26,
+          "end": 174.54,
+          "word": " know",
+          "probability": 0.775390625
+        },
+        {
+          "start": 174.54,
+          "end": 175.0,
+          "word": " it",
+          "probability": 0.34423828125
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "start": 175.0,
+      "end": 179.16,
+      "text": " Today is now or never",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 175.0,
+          "end": 175.78,
+          "word": " Today",
+          "probability": 0.93212890625
+        },
+        {
+          "start": 175.78,
+          "end": 177.84,
+          "word": " is",
+          "probability": 0.9033203125
+        },
+        {
+          "start": 177.84,
+          "end": 178.22,
+          "word": " now",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 178.22,
+          "end": 178.48,
+          "word": " or",
+          "probability": 0.9697265625
+        },
+        {
+          "start": 178.48,
+          "end": 179.16,
+          "word": " never",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "start": 180.10000000000002,
+      "end": 186.06,
+      "text": " We're shining so bright as the sun",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 180.10000000000002,
+          "end": 181.22,
+          "word": " We're",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 181.22,
+          "end": 182.24,
+          "word": " shining",
+          "probability": 0.998046875
+        },
+        {
+          "start": 182.24,
+          "end": 184.12,
+          "word": " so",
+          "probability": 0.95361328125
+        },
+        {
+          "start": 184.12,
+          "end": 184.64,
+          "word": " bright",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 184.64,
+          "end": 185.32,
+          "word": " as",
+          "probability": 0.9765625
+        },
+        {
+          "start": 185.32,
+          "end": 185.58,
+          "word": " the",
+          "probability": 0.9765625
+        },
+        {
+          "start": 185.58,
+          "end": 186.06,
+          "word": " sun",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "start": 186.06,
+      "end": 191.5,
+      "text": " We're rising so high above the stars",
+      "avg_logprob": -0.3308662322529575,
+      "no_speech_prob": 0.6513671875,
+      "compression_ratio": 1.4881889763779528,
+      "words": [
+        {
+          "start": 186.06,
+          "end": 187.08,
+          "word": " We're",
+          "probability": 0.992919921875
+        },
+        {
+          "start": 187.08,
+          "end": 188.02,
+          "word": " rising",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 188.02,
+          "end": 189.84,
+          "word": " so",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 189.84,
+          "end": 190.3,
+          "word": " high",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 190.3,
+          "end": 190.84,
+          "word": " above",
+          "probability": 0.99609375
+        },
+        {
+          "start": 190.84,
+          "end": 191.2,
+          "word": " the",
+          "probability": 0.8486328125
+        },
+        {
+          "start": 191.2,
+          "end": 191.5,
+          "word": " stars",
+          "probability": 0.59814453125
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "start": 191.5,
+      "end": 194.74,
+      "text": " In search of truth and knowledge",
+      "avg_logprob": -0.42021780303030304,
+      "no_speech_prob": 0.213134765625,
+      "compression_ratio": 1.1666666666666667,
+      "words": [
+        {
+          "start": 191.5,
+          "end": 192.72,
+          "word": " In",
+          "probability": 0.2474365234375
+        },
+        {
+          "start": 192.72,
+          "end": 193.04,
+          "word": " search",
+          "probability": 0.9423828125
+        },
+        {
+          "start": 193.04,
+          "end": 193.44,
+          "word": " of",
+          "probability": 0.994140625
+        },
+        {
+          "start": 193.44,
+          "end": 193.78,
+          "word": " truth",
+          "probability": 0.9189453125
+        },
+        {
+          "start": 193.78,
+          "end": 194.06,
+          "word": " and",
+          "probability": 0.97509765625
+        },
+        {
+          "start": 194.06,
+          "end": 194.74,
+          "word": " knowledge",
+          "probability": 0.99072265625
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "start": 194.74,
+      "end": 197.02,
+      "text": " We're focused and devoted",
+      "avg_logprob": -0.42021780303030304,
+      "no_speech_prob": 0.213134765625,
+      "compression_ratio": 1.1666666666666667,
+      "words": [
+        {
+          "start": 194.74,
+          "end": 195.54,
+          "word": " We're",
+          "probability": 0.760009765625
+        },
+        {
+          "start": 195.54,
+          "end": 196.16,
+          "word": " focused",
+          "probability": 0.8828125
+        },
+        {
+          "start": 196.16,
+          "end": 196.64,
+          "word": " and",
+          "probability": 0.97314453125
+        },
+        {
+          "start": 196.64,
+          "end": 197.02,
+          "word": " devoted",
+          "probability": 0.75634765625
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "start": 197.02,
+      "end": 198.84,
+      "text": " Let's rise",
+      "avg_logprob": -0.42021780303030304,
+      "no_speech_prob": 0.213134765625,
+      "compression_ratio": 1.1666666666666667,
+      "words": [
+        {
+          "start": 197.02,
+          "end": 198.36,
+          "word": " Let's",
+          "probability": 0.955810546875
+        },
+        {
+          "start": 198.36,
+          "end": 198.84,
+          "word": " rise",
+          "probability": 0.356689453125
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "start": 199.5,
+      "end": 201.54,
+      "text": " Night or daylight",
+      "avg_logprob": -0.42021780303030304,
+      "no_speech_prob": 0.213134765625,
+      "compression_ratio": 1.1666666666666667,
+      "words": [
+        {
+          "start": 199.5,
+          "end": 200.74,
+          "word": " Night",
+          "probability": 0.39013671875
+        },
+        {
+          "start": 200.74,
+          "end": 201.04,
+          "word": " or",
+          "probability": 0.48583984375
+        },
+        {
+          "start": 201.04,
+          "end": 201.54,
+          "word": " daylight",
+          "probability": 0.673828125
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "start": 204.16,
+      "end": 207.44,
+      "text": " Keep going right or left",
+      "avg_logprob": -0.42021780303030304,
+      "no_speech_prob": 0.213134765625,
+      "compression_ratio": 1.1666666666666667,
+      "words": [
+        {
+          "start": 204.16,
+          "end": 205.2,
+          "word": " Keep",
+          "probability": 0.442138671875
+        },
+        {
+          "start": 205.2,
+          "end": 205.74,
+          "word": " going",
+          "probability": 0.560546875
+        },
+        {
+          "start": 205.74,
+          "end": 206.42,
+          "word": " right",
+          "probability": 0.59765625
+        },
+        {
+          "start": 206.42,
+          "end": 206.76,
+          "word": " or",
+          "probability": 0.34375
+        },
+        {
+          "start": 206.76,
+          "end": 207.44,
+          "word": " left",
+          "probability": 0.61181640625
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "start": 229.2,
+      "end": 232.08,
+      "text": " © transcript Emily Beynon",
+      "avg_logprob": -0.3966796964406967,
+      "no_speech_prob": 0.734375,
+      "compression_ratio": 0.7647058823529411,
+      "words": [
+        {
+          "start": 229.2,
+          "end": 230.6,
+          "word": " ©",
+          "probability": 0.41402435302734375
+        },
+        {
+          "start": 230.6,
+          "end": 232.0,
+          "word": " transcript",
+          "probability": 0.787109375
+        },
+        {
+          "start": 232.0,
+          "end": 232.02,
+          "word": " Emily",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 232.02,
+          "end": 232.08,
+          "word": " Beynon",
+          "probability": 0.9998372395833334
+        }
+      ]
+    }
+  ],
+  "primary": [
+    {
+      "start": 10.77,
+      "end": 15.8,
+      "text": "See how far we've come together"
+    },
+    {
+      "start": 16.83,
+      "end": 20.68,
+      "text": "And we are stronger than before"
+    },
+    {
+      "start": 21.97,
+      "end": 27.75,
+      "text": "And these are memories we'll cherish more and more"
+    },
+    {
+      "start": 27.75,
+      "end": 32.02,
+      "text": "We'll walk as one with dawn"
+    },
+    {
+      "start": 33.89,
+      "end": 38.63,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 38.63,
+      "end": 43.4,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 44.81,
+      "end": 50.64,
+      "text": "And may our shared ideas cut through the haze of time"
+    },
+    {
+      "start": 51.63,
+      "end": 54.38,
+      "text": "Amidst where stars arise"
+    },
+    {
+      "start": 55.99,
+      "end": 63.13,
+      "text": "I'll carry this light moving strong I'll tell"
+    },
+    {
+      "start": 63.13,
+      "end": 67.21,
+      "text": "it our hardship is to learn"
+    },
+    {
+      "start": 67.21,
+      "end": 73.33,
+      "text": "We're made for this moment We're chosen and we know it"
+    },
+    {
+      "start": 73.33,
+      "end": 80.1,
+      "text": "Today is the day we're never to fly ever so high"
+    },
+    {
+      "start": 96.01,
+      "end": 100.97,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 100.97,
+      "end": 105.66,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 106.93,
+      "end": 112.67,
+      "text": "And may our shared ideas come through the haze of time"
+    },
+    {
+      "start": 112.67,
+      "end": 116.56,
+      "text": "A mist where stars arise"
+    },
+    {
+      "start": 118.01,
+      "end": 123.95,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 123.95,
+      "end": 129.53,
+      "text": "We're rising so high above the storm"
+    },
+    {
+      "start": 129.53,
+      "end": 132.61,
+      "text": "In search of good and all in"
+    },
+    {
+      "start": 132.61,
+      "end": 135.04,
+      "text": "We're focusing devoted"
+    },
+    {
+      "start": 135.67,
+      "end": 136.84,
+      "text": "Let's rise"
+    },
+    {
+      "start": 137.67,
+      "end": 142.86,
+      "text": "Night or daylight You know the light of mine"
+    },
+    {
+      "start": 157.53,
+      "end": 163.15,
+      "text": "I'll carry this light moving strong"
+    },
+    {
+      "start": 163.15,
+      "end": 168.91,
+      "text": "I'll tear it when hardship is too far"
+    },
+    {
+      "start": 168.91,
+      "end": 172.05,
+      "text": "We're waiting for this moment"
+    },
+    {
+      "start": 172.05,
+      "end": 179.24,
+      "text": "We're chosen and we know it Today is now or never"
+    },
+    {
+      "start": 180.05,
+      "end": 186.01,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 186.01,
+      "end": 191.45,
+      "text": "We're rising so high above the stars"
+    },
+    {
+      "start": 191.45,
+      "end": 194.69,
+      "text": "In search of truth and knowledge"
+    },
+    {
+      "start": 194.69,
+      "end": 198.92,
+      "text": "We're focused and devoted Let's rise"
+    },
+    {
+      "start": 199.45,
+      "end": 201.62,
+      "text": "Night or daylight"
+    },
+    {
+      "start": 204.11,
+      "end": 207.52,
+      "text": "Keep going right or left"
+    },
+    {
+      "start": 229.15,
+      "end": 232.16,
+      "text": "© transcript Emily Beynon"
+    }
+  ],
+  "final": [
+    {
+      "start": 10.77,
+      "end": 15.8,
+      "text": "See how far we've come together"
+    },
+    {
+      "start": 16.83,
+      "end": 20.68,
+      "text": "And we are stronger than before"
+    },
+    {
+      "start": 21.97,
+      "end": 27.75,
+      "text": "And these are memories we'll cherish more and more"
+    },
+    {
+      "start": 27.75,
+      "end": 32.02,
+      "text": "We'll walk as one with dawn"
+    },
+    {
+      "start": 33.89,
+      "end": 38.63,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 38.63,
+      "end": 43.4,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 44.81,
+      "end": 50.64,
+      "text": "And may our shared ideas cut through the haze of time"
+    },
+    {
+      "start": 51.63,
+      "end": 54.38,
+      "text": "Amidst where stars arise"
+    },
+    {
+      "start": 55.99,
+      "end": 63.13,
+      "text": "I'll carry this light moving strong I'll tell"
+    },
+    {
+      "start": 63.13,
+      "end": 67.21,
+      "text": "it our hardship is to learn"
+    },
+    {
+      "start": 67.21,
+      "end": 73.33,
+      "text": "We're made for this moment We're chosen and we know it"
+    },
+    {
+      "start": 73.33,
+      "end": 80.1,
+      "text": "Today is the day we're never to fly ever so high"
+    },
+    {
+      "start": 96.01,
+      "end": 100.97,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 100.97,
+      "end": 105.66,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 106.93,
+      "end": 112.67,
+      "text": "And may our shared ideas come through the haze of time"
+    },
+    {
+      "start": 112.67,
+      "end": 116.56,
+      "text": "A mist where stars arise"
+    },
+    {
+      "start": 118.01,
+      "end": 123.95,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 123.95,
+      "end": 129.53,
+      "text": "We're rising so high above the storm"
+    },
+    {
+      "start": 129.53,
+      "end": 132.61,
+      "text": "In search of good and all in"
+    },
+    {
+      "start": 132.61,
+      "end": 135.04,
+      "text": "We're focusing devoted"
+    },
+    {
+      "start": 135.67,
+      "end": 136.84,
+      "text": "Let's rise"
+    },
+    {
+      "start": 137.67,
+      "end": 142.86,
+      "text": "Night or daylight You know the light of mine"
+    },
+    {
+      "start": 157.53,
+      "end": 163.15,
+      "text": "I'll carry this light moving strong"
+    },
+    {
+      "start": 163.15,
+      "end": 168.91,
+      "text": "I'll tear it when hardship is too far"
+    },
+    {
+      "start": 168.91,
+      "end": 172.05,
+      "text": "We're waiting for this moment"
+    },
+    {
+      "start": 172.05,
+      "end": 179.24,
+      "text": "We're chosen and we know it Today is now or never"
+    },
+    {
+      "start": 180.05,
+      "end": 186.01,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 186.01,
+      "end": 191.45,
+      "text": "We're rising so high above the stars"
+    },
+    {
+      "start": 191.45,
+      "end": 194.69,
+      "text": "In search of truth and knowledge"
+    },
+    {
+      "start": 194.69,
+      "end": 198.92,
+      "text": "We're focused and devoted Let's rise"
+    },
+    {
+      "start": 199.45,
+      "end": 201.62,
+      "text": "Night or daylight"
+    },
+    {
+      "start": 204.11,
+      "end": 207.52,
+      "text": "Keep going right or left"
+    },
+    {
+      "start": 229.15,
+      "end": 232.16,
+      "text": "© transcript Emily Beynon"
+    }
+  ]
+}

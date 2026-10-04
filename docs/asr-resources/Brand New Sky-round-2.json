@@ -1,0 +1,2962 @@
+{
+  "metrics": {
+    "number": 2,
+    "language": "en",
+    "primary": {
+      "seconds": 14.353687100003299,
+      "process_cpu_seconds": 6.6875,
+      "process_rss_before_mib": 822.40234375,
+      "process_rss_peak_mib": 924.625,
+      "process_rss_extra_peak_mib": 102.22265625,
+      "gpu_total_memory_peak_mib": 4229.0,
+      "gpu_utilization_peak_percent": 93.0,
+      "gpu_samples": 24
+    },
+    "coverage": {
+      "seconds": 5.493441200000234,
+      "process_cpu_seconds": 2.15625,
+      "process_rss_before_mib": 821.27734375,
+      "process_rss_peak_mib": 860.15234375,
+      "process_rss_extra_peak_mib": 38.875,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 10
+    },
+    "retry_count": 5,
+    "retry_audio_seconds": 56.064,
+    "primary_cues": 37,
+    "final_cues": 37,
+    "added": 0,
+    "all_primary_text_times_unchanged": true,
+    "primary_input_unmodified": true,
+    "no_overlap": true,
+    "diagnostic": {
+      "duration": 217.0703125,
+      "gaps_before": [
+        [
+          0.0,
+          14.35
+        ],
+        [
+          88.82,
+          105.71
+        ],
+        [
+          176.82,
+          187.71
+        ]
+      ],
+      "attempts": [
+        {
+          "start": 0.0,
+          "end": 12.0,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 86.82,
+          "end": 98.82,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 174.82,
+          "end": 186.82,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 184.82,
+          "end": 196.82,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 0.6080000000000001,
+          "end": 8.672,
+          "round": 2,
+          "added": 0
+        }
+      ],
+      "added_cues": 0,
+      "speech": [
+        [
+          2.608,
+          6.672
+        ],
+        [
+          15.664,
+          91.024
+        ],
+        [
+          106.48,
+          181.776
+        ],
+        [
+          185.072,
+          214.992
+        ]
+      ],
+      "unresolved_speech": [
+        [
+          2.608,
+          6.672
+        ],
+        [
+          88.82,
+          91.024
+        ],
+        [
+          176.82,
+          181.776
+        ],
+        [
+          185.072,
+          187.71
+        ]
+      ]
+    },
+    "primary_character_inventory_preserved": true
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 14.400000000000002,
+      "end": 19.84,
+      "text": " I was standing in the quiet watching shadows softly breathe",
+      "avg_logprob": -0.4335937537252903,
+      "no_speech_prob": 0.2354736328125,
+      "compression_ratio": 1.1428571428571428,
+      "words": [
+        {
+          "start": 14.400000000000002,
+          "end": 15.48,
+          "word": " I",
+          "probability": 0.69921875
+        },
+        {
+          "start": 15.48,
+          "end": 15.86,
+          "word": " was",
+          "probability": 0.94970703125
+        },
+        {
+          "start": 15.86,
+          "end": 16.14,
+          "word": " standing",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 16.14,
+          "end": 16.72,
+          "word": " in",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 16.72,
+          "end": 17.02,
+          "word": " the",
+          "probability": 0.998046875
+        },
+        {
+          "start": 17.02,
+          "end": 17.54,
+          "word": " quiet",
+          "probability": 0.499267578125
+        },
+        {
+          "start": 17.54,
+          "end": 18.18,
+          "word": " watching",
+          "probability": 0.81689453125
+        },
+        {
+          "start": 18.18,
+          "end": 18.96,
+          "word": " shadows",
+          "probability": 0.77783203125
+        },
+        {
+          "start": 18.96,
+          "end": 19.36,
+          "word": " softly",
+          "probability": 0.9375
+        },
+        {
+          "start": 19.36,
+          "end": 19.84,
+          "word": " breathe",
+          "probability": 0.86376953125
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 19.84,
+      "end": 25.54,
+      "text": " Those unspoken wishes like a mystery",
+      "avg_logprob": -0.4335937537252903,
+      "no_speech_prob": 0.2354736328125,
+      "compression_ratio": 1.1428571428571428,
+      "words": [
+        {
+          "start": 19.84,
+          "end": 21.78,
+          "word": " Those",
+          "probability": 0.498779296875
+        },
+        {
+          "start": 21.78,
+          "end": 22.3,
+          "word": " unspoken",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 22.3,
+          "end": 22.86,
+          "word": " wishes",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 22.86,
+          "end": 23.6,
+          "word": " like",
+          "probability": 0.91162109375
+        },
+        {
+          "start": 23.6,
+          "end": 23.94,
+          "word": " a",
+          "probability": 0.97216796875
+        },
+        {
+          "start": 23.94,
+          "end": 25.54,
+          "word": " mystery",
+          "probability": 0.828125
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 26.540000000000003,
+      "end": 31.0,
+      "text": " Every step feels bigger than but a crowd is all to me",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 26.540000000000003,
+          "end": 27.26,
+          "word": " Every",
+          "probability": 0.1431884765625
+        },
+        {
+          "start": 27.26,
+          "end": 27.52,
+          "word": " step",
+          "probability": 0.84765625
+        },
+        {
+          "start": 27.52,
+          "end": 28.04,
+          "word": " feels",
+          "probability": 0.841796875
+        },
+        {
+          "start": 28.04,
+          "end": 28.62,
+          "word": " bigger",
+          "probability": 0.382568359375
+        },
+        {
+          "start": 28.62,
+          "end": 28.88,
+          "word": " than",
+          "probability": 0.82373046875
+        },
+        {
+          "start": 28.88,
+          "end": 29.3,
+          "word": " but",
+          "probability": 0.21240234375
+        },
+        {
+          "start": 29.3,
+          "end": 29.48,
+          "word": " a",
+          "probability": 0.5498046875
+        },
+        {
+          "start": 29.48,
+          "end": 29.76,
+          "word": " crowd",
+          "probability": 0.88818359375
+        },
+        {
+          "start": 29.76,
+          "end": 30.14,
+          "word": " is",
+          "probability": 0.9345703125
+        },
+        {
+          "start": 30.14,
+          "end": 30.48,
+          "word": " all",
+          "probability": 0.3642578125
+        },
+        {
+          "start": 30.48,
+          "end": 30.72,
+          "word": " to",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 30.72,
+          "end": 31.0,
+          "word": " me",
+          "probability": 0.98876953125
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 32.480000000000004,
+      "end": 37.38,
+      "text": " I don't know who is waiting there but I'll let it be",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 32.480000000000004,
+          "end": 33.2,
+          "word": " I",
+          "probability": 0.90185546875
+        },
+        {
+          "start": 33.2,
+          "end": 33.5,
+          "word": " don't",
+          "probability": 0.982177734375
+        },
+        {
+          "start": 33.5,
+          "end": 33.76,
+          "word": " know",
+          "probability": 0.994140625
+        },
+        {
+          "start": 33.76,
+          "end": 34.06,
+          "word": " who",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 34.06,
+          "end": 34.68,
+          "word": " is",
+          "probability": 0.95654296875
+        },
+        {
+          "start": 34.68,
+          "end": 35.18,
+          "word": " waiting",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 35.18,
+          "end": 35.82,
+          "word": " there",
+          "probability": 0.97705078125
+        },
+        {
+          "start": 35.82,
+          "end": 36.14,
+          "word": " but",
+          "probability": 0.72119140625
+        },
+        {
+          "start": 36.14,
+          "end": 36.38,
+          "word": " I'll",
+          "probability": 0.78173828125
+        },
+        {
+          "start": 36.38,
+          "end": 36.7,
+          "word": " let",
+          "probability": 0.994140625
+        },
+        {
+          "start": 36.7,
+          "end": 36.88,
+          "word": " it",
+          "probability": 0.9609375
+        },
+        {
+          "start": 36.88,
+          "end": 37.38,
+          "word": " be",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 38.74,
+      "end": 40.86,
+      "text": " If I fall, I die before",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 38.74,
+          "end": 39.46,
+          "word": " If",
+          "probability": 0.95849609375
+        },
+        {
+          "start": 39.46,
+          "end": 39.62,
+          "word": " I",
+          "probability": 0.95751953125
+        },
+        {
+          "start": 39.62,
+          "end": 40.06,
+          "word": " fall,",
+          "probability": 0.90625
+        },
+        {
+          "start": 40.08,
+          "end": 40.16,
+          "word": " I",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 40.16,
+          "end": 40.4,
+          "word": " die",
+          "probability": 0.3037109375
+        },
+        {
+          "start": 40.4,
+          "end": 40.86,
+          "word": " before",
+          "probability": 0.994140625
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 41.7,
+      "end": 44.16,
+      "text": " If I break, let there be light",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 41.7,
+          "end": 42.42,
+          "word": " If",
+          "probability": 0.9150390625
+        },
+        {
+          "start": 42.42,
+          "end": 42.64,
+          "word": " I",
+          "probability": 0.99609375
+        },
+        {
+          "start": 42.64,
+          "end": 43.06,
+          "word": " break,",
+          "probability": 0.97509765625
+        },
+        {
+          "start": 43.06,
+          "end": 43.26,
+          "word": " let",
+          "probability": 0.58935546875
+        },
+        {
+          "start": 43.26,
+          "end": 43.5,
+          "word": " there",
+          "probability": 0.94970703125
+        },
+        {
+          "start": 43.5,
+          "end": 43.7,
+          "word": " be",
+          "probability": 0.96728515625
+        },
+        {
+          "start": 43.7,
+          "end": 44.16,
+          "word": " light",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 44.94,
+      "end": 47.16,
+      "text": " There's a world behind the fear",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 44.94,
+          "end": 45.66,
+          "word": " There's",
+          "probability": 0.989990234375
+        },
+        {
+          "start": 45.66,
+          "end": 45.66,
+          "word": " a",
+          "probability": 0.99072265625
+        },
+        {
+          "start": 45.66,
+          "end": 46.02,
+          "word": " world",
+          "probability": 0.31396484375
+        },
+        {
+          "start": 46.02,
+          "end": 46.42,
+          "word": " behind",
+          "probability": 0.994140625
+        },
+        {
+          "start": 46.42,
+          "end": 46.86,
+          "word": " the",
+          "probability": 0.92138671875
+        },
+        {
+          "start": 46.86,
+          "end": 47.16,
+          "word": " fear",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 47.16,
+      "end": 50.32,
+      "text": " So it can make me feel alive",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 47.16,
+          "end": 48.14,
+          "word": " So",
+          "probability": 0.91357421875
+        },
+        {
+          "start": 48.14,
+          "end": 48.34,
+          "word": " it",
+          "probability": 0.63037109375
+        },
+        {
+          "start": 48.34,
+          "end": 48.56,
+          "word": " can",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 48.56,
+          "end": 48.96,
+          "word": " make",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 48.96,
+          "end": 49.34,
+          "word": " me",
+          "probability": 0.998046875
+        },
+        {
+          "start": 49.34,
+          "end": 49.66,
+          "word": " feel",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 49.66,
+          "end": 50.32,
+          "word": " alive",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 50.32,
+      "end": 53.54,
+      "text": " Seeing a storm start to avoid",
+      "avg_logprob": -0.2970779360114754,
+      "no_speech_prob": 0.810546875,
+      "compression_ratio": 1.4736842105263157,
+      "words": [
+        {
+          "start": 50.32,
+          "end": 51.52,
+          "word": " Seeing",
+          "probability": 0.60205078125
+        },
+        {
+          "start": 51.52,
+          "end": 51.78,
+          "word": " a",
+          "probability": 0.71435546875
+        },
+        {
+          "start": 51.78,
+          "end": 52.18,
+          "word": " storm",
+          "probability": 0.93115234375
+        },
+        {
+          "start": 52.18,
+          "end": 52.54,
+          "word": " start",
+          "probability": 0.96044921875
+        },
+        {
+          "start": 52.54,
+          "end": 53.0,
+          "word": " to",
+          "probability": 0.986328125
+        },
+        {
+          "start": 53.0,
+          "end": 53.54,
+          "word": " avoid",
+          "probability": 0.490478515625
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 53.54,
+      "end": 56.36,
+      "text": " Showing the miracle we made",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 53.54,
+          "end": 54.72,
+          "word": " Showing",
+          "probability": 0.4644775390625
+        },
+        {
+          "start": 54.72,
+          "end": 54.82,
+          "word": " the",
+          "probability": 0.943359375
+        },
+        {
+          "start": 54.82,
+          "end": 55.4,
+          "word": " miracle",
+          "probability": 0.93701171875
+        },
+        {
+          "start": 55.4,
+          "end": 55.94,
+          "word": " we",
+          "probability": 0.6494140625
+        },
+        {
+          "start": 55.94,
+          "end": 56.36,
+          "word": " made",
+          "probability": 0.91845703125
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 56.36,
+      "end": 59.32,
+      "text": " This time we're about to fly",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 56.36,
+          "end": 57.5,
+          "word": " This",
+          "probability": 0.8896484375
+        },
+        {
+          "start": 57.5,
+          "end": 57.78,
+          "word": " time",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 57.78,
+          "end": 58.22,
+          "word": " we're",
+          "probability": 0.835693359375
+        },
+        {
+          "start": 58.22,
+          "end": 58.7,
+          "word": " about",
+          "probability": 0.955078125
+        },
+        {
+          "start": 58.7,
+          "end": 59.06,
+          "word": " to",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 59.06,
+          "end": 59.32,
+          "word": " fly",
+          "probability": 0.9501953125
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 59.32,
+      "end": 62.64,
+      "text": " No more fending, drifting by",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 59.32,
+          "end": 60.4,
+          "word": " No",
+          "probability": 0.974609375
+        },
+        {
+          "start": 60.4,
+          "end": 60.7,
+          "word": " more",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 60.7,
+          "end": 61.5,
+          "word": " fending,",
+          "probability": 0.15032958984375
+        },
+        {
+          "start": 61.5,
+          "end": 61.8,
+          "word": " drifting",
+          "probability": 0.88037109375
+        },
+        {
+          "start": 61.8,
+          "end": 62.64,
+          "word": " by",
+          "probability": 0.994140625
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 62.64,
+      "end": 64.94,
+      "text": " We keep moving",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 62.64,
+          "end": 63.38,
+          "word": " We",
+          "probability": 0.841796875
+        },
+        {
+          "start": 63.38,
+          "end": 63.86,
+          "word": " keep",
+          "probability": 0.91015625
+        },
+        {
+          "start": 63.86,
+          "end": 64.94,
+          "word": " moving",
+          "probability": 0.98095703125
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 65.86,
+      "end": 68.78,
+      "text": " We keep it when I'm standing still",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 65.86,
+          "end": 66.72,
+          "word": " We",
+          "probability": 0.8388671875
+        },
+        {
+          "start": 66.72,
+          "end": 66.96,
+          "word": " keep",
+          "probability": 0.58349609375
+        },
+        {
+          "start": 66.96,
+          "end": 67.14,
+          "word": " it",
+          "probability": 0.98046875
+        },
+        {
+          "start": 67.14,
+          "end": 67.34,
+          "word": " when",
+          "probability": 0.5078125
+        },
+        {
+          "start": 67.34,
+          "end": 67.86,
+          "word": " I'm",
+          "probability": 0.99072265625
+        },
+        {
+          "start": 67.86,
+          "end": 68.14,
+          "word": " standing",
+          "probability": 0.970703125
+        },
+        {
+          "start": 68.14,
+          "end": 68.78,
+          "word": " still",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 68.78,
+      "end": 71.82,
+      "text": " I'm not losing",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 68.78,
+          "end": 69.72,
+          "word": " I'm",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 69.72,
+          "end": 69.96,
+          "word": " not",
+          "probability": 0.95703125
+        },
+        {
+          "start": 69.96,
+          "end": 71.82,
+          "word": " losing",
+          "probability": 0.98095703125
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 71.82,
+      "end": 74.98,
+      "text": " You and your song we're writing still",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 71.82,
+          "end": 72.78,
+          "word": " You",
+          "probability": 0.8876953125
+        },
+        {
+          "start": 72.78,
+          "end": 73.12,
+          "word": " and",
+          "probability": 0.461181640625
+        },
+        {
+          "start": 73.12,
+          "end": 73.24,
+          "word": " your",
+          "probability": 0.63427734375
+        },
+        {
+          "start": 73.24,
+          "end": 73.54,
+          "word": " song",
+          "probability": 0.70751953125
+        },
+        {
+          "start": 73.54,
+          "end": 73.86,
+          "word": " we're",
+          "probability": 0.61669921875
+        },
+        {
+          "start": 73.86,
+          "end": 74.32,
+          "word": " writing",
+          "probability": 0.18115234375
+        },
+        {
+          "start": 74.32,
+          "end": 74.98,
+          "word": " still",
+          "probability": 0.982421875
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 74.98,
+      "end": 77.9,
+      "text": " Knowing the ending",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 74.98,
+          "end": 75.86,
+          "word": " Knowing",
+          "probability": 0.93017578125
+        },
+        {
+          "start": 75.86,
+          "end": 76.04,
+          "word": " the",
+          "probability": 0.89794921875
+        },
+        {
+          "start": 76.04,
+          "end": 77.9,
+          "word": " ending",
+          "probability": 0.94189453125
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 77.9,
+      "end": 81.04,
+      "text": " I know I don't need to see the proof",
+      "avg_logprob": -0.2403371771307368,
+      "no_speech_prob": 0.79345703125,
+      "compression_ratio": 1.515527950310559,
+      "words": [
+        {
+          "start": 77.9,
+          "end": 78.94,
+          "word": " I",
+          "probability": 0.80078125
+        },
+        {
+          "start": 78.94,
+          "end": 79.16,
+          "word": " know",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 79.16,
+          "end": 79.36,
+          "word": " I",
+          "probability": 0.966796875
+        },
+        {
+          "start": 79.36,
+          "end": 79.82,
+          "word": " don't",
+          "probability": 0.988037109375
+        },
+        {
+          "start": 79.82,
+          "end": 79.98,
+          "word": " need",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 79.98,
+          "end": 80.08,
+          "word": " to",
+          "probability": 0.95947265625
+        },
+        {
+          "start": 80.08,
+          "end": 80.38,
+          "word": " see",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 80.38,
+          "end": 80.68,
+          "word": " the",
+          "probability": 0.4130859375
+        },
+        {
+          "start": 80.68,
+          "end": 81.04,
+          "word": " proof",
+          "probability": 0.7958984375
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 81.04,
+      "end": 83.18,
+      "text": " The sign is lightening up",
+      "avg_logprob": -0.5898437247826502,
+      "no_speech_prob": 0.1885986328125,
+      "compression_ratio": 1.0253164556962024,
+      "words": [
+        {
+          "start": 81.04,
+          "end": 81.54,
+          "word": " The",
+          "probability": 0.236328125
+        },
+        {
+          "start": 81.54,
+          "end": 81.92,
+          "word": " sign",
+          "probability": 0.93994140625
+        },
+        {
+          "start": 81.92,
+          "end": 82.34,
+          "word": " is",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 82.34,
+          "end": 82.86,
+          "word": " lightening",
+          "probability": 0.30621337890625
+        },
+        {
+          "start": 82.86,
+          "end": 83.18,
+          "word": " up",
+          "probability": 0.9912109375
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 85.3,
+      "end": 88.74,
+      "text": " Like he's calling me to you",
+      "avg_logprob": -0.5898437247826502,
+      "no_speech_prob": 0.1885986328125,
+      "compression_ratio": 1.0253164556962024,
+      "words": [
+        {
+          "start": 85.3,
+          "end": 86.32,
+          "word": " Like",
+          "probability": 0.1607666015625
+        },
+        {
+          "start": 86.32,
+          "end": 86.98,
+          "word": " he's",
+          "probability": 0.7783203125
+        },
+        {
+          "start": 86.98,
+          "end": 87.4,
+          "word": " calling",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 87.4,
+          "end": 87.74,
+          "word": " me",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 87.74,
+          "end": 88.2,
+          "word": " to",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 88.2,
+          "end": 88.74,
+          "word": " you",
+          "probability": 0.994140625
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "start": 105.76,
+      "end": 109.52,
+      "text": " I remember all the versions",
+      "avg_logprob": -0.5898437247826502,
+      "no_speech_prob": 0.1885986328125,
+      "compression_ratio": 1.0253164556962024,
+      "words": [
+        {
+          "start": 105.76,
+          "end": 106.78,
+          "word": " I",
+          "probability": 0.57861328125
+        },
+        {
+          "start": 106.78,
+          "end": 107.8,
+          "word": " remember",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 107.8,
+          "end": 108.54,
+          "word": " all",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 108.54,
+          "end": 108.94,
+          "word": " the",
+          "probability": 0.984375
+        },
+        {
+          "start": 108.94,
+          "end": 109.52,
+          "word": " versions",
+          "probability": 0.88427734375
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "start": 109.52,
+      "end": 112.22,
+      "text": " Some are lonely, some are ill or still",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 109.52,
+          "end": 110.42,
+          "word": " Some",
+          "probability": 0.0869140625
+        },
+        {
+          "start": 110.42,
+          "end": 110.72,
+          "word": " are",
+          "probability": 0.9658203125
+        },
+        {
+          "start": 110.72,
+          "end": 111.04,
+          "word": " lonely,",
+          "probability": 0.955078125
+        },
+        {
+          "start": 111.1,
+          "end": 111.28,
+          "word": " some",
+          "probability": 0.9580078125
+        },
+        {
+          "start": 111.28,
+          "end": 111.48,
+          "word": " are",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 111.48,
+          "end": 111.66,
+          "word": " ill",
+          "probability": 0.66650390625
+        },
+        {
+          "start": 111.66,
+          "end": 111.84,
+          "word": " or",
+          "probability": 0.4658203125
+        },
+        {
+          "start": 111.84,
+          "end": 112.22,
+          "word": " still",
+          "probability": 0.6171875
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "start": 113.55999999999999,
+      "end": 115.64,
+      "text": " No more running away",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 113.55999999999999,
+          "end": 114.32,
+          "word": " No",
+          "probability": 0.67626953125
+        },
+        {
+          "start": 114.32,
+          "end": 114.5,
+          "word": " more",
+          "probability": 0.85546875
+        },
+        {
+          "start": 114.5,
+          "end": 115.04,
+          "word": " running",
+          "probability": 0.9921875
+        },
+        {
+          "start": 115.04,
+          "end": 115.64,
+          "word": " away",
+          "probability": 0.9951171875
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "start": 115.64,
+      "end": 118.3,
+      "text": " Just hearing echoes afar",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 115.64,
+          "end": 116.6,
+          "word": " Just",
+          "probability": 0.61669921875
+        },
+        {
+          "start": 116.6,
+          "end": 117.14,
+          "word": " hearing",
+          "probability": 0.67431640625
+        },
+        {
+          "start": 117.14,
+          "end": 117.88,
+          "word": " echoes",
+          "probability": 0.9580078125
+        },
+        {
+          "start": 117.88,
+          "end": 118.3,
+          "word": " afar",
+          "probability": 0.8974609375
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "start": 118.3,
+      "end": 121.0,
+      "text": " If the future is a puzzle",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 118.3,
+          "end": 118.86,
+          "word": " If",
+          "probability": 0.95556640625
+        },
+        {
+          "start": 118.86,
+          "end": 118.98,
+          "word": " the",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 118.98,
+          "end": 119.54,
+          "word": " future",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 119.54,
+          "end": 120.34,
+          "word": " is",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 120.34,
+          "end": 120.34,
+          "word": " a",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 120.34,
+          "end": 121.0,
+          "word": " puzzle",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "start": 121.52,
+      "end": 124.24,
+      "text": " I am brave enough to solve it",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 121.52,
+          "end": 121.92,
+          "word": " I",
+          "probability": 0.79736328125
+        },
+        {
+          "start": 121.92,
+          "end": 122.1,
+          "word": " am",
+          "probability": 0.8896484375
+        },
+        {
+          "start": 122.1,
+          "end": 122.4,
+          "word": " brave",
+          "probability": 0.943359375
+        },
+        {
+          "start": 122.4,
+          "end": 122.9,
+          "word": " enough",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 122.9,
+          "end": 123.4,
+          "word": " to",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 123.4,
+          "end": 123.76,
+          "word": " solve",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 123.76,
+          "end": 124.24,
+          "word": " it",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "start": 124.24,
+      "end": 127.08,
+      "text": " If the end is just a journey",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 124.24,
+          "end": 125.04,
+          "word": " If",
+          "probability": 0.8271484375
+        },
+        {
+          "start": 125.04,
+          "end": 125.14,
+          "word": " the",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 125.14,
+          "end": 125.52,
+          "word": " end",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 125.52,
+          "end": 125.84,
+          "word": " is",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 125.84,
+          "end": 126.2,
+          "word": " just",
+          "probability": 0.998046875
+        },
+        {
+          "start": 126.2,
+          "end": 126.5,
+          "word": " a",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 126.5,
+          "end": 127.08,
+          "word": " journey",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "start": 127.08,
+      "end": 129.9,
+      "text": " I'll be ready for the call",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 127.08,
+          "end": 128.06,
+          "word": " I'll",
+          "probability": 0.95654296875
+        },
+        {
+          "start": 128.06,
+          "end": 128.18,
+          "word": " be",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 128.18,
+          "end": 128.62,
+          "word": " ready",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 128.62,
+          "end": 129.0,
+          "word": " for",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 129.0,
+          "end": 129.56,
+          "word": " the",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 129.56,
+          "end": 129.9,
+          "word": " call",
+          "probability": 0.7177734375
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "start": 130.51999999999998,
+      "end": 132.78,
+      "text": " If I fall, I can be far",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 130.51999999999998,
+          "end": 131.16,
+          "word": " If",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 131.16,
+          "end": 131.32,
+          "word": " I",
+          "probability": 0.82958984375
+        },
+        {
+          "start": 131.32,
+          "end": 131.72,
+          "word": " fall,",
+          "probability": 0.9306640625
+        },
+        {
+          "start": 131.8,
+          "end": 131.86,
+          "word": " I",
+          "probability": 0.74755859375
+        },
+        {
+          "start": 131.86,
+          "end": 132.06,
+          "word": " can",
+          "probability": 0.57275390625
+        },
+        {
+          "start": 132.06,
+          "end": 132.48,
+          "word": " be",
+          "probability": 0.62158203125
+        },
+        {
+          "start": 132.48,
+          "end": 132.78,
+          "word": " far",
+          "probability": 0.55224609375
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "start": 133.51999999999998,
+      "end": 135.94,
+      "text": " If I break, let there be light",
+      "avg_logprob": -0.18017578721046448,
+      "no_speech_prob": 0.59765625,
+      "compression_ratio": 1.485207100591716,
+      "words": [
+        {
+          "start": 133.34,
+          "end": 133.72,
+          "word": " If",
+          "probability": 0.90380859375
+        },
+        {
+          "start": 133.72,
+          "end": 134.38,
+          "word": " I",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.38,
+          "end": 134.8,
+          "word": " break,",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 134.8,
+          "end": 134.98,
+          "word": " let",
+          "probability": 0.64111328125
+        },
+        {
+          "start": 134.98,
+          "end": 135.2,
+          "word": " there",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 135.2,
+          "end": 135.46,
+          "word": " be",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 135.46,
+          "end": 135.94,
+          "word": " light",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "start": 135.94,
+      "end": 138.88,
+      "text": " There's a world behind the fear",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 135.94,
+          "end": 137.42,
+          "word": " There's",
+          "probability": 0.59197998046875
+        },
+        {
+          "start": 137.42,
+          "end": 137.42,
+          "word": " a",
+          "probability": 0.9384765625
+        },
+        {
+          "start": 137.42,
+          "end": 137.74,
+          "word": " world",
+          "probability": 0.309814453125
+        },
+        {
+          "start": 137.74,
+          "end": 138.18,
+          "word": " behind",
+          "probability": 0.9599609375
+        },
+        {
+          "start": 138.18,
+          "end": 138.58,
+          "word": " the",
+          "probability": 0.94873046875
+        },
+        {
+          "start": 138.58,
+          "end": 138.88,
+          "word": " fear",
+          "probability": 0.98583984375
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "start": 138.88,
+      "end": 142.12,
+      "text": " So it can make me feel alive",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 138.88,
+          "end": 139.86,
+          "word": " So",
+          "probability": 0.75244140625
+        },
+        {
+          "start": 139.86,
+          "end": 140.08,
+          "word": " it",
+          "probability": 0.5009765625
+        },
+        {
+          "start": 140.08,
+          "end": 140.24,
+          "word": " can",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 140.24,
+          "end": 140.68,
+          "word": " make",
+          "probability": 0.97119140625
+        },
+        {
+          "start": 140.68,
+          "end": 141.06,
+          "word": " me",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 141.06,
+          "end": 141.4,
+          "word": " feel",
+          "probability": 0.99609375
+        },
+        {
+          "start": 141.4,
+          "end": 142.12,
+          "word": " alive",
+          "probability": 0.99560546875
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "start": 142.12,
+      "end": 144.86,
+      "text": " We keep moving",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 142.12,
+          "end": 142.86,
+          "word": " We",
+          "probability": 0.79736328125
+        },
+        {
+          "start": 142.86,
+          "end": 143.34,
+          "word": " keep",
+          "probability": 0.89697265625
+        },
+        {
+          "start": 143.34,
+          "end": 144.86,
+          "word": " moving",
+          "probability": 0.8828125
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "start": 145.48,
+      "end": 148.38,
+      "text": " We keep it when I'm standing still",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 145.48,
+          "end": 146.22,
+          "word": " We",
+          "probability": 0.56591796875
+        },
+        {
+          "start": 146.22,
+          "end": 146.44,
+          "word": " keep",
+          "probability": 0.9169921875
+        },
+        {
+          "start": 146.44,
+          "end": 146.62,
+          "word": " it",
+          "probability": 0.92626953125
+        },
+        {
+          "start": 146.62,
+          "end": 146.84,
+          "word": " when",
+          "probability": 0.83837890625
+        },
+        {
+          "start": 146.84,
+          "end": 147.34,
+          "word": " I'm",
+          "probability": 0.990234375
+        },
+        {
+          "start": 147.34,
+          "end": 147.66,
+          "word": " standing",
+          "probability": 0.8701171875
+        },
+        {
+          "start": 147.66,
+          "end": 148.38,
+          "word": " still",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "start": 148.38,
+      "end": 151.28,
+      "text": " I'm not losing",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 148.38,
+          "end": 149.18,
+          "word": " I'm",
+          "probability": 0.97021484375
+        },
+        {
+          "start": 149.18,
+          "end": 149.42,
+          "word": " not",
+          "probability": 0.9423828125
+        },
+        {
+          "start": 149.42,
+          "end": 151.28,
+          "word": " losing",
+          "probability": 0.978515625
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "start": 151.28,
+      "end": 154.2,
+      "text": " You left me somewhere right still",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 151.28,
+          "end": 152.32,
+          "word": " You",
+          "probability": 0.58935546875
+        },
+        {
+          "start": 152.32,
+          "end": 152.56,
+          "word": " left",
+          "probability": 0.5
+        },
+        {
+          "start": 152.56,
+          "end": 152.72,
+          "word": " me",
+          "probability": 0.96435546875
+        },
+        {
+          "start": 152.72,
+          "end": 153.18,
+          "word": " somewhere",
+          "probability": 0.91796875
+        },
+        {
+          "start": 153.18,
+          "end": 153.7,
+          "word": " right",
+          "probability": 0.043243408203125
+        },
+        {
+          "start": 153.7,
+          "end": 154.2,
+          "word": " still",
+          "probability": 0.76611328125
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "start": 154.2,
+      "end": 157.28,
+      "text": " Knowing the ending",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 154.2,
+          "end": 155.3,
+          "word": " Knowing",
+          "probability": 0.52197265625
+        },
+        {
+          "start": 155.3,
+          "end": 155.5,
+          "word": " the",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 155.5,
+          "end": 157.28,
+          "word": " ending",
+          "probability": 0.88623046875
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "start": 157.28,
+      "end": 160.46,
+      "text": " I know I don't need to see it through",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 157.28,
+          "end": 158.42,
+          "word": " I",
+          "probability": 0.98046875
+        },
+        {
+          "start": 158.42,
+          "end": 158.66,
+          "word": " know",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 158.66,
+          "end": 158.86,
+          "word": " I",
+          "probability": 0.98486328125
+        },
+        {
+          "start": 158.86,
+          "end": 159.18,
+          "word": " don't",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 159.18,
+          "end": 159.46,
+          "word": " need",
+          "probability": 0.99609375
+        },
+        {
+          "start": 159.46,
+          "end": 159.58,
+          "word": " to",
+          "probability": 0.97412109375
+        },
+        {
+          "start": 159.58,
+          "end": 159.9,
+          "word": " see",
+          "probability": 0.994140625
+        },
+        {
+          "start": 159.9,
+          "end": 160.1,
+          "word": " it",
+          "probability": 0.5986328125
+        },
+        {
+          "start": 160.1,
+          "end": 160.46,
+          "word": " through",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "start": 160.46,
+      "end": 162.52,
+      "text": " I'm silent right now",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 160.46,
+          "end": 161.12,
+          "word": " I'm",
+          "probability": 0.93017578125
+        },
+        {
+          "start": 161.12,
+          "end": 161.6,
+          "word": " silent",
+          "probability": 0.57763671875
+        },
+        {
+          "start": 161.6,
+          "end": 162.1,
+          "word": " right",
+          "probability": 0.9921875
+        },
+        {
+          "start": 162.1,
+          "end": 162.52,
+          "word": " now",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "start": 162.52,
+      "end": 164.9,
+      "text": " He's calling me to you",
+      "avg_logprob": -0.30979939448980637,
+      "no_speech_prob": 0.6982421875,
+      "compression_ratio": 1.5204678362573099,
+      "words": [
+        {
+          "start": 162.52,
+          "end": 163.46,
+          "word": " He's",
+          "probability": 0.770751953125
+        },
+        {
+          "start": 163.46,
+          "end": 163.92,
+          "word": " calling",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 163.92,
+          "end": 164.34,
+          "word": " me",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 164.34,
+          "end": 164.66,
+          "word": " to",
+          "probability": 0.5400390625
+        },
+        {
+          "start": 164.66,
+          "end": 164.9,
+          "word": " you",
+          "probability": 0.97607421875
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "start": 164.9,
+      "end": 167.82,
+      "text": " I can feel it pushing on me",
+      "avg_logprob": -0.35910561012810677,
+      "no_speech_prob": 0.1671142578125,
+      "compression_ratio": 1.3409090909090908,
+      "words": [
+        {
+          "start": 164.9,
+          "end": 165.54,
+          "word": " I",
+          "probability": 0.7744140625
+        },
+        {
+          "start": 165.54,
+          "end": 165.66,
+          "word": " can",
+          "probability": 0.984375
+        },
+        {
+          "start": 165.66,
+          "end": 166.06,
+          "word": " feel",
+          "probability": 0.984375
+        },
+        {
+          "start": 166.06,
+          "end": 166.36,
+          "word": " it",
+          "probability": 0.9443359375
+        },
+        {
+          "start": 166.36,
+          "end": 166.92,
+          "word": " pushing",
+          "probability": 0.93701171875
+        },
+        {
+          "start": 166.92,
+          "end": 167.3,
+          "word": " on",
+          "probability": 0.98828125
+        },
+        {
+          "start": 167.3,
+          "end": 167.82,
+          "word": " me",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "start": 167.82,
+      "end": 170.98,
+      "text": " Up when the sky, he falls on top of me",
+      "avg_logprob": -0.35910561012810677,
+      "no_speech_prob": 0.1671142578125,
+      "compression_ratio": 1.3409090909090908,
+      "words": [
+        {
+          "start": 167.82,
+          "end": 168.4,
+          "word": " Up",
+          "probability": 0.4912109375
+        },
+        {
+          "start": 168.4,
+          "end": 168.62,
+          "word": " when",
+          "probability": 0.79931640625
+        },
+        {
+          "start": 168.62,
+          "end": 168.7,
+          "word": " the",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 168.7,
+          "end": 168.94,
+          "word": " sky,",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 169.12,
+          "end": 169.34,
+          "word": " he",
+          "probability": 0.51171875
+        },
+        {
+          "start": 169.34,
+          "end": 169.82,
+          "word": " falls",
+          "probability": 0.256103515625
+        },
+        {
+          "start": 169.82,
+          "end": 170.06,
+          "word": " on",
+          "probability": 0.57080078125
+        },
+        {
+          "start": 170.06,
+          "end": 170.44,
+          "word": " top",
+          "probability": 0.89453125
+        },
+        {
+          "start": 170.44,
+          "end": 170.8,
+          "word": " of",
+          "probability": 0.8115234375
+        },
+        {
+          "start": 170.8,
+          "end": 170.98,
+          "word": " me",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "start": 170.98,
+      "end": 176.74,
+      "text": " I don't look back, I only take the ugly for a new one now",
+      "avg_logprob": -0.35910561012810677,
+      "no_speech_prob": 0.1671142578125,
+      "compression_ratio": 1.3409090909090908,
+      "words": [
+        {
+          "start": 170.98,
+          "end": 171.64,
+          "word": " I",
+          "probability": 0.96923828125
+        },
+        {
+          "start": 171.64,
+          "end": 171.92,
+          "word": " don't",
+          "probability": 0.96533203125
+        },
+        {
+          "start": 171.92,
+          "end": 172.08,
+          "word": " look",
+          "probability": 0.97607421875
+        },
+        {
+          "start": 172.08,
+          "end": 172.56,
+          "word": " back,",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 172.56,
+          "end": 172.92,
+          "word": " I",
+          "probability": 0.9375
+        },
+        {
+          "start": 172.92,
+          "end": 173.16,
+          "word": " only",
+          "probability": 0.313232421875
+        },
+        {
+          "start": 173.16,
+          "end": 173.52,
+          "word": " take",
+          "probability": 0.89599609375
+        },
+        {
+          "start": 173.52,
+          "end": 173.78,
+          "word": " the",
+          "probability": 0.6025390625
+        },
+        {
+          "start": 173.78,
+          "end": 174.12,
+          "word": " ugly",
+          "probability": 0.16943359375
+        },
+        {
+          "start": 174.12,
+          "end": 174.72,
+          "word": " for",
+          "probability": 0.6142578125
+        },
+        {
+          "start": 174.72,
+          "end": 175.28,
+          "word": " a",
+          "probability": 0.96337890625
+        },
+        {
+          "start": 175.28,
+          "end": 175.72,
+          "word": " new",
+          "probability": 0.98486328125
+        },
+        {
+          "start": 175.72,
+          "end": 176.14,
+          "word": " one",
+          "probability": 0.6513671875
+        },
+        {
+          "start": 176.14,
+          "end": 176.74,
+          "word": " now",
+          "probability": 0.7626953125
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "start": 187.76,
+      "end": 190.28,
+      "text": " We keep moving",
+      "avg_logprob": -0.35910561012810677,
+      "no_speech_prob": 0.1671142578125,
+      "compression_ratio": 1.3409090909090908,
+      "words": [
+        {
+          "start": 187.76,
+          "end": 188.48,
+          "word": " We",
+          "probability": 0.6005859375
+        },
+        {
+          "start": 188.48,
+          "end": 189.2,
+          "word": " keep",
+          "probability": 0.9189453125
+        },
+        {
+          "start": 189.2,
+          "end": 190.28,
+          "word": " moving",
+          "probability": 0.9462890625
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "start": 191.34,
+      "end": 194.14,
+      "text": " We keep it wet and I'm standing still",
+      "avg_logprob": -0.35910561012810677,
+      "no_speech_prob": 0.1671142578125,
+      "compression_ratio": 1.3409090909090908,
+      "words": [
+        {
+          "start": 191.34,
+          "end": 192.06,
+          "word": " We",
+          "probability": 0.517578125
+        },
+        {
+          "start": 192.06,
+          "end": 192.34,
+          "word": " keep",
+          "probability": 0.9033203125
+        },
+        {
+          "start": 192.34,
+          "end": 192.5,
+          "word": " it",
+          "probability": 0.9267578125
+        },
+        {
+          "start": 192.5,
+          "end": 192.78,
+          "word": " wet",
+          "probability": 0.497314453125
+        },
+        {
+          "start": 192.78,
+          "end": 192.94,
+          "word": " and",
+          "probability": 0.85302734375
+        },
+        {
+          "start": 192.94,
+          "end": 193.18,
+          "word": " I'm",
+          "probability": 0.988525390625
+        },
+        {
+          "start": 193.18,
+          "end": 193.54,
+          "word": " standing",
+          "probability": 0.9501953125
+        },
+        {
+          "start": 193.54,
+          "end": 194.14,
+          "word": " still",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "start": 194.14,
+      "end": 200.12,
+      "text": " I'm not losing you, I'm somewhere right still",
+      "avg_logprob": -0.37132352590560913,
+      "no_speech_prob": 0.2215576171875,
+      "compression_ratio": 1.453781512605042,
+      "words": [
+        {
+          "start": 194.14,
+          "end": 195.04,
+          "word": " I'm",
+          "probability": 0.86181640625
+        },
+        {
+          "start": 195.04,
+          "end": 195.26,
+          "word": " not",
+          "probability": 0.9443359375
+        },
+        {
+          "start": 195.26,
+          "end": 197.16,
+          "word": " losing",
+          "probability": 0.74072265625
+        },
+        {
+          "start": 197.16,
+          "end": 198.22,
+          "word": " you,",
+          "probability": 0.34619140625
+        },
+        {
+          "start": 198.24,
+          "end": 198.56,
+          "word": " I'm",
+          "probability": 0.921630859375
+        },
+        {
+          "start": 198.56,
+          "end": 199.08,
+          "word": " somewhere",
+          "probability": 0.5390625
+        },
+        {
+          "start": 199.08,
+          "end": 199.58,
+          "word": " right",
+          "probability": 0.265625
+        },
+        {
+          "start": 199.58,
+          "end": 200.12,
+          "word": " still",
+          "probability": 0.84619140625
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "start": 200.12,
+      "end": 206.34,
+      "text": " Knowing the ending, I know I don't need to see it through",
+      "avg_logprob": -0.37132352590560913,
+      "no_speech_prob": 0.2215576171875,
+      "compression_ratio": 1.453781512605042,
+      "words": [
+        {
+          "start": 200.12,
+          "end": 201.2,
+          "word": " Knowing",
+          "probability": 0.365478515625
+        },
+        {
+          "start": 201.2,
+          "end": 201.46,
+          "word": " the",
+          "probability": 0.9267578125
+        },
+        {
+          "start": 201.46,
+          "end": 203.28,
+          "word": " ending,",
+          "probability": 0.7314453125
+        },
+        {
+          "start": 203.62,
+          "end": 204.2,
+          "word": " I",
+          "probability": 0.7080078125
+        },
+        {
+          "start": 204.2,
+          "end": 204.46,
+          "word": " know",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 204.46,
+          "end": 204.7,
+          "word": " I",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 204.7,
+          "end": 205.16,
+          "word": " don't",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 205.16,
+          "end": 205.3,
+          "word": " need",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 205.3,
+          "end": 205.44,
+          "word": " to",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 205.44,
+          "end": 205.74,
+          "word": " see",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 205.74,
+          "end": 206.02,
+          "word": " it",
+          "probability": 0.73486328125
+        },
+        {
+          "start": 206.02,
+          "end": 206.34,
+          "word": " through",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "start": 206.34,
+      "end": 211.52,
+      "text": " I'm signing this line up, signing this line up",
+      "avg_logprob": -0.37132352590560913,
+      "no_speech_prob": 0.2215576171875,
+      "compression_ratio": 1.453781512605042,
+      "words": [
+        {
+          "start": 206.34,
+          "end": 206.96,
+          "word": " I'm",
+          "probability": 0.4251708984375
+        },
+        {
+          "start": 206.96,
+          "end": 207.34,
+          "word": " signing",
+          "probability": 0.28076171875
+        },
+        {
+          "start": 207.34,
+          "end": 207.82,
+          "word": " this",
+          "probability": 0.9296875
+        },
+        {
+          "start": 207.82,
+          "end": 208.04,
+          "word": " line",
+          "probability": 0.5556640625
+        },
+        {
+          "start": 208.04,
+          "end": 208.44,
+          "word": " up,",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 208.62,
+          "end": 210.14,
+          "word": " signing",
+          "probability": 0.77197265625
+        },
+        {
+          "start": 210.14,
+          "end": 210.86,
+          "word": " this",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 210.86,
+          "end": 211.08,
+          "word": " line",
+          "probability": 1.0
+        },
+        {
+          "start": 211.08,
+          "end": 211.52,
+          "word": " up",
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "start": 211.52,
+      "end": 213.94,
+      "text": " He's calling me to you",
+      "avg_logprob": -0.37132352590560913,
+      "no_speech_prob": 0.2215576171875,
+      "compression_ratio": 1.453781512605042,
+      "words": [
+        {
+          "start": 211.52,
+          "end": 212.36,
+          "word": " He's",
+          "probability": 0.6036376953125
+        },
+        {
+          "start": 212.36,
+          "end": 212.7,
+          "word": " calling",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 212.7,
+          "end": 213.22,
+          "word": " me",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 213.22,
+          "end": 213.56,
+          "word": " to",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 213.56,
+          "end": 213.94,
+          "word": " you",
+          "probability": 0.998046875
+        }
+      ]
+    }
+  ],
+  "primary": [
+    {
+      "start": 14.35,
+      "end": 19.79,
+      "text": "I was standing in the quiet watching shadows softly breathe"
+    },
+    {
+      "start": 19.79,
+      "end": 25.62,
+      "text": "Those unspoken wishes like a mystery"
+    },
+    {
+      "start": 26.49,
+      "end": 31.08,
+      "text": "Every step feels bigger than but a crowd is all to me"
+    },
+    {
+      "start": 32.43,
+      "end": 37.46,
+      "text": "I don't know who is waiting there but I'll let it be"
+    },
+    {
+      "start": 38.69,
+      "end": 40.94,
+      "text": "If I fall, I die before"
+    },
+    {
+      "start": 41.65,
+      "end": 44.24,
+      "text": "If I break, let there be light"
+    },
+    {
+      "start": 44.89,
+      "end": 50.27,
+      "text": "There's a world behind the fear So it can make me feel alive"
+    },
+    {
+      "start": 50.27,
+      "end": 53.49,
+      "text": "Seeing a storm start to avoid"
+    },
+    {
+      "start": 53.49,
+      "end": 59.27,
+      "text": "Showing the miracle we made This time we're about to fly"
+    },
+    {
+      "start": 59.27,
+      "end": 62.59,
+      "text": "No more fending, drifting by"
+    },
+    {
+      "start": 62.59,
+      "end": 65.02,
+      "text": "We keep moving"
+    },
+    {
+      "start": 65.81,
+      "end": 71.77,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 71.77,
+      "end": 74.93,
+      "text": "You and your song we're writing still"
+    },
+    {
+      "start": 74.93,
+      "end": 80.99,
+      "text": "Knowing the ending I know I don't need to see the proof"
+    },
+    {
+      "start": 80.99,
+      "end": 83.26,
+      "text": "The sign is lightening up"
+    },
+    {
+      "start": 85.25,
+      "end": 88.82,
+      "text": "Like he's calling me to you"
+    },
+    {
+      "start": 105.71,
+      "end": 109.47,
+      "text": "I remember all the versions"
+    },
+    {
+      "start": 109.47,
+      "end": 112.3,
+      "text": "Some are lonely, some are ill or still"
+    },
+    {
+      "start": 113.51,
+      "end": 118.25,
+      "text": "No more running away Just hearing echoes afar"
+    },
+    {
+      "start": 118.25,
+      "end": 121.08,
+      "text": "If the future is a puzzle"
+    },
+    {
+      "start": 121.47,
+      "end": 127.03,
+      "text": "I am brave enough to solve it If the end is just a journey"
+    },
+    {
+      "start": 127.03,
+      "end": 129.98,
+      "text": "I'll be ready for the call"
+    },
+    {
+      "start": 130.47,
+      "end": 132.86,
+      "text": "If I fall, I can be far"
+    },
+    {
+      "start": 133.29,
+      "end": 138.83,
+      "text": "If I break, let there be light There's a world behind the fear"
+    },
+    {
+      "start": 138.83,
+      "end": 142.07,
+      "text": "So it can make me feel alive"
+    },
+    {
+      "start": 142.07,
+      "end": 144.94,
+      "text": "We keep moving"
+    },
+    {
+      "start": 145.43,
+      "end": 151.23,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 151.23,
+      "end": 157.23,
+      "text": "You left me somewhere right still Knowing the ending"
+    },
+    {
+      "start": 157.23,
+      "end": 160.41,
+      "text": "I know I don't need to see it through"
+    },
+    {
+      "start": 160.41,
+      "end": 164.85,
+      "text": "I'm silent right now He's calling me to you"
+    },
+    {
+      "start": 164.85,
+      "end": 170.93,
+      "text": "I can feel it pushing on me Up when the sky, he falls on top of me"
+    },
+    {
+      "start": 170.93,
+      "end": 176.82,
+      "text": "I don't look back, I only take the ugly for a new one now"
+    },
+    {
+      "start": 187.71,
+      "end": 190.36,
+      "text": "We keep moving"
+    },
+    {
+      "start": 191.29,
+      "end": 199.03,
+      "text": "We keep it wet and I'm standing still I'm not losing you, I'm somewhere"
+    },
+    {
+      "start": 199.03,
+      "end": 203.36,
+      "text": "right still Knowing the ending,"
+    },
+    {
+      "start": 203.57,
+      "end": 211.47,
+      "text": "I know I don't need to see it through I'm signing this line up, signing this line up"
+    },
+    {
+      "start": 211.47,
+      "end": 214.02,
+      "text": "He's calling me to you"
+    }
+  ],
+  "final": [
+    {
+      "start": 14.35,
+      "end": 19.79,
+      "text": "I was standing in the quiet watching shadows softly breathe"
+    },
+    {
+      "start": 19.79,
+      "end": 25.62,
+      "text": "Those unspoken wishes like a mystery"
+    },
+    {
+      "start": 26.49,
+      "end": 31.08,
+      "text": "Every step feels bigger than but a crowd is all to me"
+    },
+    {
+      "start": 32.43,
+      "end": 37.46,
+      "text": "I don't know who is waiting there but I'll let it be"
+    },
+    {
+      "start": 38.69,
+      "end": 40.94,
+      "text": "If I fall, I die before"
+    },
+    {
+      "start": 41.65,
+      "end": 44.24,
+      "text": "If I break, let there be light"
+    },
+    {
+      "start": 44.89,
+      "end": 50.27,
+      "text": "There's a world behind the fear So it can make me feel alive"
+    },
+    {
+      "start": 50.27,
+      "end": 53.49,
+      "text": "Seeing a storm start to avoid"
+    },
+    {
+      "start": 53.49,
+      "end": 59.27,
+      "text": "Showing the miracle we made This time we're about to fly"
+    },
+    {
+      "start": 59.27,
+      "end": 62.59,
+      "text": "No more fending, drifting by"
+    },
+    {
+      "start": 62.59,
+      "end": 65.02,
+      "text": "We keep moving"
+    },
+    {
+      "start": 65.81,
+      "end": 71.77,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 71.77,
+      "end": 74.93,
+      "text": "You and your song we're writing still"
+    },
+    {
+      "start": 74.93,
+      "end": 80.99,
+      "text": "Knowing the ending I know I don't need to see the proof"
+    },
+    {
+      "start": 80.99,
+      "end": 83.26,
+      "text": "The sign is lightening up"
+    },
+    {
+      "start": 85.25,
+      "end": 88.82,
+      "text": "Like he's calling me to you"
+    },
+    {
+      "start": 105.71,
+      "end": 109.47,
+      "text": "I remember all the versions"
+    },
+    {
+      "start": 109.47,
+      "end": 112.3,
+      "text": "Some are lonely, some are ill or still"
+    },
+    {
+      "start": 113.51,
+      "end": 118.25,
+      "text": "No more running away Just hearing echoes afar"
+    },
+    {
+      "start": 118.25,
+      "end": 121.08,
+      "text": "If the future is a puzzle"
+    },
+    {
+      "start": 121.47,
+      "end": 127.03,
+      "text": "I am brave enough to solve it If the end is just a journey"
+    },
+    {
+      "start": 127.03,
+      "end": 129.98,
+      "text": "I'll be ready for the call"
+    },
+    {
+      "start": 130.47,
+      "end": 132.86,
+      "text": "If I fall, I can be far"
+    },
+    {
+      "start": 133.29,
+      "end": 138.83,
+      "text": "If I break, let there be light There's a world behind the fear"
+    },
+    {
+      "start": 138.83,
+      "end": 142.07,
+      "text": "So it can make me feel alive"
+    },
+    {
+      "start": 142.07,
+      "end": 144.94,
+      "text": "We keep moving"
+    },
+    {
+      "start": 145.43,
+      "end": 151.23,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 151.23,
+      "end": 157.23,
+      "text": "You left me somewhere right still Knowing the ending"
+    },
+    {
+      "start": 157.23,
+      "end": 160.41,
+      "text": "I know I don't need to see it through"
+    },
+    {
+      "start": 160.41,
+      "end": 164.85,
+      "text": "I'm silent right now He's calling me to you"
+    },
+    {
+      "start": 164.85,
+      "end": 170.93,
+      "text": "I can feel it pushing on me Up when the sky, he falls on top of me"
+    },
+    {
+      "start": 170.93,
+      "end": 176.82,
+      "text": "I don't look back, I only take the ugly for a new one now"
+    },
+    {
+      "start": 187.71,
+      "end": 190.36,
+      "text": "We keep moving"
+    },
+    {
+      "start": 191.29,
+      "end": 199.03,
+      "text": "We keep it wet and I'm standing still I'm not losing you, I'm somewhere"
+    },
+    {
+      "start": 199.03,
+      "end": 203.36,
+      "text": "right still Knowing the ending,"
+    },
+    {
+      "start": 203.57,
+      "end": 211.47,
+      "text": "I know I don't need to see it through I'm signing this line up, signing this line up"
+    },
+    {
+      "start": 211.47,
+      "end": 214.02,
+      "text": "He's calling me to you"
+    }
+  ]
+}

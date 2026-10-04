@@ -5,6 +5,7 @@ from pathlib import Path
 from PySide6.QtGui import QImageReader, QPixmap, QPixmapCache
 from PySide6.QtCore import Qt, QSize, Signal, QThreadPool, QRunnable, QObject
 from PySide6.QtWidgets import (QWidget, QLabel, QVBoxLayout, QSizePolicy, QFrame)
+from .icons import label_icon
 
 QPixmapCache.setCacheLimit(102400)
 # =========================================================
@@ -245,14 +246,14 @@ class MediaCard(QFrame):
 
     def show_default_icon(self):
         self.thumb_label.clear()
-        self.thumb_label.setText("🎬")
+        label_icon(self.thumb_label, "music", size=36)
         self.thumb_label.setStyleSheet("""
             QLabel {
-                background-color: #202020; 
-                border-radius: 6px; 
+                background-color: #101722;
+                border-radius: 8px;
                 color: #555; 
                 font-size: 40px;
-                border: 1px solid #333;
+                border: 1px solid #273445;
             }
         """)
 
@@ -263,20 +264,20 @@ class MediaCard(QFrame):
     def refresh_style(self):
         """CSS Styling"""
         if self._is_active:
-            bg_color = "#383838"
-            border_color = "#1DB954"
+            bg_color = "#19372F"
+            border_color = "#77E0BE"
         else:
-            bg_color = "#2b2b2b"
-            border_color = "transparent"
+            bg_color = "#151C26"
+            border_color = "#273445"
 
         self.setStyleSheet(f"""
             MediaCard {{
                 background-color: {bg_color};
-                border-radius: 8px;
+                border-radius: 12px;
                 border: 2px solid {border_color};
             }}
             MediaCard:hover {{
-                background-color: #333333;
+                background-color: #1B2431;
             }}
             #cardTitle {{
                 font-weight: bold;

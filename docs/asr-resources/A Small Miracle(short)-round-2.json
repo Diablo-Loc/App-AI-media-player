@@ -1,0 +1,1829 @@
+{
+  "metrics": {
+    "number": 2,
+    "language": "jw",
+    "primary": {
+      "seconds": 10.81157190000522,
+      "process_cpu_seconds": 4.703125,
+      "process_rss_before_mib": 813.89453125,
+      "process_rss_peak_mib": 909.7578125,
+      "process_rss_extra_peak_mib": 95.86328125,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 19
+    },
+    "coverage": {
+      "seconds": 6.418826100001752,
+      "process_cpu_seconds": 2.078125,
+      "process_rss_before_mib": 817.296875,
+      "process_rss_peak_mib": 848.76171875,
+      "process_rss_extra_peak_mib": 31.46484375,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 11
+    },
+    "retry_count": 7,
+    "retry_audio_seconds": 65.28,
+    "primary_cues": 24,
+    "final_cues": 26,
+    "added": 2,
+    "all_primary_text_times_unchanged": true,
+    "primary_input_unmodified": true,
+    "no_overlap": true,
+    "diagnostic": {
+      "duration": 143.1611875,
+      "gaps_before": [
+        [
+          30.06,
+          38.87
+        ],
+        [
+          70.86,
+          84.77
+        ],
+        [
+          111.64,
+          135.05
+        ]
+      ],
+      "attempts": [
+        {
+          "start": 28.06,
+          "end": 40.06,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 68.86,
+          "end": 80.86,
+          "round": 1,
+          "added": 2
+        },
+        {
+          "start": 78.86,
+          "end": 90.86,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 109.64,
+          "end": 121.64,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 31.200000000000003,
+          "end": 36.512,
+          "round": 2,
+          "added": 0
+        },
+        {
+          "start": 77.984,
+          "end": 84.896,
+          "round": 2,
+          "added": 0
+        },
+        {
+          "start": 116.32,
+          "end": 121.376,
+          "round": 2,
+          "added": 0
+        }
+      ],
+      "added_cues": 2,
+      "speech": [
+        [
+          15.216,
+          20.496
+        ],
+        [
+          33.2,
+          34.512
+        ],
+        [
+          39.536,
+          77.712
+        ],
+        [
+          79.984,
+          82.896
+        ],
+        [
+          86.0,
+          87.632
+        ],
+        [
+          89.264,
+          116.432
+        ],
+        [
+          118.32,
+          119.376
+        ]
+      ],
+      "unresolved_speech": [
+        [
+          33.2,
+          34.512
+        ],
+        [
+          79.984,
+          82.896
+        ],
+        [
+          111.64,
+          116.432
+        ],
+        [
+          118.32,
+          119.376
+        ]
+      ]
+    },
+    "primary_character_inventory_preserved": true
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 29.98,
+      "text": " I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry",
+      "avg_logprob": -0.15819443808661568,
+      "no_speech_prob": 0.8095703125,
+      "compression_ratio": 23.615384615384617,
+      "words": [
+        {
+          "start": 0.0,
+          "end": 0.62,
+          "word": " I'm",
+          "probability": 0.051971435546875
+        },
+        {
+          "start": 0.62,
+          "end": 1.9,
+          "word": " sorry,",
+          "probability": 0.058349609375
+        },
+        {
+          "start": 1.9,
+          "end": 1.9,
+          "word": " I'm",
+          "probability": 0.34515380859375
+        },
+        {
+          "start": 1.9,
+          "end": 1.9,
+          "word": " sorry,",
+          "probability": 0.5927734375
+        },
+        {
+          "start": 1.9,
+          "end": 4.14,
+          "word": " I'm",
+          "probability": 0.877197265625
+        },
+        {
+          "start": 4.14,
+          "end": 4.5,
+          "word": " sorry,",
+          "probability": 0.92578125
+        },
+        {
+          "start": 4.64,
+          "end": 8.82,
+          "word": " I'm",
+          "probability": 0.936767578125
+        },
+        {
+          "start": 8.82,
+          "end": 9.5,
+          "word": " sorry,",
+          "probability": 0.95703125
+        },
+        {
+          "start": 9.5,
+          "end": 9.8,
+          "word": " I'm",
+          "probability": 0.960693359375
+        },
+        {
+          "start": 9.8,
+          "end": 10.06,
+          "word": " sorry,",
+          "probability": 0.9697265625
+        },
+        {
+          "start": 10.06,
+          "end": 10.14,
+          "word": " I'm",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 10.14,
+          "end": 10.98,
+          "word": " sorry,",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 10.98,
+          "end": 12.32,
+          "word": " I'm",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 12.32,
+          "end": 13.22,
+          "word": " sorry,",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 13.22,
+          "end": 13.36,
+          "word": " I'm",
+          "probability": 0.982177734375
+        },
+        {
+          "start": 13.36,
+          "end": 13.36,
+          "word": " sorry,",
+          "probability": 0.984375
+        },
+        {
+          "start": 13.54,
+          "end": 14.62,
+          "word": " I'm",
+          "probability": 0.98486328125
+        },
+        {
+          "start": 14.62,
+          "end": 14.62,
+          "word": " sorry,",
+          "probability": 0.986328125
+        },
+        {
+          "start": 14.62,
+          "end": 14.68,
+          "word": " I'm",
+          "probability": 0.987060546875
+        },
+        {
+          "start": 14.68,
+          "end": 14.68,
+          "word": " sorry,",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 15.02,
+          "end": 15.14,
+          "word": " I'm",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 15.14,
+          "end": 15.14,
+          "word": " sorry,",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 15.14,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.989990234375
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.990966796875
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.990234375
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.991455078125
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.9921875
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.992431640625
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.9921875
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " I'm",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 15.16,
+          "end": 15.16,
+          "word": " sorry,",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 15.18,
+          "end": 15.54,
+          "word": " I'm",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 15.54,
+          "end": 16.06,
+          "word": " sorry,",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 16.06,
+          "end": 16.7,
+          "word": " I'm",
+          "probability": 0.993896484375
+        },
+        {
+          "start": 16.7,
+          "end": 16.7,
+          "word": " sorry,",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 16.94,
+          "end": 17.84,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 17.84,
+          "end": 18.04,
+          "word": " sorry,",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 18.06,
+          "end": 18.58,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 18.58,
+          "end": 18.88,
+          "word": " sorry,",
+          "probability": 0.994140625
+        },
+        {
+          "start": 18.88,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.994140625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.994140625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.12,
+          "end": 19.12,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 19.12,
+          "end": 19.32,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 19.44,
+          "end": 19.58,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 19.58,
+          "end": 19.58,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 20.02,
+          "end": 20.3,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 20.3,
+          "end": 20.3,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 20.44,
+          "end": 20.72,
+          "word": " I'm",
+          "probability": 0.994140625
+        },
+        {
+          "start": 20.72,
+          "end": 20.72,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 20.72,
+          "end": 20.72,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 20.72,
+          "end": 20.72,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 20.72,
+          "end": 20.78,
+          "word": " I'm",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 20.78,
+          "end": 20.98,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 20.98,
+          "end": 21.56,
+          "word": " I'm",
+          "probability": 0.994140625
+        },
+        {
+          "start": 21.56,
+          "end": 22.1,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.3,
+          "end": 22.62,
+          "word": " I'm",
+          "probability": 0.994140625
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " I'm",
+          "probability": 0.993896484375
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " I'm",
+          "probability": 0.993896484375
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " I'm",
+          "probability": 0.993896484375
+        },
+        {
+          "start": 22.62,
+          "end": 22.62,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " I'm",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " I'm",
+          "probability": 0.993408203125
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " I'm",
+          "probability": 0.993408203125
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " I'm",
+          "probability": 0.993408203125
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " I'm",
+          "probability": 0.993408203125
+        },
+        {
+          "start": 22.68,
+          "end": 22.68,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 22.68,
+          "end": 22.72,
+          "word": " I'm",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 22.72,
+          "end": 23.02,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 23.18,
+          "end": 23.82,
+          "word": " I'm",
+          "probability": 0.992919921875
+        },
+        {
+          "start": 23.82,
+          "end": 24.1,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 24.1,
+          "end": 24.5,
+          "word": " I'm",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 24.5,
+          "end": 24.5,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 24.5,
+          "end": 24.5,
+          "word": " I'm",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 24.5,
+          "end": 24.5,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 24.5,
+          "end": 24.52,
+          "word": " I'm",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 24.52,
+          "end": 24.92,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 24.92,
+          "end": 25.14,
+          "word": " I'm",
+          "probability": 0.992431640625
+        },
+        {
+          "start": 25.14,
+          "end": 25.16,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 25.32,
+          "end": 25.54,
+          "word": " I'm",
+          "probability": 0.9921875
+        },
+        {
+          "start": 25.54,
+          "end": 25.94,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 26.1,
+          "end": 26.62,
+          "word": " I'm",
+          "probability": 0.9921875
+        },
+        {
+          "start": 26.62,
+          "end": 27.14,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 27.14,
+          "end": 27.38,
+          "word": " I'm",
+          "probability": 0.9921875
+        },
+        {
+          "start": 27.38,
+          "end": 27.9,
+          "word": " sorry,",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 27.9,
+          "end": 29.98,
+          "word": " I'm",
+          "probability": 0.9921875
+        },
+        {
+          "start": 29.98,
+          "end": 29.98,
+          "word": " sorry",
+          "probability": 0.99462890625
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 38.92,
+      "end": 43.08,
+      "text": " Isn't it so incredible",
+      "avg_logprob": -0.3707589166504996,
+      "no_speech_prob": 0.2159423828125,
+      "compression_ratio": 1.2079207920792079,
+      "words": [
+        {
+          "start": 38.92,
+          "end": 40.32,
+          "word": " Isn't",
+          "probability": 0.85009765625
+        },
+        {
+          "start": 40.32,
+          "end": 40.78,
+          "word": " it",
+          "probability": 0.826171875
+        },
+        {
+          "start": 40.78,
+          "end": 42.08,
+          "word": " so",
+          "probability": 0.6962890625
+        },
+        {
+          "start": 42.08,
+          "end": 43.08,
+          "word": " incredible",
+          "probability": 0.9951171875
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 43.620000000000005,
+      "end": 50.64,
+      "text": " We're here sharing the same tired space",
+      "avg_logprob": -0.3707589166504996,
+      "no_speech_prob": 0.2159423828125,
+      "compression_ratio": 1.2079207920792079,
+      "words": [
+        {
+          "start": 43.620000000000005,
+          "end": 45.24,
+          "word": " We're",
+          "probability": 0.6710205078125
+        },
+        {
+          "start": 45.24,
+          "end": 45.7,
+          "word": " here",
+          "probability": 0.986328125
+        },
+        {
+          "start": 45.7,
+          "end": 46.62,
+          "word": " sharing",
+          "probability": 0.97314453125
+        },
+        {
+          "start": 46.62,
+          "end": 48.16,
+          "word": " the",
+          "probability": 0.6396484375
+        },
+        {
+          "start": 48.16,
+          "end": 48.58,
+          "word": " same",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 48.58,
+          "end": 49.56,
+          "word": " tired",
+          "probability": 0.2408447265625
+        },
+        {
+          "start": 49.56,
+          "end": 50.64,
+          "word": " space",
+          "probability": 0.97998046875
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 51.24,
+      "end": 55.78,
+      "text": " In your eyes, the stars look like",
+      "avg_logprob": -0.3707589166504996,
+      "no_speech_prob": 0.2159423828125,
+      "compression_ratio": 1.2079207920792079,
+      "words": [
+        {
+          "start": 50.94,
+          "end": 51.64,
+          "word": " In",
+          "probability": 0.6484375
+        },
+        {
+          "start": 51.64,
+          "end": 52.24,
+          "word": " your",
+          "probability": 0.98046875
+        },
+        {
+          "start": 52.24,
+          "end": 53.18,
+          "word": " eyes,",
+          "probability": 0.998046875
+        },
+        {
+          "start": 53.4,
+          "end": 54.06,
+          "word": " the",
+          "probability": 0.83056640625
+        },
+        {
+          "start": 54.06,
+          "end": 54.38,
+          "word": " stars",
+          "probability": 0.68310546875
+        },
+        {
+          "start": 54.38,
+          "end": 55.22,
+          "word": " look",
+          "probability": 0.97265625
+        },
+        {
+          "start": 55.22,
+          "end": 55.78,
+          "word": " like",
+          "probability": 0.9892578125
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 55.78,
+      "end": 59.04,
+      "text": " Thousands of bright stars",
+      "avg_logprob": -0.3707589166504996,
+      "no_speech_prob": 0.2159423828125,
+      "compression_ratio": 1.2079207920792079,
+      "words": [
+        {
+          "start": 55.78,
+          "end": 57.34,
+          "word": " Thousands",
+          "probability": 0.241455078125
+        },
+        {
+          "start": 57.34,
+          "end": 58.12,
+          "word": " of",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 58.12,
+          "end": 58.68,
+          "word": " bright",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 58.68,
+          "end": 59.04,
+          "word": " stars",
+          "probability": 0.99560546875
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 59.04,
+      "end": 63.28,
+      "text": " I have gazed at four thousands of time",
+      "avg_logprob": -0.4644097288449605,
+      "no_speech_prob": 0.7333984375,
+      "compression_ratio": 1.1379310344827587,
+      "words": [
+        {
+          "start": 59.04,
+          "end": 60.1,
+          "word": " I",
+          "probability": 0.1961669921875
+        },
+        {
+          "start": 60.1,
+          "end": 60.36,
+          "word": " have",
+          "probability": 0.5283203125
+        },
+        {
+          "start": 60.36,
+          "end": 60.82,
+          "word": " gazed",
+          "probability": 0.807861328125
+        },
+        {
+          "start": 60.82,
+          "end": 61.02,
+          "word": " at",
+          "probability": 0.97607421875
+        },
+        {
+          "start": 61.02,
+          "end": 61.3,
+          "word": " four",
+          "probability": 0.58935546875
+        },
+        {
+          "start": 61.3,
+          "end": 61.94,
+          "word": " thousands",
+          "probability": 0.6513671875
+        },
+        {
+          "start": 61.94,
+          "end": 62.62,
+          "word": " of",
+          "probability": 0.6806640625
+        },
+        {
+          "start": 62.62,
+          "end": 63.28,
+          "word": " time",
+          "probability": 0.58544921875
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 63.28,
+      "end": 67.72,
+      "text": " Da da da, da da da",
+      "avg_logprob": -0.4644097288449605,
+      "no_speech_prob": 0.7333984375,
+      "compression_ratio": 1.1379310344827587,
+      "words": [
+        {
+          "start": 63.28,
+          "end": 63.52,
+          "word": " Da",
+          "probability": 0.13720703125
+        },
+        {
+          "start": 63.52,
+          "end": 64.02,
+          "word": " da",
+          "probability": 0.359619140625
+        },
+        {
+          "start": 64.02,
+          "end": 64.52,
+          "word": " da,",
+          "probability": 0.89208984375
+        },
+        {
+          "start": 64.9,
+          "end": 66.52,
+          "word": " da",
+          "probability": 0.7548828125
+        },
+        {
+          "start": 66.52,
+          "end": 67.12,
+          "word": " da",
+          "probability": 0.9736328125
+        },
+        {
+          "start": 67.12,
+          "end": 67.72,
+          "word": " da",
+          "probability": 0.99169921875
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 67.72,
+      "end": 70.78,
+      "text": " Da da da",
+      "avg_logprob": -0.4644097288449605,
+      "no_speech_prob": 0.7333984375,
+      "compression_ratio": 1.1379310344827587,
+      "words": [
+        {
+          "start": 67.72,
+          "end": 69.34,
+          "word": " Da",
+          "probability": 0.2509765625
+        },
+        {
+          "start": 69.34,
+          "end": 70.12,
+          "word": " da",
+          "probability": 0.96630859375
+        },
+        {
+          "start": 70.12,
+          "end": 70.78,
+          "word": " da",
+          "probability": 0.97900390625
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 84.82,
+      "end": 89.56,
+      "text": " You build a world of miracles",
+      "avg_logprob": -0.3901367075741291,
+      "no_speech_prob": 0.386962890625,
+      "compression_ratio": 1.1958762886597938,
+      "words": [
+        {
+          "start": 84.82,
+          "end": 86.02,
+          "word": " You",
+          "probability": 0.246337890625
+        },
+        {
+          "start": 86.02,
+          "end": 87.02,
+          "word": " build",
+          "probability": 0.75146484375
+        },
+        {
+          "start": 87.02,
+          "end": 87.2,
+          "word": " a",
+          "probability": 0.91259765625
+        },
+        {
+          "start": 87.2,
+          "end": 87.64,
+          "word": " world",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 87.64,
+          "end": 88.3,
+          "word": " of",
+          "probability": 0.92626953125
+        },
+        {
+          "start": 88.3,
+          "end": 89.56,
+          "word": " miracles",
+          "probability": 0.87646484375
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 89.56,
+      "end": 92.0,
+      "text": " Some wanting the precious",
+      "avg_logprob": -0.3901367075741291,
+      "no_speech_prob": 0.386962890625,
+      "compression_ratio": 1.1958762886597938,
+      "words": [
+        {
+          "start": 89.56,
+          "end": 90.2,
+          "word": " Some",
+          "probability": 0.08837890625
+        },
+        {
+          "start": 90.2,
+          "end": 90.84,
+          "word": " wanting",
+          "probability": 0.1956787109375
+        },
+        {
+          "start": 90.84,
+          "end": 91.12,
+          "word": " the",
+          "probability": 0.591796875
+        },
+        {
+          "start": 91.12,
+          "end": 92.0,
+          "word": " precious",
+          "probability": 0.98828125
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 92.0,
+      "end": 95.38,
+      "text": " This dream of shimmering daily moments",
+      "avg_logprob": -0.3901367075741291,
+      "no_speech_prob": 0.386962890625,
+      "compression_ratio": 1.1958762886597938,
+      "words": [
+        {
+          "start": 92.0,
+          "end": 92.8,
+          "word": " This",
+          "probability": 0.166748046875
+        },
+        {
+          "start": 92.8,
+          "end": 93.12,
+          "word": " dream",
+          "probability": 0.978515625
+        },
+        {
+          "start": 93.12,
+          "end": 93.36,
+          "word": " of",
+          "probability": 0.354248046875
+        },
+        {
+          "start": 93.36,
+          "end": 93.96,
+          "word": " shimmering",
+          "probability": 0.94140625
+        },
+        {
+          "start": 93.96,
+          "end": 94.38,
+          "word": " daily",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 94.38,
+          "end": 95.38,
+          "word": " moments",
+          "probability": 0.76025390625
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 95.38,
+      "end": 98.12,
+      "text": " Return way to my soul",
+      "avg_logprob": -0.3901367075741291,
+      "no_speech_prob": 0.386962890625,
+      "compression_ratio": 1.1958762886597938,
+      "words": [
+        {
+          "start": 95.38,
+          "end": 96.48,
+          "word": " Return",
+          "probability": 0.986328125
+        },
+        {
+          "start": 96.48,
+          "end": 96.92,
+          "word": " way",
+          "probability": 0.387451171875
+        },
+        {
+          "start": 96.92,
+          "end": 97.18,
+          "word": " to",
+          "probability": 0.9765625
+        },
+        {
+          "start": 97.18,
+          "end": 97.66,
+          "word": " my",
+          "probability": 0.9736328125
+        },
+        {
+          "start": 97.66,
+          "end": 98.12,
+          "word": " soul",
+          "probability": 0.99560546875
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 98.12,
+      "end": 101.54,
+      "text": " Stop me from drifting in my feet",
+      "avg_logprob": -0.28791921894724776,
+      "no_speech_prob": 0.371337890625,
+      "compression_ratio": 1.2897196261682242,
+      "words": [
+        {
+          "start": 98.12,
+          "end": 98.54,
+          "word": " Stop",
+          "probability": 0.1346435546875
+        },
+        {
+          "start": 98.54,
+          "end": 99.14,
+          "word": " me",
+          "probability": 0.96875
+        },
+        {
+          "start": 99.14,
+          "end": 99.52,
+          "word": " from",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 99.52,
+          "end": 100.06,
+          "word": " drifting",
+          "probability": 0.98828125
+        },
+        {
+          "start": 100.06,
+          "end": 100.76,
+          "word": " in",
+          "probability": 0.37939453125
+        },
+        {
+          "start": 100.76,
+          "end": 101.12,
+          "word": " my",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 101.12,
+          "end": 101.54,
+          "word": " feet",
+          "probability": 0.97265625
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 101.54,
+      "end": 103.1,
+      "text": " That solid ground I stand",
+      "avg_logprob": -0.28791921894724776,
+      "no_speech_prob": 0.371337890625,
+      "compression_ratio": 1.2897196261682242,
+      "words": [
+        {
+          "start": 101.54,
+          "end": 101.88,
+          "word": " That",
+          "probability": 0.43994140625
+        },
+        {
+          "start": 101.88,
+          "end": 102.38,
+          "word": " solid",
+          "probability": 0.80810546875
+        },
+        {
+          "start": 102.38,
+          "end": 102.76,
+          "word": " ground",
+          "probability": 0.95556640625
+        },
+        {
+          "start": 102.76,
+          "end": 102.84,
+          "word": " I",
+          "probability": 0.90673828125
+        },
+        {
+          "start": 102.84,
+          "end": 103.1,
+          "word": " stand",
+          "probability": 0.9453125
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 103.1,
+      "end": 104.9,
+      "text": " So I sing together",
+      "avg_logprob": -0.28791921894724776,
+      "no_speech_prob": 0.371337890625,
+      "compression_ratio": 1.2897196261682242,
+      "words": [
+        {
+          "start": 103.1,
+          "end": 103.64,
+          "word": " So",
+          "probability": 0.41357421875
+        },
+        {
+          "start": 103.64,
+          "end": 103.84,
+          "word": " I",
+          "probability": 0.521484375
+        },
+        {
+          "start": 103.84,
+          "end": 104.12,
+          "word": " sing",
+          "probability": 0.9228515625
+        },
+        {
+          "start": 104.12,
+          "end": 104.9,
+          "word": " together",
+          "probability": 0.9814453125
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 104.9,
+      "end": 109.24,
+      "text": " Every light I'm giving all goes back to you",
+      "avg_logprob": -0.28791921894724776,
+      "no_speech_prob": 0.371337890625,
+      "compression_ratio": 1.2897196261682242,
+      "words": [
+        {
+          "start": 104.9,
+          "end": 105.68,
+          "word": " Every",
+          "probability": 0.591796875
+        },
+        {
+          "start": 105.68,
+          "end": 106.36,
+          "word": " light",
+          "probability": 0.87890625
+        },
+        {
+          "start": 106.36,
+          "end": 106.8,
+          "word": " I'm",
+          "probability": 0.989013671875
+        },
+        {
+          "start": 106.8,
+          "end": 107.24,
+          "word": " giving",
+          "probability": 0.92236328125
+        },
+        {
+          "start": 107.24,
+          "end": 107.8,
+          "word": " all",
+          "probability": 0.69775390625
+        },
+        {
+          "start": 107.8,
+          "end": 108.2,
+          "word": " goes",
+          "probability": 0.560546875
+        },
+        {
+          "start": 108.2,
+          "end": 108.58,
+          "word": " back",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 108.58,
+          "end": 108.94,
+          "word": " to",
+          "probability": 0.998046875
+        },
+        {
+          "start": 108.94,
+          "end": 109.24,
+          "word": " you",
+          "probability": 0.99658203125
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 109.24,
+      "end": 111.56,
+      "text": " Goes back to you",
+      "avg_logprob": -0.28791921894724776,
+      "no_speech_prob": 0.371337890625,
+      "compression_ratio": 1.2897196261682242,
+      "words": [
+        {
+          "start": 109.24,
+          "end": 109.74,
+          "word": " Goes",
+          "probability": 0.7783203125
+        },
+        {
+          "start": 109.74,
+          "end": 110.06,
+          "word": " back",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 110.06,
+          "end": 110.68,
+          "word": " to",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 110.68,
+          "end": 111.56,
+          "word": " you",
+          "probability": 0.994140625
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 135.10000000000002,
+      "end": 142.78,
+      "text": " Terima kasih telah menonton!",
+      "avg_logprob": -0.15731533819978888,
+      "no_speech_prob": 0.609375,
+      "compression_ratio": 0.7777777777777778,
+      "words": [
+        {
+          "start": 135.10000000000002,
+          "end": 135.58,
+          "word": " Terima",
+          "probability": 0.779541015625
+        },
+        {
+          "start": 135.58,
+          "end": 135.82,
+          "word": " kasih",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 135.82,
+          "end": 142.72,
+          "word": " telah",
+          "probability": 0.893310546875
+        },
+        {
+          "start": 142.72,
+          "end": 142.78,
+          "word": " menonton!",
+          "probability": 0.998779296875
+        }
+      ]
+    }
+  ],
+  "primary": [
+    {
+      "start": 0.0,
+      "end": 4.58,
+      "text": "I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 4.59,
+      "end": 12.27,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm"
+    },
+    {
+      "start": 12.27,
+      "end": 14.76,
+      "text": "sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 14.97,
+      "end": 15.11,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 15.11,
+      "end": 19.07,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.07,
+      "end": 19.39,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.39,
+      "end": 22.57,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.57,
+      "end": 22.63,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.63,
+      "end": 25.24,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 25.27,
+      "end": 30.06,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry"
+    },
+    {
+      "start": 38.87,
+      "end": 43.16,
+      "text": "Isn't it so incredible"
+    },
+    {
+      "start": 43.57,
+      "end": 50.72,
+      "text": "We're here sharing the same tired space"
+    },
+    {
+      "start": 50.89,
+      "end": 55.73,
+      "text": "In your eyes, the stars look like"
+    },
+    {
+      "start": 55.73,
+      "end": 58.99,
+      "text": "Thousands of bright stars"
+    },
+    {
+      "start": 58.99,
+      "end": 63.23,
+      "text": "I have gazed at four thousands of time"
+    },
+    {
+      "start": 63.23,
+      "end": 67.67,
+      "text": "Da da da, da da da"
+    },
+    {
+      "start": 67.67,
+      "end": 70.86,
+      "text": "Da da da"
+    },
+    {
+      "start": 84.77,
+      "end": 89.51,
+      "text": "You build a world of miracles"
+    },
+    {
+      "start": 89.51,
+      "end": 95.33,
+      "text": "Some wanting the precious This dream of shimmering daily moments"
+    },
+    {
+      "start": 95.33,
+      "end": 101.49,
+      "text": "Return way to my soul Stop me from drifting in my feet"
+    },
+    {
+      "start": 101.49,
+      "end": 104.85,
+      "text": "That solid ground I stand So I sing together"
+    },
+    {
+      "start": 104.85,
+      "end": 109.19,
+      "text": "Every light I'm giving all goes back to you"
+    },
+    {
+      "start": 109.19,
+      "end": 111.64,
+      "text": "Goes back to you"
+    },
+    {
+      "start": 135.05,
+      "end": 142.86,
+      "text": "Terima kasih telah menonton!"
+    }
+  ],
+  "final": [
+    {
+      "start": 0.0,
+      "end": 4.58,
+      "text": "I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 4.59,
+      "end": 12.27,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm"
+    },
+    {
+      "start": 12.27,
+      "end": 14.76,
+      "text": "sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 14.97,
+      "end": 15.11,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 15.11,
+      "end": 19.07,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.07,
+      "end": 19.39,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.39,
+      "end": 22.57,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.57,
+      "end": 22.63,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.63,
+      "end": 25.24,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 25.27,
+      "end": 30.06,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry"
+    },
+    {
+      "start": 38.87,
+      "end": 43.16,
+      "text": "Isn't it so incredible"
+    },
+    {
+      "start": 43.57,
+      "end": 50.72,
+      "text": "We're here sharing the same tired space"
+    },
+    {
+      "start": 50.89,
+      "end": 55.73,
+      "text": "In your eyes, the stars look like"
+    },
+    {
+      "start": 55.73,
+      "end": 58.99,
+      "text": "Thousands of bright stars"
+    },
+    {
+      "start": 58.99,
+      "end": 63.23,
+      "text": "I have gazed at four thousands of time"
+    },
+    {
+      "start": 63.23,
+      "end": 67.67,
+      "text": "Da da da, da da da"
+    },
+    {
+      "start": 67.67,
+      "end": 70.86,
+      "text": "Da da da"
+    },
+    {
+      "start": 71.29,
+      "end": 74.06,
+      "text": "-da -da, da -da"
+    },
+    {
+      "start": 75.05,
+      "end": 79.88,
+      "text": "Da -da -da, da -da -da"
+    },
+    {
+      "start": 84.77,
+      "end": 89.51,
+      "text": "You build a world of miracles"
+    },
+    {
+      "start": 89.51,
+      "end": 95.33,
+      "text": "Some wanting the precious This dream of shimmering daily moments"
+    },
+    {
+      "start": 95.33,
+      "end": 101.49,
+      "text": "Return way to my soul Stop me from drifting in my feet"
+    },
+    {
+      "start": 101.49,
+      "end": 104.85,
+      "text": "That solid ground I stand So I sing together"
+    },
+    {
+      "start": 104.85,
+      "end": 109.19,
+      "text": "Every light I'm giving all goes back to you"
+    },
+    {
+      "start": 109.19,
+      "end": 111.64,
+      "text": "Goes back to you"
+    },
+    {
+      "start": 135.05,
+      "end": 142.86,
+      "text": "Terima kasih telah menonton!"
+    }
+  ]
+}

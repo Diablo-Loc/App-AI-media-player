@@ -1,8 +1,52 @@
 # App-AI-media-player (BoTube)
 
+For You: gutter/search cân đối 12 px, thanh tiêu đề native đồng bộ màu trên Windows hỗ trợ. Giữ PySide6 và các luồng cửa sổ/video hiện có. [Báo cáo UI](docs/FORYOU_SPACING_AND_CAPTION.md).
+
+Lyric: cải thiện chia câu cho phụ đề tạo mới, giữ nguyên các bài đã lưu. [Phạm vi sửa và kiểm chứng](docs/LYRIC_PHRASE_GROUPING.md).
+
+For You: search và xóa search có vòng loading, chỉ hiện kết quả khi chuẩn bị xong; giữ toàn playlist cho Next/Previous. [Chi tiết kiểm chứng](docs/FORYOU_SEARCH_LOADING.md).
+
+For You search/cuộn: [báo cáo và số đo](docs/FORYOU_SEARCH_PERFORMANCE.md). Search chỉ lọc hiển thị; Next/Previous giữ toàn playlist. Danh sách dùng viewport pool và hai decoder thumbnail để giảm chặn giao diện.
+
 A media player with AI-powered subtitle, translation and processing features.
 This repository contains both the application code and tooling for building
 packaged executables.
+
+## Development and architecture
+
+Use the project Python 3.11 environment from the repository root:
+
+```powershell
+.\venv\Scripts\python.exe app/run_app.py
+```
+
+FFmpeg/FFprobe can be installed in `PATH`, `bin/`, or `app_resources/bin/`.
+Portable AI libraries and models remain in `app_resources/` beside the executable.
+Persistent data remains in `storage/`; existing media IDs and subtitle JSON are preserved.
+
+The user restored `app/` to the original working baseline on 2026-10-03.
+Use the script entry point above; `python -m app` belongs to the reverted refactor
+and is unavailable in the restored tree. The [current review](docs/RESTORED_APP_REVIEW.md)
+analyzes every directory, preserves the current UI and runtime, and proposes
+incremental performance and accuracy work. See the [documentation index](docs/README.md)
+for current reports and historical refactor records.
+
+```powershell
+.\venv\Scripts\python.exe tools/audit_restored_app.py
+.\venv\Scripts\python.exe tools/probe_restored_contracts.py
+```
+
+`tests/` currently contains historical tests for the reverted refactor; adapt them
+to the restored baseline before using discovery for validation. `app/test/` contains
+legacy interactive demos that may start Qt/GPU/network work. The audit and contract
+probes above do not start the application, access user settings, or call APIs/models.
+
+The current phase keeps the UI and prioritizes architecture and responsiveness.
+See [development](docs/DEVELOPMENT.md), [feature contracts](docs/FEATURE_PARITY.md),
+[previous refactor audit](docs/PREVIOUS_REFACTOR_AUDIT.md),
+[performance results](docs/PERFORMANCE.md), [roadmap](docs/ROADMAP.md),
+and [future UI strategy](docs/UI_STRATEGY.md). Repository working rules live in
+[AGENTS.md](AGENTS.md).
 
 ---
 

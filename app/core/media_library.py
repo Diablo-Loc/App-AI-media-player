@@ -6,7 +6,7 @@ import time
 import threading
 import subprocess
 from pathlib import Path
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, replace
 from typing import Optional, List, Dict, Tuple
 
 # Giả sử class SubtitleManager của bạn nằm ở đây
@@ -97,7 +97,8 @@ class MediaLibrary:
         self.db_path = Path(db_path)
         self.items: Dict[str, MediaMetadata] = {}
         self.subtitle_mgr = SubtitleManager()
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
+        self._save_lock = threading.Lock()
         self.load()
         logger.info("✅ MediaLibrary initialized")
 
@@ -114,6 +115,8 @@ class MediaLibrary:
         count_scan = 0
         
         for file in folder.rglob('*'):
+            if getattr(self, '_cancel_scan', lambda: False)():
+                break
             if not file.is_file(): continue
             if file.suffix.lower() in {'.part', '.ytdl', '.tmp', '.temp'}:
                 continue
@@ -170,12 +173,12 @@ class MediaLibrary:
 
     def update_thumbnail_in_db(self, media_id, thumb_path):
         """Worker gọi hàm này khi tạo xong ảnh để lưu vào JSON"""
-        if media_id in self.items:
-            # 1. Update Memory
+        with self.lock:
+            if media_id not in self.items:
+                return
             self.items[media_id].thumbnail = thumb_path
-            # 2. Update Disk
-            self.save()
-            logger.info(f"💾 Đã lưu path thumbnail cho {media_id}")
+        self.save()
+        logger.info(f"💾 Đã lưu path thumbnail cho {media_id}")
 
     def cleanup(self):
         """
@@ -202,12 +205,14 @@ class MediaLibrary:
         Lưu file JSON với cơ chế chống lỗi WinError 5 (Access Denied)
         """
         # 1. Dùng Lock để đảm bảo chỉ 1 luồng được ghi file tại 1 thời điểm
-        with self.lock:
+        with self._save_lock:
             try:
                 self.db_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 # Convert data sang dict
-                data = {mid: asdict(meta) for mid, meta in self.items.items()}
+                with self.lock:
+                    snapshot = [(mid, replace(meta)) for mid, meta in self.items.items()]
+                data = {mid: asdict(meta) for mid, meta in snapshot}
                 
                 temp_path = self.db_path.with_suffix(".tmp")
                 

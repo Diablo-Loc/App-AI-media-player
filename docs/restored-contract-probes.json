@@ -1,0 +1,36 @@
+{
+  "scope": "Isolated snippets and synthetic API stub only. No Qt app, network, GPU, user settings or media. These demonstrate conditional contracts, not actual user quality failures.",
+  "revision": "4148c138c1e38f4959574caf925f1c86dbcca339",
+  "source_sha256": {
+    "app/translate/cache.py": "26f545e33f3fe266d2b2709d2fb9ed85b45de88136cb1bf2f7e5869988c3b642",
+    "app/translate/online_logic.py": "df54a70d8814fd0be1c0827392f293eb30f8a4556f99751f567db162fb0d9022",
+    "app/translate/pipeline.py": "6801b3db1f082bdcb34f339e84aca7ac35f5300008ba338dd7b0f5d0a35a1e32"
+  },
+  "translation_cache_key": {
+    "input": "Hello",
+    "key": "8b1a9953c4611296a827abf8c47804d7",
+    "accepts_language_mode_provider_model_context": false
+  },
+  "cleaner_long_text": {
+    "input_characters": 200,
+    "output_characters": 153,
+    "output": "一丁丂七丄丅丆万丈三上下丌不与丏丐丑丒专且丕世丗丘丙业丛东丝丞丟丠両丢丣两严並丧丨丩个丫丬中丮丯丰丱串丳临丵丶丷丸丹为主丼丽举丿乀乁乂乃乄久乆乇么义乊之乌乍乎乏乐乑乒乓乔乕乖乗乘乙乚乛乜九乞也习乡乢乣乤乥书乧乨乩乪乫乬乭乮乯买乱乲乳乴乵乶乷乸乹乺乻乼乽乾乿亀亁亂亃亄亅了亇予争亊事二亍于亏亐云互亓五井..."
+  },
+  "online_unparseable_response": {
+    "input_rows": 1,
+    "returned_truthy_list": true,
+    "translated_rows": 0,
+    "would_pass_main_pipeline_if_result_check": true
+  },
+  "local_pipeline_online_adapter": {
+    "unsupported_keyword_arguments": [
+      "src_lang"
+    ],
+    "note": "Main ai.pipeline calls online_logic directly, so this mismatch does not mean its normal online path fails."
+  },
+  "srt_rounding_boundary": {
+    "input_seconds": 1.9996,
+    "output": "00:00:01,1000",
+    "note": "Synthetic boundary reaches 1000 in the millisecond field instead of carrying to the next second."
+  }
+}

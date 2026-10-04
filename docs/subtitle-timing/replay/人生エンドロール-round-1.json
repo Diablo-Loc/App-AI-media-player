@@ -1,0 +1,143 @@
+{
+  "report": {
+    "record": "人生エンドロール-round-1.json",
+    "language": "ja",
+    "cues": 25,
+    "captured_previous_profile_reproduced": true,
+    "cue_text_and_start_unchanged": true,
+    "accepted_character_inventory_preserved": true,
+    "no_added_tail": true,
+    "no_overlap": true,
+    "word_timestamp_pauses_at_least_two_seconds": 3,
+    "pause_violations": [],
+    "source_reference": "Captured raw ASR; not human lyric or vocal boundary ground truth",
+    "saved_times_equal_refined": true
+  },
+  "refined": [
+    {
+      "start": 29.95,
+      "end": 34.39,
+      "text": "息を吸って解けた靴紐を結んだ"
+    },
+    {
+      "start": 34.39,
+      "end": 39.0,
+      "text": "理屈な言葉あたりでも足を止めないよ"
+    },
+    {
+      "start": 39.45,
+      "end": 43.56,
+      "text": "つるぼけた地図を頼りにいこう"
+    },
+    {
+      "start": 44.65,
+      "end": 49.44,
+      "text": "隣の芝生が青く見えても"
+    },
+    {
+      "start": 51.03,
+      "end": 55.83,
+      "text": "走り最低限でも止まらなきゃそれでいいから"
+    },
+    {
+      "start": 55.83,
+      "end": 61.17,
+      "text": "後ろで指差す奴らはほっとけ"
+    },
+    {
+      "start": 61.17,
+      "end": 66.43,
+      "text": "消失な人生なんてもう特に諦めたら"
+    },
+    {
+      "start": 66.43,
+      "end": 72.92,
+      "text": "エンドロールなんかじゃない生き様で刻んでやれ"
+    },
+    {
+      "start": 81.81,
+      "end": 87.08,
+      "text": "一人がいいってどこか強がってみせた"
+    },
+    {
+      "start": 87.77,
+      "end": 90.3,
+      "text": "主人公じゃないから"
+    },
+    {
+      "start": 90.53,
+      "end": 92.56,
+      "text": "見合わないのに"
+    },
+    {
+      "start": 93.1,
+      "end": 96.93,
+      "text": "けれど千点万か正解はいいぞ"
+    },
+    {
+      "start": 96.93,
+      "end": 102.96,
+      "text": "そう都合主義ならまかり通すだよ"
+    },
+    {
+      "start": 104.39,
+      "end": 109.45,
+      "text": "二重人生なんかそういうものっては生きらないで"
+    },
+    {
+      "start": 109.45,
+      "end": 114.59,
+      "text": "泥まみれの生き方でもいいんだ"
+    },
+    {
+      "start": 114.59,
+      "end": 119.77,
+      "text": "大それた才能なんてこっちからお断りだ"
+    },
+    {
+      "start": 119.77,
+      "end": 126.37,
+      "text": "バードエンドなんかじゃないそれなりの幸せで"
+    },
+    {
+      "start": 126.37,
+      "end": 130.28,
+      "text": "決められたレールを保っても"
+    },
+    {
+      "start": 130.75,
+      "end": 136.68,
+      "text": "悪くはないんだろうけどそれだけじゃつまらないから"
+    },
+    {
+      "start": 157.91,
+      "end": 162.83,
+      "text": "走れ最低限でも止まらなくそれでいいから"
+    },
+    {
+      "start": 162.83,
+      "end": 168.13,
+      "text": "後ろで指さす奴らはほっとけ"
+    },
+    {
+      "start": 168.13,
+      "end": 173.21,
+      "text": "上質な人生なんてもう特に諦めたら"
+    },
+    {
+      "start": 173.21,
+      "end": 180.0,
+      "text": "エンドロールなんかじゃない生き様で刻んでやれ"
+    },
+    {
+      "start": 183.89,
+      "end": 187.92,
+      "text": "くだらない人生の最後の一手を"
+    },
+    {
+      "start": 189.63,
+      "end": 190.36,
+      "text": "今"
+    }
+  ]
+}

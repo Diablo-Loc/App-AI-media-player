@@ -15,6 +15,9 @@ from PySide6.QtMultimediaWidgets import QVideoWidget
 # Import UI components
 from paths import project_root, storage_dir, get_icon_path
 from ui.playback_bar import PlaybackBar
+from ui.icons import button_icon, icon
+from ui.design_system import apply_shell, ICON_BUTTON_STYLE
+from ui.overlay_input_guard import OverlayInputGuard
 from ui.media_card import MediaCard
 from ui.subs_ui.subtitle_layer import SubtitleLayer
 from ui.subs_ui.sub_panel import SettingsPanel
@@ -410,6 +413,14 @@ class MainWindow(QMainWindow):
             if hasattr(self, "_sidebar_timer") and self._sidebar_timer:
                 self._sidebar_timer.stop()
 
+            if hasattr(self, '_folder_scan_queue'):
+                self._folder_scan_queue.shutdown()
+            if hasattr(self, 'download_page'):
+                self.download_page.shutdown_workers()
+            subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
+            if subtitle_owner is not None:
+                subtitle_owner.shutdown()
+
             # --- BƯỚC 2: HỦY CÁC LUỒNG AI ĐANG CHẠY ---
             if hasattr(self, "job_manager") and self.job_manager:
                 print("⛔ Đang gửi lệnh dừng tới các Worker...")
@@ -577,22 +588,20 @@ class MainWindow(QMainWindow):
         # ===============================================================
         self.sidebar_container = QWidget()
         self.sidebar_container.setFixedWidth(160) # Mặc định mở
-        self.sidebar_container.setStyleSheet("background-color: #0f0f0f;")
+        self.sidebar_container.setObjectName("navigationRail")
         
         self.sidebar_layout = QVBoxLayout(self.sidebar_container)
         self.sidebar_layout.setContentsMargins(0, 10, 0, 0)
         self.sidebar_layout.setSpacing(5)
         
         # A. Nút 3 gạch (Menu)
-        self.btn_menu = QPushButton("☰")
+        self.btn_menu = QPushButton()
         self.btn_menu.setFixedSize(36, 36)
         self.btn_menu.setCursor(Qt.PointingHandCursor)
-        self.btn_menu.setStyleSheet("""
-            QPushButton { border: none; color: white; font-size: 24px; background: transparent; }
-            QPushButton:hover { background-color: #272727; border-radius: 25px; }
-        """)
 
         self.btn_menu.setToolTip("Mở/Đóng Menu")
+        self.btn_menu.setStyleSheet(ICON_BUTTON_STYLE)
+        button_icon(self.btn_menu, "menu", "Mở/Đóng Menu")
         # KẾT NỐI ANIMATION TẠI ĐÂY
         self.btn_menu.clicked.connect(self.toggle_nav_animation)
 
@@ -601,7 +610,10 @@ class MainWindow(QMainWindow):
         self.sidebar.add_menu_items(["🏠 Trang chủ", "🎶 For You", "📚 Thư viện", "💾 Download", "⚙️ Tùy chỉnh"])
 
         # Add vào Container
-        self.sidebar_layout.addWidget(self.btn_menu, alignment=Qt.AlignLeft)
+        self.sidebar_layout.addWidget(self.btn_menu, alignment=Qt.AlignHCenter)
+        self.brand_label = QLabel("BoTube")
+        self.brand_label.setStyleSheet("color: #EDF3FA; font-size: 23px; font-weight: 700; padding: 12px 18px 14px 18px;")
+        self.sidebar_layout.addWidget(self.brand_label)
         self.sidebar_layout.addWidget(self.sidebar)
         
         # 2. Content Stack (Nơi chứa 2 trang Home/Library)
@@ -644,6 +656,11 @@ class MainWindow(QMainWindow):
         self.root_layout.addWidget(self.main_area)
         self.root_layout.addWidget(self.playback_bar)
 
+        self._overlay_input_guard = OverlayInputGuard(self, self.sub_layer, (
+            self.playback_bar, self.sidebar_container, self.vol_popup,
+            self.subsettings_panel, self.playback_bar.info_popup,
+        ))
+
         # --- KẾT NỐI TÍN HIỆU ---
         self.sidebar.itemClicked.connect(self.handle_sidebar_click)
 
@@ -652,8 +669,8 @@ class MainWindow(QMainWindow):
         # Tạo widget đại diện cho toàn bộ vùng bên phải
         self.grid_main_page = QWidget()
         layout = QVBoxLayout(self.grid_main_page)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setSpacing(18)
 
         # --- 1. TẠO VỎ BỌC CHO TOOLBAR ---
         self.top_toolbar_container = QWidget() # Đây là cái "công tắc" để ẩn/hiện
@@ -661,32 +678,22 @@ class MainWindow(QMainWindow):
         toolbar_layout.setContentsMargins(0, 0, 10, 0)
         
         # A. Nút Mở Thư Mục
-        self.btn_folder = QPushButton("📂 Mở Thư Mục Video")
+        self.btn_folder = QPushButton("Mở thư mục video")
+        button_icon(self.btn_folder, "folder-open", "Mở thư mục video", icon_only=False)
         self.btn_folder.setFixedSize(200, 40)
         self.btn_folder.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_folder.clicked.connect(self.choose_folder)
         
         # B. Thanh Tìm Kiếm
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Tìm kiếm video...")
-        self.search_input.setFixedWidth(300)
+        self.search_input.setPlaceholderText("Tìm kiếm video...")
+        self.search_input.addAction(icon("search"), QLineEdit.ActionPosition.LeadingPosition)
+        self.search_input.setMinimumWidth(180)
+        self.search_input.setMaximumWidth(300)
+        self.search_input.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.search_input.setFixedHeight(40)
         self.search_input.textChanged.connect(self.filter_grid)
         
-        self.search_input.setStyleSheet("""
-            QLineEdit {
-                background-color: #2b2b2b;
-                color: #ffffff;
-                border: 1px solid #3a3a3a;
-                border-radius: 20px; 
-                padding: 0 15px;
-                font-size: 13px;
-            }
-            QLineEdit:focus {
-                border: 1px solid #1DB954;
-                background-color: #333333;
-            }
-        """)
 
         toolbar_layout.addWidget(self.btn_folder)
         toolbar_layout.addStretch()
@@ -808,8 +815,7 @@ class MainWindow(QMainWindow):
         self.audio_output.setVolume(float_vol)
         
         # Update icon loa ở thanh bar chính (Mute/Unmute icon)
-        icon = "🔇" if float_vol == 0 else "🔉" if float_vol < 0.5 else "🔊"
-        self.playback_bar.btn_vol.setText(icon)
+        self.playback_bar.update_volume_icon(float_vol)
 
     def adjust_volume(self, delta):
         """Xử lý khi bấm phím tắt Tăng/Giảm âm lượng"""
@@ -819,7 +825,7 @@ class MainWindow(QMainWindow):
         new_vol = max(0.0, min(1.0, current_vol + delta))
         self.audio_output.setVolume(new_vol)
         self.vol_popup.set_value(int(new_vol * 100))
-        self.playback_bar.btn_vol.setText("🔇" if new_vol == 0 else "🔉" if new_vol < 0.5 else "🔊")
+        self.playback_bar.update_volume_icon(new_vol)
 
     def seek_relative(self, ms):
         player = self.media_player.player
@@ -996,16 +1002,7 @@ class MainWindow(QMainWindow):
         self.app_controller.start_thumbnail_scan()
     
     def apply_global_styles(self):
-        self.setStyleSheet("""
-            QMainWindow { background-color: #121212; }
-            QListWidget { background-color: #000000; border: none; color: #b3b3b3; font-size: 14px; }
-            QListWidget::item { padding: 15px; border-radius: 5px; }
-            QListWidget::item:selected { background-color: #282828; color: white; }
-            QSlider::groove:horizontal { height: 4px; background: #4d4d4d; border-radius: 2px; }
-            QSlider::sub-page:horizontal { background: #1DB954; border-radius: 2px; }
-            QSlider::handle:horizontal { background: white; width: 12px; height: 12px; margin: -4px 0; border-radius: 6px; }
-            QSlider::handle:horizontal:hover { background: #1DB954; width: 14px; height: 14px; }
-        """)
+        apply_shell(self)
 
     def play_next(self):
         """Phát bài tiếp theo dựa trên Playlist đã chốt"""
@@ -1154,7 +1151,7 @@ class MainWindow(QMainWindow):
             
             # TRƯỜNG HỢP 1: Trang For You (Dùng danh sách lazy load)
             if hasattr(self, 'foryou_page') and current_page == self.foryou_page:
-                self.active_playlist = list(self.foryou_page.all_items_data)
+                self.active_playlist = self.foryou_page.get_playback_playlist()
                 print(f"📋 Playlist ForYou: Đã chốt {len(self.active_playlist)} bài.")
 
             # TRƯỜNG HỢP 2: Các trang cũ (Dùng Grid Layout như Home/Library)
@@ -1169,7 +1166,7 @@ class MainWindow(QMainWindow):
             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
             if self.active_playlist and hasattr(self, 'foryou_page'):
                     # sync For You page only when necessary
-                if not self.foryou_page.all_items_data:
+                if not self.foryou_page.master_data:
                     # first time loading playlist, we need to tell page where to start
                     self.foryou_page.current_playing_id = media_item.id
                     self.foryou_page.load_playlist(self.active_playlist)
@@ -1244,7 +1241,7 @@ class MainWindow(QMainWindow):
             self.foryou_page.artist_label.setText(getattr(media_item, "artist", "Unknown"))
             
             # 2. CẬP NHẬT PLAYLIST (CHỈ KHI CẦN THIẾT)
-            if update_playlist and hasattr(self, 'active_playlist'):
+            if update_playlist and hasattr(self, 'active_playlist') and current_page != self.foryou_page:
                 # Kiểm tra nếu danh sách hiện tại khác hoàn toàn danh sách mới (VD: chuyển từ album A sang album B)
                 # Hoặc nếu danh sách ForYou đang rỗng
                 if not self.foryou_page.original_data or len(self.foryou_page.original_data) != len(self.active_playlist):
@@ -1319,7 +1316,7 @@ class MainWindow(QMainWindow):
             self.update_video_location("large")
             self.playback_bar.show()
             self.setCursor(Qt.ArrowCursor)
-            self.playback_bar.btn_fs.setText("⛶")
+            self.playback_bar.update_fullscreen_icon(False)
             self.mouse_hide_timer.stop()
         else:
             # Vào fullscreen
@@ -1328,7 +1325,7 @@ class MainWindow(QMainWindow):
             self.showFullScreen()
             self.playback_bar.show()
             self.setCursor(Qt.ArrowCursor)
-            self.playback_bar.btn_fs.setText("↙️")
+            self.playback_bar.update_fullscreen_icon(True)
             self.mouse_hide_timer.start(3000)
         QTimer.singleShot(100, self.sync_subtitle_margin)
     
@@ -1343,6 +1340,12 @@ class MainWindow(QMainWindow):
     def hide_controls(self):
         """Ẩn thanh điều khiển và chuột"""
         if self.playback_bar.underMouse():
+            return
+        if any(popup.isVisible() for popup in (
+            self.vol_popup, self.subsettings_panel, self.playback_bar.info_popup,
+        )) or self.playback_bar.time_slider.isSliderDown():
+            return
+        if any(button.isDown() for button in self.playback_bar.findChildren(QPushButton)):
             return
             
         self.playback_bar.hide()
@@ -1710,19 +1713,24 @@ class MainWindow(QMainWindow):
         self.current_watched_folder = folder_path
 
         # 2. GỌI MEDIA LIBRARY (Scan file mới)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        try:
-            # Scan và lưu vào kho tổng
-            scanned_items = self.media_library.scan_folder(folder_path)
-            self.all_media_items = scanned_items # <--- CẬP NHẬT KHO TỔNG
-            self.media_items = scanned_items     # Đồng bộ luôn vào biến cũ
-                
-        except Exception as e:
-            print(f"Lỗi scan: {e}")
-            self.all_media_items = []
-            self.media_items = []
-        finally:
-            QApplication.restoreOverrideCursor()
+        if not hasattr(self, '_folder_scan_queue'):
+            from control.library_scan import LibraryScanQueue
+            self._folder_scan_queue = LibraryScanQueue(self.media_library, self)
+            self._folder_scan_queue.completed.connect(self._folder_scan_completed)
+            self._folder_scan_queue.failed.connect(self._folder_scan_failed)
+        self._folder_scan_queue.request(folder_path)
+
+    def _folder_scan_failed(self, message):
+        print(f"Lỗi scan: {message}")
+        self._folder_scan_completed([])
+
+    def _folder_scan_completed(self, scanned_items):
+        if self.refresh_paused:
+            return
+        self.all_media_items = scanned_items
+        self.media_items = scanned_items
+        if not scanned_items and hasattr(self, 'foryou_page'):
+            self.foryou_page.load_playlist([])
         
         # 3. SAU KHI SCAN XONG:
         if self.all_media_items:
@@ -1827,6 +1835,9 @@ class MainWindow(QMainWindow):
      
     #vị trí
     def update_video_location(self, mode="mini"):
+        self.playback_bar.mini_video_dock.bind(self.video_display)
+        if mode == "mini":
+            self.playback_bar.mini_video_dock.prepare_media()
         # 1. Chặn update trùng lặp (Giữ nguyên logic của bác)
         if hasattr(self, "video_mode") and self.video_mode == mode:
             current = self.content_stack.currentWidget()
@@ -2178,8 +2189,7 @@ class MainWindow(QMainWindow):
             new_list = list(self.foryou_page.original_data)
 
         # 3. Cập nhật UI Playlist
-        self.foryou_page.all_items_data = new_list
-        self.foryou_page.refresh_playlist_ui()
+        self.foryou_page.set_playback_playlist(new_list)
         
         # 4. ⭐ QUAN TRỌNG: Cập nhật danh sách phát nhạc (dùng cho next/prev)
         self.active_playlist = new_list
@@ -2208,36 +2218,29 @@ class MainWindow(QMainWindow):
                 self.app_controller.current_index = 0
     
     def toggle_nav_animation(self):
-        """Hàm xử lý hiệu ứng đóng mở Menu"""
-        # Kiểm tra xem đang mở hay đóng dựa trên chiều rộng hiện tại
+        """Reverse one owned animation from its current width on rapid clicks."""
         current_width = self.sidebar_container.width()
-        
-        if current_width > 100:
-            # Đang Mở -> Cần Đóng (Thu về 70px)
-            end_width = 70
-            self.sidebar.set_mini_mode() # Ẩn chữ, hiện icon giữa
+        self._nav_expanded = not getattr(self, "_nav_expanded", True)
+        end_width = 160 if self._nav_expanded else 70
+        if self._nav_expanded:
+            self.sidebar.set_full_mode()
+            self.brand_label.show()
         else:
-            # Đang Đóng -> Cần Mở (Ra 200px)
-            end_width = 160
-            self.sidebar.set_full_mode() # Hiện full chữ
-            
-        # Tạo Animation cho Container
-        self.anim_menu = QPropertyAnimation(self.sidebar_container, b"minimumWidth")
-        self.anim_menu.setDuration(250) # 0.25 giây
-        self.anim_menu.setStartValue(current_width)
-        self.anim_menu.setEndValue(end_width)
-        self.anim_menu.setEasingCurve(QEasingCurve.Type.InOutQuad)
-        
-        # Animation ép cả MaximumWidth để layout không tự nhảy
-        self.anim_menu_max = QPropertyAnimation(self.sidebar_container, b"maximumWidth")
-        self.anim_menu_max.setDuration(250)
-        self.anim_menu_max.setStartValue(current_width)
-        self.anim_menu_max.setEndValue(end_width)
-        
-        # Chạy song song
-        self.anim_group = QParallelAnimationGroup(self)
-        self.anim_group.addAnimation(self.anim_menu)
-        self.anim_group.addAnimation(self.anim_menu_max)
+            self.sidebar.set_mini_mode()
+            self.brand_label.hide()
+        if not hasattr(self, "anim_group"):
+            self.anim_group = QParallelAnimationGroup(self)
+            self.anim_group.finished.connect(self.refresh_grid)
+            self.anim_menu = QPropertyAnimation(self.sidebar_container, b"minimumWidth")
+            self.anim_menu_max = QPropertyAnimation(self.sidebar_container, b"maximumWidth")
+            for animation in (self.anim_menu, self.anim_menu_max):
+                animation.setDuration(200)
+                animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+                self.anim_group.addAnimation(animation)
+        self.anim_group.stop()
+        for animation in (self.anim_menu, self.anim_menu_max):
+            animation.setStartValue(current_width)
+            animation.setEndValue(end_width)
         self.anim_group.start()
 
     def sync_mini_player_state(self):

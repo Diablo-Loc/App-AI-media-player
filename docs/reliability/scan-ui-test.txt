@@ -1,0 +1,30 @@
+test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view (tests.test_reliability.AsyncJobTests.test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view) ... ERROR
+
+======================================================================
+ERROR: test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view (tests.test_reliability.AsyncJobTests.test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\tests\test_reliability.py", line 429, in test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view
+    self.assertEqual({s.id for s in window.foryou_page.master_items}, {s.id for s in window.all_media_items})
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'ForYouPage' object has no attribute 'master_items'
+
+----------------------------------------------------------------------
+Ran 1 test in 1.984s
+
+FAILED (errors=1)
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-ui-ykodlqwv\media-fixture
+✅ Lấy từ Cache: 0 file (Siêu tốc)
+🐌 Quét mới:     2 file (Chậm)
+------------------------------
+🚀 Đang đẩy dữ liệu vào trang For You...
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QGraphicsDropShadowEffect, QApplication
 from PySide6.QtCore import Qt, Signal, QTimer, QPoint
 from PySide6.QtGui import QColor, QFont, QCursor, QGuiApplication,QPixmap,QPainter, QPainterPath
+from ..icons import button_icon, label_icon, ACCENT
 
 class MiniPlayer(QWidget):
     play_req = Signal()
@@ -33,23 +34,23 @@ class MiniPlayer(QWidget):
                 background: transparent;
             }
             QWidget#MiniContainer {
-                background-color: #000000;
-                border: 2px solid #00f7ff;
+                background-color: #111823;
+                border: 1px solid #405267;
                 border-radius: 30px; /* Bo tròn hoàn toàn */
             }
             QLabel { color: white; font-family: "Segoe UI"; border: none; background: transparent; }
             QPushButton {
                 background: transparent; border: none; border-radius: 15px;
-                color: #00f7ff; font-size: 18px; font-weight: bold;
+                color: #77E0BE; font-size: 18px; font-weight: bold;
             }
-            QPushButton:hover { background-color: rgba(0, 247, 255, 0.15); }
-            QPushButton:pressed { background-color: rgba(0, 247, 255, 0.3); }
+            QPushButton:hover { background-color: #253243; }
+            QPushButton:pressed { background-color: #304052; }
         """)
 
         # Hiệu ứng Glow
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 247, 255, 150))
+        shadow.setColor(QColor(0, 0, 0, 110))
         shadow.setOffset(0, 0)
         self.container.setGraphicsEffect(shadow)
 
@@ -82,12 +83,15 @@ class MiniPlayer(QWidget):
         self.info_layout.addWidget(self.lbl_title)
         self.info_layout.addWidget(self.lbl_artist)
 
-        self.btn_prev = QPushButton("⏮")
-        self.btn_play = QPushButton("▶")
-        self.btn_next = QPushButton("⏭")
+        self.btn_prev = QPushButton()
+        self.btn_play = QPushButton()
+        self.btn_next = QPushButton()
         self.btn_prev.setFixedSize(28, 28)
         self.btn_play.setFixedSize(28, 28)
         self.btn_next.setFixedSize(28, 28)
+        button_icon(self.btn_prev, "skip-back", "Bài trước", size=16)
+        button_icon(self.btn_play, "play", "Phát / Tạm dừng", size=16, color=ACCENT)
+        button_icon(self.btn_next, "skip-forward", "Bài tiếp theo", size=16)
 
         self.btn_prev.clicked.connect(self.prev_req.emit)
         self.btn_play.clicked.connect(self.play_req.emit)
@@ -122,7 +126,7 @@ class MiniPlayer(QWidget):
         display_title = (title[:20] + '..') if len(title) > 20 else title
         self.lbl_title.setText(display_title)
         self.lbl_artist.setText(artist)
-        self.btn_play.setText("⏸" if is_playing else "▶")
+        button_icon(self.btn_play, "pause" if is_playing else "play", size=16, color=ACCENT)
         
         # Sử dụng hàm bo tròn để cập nhật thumbnail
         if cover_path:
@@ -130,7 +134,7 @@ class MiniPlayer(QWidget):
             self.set_rounded_pixmap(self.lbl_icon, cover_path)
         else:
             self.lbl_icon.clear() # Xóa ảnh cũ
-            self.lbl_icon.setText("💿") # Quay lại icon mặc định
+            label_icon(self.lbl_icon, "disc-3", size=24)
             self.lbl_icon.setAlignment(Qt.AlignCenter) # Căn giữa icon đĩa nhạc
             self.lbl_icon.setStyleSheet("""
                 border-radius: 20px; 
@@ -142,7 +146,7 @@ class MiniPlayer(QWidget):
     def set_rounded_pixmap(self, label, image_path):
         pixmap = QPixmap(image_path)
         if pixmap.isNull():
-            label.setText("💿")
+            label_icon(label, "disc-3", size=24)
             return
 
         # Size của label

@@ -1,0 +1,9 @@
+{"datasets": 24, "videos": 8, "existing_saved_files": 27, "existing_saved_files_unchanged": true, "reference": "Captured ASR replay, not fresh ASR or human lyric/timing ground truth"}
+A Small Miracle(short)-round-1.json 24 -> 25 3.627 ms
+Brand New Sky-round-1.json 37 -> 49 4.762 ms
+Empty old City - Looma-round-1.json 29 -> 28 2.37 ms
+Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-1.json 45 -> 43 63.649 ms
+Unwavering Startorch-round-1.json 33 -> 35 3.354 ms
+【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json 38 -> 44 4.041 ms
+【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json 36 -> 55 6.06 ms
+人生エンドロール-round-1.json 25 -> 28 3.934 ms

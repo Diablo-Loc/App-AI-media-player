@@ -1,0 +1,14 @@
+{
+  "before": {
+    "max_decoded_frame_delivery_gap_ms": 1842.5111000033212,
+    "max_gui_heartbeat_gap_ms": 2495.2809999958845,
+    "elapsed_s": 12.296848600002704,
+    "live_cards": 1000
+  },
+  "after": {
+    "max_decoded_frame_delivery_gap_ms": 47.38329999963753,
+    "max_gui_heartbeat_gap_ms": 27.360899999621324,
+    "elapsed_s": 2.826838000000862,
+    "live_cards": 11
+  }
+}

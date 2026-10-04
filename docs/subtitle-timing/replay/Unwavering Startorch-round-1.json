@@ -1,0 +1,183 @@
+{
+  "report": {
+    "record": "Unwavering Startorch-round-1.json",
+    "language": "en",
+    "cues": 33,
+    "captured_previous_profile_reproduced": true,
+    "cue_text_and_start_unchanged": true,
+    "accepted_character_inventory_preserved": true,
+    "no_added_tail": true,
+    "no_overlap": true,
+    "word_timestamp_pauses_at_least_two_seconds": 4,
+    "pause_violations": [],
+    "source_reference": "Captured raw ASR; not human lyric or vocal boundary ground truth",
+    "saved_times_equal_refined": true
+  },
+  "refined": [
+    {
+      "start": 10.77,
+      "end": 15.72,
+      "text": "See how far we've come together"
+    },
+    {
+      "start": 16.83,
+      "end": 20.6,
+      "text": "And we are stronger than before"
+    },
+    {
+      "start": 21.97,
+      "end": 27.75,
+      "text": "And these are memories we'll cherish more and more"
+    },
+    {
+      "start": 27.75,
+      "end": 31.94,
+      "text": "We'll walk as one with dawn"
+    },
+    {
+      "start": 33.89,
+      "end": 38.63,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 38.63,
+      "end": 43.32,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 44.81,
+      "end": 50.56,
+      "text": "And may our shared ideas cut through the haze of time"
+    },
+    {
+      "start": 51.63,
+      "end": 54.3,
+      "text": "Amidst where stars arise"
+    },
+    {
+      "start": 55.99,
+      "end": 63.13,
+      "text": "I'll carry this light moving strong I'll tell"
+    },
+    {
+      "start": 63.13,
+      "end": 67.21,
+      "text": "it our hardship is to learn"
+    },
+    {
+      "start": 67.21,
+      "end": 73.33,
+      "text": "We're made for this moment We're chosen and we know it"
+    },
+    {
+      "start": 73.33,
+      "end": 80.02,
+      "text": "Today is the day we're never to fly ever so high"
+    },
+    {
+      "start": 96.01,
+      "end": 100.97,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 100.97,
+      "end": 105.58,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 106.93,
+      "end": 112.67,
+      "text": "And may our shared ideas come through the haze of time"
+    },
+    {
+      "start": 112.67,
+      "end": 116.48,
+      "text": "A mist where stars arise"
+    },
+    {
+      "start": 118.01,
+      "end": 123.95,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 123.95,
+      "end": 129.53,
+      "text": "We're rising so high above the storm"
+    },
+    {
+      "start": 129.53,
+      "end": 132.61,
+      "text": "In search of good and all in"
+    },
+    {
+      "start": 132.61,
+      "end": 134.96,
+      "text": "We're focusing devoted"
+    },
+    {
+      "start": 135.67,
+      "end": 136.76,
+      "text": "Let's rise"
+    },
+    {
+      "start": 137.67,
+      "end": 142.78,
+      "text": "Night or daylight You know the light of mine"
+    },
+    {
+      "start": 157.53,
+      "end": 163.15,
+      "text": "I'll carry this light moving strong"
+    },
+    {
+      "start": 163.15,
+      "end": 168.91,
+      "text": "I'll tear it when hardship is too far"
+    },
+    {
+      "start": 168.91,
+      "end": 172.05,
+      "text": "We're waiting for this moment"
+    },
+    {
+      "start": 172.05,
+      "end": 179.16,
+      "text": "We're chosen and we know it Today is now or never"
+    },
+    {
+      "start": 180.05,
+      "end": 186.01,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 186.01,
+      "end": 191.45,
+      "text": "We're rising so high above the stars"
+    },
+    {
+      "start": 191.45,
+      "end": 194.69,
+      "text": "In search of truth and knowledge"
+    },
+    {
+      "start": 194.69,
+      "end": 198.84,
+      "text": "We're focused and devoted Let's rise"
+    },
+    {
+      "start": 199.45,
+      "end": 201.54,
+      "text": "Night or daylight"
+    },
+    {
+      "start": 204.11,
+      "end": 207.44,
+      "text": "Keep going right or left"
+    },
+    {
+      "start": 229.15,
+      "end": 232.08,
+      "text": "© transcript Emily Beynon"
+    }
+  ]
+}

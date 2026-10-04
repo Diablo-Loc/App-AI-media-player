@@ -38,7 +38,8 @@ def fix_nvidia_dlls():
 # ================================================================
 import difflib
 from pipeline.extractor import extract_audio
-from pipeline.aligner import refine_segments
+from pipeline.lyric_refinement import refine_lyrics, finalize_cue_times, mark_final_timing
+from pipeline.asr_coverage import repair_missing_subtitles
 from pipeline.lyric_formatter import export_srt, export_lrc
 from pipeline.jp_normalizer import normalize_japanese, universal_text_reconstruct
 
@@ -232,16 +233,11 @@ def run_ai_pipeline(
                 torch.cuda.empty_cache()
                 model = WhisperModel("medium", device="cpu", compute_type="int8")
                 # Chạy lại với file temp
-                segments_generator, _ = model.transcribe(str(temp_wav_path), word_timestamps=True)
+                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), word_timestamps=True)
                 segments_list = list(segments_generator)
+                detected_lang = fallback_info.language
             else:
                 raise e
-
-        # Dọn dẹp Model
-        del model
-        gc.collect()
-        if hasattr(torch, "cuda") and torch.cuda.is_available():
-            torch.cuda.empty_cache()
 
         _check_cancel(cancel_cb)
         
@@ -274,8 +270,6 @@ def run_ai_pipeline(
                 "words": words_data,
             })
 
-        if not raw_segments:
-            raise RuntimeError("⚠️ Không tìm thấy lời thoại nào.")
                         
         # ============================================================
         # 5️⃣ REFINE SEGMENTS & EXPORT RAW
@@ -283,18 +277,47 @@ def run_ai_pipeline(
         _report(progress_cb, 55, "✂️ Căn chỉnh subtitle")
         _check_cancel(cancel_cb)
 
-        # Thiết lập thông số dựa trên detected_lang
+        # Keep the orchestration options compatible with legacy refinement.
+        # The new profile uses its own 50 ms lead / 80 ms tail, not these offsets.
         is_cjk = detected_lang in LANG_CONFIG["cjk"]
         
-        final_segments = refine_segments(
+        final_segments = refine_lyrics(
             raw_segments,
-            max_chars=22 if is_cjk else 74,      # Thay 45 thành 80 cho hệ Latin
-            min_pause=0.54 if is_cjk else 0.6,   # Thay 0.54 thành 0.75 cho hệ Latin
-            start_offset=-0.2 if is_cjk else 0, # Tiếng Anh nên giảm offset chút để bắt kịp âm gió
+            max_chars=22 if is_cjk else 74,
+            min_pause=0.54 if is_cjk else 0.6,
+            start_offset=-0.2 if is_cjk else 0,
             end_padding=0.27 if is_cjk else 0.6,
-            gap_threshold=0.6,    # Dễ dàng điều chỉnh
-            memory_reset_t=3.0    # Tự động quên câu cũ sau 3s im lặng
+            gap_threshold=0.6,
+            memory_reset_t=3.0
         )
+
+        coverage = {}
+        try:
+            final_segments, coverage = repair_missing_subtitles(
+                model, temp_wav_path, detected_lang, final_segments,
+                dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,
+                     start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,
+                     gap_threshold=0.6, memory_reset_t=3.0),
+                cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,
+                boundary_gap=0.0, boundary_tolerance=0.08)
+            print(f"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, "
+                  f"{len(coverage.get('attempts', []))} lượt nhận diện lại.")
+            if coverage.get("unresolved_speech"):
+                print(f"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}")
+            if coverage.get("error"):
+                print(f"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}")
+        except Exception as error:
+            _check_cancel(cancel_cb)
+            # Preserve primary recognition if optional local coverage detection fails.
+            print(f"⚠️ Không kiểm tra được coverage bổ sung: {error}")
+        finally:
+            del model
+            gc.collect()
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+        final_segments = finalize_cue_times(final_segments, duration=coverage.get("duration"))
+        _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng
         base_name = input_path.stem
@@ -306,6 +329,13 @@ def run_ai_pipeline(
 
         export_srt(final_segments, output_dir / "subtitles" / "source" / "srt" / f"{clean_name}.srt")
         export_lrc(final_segments, output_dir / "subtitles" / "source" / "lrc" / f"{clean_name}.lrc")
+
+        if not final_segments:
+            # A completed recognition pass can legitimately contain no lyrics.
+            # Keep the usual result/export contracts, without loading translators.
+            _check_cancel(cancel_cb)
+            _report(progress_cb, 100, "ℹ️ Hoàn tất: chưa nhận diện được lời (có thể là nhạc không lời).")
+            return {"media_id": media_id, "segments": []}
 
         # ============================================================
         # 6️⃣ TRANSLATE (ĐIỀU HƯỚNG CHUẨN: USER LÀ NHẤT)
@@ -368,6 +398,7 @@ def run_ai_pipeline(
         # 7️⃣ KẾT THÚC
         # ============================================================
         _report(progress_cb, 100, "✅ Hoàn tất AI")
+        mark_final_timing(subs)
         #serialized_result = _serialize_subtitles(subs)
         return {
             "media_id": media_id,

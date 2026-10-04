@@ -93,7 +93,8 @@ def refine_segments(
     start_offset=-0.2,
     end_padding=0.27,
     gap_threshold=0.6,    
-    memory_reset_t=3.0    # Tự động quên câu cũ sau 3s im lặng
+    memory_reset_t=3.0,   # Tự động quên câu cũ sau 3s im lặng
+    allow_short_lyrics=False  # New generation can trust timestamped short lyrics.
 ):
     # 1. NHÓM TỪ CẤM TUYỆT ĐỐI (Dài ngắn gì cũng xóa)
     # Đây là những từ đặc trưng của Hallucination/Intro/Credit
@@ -152,7 +153,7 @@ def refine_segments(
         # --- CHECK BAD WORDS ---
         if any(bad in text_l for bad in CRITICAL_BAD_WORDS_L): continue
         if any(phrase in text_l for phrase in HALLUCINATION_PHRASES_L): continue
-        if len(text) < 15 and any(weak in text_l for weak in WEAK_BAD_WORDS_L): continue
+        if not allow_short_lyrics and len(text) < 15 and any(weak in text_l for weak in WEAK_BAD_WORDS_L): continue
 
         words = seg.get("words", [])
         

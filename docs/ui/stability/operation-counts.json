@@ -1,0 +1,14 @@
+{
+  "python": "3.11.0",
+  "pyside": "6.10.1",
+  "platform": "Qt offscreen / Windows",
+  "toggles": 50,
+  "original": {
+    "groups": 50,
+    "animations": 100
+  },
+  "current": {
+    "groups": 1,
+    "animations": 2
+  }
+}

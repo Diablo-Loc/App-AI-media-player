@@ -6,6 +6,8 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QTabWidget, QWidget, QScrollArea, 
                              QGridLayout, QApplication, QTextEdit)
 from PySide6.QtCore import Qt
+from .icons import icon
+from .design_system import DIALOG_STYLE
 
 class VideoInfoPopup(QDialog):
     def __init__(self, parent=None):
@@ -14,51 +16,9 @@ class VideoInfoPopup(QDialog):
         self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
         self.resize(550, 420)
         self.init_ui()
+        self.setStyleSheet(DIALOG_STYLE)
 
     def init_ui(self):
-        self.setStyleSheet("""
-            QDialog {
-                background-color: #1c1c1e;
-                color: #ffffff;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            }
-            QTabWidget::pane {
-                border: 1px solid #2c2c2e;
-                background-color: #121214;
-                border-radius: 6px;
-            }
-            QTabBar::tab {
-                background: #2c2c2e;
-                color: #aaaaaa;
-                padding: 8px 16px;
-                border-top-left-radius: 4px;
-                border-top-right-radius: 4px;
-                margin-right: 2px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-            QTabBar::tab:selected {
-                background: #121214;
-                color: #3ea6ff;
-                border-bottom: 2px solid #3ea6ff;
-            }
-            QLabel {
-                color: #e5e5ea;
-                font-size: 13px;
-                background: transparent;
-            }
-            .KeyLabel {
-                color: #8e8e93;
-                font-weight: bold;
-            }
-            .ValueLabel {
-                color: #ffffff;
-            }
-            QScrollArea {
-                border: none;
-                background: transparent;
-            }
-        """)
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
@@ -72,14 +32,20 @@ class VideoInfoPopup(QDialog):
         self.tabs = QTabWidget()
         
         self.tab_general = QWidget()
+        self.tab_general.setObjectName("detailTab")
+        self.tab_general.setAttribute(Qt.WA_StyledBackground, True)
         self.init_general_tab()
-        self.tabs.addTab(self.tab_general, "📊 Tổng Quan")
+        self.tabs.addTab(self.tab_general, icon("info"), "Tổng Quan")
 
         self.tab_stream = QWidget()
+        self.tab_stream.setObjectName("detailTab")
+        self.tab_stream.setAttribute(Qt.WA_StyledBackground, True)
         self.init_stream_tab()
-        self.tabs.addTab(self.tab_stream, "⚡ Kỹ Thuật (Codec)")
+        self.tabs.addTab(self.tab_stream, icon("settings"), "Kỹ Thuật (Codec)")
 
         self.tab_meta = QWidget()
+        self.tab_meta.setObjectName("detailTab")
+        self.tab_meta.setAttribute(Qt.WA_StyledBackground, True)
         self.init_meta_tab()
         self.tabs.addTab(self.tab_meta, "Description (Meta)")
         main_layout.addWidget(self.tabs)
@@ -89,19 +55,6 @@ class VideoInfoPopup(QDialog):
 
         btn_close = QPushButton("Đóng Tâm Bảo")
         btn_close.setFixedSize(110, 32)
-        btn_close.setStyleSheet("""
-            QPushButton {
-                background-color: #2c2c2e;
-                color: white;
-                border: 1px solid #3a3a3c;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #3a3a3c;
-                border-color: #3ea6ff;
-            }
-        """)
         btn_close.clicked.connect(self.close)
         btn_layout.addWidget(btn_close)
         main_layout.addLayout(btn_layout)
@@ -111,6 +64,8 @@ class VideoInfoPopup(QDialog):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         content = QWidget()
+        content.setObjectName("detailContent")
+        content.setAttribute(Qt.WA_StyledBackground, True)
         self.grid_general = QGridLayout(content)
         self.grid_general.setSpacing(10)
         
@@ -146,6 +101,8 @@ class VideoInfoPopup(QDialog):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         content = QWidget()
+        content.setObjectName("detailContent")
+        content.setAttribute(Qt.WA_StyledBackground, True)
         self.grid_stream = QGridLayout(content)
         self.grid_stream.setSpacing(10)
         

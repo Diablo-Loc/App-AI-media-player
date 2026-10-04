@@ -1,0 +1,122 @@
+test_background_cache_io_does_not_hold_metadata_lock (tests.test_reliability.AsyncJobTests.test_background_cache_io_does_not_hold_metadata_lock) ... ok
+test_cancel_or_shutdown_prevents_queued_restart (tests.test_reliability.AsyncJobTests.test_cancel_or_shutdown_prevents_queued_restart) ... ok
+test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view (tests.test_reliability.AsyncJobTests.test_main_window_async_scan_commits_full_playlist_and_empty_folder_clears_view) ... ok
+test_restart_is_nonblocking_latest_request_wins_and_stale_results_ignored (tests.test_reliability.AsyncJobTests.test_restart_is_nonblocking_latest_request_wins_and_stale_results_ignored) ... ok
+test_scan_is_background_latest_folder_and_concurrent_edits_are_preserved (tests.test_reliability.AsyncJobTests.test_scan_is_background_latest_folder_and_concurrent_edits_are_preserved) ... ok
+test_exact_reviewed_snapshots_restore_previous_phase_and_asr_timing_hook_stay_unchanged (tests.test_reliability.ReviewedScopeTests.test_exact_reviewed_snapshots_restore_previous_phase_and_asr_timing_hook_stay_unchanged) ... ok
+test_editor_failure_does_not_report_success_or_close (tests.test_reliability.SubtitleSaveTests.test_editor_failure_does_not_report_success_or_close) ... ok
+test_external_editor_write_failure_does_not_truncate_imported_file (tests.test_reliability.SubtitleSaveTests.test_external_editor_write_failure_does_not_truncate_imported_file) ... ok
+test_interrupted_publication_recovers_only_owned_transaction_on_reopen (tests.test_reliability.SubtitleSaveTests.test_interrupted_publication_recovers_only_owned_transaction_on_reopen) ... ok
+test_json_encoding_failure_does_not_truncate_saved_file (tests.test_reliability.SubtitleSaveTests.test_json_encoding_failure_does_not_truncate_saved_file) ... ❌ Save JSON failed: Object of type object is not JSON serializable
+ok
+test_old_load_is_read_only_and_never_realigns_or_migrates (tests.test_reliability.SubtitleSaveTests.test_old_load_is_read_only_and_never_realigns_or_migrates) ... ok
+test_render_false_or_exception_keeps_all_old_files_and_index (tests.test_reliability.SubtitleSaveTests.test_render_false_or_exception_keeps_all_old_files_and_index) ... Subtitle ASS preparation failed; existing files kept
+Subtitle save failed: synthetic renderer error
+ok
+test_second_replace_failure_rolls_back_json_ass_and_index (tests.test_reliability.SubtitleSaveTests.test_second_replace_failure_rolls_back_json_ass_and_index) ... Subtitle save failed: synthetic ASS publish failure
+ok
+test_success_keeps_old_schema_and_final_marker_timing (tests.test_reliability.SubtitleSaveTests.test_success_keeps_old_schema_and_final_marker_timing) ... ok
+test_all_valid_cache_hits_skip_model_initialization_and_file_write (tests.test_reliability.TranslationTests.test_all_valid_cache_hits_skip_model_initialization_and_file_write) ... ok
+test_failed_translation_is_not_cached_and_next_attempt_can_succeed (tests.test_reliability.TranslationTests.test_failed_translation_is_not_cached_and_next_attempt_can_succeed) ... ok
+test_malformed_legacy_cache_entries_are_ignored_without_rewriting_file (tests.test_reliability.TranslationTests.test_malformed_legacy_cache_entries_are_ignored_without_rewriting_file) ... ok
+test_old_blank_cache_is_ignored_without_migrating_it_on_read (tests.test_reliability.TranslationTests.test_old_blank_cache_is_ignored_without_migrating_it_on_read) ... ok
+test_online_complete_out_of_order_ids_map_to_original_times (tests.test_reliability.TranslationTests.test_online_complete_out_of_order_ids_map_to_original_times) ... ok
+test_online_invalid_partial_duplicate_or_empty_rows_do_not_mutate_source (tests.test_reliability.TranslationTests.test_online_invalid_partial_duplicate_or_empty_rows_do_not_mutate_source) ... ok
+test_short_response_retries_individual_rows_without_shift_into_next_batch (tests.test_reliability.TranslationTests.test_short_response_retries_individual_rows_without_shift_into_next_batch) ... ok
+test_source_repeats_and_long_lyrics_are_passed_in_full (tests.test_reliability.TranslationTests.test_source_repeats_and_long_lyrics_are_passed_in_full) ... ok
+test_cancel_registration_race_terminates_newly_owned_process (tests.test_reliability.WorkerShutdownTests.test_cancel_registration_race_terminates_newly_owned_process) ... ok
+test_close_main_window_waits_for_download_and_editor_workers (tests.test_reliability.WorkerShutdownTests.test_close_main_window_waits_for_download_and_editor_workers) ... ok
+test_dialog_owner_retains_cancelled_translation_until_thread_finishes (tests.test_reliability.WorkerShutdownTests.test_dialog_owner_retains_cancelled_translation_until_thread_finishes) ... ok
+test_download_and_title_shutdown_kill_actual_owned_update_process (tests.test_reliability.WorkerShutdownTests.test_download_and_title_shutdown_kill_actual_owned_update_process) ... ok
+test_no_late_editor_callbacks_after_close (tests.test_reliability.WorkerShutdownTests.test_no_late_editor_callbacks_after_close) ... ok
+test_stop_during_actual_download_stage_reaps_owned_process (tests.test_reliability.WorkerShutdownTests.test_stop_during_actual_download_stage_reaps_owned_process) ... ok
+test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent (tests.test_foryou_spacing.ForYouSpacingTests.test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent) ... ok
+test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes (tests.test_foryou_spacing.ForYouSpacingTests.test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes) ... ok
+test_search_top_bottom_and_horizontal_center_are_balanced (tests.test_foryou_spacing.ForYouSpacingTests.test_search_top_bottom_and_horizontal_center_are_balanced) ... ok
+test_style_observer_never_changes_flags_geometry_or_native_video_owners (tests.test_foryou_spacing.ForYouSpacingTests.test_style_observer_never_changes_flags_geometry_or_native_video_owners) ... ok
+test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized (tests.test_foryou_spacing.FrameColorTests.test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized) ... ok
+test_only_for_you_presentation_and_shell_installs_change_captured_sources (tests.test_foryou_spacing.FrameColorTests.test_only_for_you_presentation_and_shell_installs_change_captured_sources) ... ok
+test_unavailable_or_unsupported_dwm_does_not_break_startup (tests.test_foryou_spacing.FrameColorTests.test_unavailable_or_unsupported_dwm_does_not_break_startup) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 4.428s
+
+OK
+🛑 Controller: Đang yêu cầu dừng Worker Thread...
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-ui-33n30nyi\media-fixture
+✅ Lấy từ Cache: 0 file (Siêu tốc)
+🐌 Quét mới:     2 file (Chậm)
+------------------------------
+🚀 Đang đẩy dữ liệu vào trang For You...
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-ui-33n30nyi\empty-fixture
+✅ Lấy từ Cache: 0 file (Siêu tốc)
+🐌 Quét mới:     0 file (Chậm)
+------------------------------
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+🔄 Phát hiện thay đổi file tại: C:\Users\DIABLO\AppData\Local\Temp\botube-ui-33n30nyi\empty-fixture
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-reliability-vj29xjh3\first
+✅ Lấy từ Cache: 0 file (Siêu tốc)
+🐌 Quét mới:     1 file (Chậm)
+------------------------------
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-reliability-vj29xjh3\second
+✅ Lấy từ Cache: 0 file (Siêu tốc)
+🐌 Quét mới:     1 file (Chậm)
+------------------------------
+------------------------------
+📊 KẾT QUẢ QUÉT: C:\Users\DIABLO\AppData\Local\Temp\botube-reliability-vj29xjh3\second
+✅ Lấy từ Cache: 1 file (Siêu tốc)
+🐌 Quét mới:     0 file (Chậm)
+------------------------------
+🌍 [LOCAL AI] Bắt đầu dịch 2 dòng từ 'en' (Mode: pivot_vi)...
+🚀 Mode: Direct Translate (en -> VI)
+⚠️ Lỗi dịch batch 0-8 (en->vi): synthetic model failure
+🌍 [LOCAL AI] Bắt đầu dịch 2 dòng từ 'en' (Mode: pivot_vi)...
+🚀 Mode: Direct Translate (en -> VI)
+🧹 Bỏ qua Cache lỗi cho: 'First sentence...' để dịch lại khi được yêu cầu.
+🧹 Bỏ qua Cache lỗi cho: 'First sentence...' để dịch lại khi được yêu cầu.
+🧹 Bỏ qua Cache lỗi cho: 'First sentence...' để dịch lại khi được yêu cầu.
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+✅ Dịch xong 2/2 dòng
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+⚠️ Dịch thiếu 2 dòng; chuyển sang fallback hiện có.
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+⚠️ Dịch thiếu 1 dòng; chuyển sang fallback hiện có.
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+⚠️ Dịch thiếu 1 dòng; chuyển sang fallback hiện có.
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+⚠️ Dịch thiếu 1 dòng; chuyển sang fallback hiện có.
+⚠️ Lỗi dịch batch 0-2 (en->vi): Translation response cardinality mismatch
+⚠️ Lỗi dịch batch 2-4 (en->vi): Translation response cardinality mismatch
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

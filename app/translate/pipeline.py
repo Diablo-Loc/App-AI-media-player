@@ -41,7 +41,7 @@ def clean_repetitive_text(text):
     total_len = len(words_raw)
 
     # --- CHỐT CHẶN 0 (SỬA LẠI): DIỆT SPAM "NO NO NO" ---
-    if total_len >= 3:
+    if total_len >= 12:
         # Lấy 3 từ đầu chuẩn hóa
         w1 = words_raw[0].lower().strip(".,!?:")
         w2 = words_raw[1].lower().strip(".,!?:")
@@ -57,8 +57,8 @@ def clean_repetitive_text(text):
             unique_words = set([w.lower().strip(".,!?:") for w in words_raw])
             
             # Nếu cả câu dài ngoằng mà chỉ loanh quanh 1-2 từ -> SPAM CHẮC CHẮN
-            if len(unique_words) <= 2 and total_len > 5:
-                return words_raw[0].rstrip(".,!?:") + "..."
+            if len(unique_words) <= 2 and total_len >= 24:
+                return " ".join(words_raw[:3])
             
             # Nếu câu ngắn (dưới 5 từ) mà lặp 3 (ví dụ: "Bye bye bye") 
             # -> Giữ nguyên, đây là lời bài hát.
@@ -71,12 +71,12 @@ def clean_repetitive_text(text):
     total_words = len(words)
     
     # Chỉ check entropy nếu câu dài (tránh cắt nhầm câu ngắn)
-    if total_words > 10: 
+    if total_words >= 80:
         unique_words = set(words)
         diversity_ratio = len(unique_words) / total_words
         
         # Nếu dài mà nghèo nàn từ vựng (< 35%) -> Cắt
-        if diversity_ratio < 0.35: 
+        if diversity_ratio < 0.1:
             limit = min(4, int(total_words / 3) + 1)
             shortened_text = " ".join(text.split()[:limit])
             return shortened_text.strip().rstrip(".,!?:") + "..."
@@ -85,12 +85,9 @@ def clean_repetitive_text(text):
     # Chỉ gộp nếu lặp > 3 lần liên tiếp (để giữ lại điệp khúc ngắn)
     # Ví dụ: "La la la" (3 lần) -> Giữ nguyên
     # "La la la la la" (5 lần) -> "La la la"
-    text = re.sub(r'(?i)(\b\w+(?:[,\s]+\w+)*[,\s]*)\1{3,}', r'\1\1\1', text)
+    text = re.sub(r'(?i)(\b\w+(?:[,\s]+\w+){0,5}[,\s]+)\1{11,}', r'\1\1\1', text)
 
     # --- TẦNG 4: HARD LIMIT ---
-    if len(text) > 150:
-        text = text[:150].rsplit(' ', 1)[0].rstrip(".,!?:") + "..."
-        
     return text.strip()
 
 # ==============================================================================
@@ -108,22 +105,29 @@ def run_safe_batch(translator, text_list, src_lang, tgt_lang, batch_size=16):
         processed_batch = []
         for t in batch:
             # Dọn rác đầu vào để AI không bị loạn
-            cleaned_t = clean_repetitive_text(t)
-            
-            # Cắt ngắn nếu vẫn quá dài (Tránh lỗi OOM bộ nhớ)
-            if len(cleaned_t) > 1000: 
-                processed_batch.append(cleaned_t[:1000])
-            else:
-                processed_batch.append(cleaned_t)
+            # Accepted source lyrics must not be treated as generated spam.
+            processed_batch.append(t.strip())
         
         try:
             # Gọi model NLLB để dịch
             res = translator.translate_batch(processed_batch, src_lang=src_lang, tgt_lang=tgt_lang)
+            if not isinstance(res, (list, tuple)) or len(res) != len(batch):
+                raise ValueError("Translation response cardinality mismatch")
+            if any(not isinstance(t, str) or not t.strip() for t in res):
+                raise ValueError("Translation response contains missing lines")
             results.extend(res)
         except Exception as e:
             print(f"⚠️ Lỗi dịch batch {i}-{i+batch_size} ({src_lang}->{tgt_lang}): {e}")
             # Fallback: Trả về chuỗi rỗng nếu lỗi, để không làm lệch index
-            results.extend([""] * len(batch))
+            # A short response cannot be mapped safely. Retry each original row.
+            for source in processed_batch:
+                try:
+                    item = translator.translate_batch([source], src_lang=src_lang, tgt_lang=tgt_lang)
+                    if not isinstance(item, (list, tuple)) or len(item) != 1 or not isinstance(item[0], str) or not item[0].strip():
+                        raise ValueError("Missing individual translation")
+                    results.append(item[0])
+                except Exception as retry_error:
+                    raise RuntimeError(f"Không dịch được đầy đủ ({src_lang}->{tgt_lang}); chưa lưu kết quả lỗi vào cache.") from retry_error
             
         # Giải phóng VRAM sau mỗi batch
         if torch.cuda.is_available():
@@ -164,7 +168,9 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
             print(f"🌍 [ONLINE] Đang gọi API {provider} (src_lang: {src_lang})...")
             from translate.online_logic import translate_online_pipeline
             # 🔥 SỬA LỖI: Đã truyền thêm src_lang sang Online Logic
-            return translate_online_pipeline(subs, provider, key, song_title, src_lang=src_lang)
+            online = translate_online_pipeline(subs, provider, key, song_title_raw=song_title)
+            if online:
+                return online
         else:
             print("⚠️ API Key trống! Tự động chuyển về Local NLLB...")
 
@@ -172,7 +178,6 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     # NHÁNH 2: DỊCH LOCAL NLLB
     # ==============================================================================
     cache = TranslationCache()
-    translator = get_translator() 
     
     # --- BƯỚC A: CHUẨN BỊ DỮ LIỆU ---
     all_texts = [s.top.text if s.top else "" for s in subs]
@@ -193,6 +198,7 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
 
     # --- BƯỚC B: THỰC HIỆN DỊCH ---
     if to_translate:
+        translator = get_translator()
         BATCH_STEP_1 = 16 
         BATCH_STEP_2 = 8
         

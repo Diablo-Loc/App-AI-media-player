@@ -1,0 +1,1406 @@
+{
+  "baseline": "4148c138c1e38f4959574caf925f1c86dbcca339",
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "inventory": {
+    "source_count": 103,
+    "lines": 18002,
+    "syntax_errors": 0,
+    "files": {
+      "app/ai/pipeline.py": {
+        "lines": 416,
+        "sha256": "d5de97196bc36077b9bc0d55c33c4ba8d2d9726ade6908d78fa168297c3c6b74",
+        "imports": [
+          "PySide6.QtCore",
+          "difflib",
+          "faster_whisper",
+          "gc",
+          "lyricsgenius",
+          "os",
+          "pathlib",
+          "pipeline.asr_coverage",
+          "pipeline.extractor",
+          "pipeline.jp_normalizer",
+          "pipeline.lyric_corrector",
+          "pipeline.lyric_formatter",
+          "pipeline.lyric_refinement",
+          "pipeline.utils",
+          "re",
+          "subtitle.ass.renderer",
+          "subtitle.config",
+          "subtitle.converter",
+          "subtitle.mode",
+          "subtitle.storage",
+          "sys",
+          "time",
+          "torch",
+          "translate.online_logic",
+          "translate.pipeline",
+          "typing"
+        ],
+        "functions": 5
+      },
+      "app/ai/whisper_engine.py": {
+        "lines": 27,
+        "sha256": "dee5d9a89758f2cd720107875997b182bf3a2a817a8db0dc86df4ada2ecbc932",
+        "imports": [
+          "time"
+        ],
+        "functions": 1
+      },
+      "app/config.py": {
+        "lines": 53,
+        "sha256": "20d9d04825756488ff4bbbe05a431b8d9507c95d32a6574efb601847ed09a39e",
+        "imports": [
+          "json",
+          "os",
+          "pathlib",
+          "paths"
+        ],
+        "functions": 4
+      },
+      "app/control/ai_controller.py": {
+        "lines": 226,
+        "sha256": "14b6b04291035e3fe25426cb3060b32521c9a23b596e1a3e7dc5ed60a4966916",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "download_core.download_source_app",
+          "os",
+          "worker"
+        ],
+        "functions": 14
+      },
+      "app/control/ai_process_manager.py": {
+        "lines": 104,
+        "sha256": "c7ca8c4df936156849960b9657b70cd37b356a278052f2f72d269687316146eb",
+        "imports": [
+          "PySide6.QtCore",
+          "gc",
+          "torch",
+          "worker"
+        ],
+        "functions": 10
+      },
+      "app/control/app_controller.py": {
+        "lines": 281,
+        "sha256": "e69e35e6ae512bbcda903d6cb03d353d650b76899cd4a3551aad7062ecd8c9ef",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtMultimedia",
+          "core.subtitle_manager",
+          "gc",
+          "logging",
+          "os",
+          "thumbnail.thumbnail_workers"
+        ],
+        "functions": 12
+      },
+      "app/core/media_control.py": {
+        "lines": 58,
+        "sha256": "f625d917d704a7c66acb781dfadc35a419cc1d9ded46e4c71acd5c414bf8320d",
+        "imports": [
+          "os",
+          "winsdk.windows.media",
+          "winsdk.windows.storage.streams"
+        ],
+        "functions": 4
+      },
+      "app/core/media_library.py": {
+        "lines": 255,
+        "sha256": "73d90afbcdcafc207d097b5ec144002ccf1a5adc4cfc261358532eefb850d4dc",
+        "imports": [
+          "core.subtitle_manager",
+          "dataclasses",
+          "json",
+          "logging",
+          "os",
+          "pathlib",
+          "subprocess",
+          "sys",
+          "threading",
+          "time",
+          "typing"
+        ],
+        "functions": 7
+      },
+      "app/core/subtitle_manager.py": {
+        "lines": 380,
+        "sha256": "4f94a98e1c147ee0100eac851aacd06f4379bcebc832d97d0a800d4d27d80b95",
+        "imports": [
+          "core.subtitle_renderer",
+          "hashlib",
+          "json",
+          "logging",
+          "pathlib",
+          "re",
+          "subtitle.mode",
+          "traceback",
+          "typing"
+        ],
+        "functions": 21
+      },
+      "app/core/subtitle_renderer.py": {
+        "lines": 64,
+        "sha256": "7571361ae65eab08642395890d1788921cd37dd956d1a09853453012469df513",
+        "imports": [
+          "logging",
+          "pathlib",
+          "subtitle.timing_format"
+        ],
+        "functions": 2
+      },
+      "app/download_core/download_source_app.py": {
+        "lines": 593,
+        "sha256": "3f14c6011e049138108101b452cd506673e689aacaf3fc38678f3a6b982d1ae1",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "app.control.ai_controller",
+          "huggingface_hub",
+          "os",
+          "random",
+          "shutil",
+          "subprocess",
+          "sys",
+          "traceback"
+        ],
+        "functions": 13
+      },
+      "app/download_core/download_worker.py": {
+        "lines": 295,
+        "sha256": "420c431905801884bfef96be835bd65358e2207e8dc59488c421a6c47d2568ac",
+        "imports": [
+          ".yt_dlp",
+          "PySide6.QtCore",
+          "os",
+          "subprocess",
+          "sys"
+        ],
+        "functions": 4
+      },
+      "app/download_core/get_title_worker.py": {
+        "lines": 98,
+        "sha256": "d4f949fa1fae49b53f59ffd7d4a144dff795a1cfe7979966b932057454279625",
+        "imports": [
+          ".utils",
+          ".yt_dlp",
+          "PySide6.QtCore",
+          "os",
+          "subprocess",
+          "sys",
+          "yt_dlp"
+        ],
+        "functions": 3
+      },
+      "app/download_core/utils.py": {
+        "lines": 39,
+        "sha256": "b216f8f2d05ae8e09f32f36061c7fac1d9c38dccaea9ff5472bac9cf7df50a27",
+        "imports": [
+          "re"
+        ],
+        "functions": 1
+      },
+      "app/download_core/yt_dlp.py": {
+        "lines": 52,
+        "sha256": "1d29cfa28d241433f8903db580e2fb56a80f0f803b7a01b0002d86aa1cd0819c",
+        "imports": [
+          "os",
+          "ssl",
+          "urllib.request"
+        ],
+        "functions": 1
+      },
+      "app/downloader.py": {
+        "lines": 25,
+        "sha256": "75fbdb3db6774727e5777deea30cceb7b3dbdb93e2bf4caa5f642b1f595d7b00",
+        "imports": [
+          "app.paths",
+          "os",
+          "pathlib",
+          "requests"
+        ],
+        "functions": 1
+      },
+      "app/job/job_manager.py": {
+        "lines": 285,
+        "sha256": "ad7fd572a4b5fd6cfa7df3a1c5c6bb9fbdf02806c98e988b4f39704660420618",
+        "imports": [
+          "PySide6.QtCore",
+          "ai.whisper_engine",
+          "core.subtitle_manager",
+          "core.subtitle_renderer",
+          "job.job_state",
+          "logging",
+          "os",
+          "pathlib",
+          "paths",
+          "queue",
+          "subprocess",
+          "threading",
+          "typing"
+        ],
+        "functions": 11
+      },
+      "app/job/job_state.py": {
+        "lines": 9,
+        "sha256": "6f21d15d0f353de6050da00e4f54245eb9983bc10d63fa658592ebd7fad5cda4",
+        "imports": [
+          "enum"
+        ],
+        "functions": 0
+      },
+      "app/paths.py": {
+        "lines": 85,
+        "sha256": "02ee7edad223cae6216e806d4a3c3e83fd26c8ae6c798ec67d8cd7beecee6739",
+        "imports": [
+          "os",
+          "pathlib",
+          "sys"
+        ],
+        "functions": 7
+      },
+      "app/pipeline/aligner.py": {
+        "lines": 233,
+        "sha256": "bf590c7f079b10588ac1361111dbd8d3f6df3e9189ac308a89ecf63987b1d7c6",
+        "imports": [
+          "difflib",
+          "re"
+        ],
+        "functions": 9
+      },
+      "app/pipeline/asr_coverage.py": {
+        "lines": 227,
+        "sha256": "e988fbca7a1a3bc9416d1d8ea6276271c8d9920a94169c4301b70bde3b8a1236",
+        "imports": [
+          ".aligner",
+          ".jp_normalizer",
+          "faster_whisper.audio",
+          "faster_whisper.vad",
+          "math",
+          "re",
+          "wave"
+        ],
+        "functions": 8
+      },
+      "app/pipeline/asr_engine.py": {
+        "lines": 34,
+        "sha256": "80fcff1ff925f52c8a9e03b179e5f88ab7751c6777c616b8ff87bbf1d86ffad7",
+        "imports": [
+          "faster_whisper",
+          "pathlib"
+        ],
+        "functions": 3
+      },
+      "app/pipeline/extractor.py": {
+        "lines": 57,
+        "sha256": "a5e8357ed0dfc82d606837007c151ea43cbe24664143b330d319ff5d59d4a07c",
+        "imports": [
+          "os",
+          "pathlib",
+          "subprocess"
+        ],
+        "functions": 1
+      },
+      "app/pipeline/forced_aligner.py": {
+        "lines": 9,
+        "sha256": "40bee0f56abe0903c2fa82dab45673dbea8dd7ec8d7e7dbf3e04a4ba705f39c8",
+        "imports": [],
+        "functions": 1
+      },
+      "app/pipeline/jp_normalizer.py": {
+        "lines": 101,
+        "sha256": "eef841d8d088a37a5a424302d51f0ea7896e4cc666eab0cc0a6edec91169a8bd",
+        "imports": [
+          "re",
+          "unicodedata"
+        ],
+        "functions": 3
+      },
+      "app/pipeline/lyric_corrector.py": {
+        "lines": 132,
+        "sha256": "dd913d201f0033881a787ce2ac94264ef96d5309d3cecc4a91892242930bcb98",
+        "imports": [
+          "google",
+          "google.genai",
+          "json",
+          "re",
+          "requests"
+        ],
+        "functions": 1
+      },
+      "app/pipeline/lyric_formatter.py": {
+        "lines": 37,
+        "sha256": "47d31ed45f262af09ab33867f36c4312e97e38913e5b1d72006b3998e7cebea2",
+        "imports": [
+          "pathlib",
+          "subtitle.timing_format"
+        ],
+        "functions": 4
+      },
+      "app/pipeline/lyric_phrases.py": {
+        "lines": 98,
+        "sha256": "0d3051f008ad7df4c8ede0f991f8e0c603c02a23d8633746a456c3433931f96b",
+        "imports": [
+          ".aligner",
+          "math"
+        ],
+        "functions": 5
+      },
+      "app/pipeline/lyric_refinement.py": {
+        "lines": 228,
+        "sha256": "d87f23a49cdc51ef80f49f5b012ad2628db57a4ac232a600461e608fa134f9c4",
+        "imports": [
+          ".aligner",
+          ".lyric_phrases",
+          "math",
+          "re",
+          "unicodedata"
+        ],
+        "functions": 12
+      },
+      "app/pipeline/postprocess.py": {
+        "lines": 43,
+        "sha256": "2af4f00ac5484fc492e3fbc00b9784bc133af04fbba655a9f1f71df4a7cd4752",
+        "imports": [
+          "json",
+          "pathlib"
+        ],
+        "functions": 3
+      },
+      "app/pipeline/utils.py": {
+        "lines": 99,
+        "sha256": "b6a6de1344b1194cd92b5480de79719e7c694299667500a0f71c28be2499b691",
+        "imports": [
+          "pathlib",
+          "paths",
+          "re",
+          "shutil",
+          "socket",
+          "uuid"
+        ],
+        "functions": 5
+      },
+      "app/pipeline/vad.py": {
+        "lines": 29,
+        "sha256": "527854c1c52aefa3449911085f5475d0db083cc70f453747807908c1c8e6e226",
+        "imports": [
+          "numpy",
+          "soundfile",
+          "torch"
+        ],
+        "functions": 3
+      },
+      "app/pipeline/vocal_separator.py": {
+        "lines": 53,
+        "sha256": "01f49ff7e08135b48f5e00f7a0c5221dd33698d8d50ef5ff159e16351c217b2c",
+        "imports": [
+          "pathlib",
+          "subprocess"
+        ],
+        "functions": 1
+      },
+      "app/run_app.py": {
+        "lines": 226,
+        "sha256": "61ea4bbbb15c27b7e772e909cdbe7334057711f5f572626fdcf5ac92e6ae58ea",
+        "imports": [
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "control.ai_controller",
+          "control.app_controller",
+          "core.media_library",
+          "core.subtitle_manager",
+          "ctypes",
+          "io",
+          "logging",
+          "multiprocessing",
+          "os",
+          "pathlib",
+          "paths",
+          "pipeline.utils",
+          "shutil",
+          "sys",
+          "ui.main_window"
+        ],
+        "functions": 4
+      },
+      "app/subtitle/ass/ass_parser.py": {
+        "lines": 56,
+        "sha256": "75e73efe68247fe96c2f456f75365e0c5e55402cb7d3c7e63f4a81f4dff3afe0",
+        "imports": [
+          "os",
+          "re"
+        ],
+        "functions": 2
+      },
+      "app/subtitle/ass/renderer.py": {
+        "lines": 96,
+        "sha256": "f49cf7565a22f719c8bc9442a1b2f6abf4123ed71d7bdd32397a202a6948bccc",
+        "imports": [
+          ".utils",
+          "os",
+          "subtitle.config",
+          "subtitle.mode"
+        ],
+        "functions": 3
+      },
+      "app/subtitle/ass/style.py": {
+        "lines": 28,
+        "sha256": "d90377edc93519eca4f35ad2602d690dcb5d8c97d931e240fe1bcaa5eeee0639",
+        "imports": [],
+        "functions": 0
+      },
+      "app/subtitle/ass/utils.py": {
+        "lines": 27,
+        "sha256": "d1c0e54ffa7a1413180ae07f59d817956fb6321508006caff1cce3d59e51e8fd",
+        "imports": [],
+        "functions": 2
+      },
+      "app/subtitle/config.py": {
+        "lines": 45,
+        "sha256": "252a122b519fd40abff7cc6556947523c311664359afc8765a6c93f522df142f",
+        "imports": [
+          "dataclasses"
+        ],
+        "functions": 0
+      },
+      "app/subtitle/converter.py": {
+        "lines": 51,
+        "sha256": "9420cd0439a7c8eb1c848e1249143c8a2ab65ab4a83b1418dfa4a6ce0af85009",
+        "imports": [
+          "subtitle.model"
+        ],
+        "functions": 1
+      },
+      "app/subtitle/engine.py": {
+        "lines": 13,
+        "sha256": "1fa842caa420d08558f6969352c9aefcc0190680c9032ff3d03b67c1acd52889",
+        "imports": [
+          "copy",
+          "subtitle.model"
+        ],
+        "functions": 3
+      },
+      "app/subtitle/mode.py": {
+        "lines": 14,
+        "sha256": "ff25a1fcb651c9017c321882bac5850971e53ce4a2f510ff4674f7a83425b2aa",
+        "imports": [
+          "enum"
+        ],
+        "functions": 0
+      },
+      "app/subtitle/model.py": {
+        "lines": 31,
+        "sha256": "064106754383fa074dbe928fb561b4ac494c5134259294c08c4b926b9407b056",
+        "imports": [
+          "dataclasses",
+          "typing"
+        ],
+        "functions": 0
+      },
+      "app/subtitle/models.py": {
+        "lines": 13,
+        "sha256": "eb684322bc3357460841afddcaccd8bfdc68c53f86a0ade09a4040d85801a64a",
+        "imports": [
+          "dataclasses"
+        ],
+        "functions": 0
+      },
+      "app/subtitle/profile.py": {
+        "lines": 126,
+        "sha256": "6ed202b44eeaf826e132dc531fa3c0774a57dc12a19e9df79a78709396e72932",
+        "imports": [
+          "dataclasses",
+          "json",
+          "logging",
+          "os",
+          "pathlib",
+          "paths",
+          "subtitle.model"
+        ],
+        "functions": 7
+      },
+      "app/subtitle/storage.py": {
+        "lines": 143,
+        "sha256": "933883a5431d9e3b957fe0f1f5f7dfbae88a264d4f7d9e01652e4bd335e3d2eb",
+        "imports": [
+          "dataclasses",
+          "json",
+          "logging",
+          "os",
+          "pathlib",
+          "subtitle.model"
+        ],
+        "functions": 7
+      },
+      "app/subtitle/timing_format.py": {
+        "lines": 24,
+        "sha256": "f816fc8a9411c0e6ef8d2ffa2594219b5a389cc86639331d2f30a260433a9483",
+        "imports": [],
+        "functions": 4
+      },
+      "app/test/main.py": {
+        "lines": 150,
+        "sha256": "c3e15657e506b91815145d3f8f8d3a7683119d7bd9dcee1c5c84ec9884a5270f",
+        "imports": [
+          "faster_whisper",
+          "gc",
+          "glob",
+          "os",
+          "pathlib",
+          "pipeline.aligner",
+          "pipeline.extractor",
+          "pipeline.jp_normalizer",
+          "pipeline.lyric_formatter",
+          "subtitle.ass.renderer",
+          "subtitle.config",
+          "subtitle.converter",
+          "subtitle.mode",
+          "subtitle.model",
+          "subtitle.storage",
+          "sys",
+          "torch",
+          "translate.pipeline",
+          "translate.translator"
+        ],
+        "functions": 2
+      },
+      "app/test/test.py": {
+        "lines": 141,
+        "sha256": "86c127fd69e4cd69b126329911002846f5baef81182ba28decf679d902d405f5",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtMultimedia",
+          "PySide6.QtMultimediaWidgets",
+          "PySide6.QtWidgets",
+          "os",
+          "paths",
+          "re",
+          "subtitle.mode",
+          "sys",
+          "ui.main_window"
+        ],
+        "functions": 9
+      },
+      "app/test/test_ai.py": {
+        "lines": 119,
+        "sha256": "0d5ac9ea5f4a29549360cb9827955d518c4ffd4c60e2b517f9f64d94606b93b5",
+        "imports": [
+          "PySide6.QtCore",
+          "app.worker",
+          "os",
+          "pathlib",
+          "paths",
+          "sys",
+          "worker"
+        ],
+        "functions": 8
+      },
+      "app/test/test_ai_controller.py": {
+        "lines": 80,
+        "sha256": "55fa613685fe789f441d329e0c0668ceaa03216fe124366766bd8c2b4c30abf7",
+        "imports": [
+          "PySide6.QtCore",
+          "control.ai_controller",
+          "core.subtitle_manager",
+          "os",
+          "sys"
+        ],
+        "functions": 2
+      },
+      "app/test/test_aligner_optimizations.py": {
+        "lines": 17,
+        "sha256": "2bd5d7e91e96ce5e74846de12f2a3ac29a00c2ac3563b9f237883bec8fa98146",
+        "imports": [
+          "pipeline.aligner",
+          "unittest"
+        ],
+        "functions": 1
+      },
+      "app/test/test_pipeline.py": {
+        "lines": 17,
+        "sha256": "f97d7fda7dd9dd36646f49e02cbbffd416907c43274268e84dd812572198c393",
+        "imports": [
+          "ai.pipeline",
+          "pathlib"
+        ],
+        "functions": 1
+      },
+      "app/test/test_sub.py": {
+        "lines": 142,
+        "sha256": "f2293950af825404837e7838768ff7e2b15139e27025847950435a3ee195152e",
+        "imports": [
+          "random",
+          "time",
+          "tkinter"
+        ],
+        "functions": 5
+      },
+      "app/test/test_worker.py": {
+        "lines": 31,
+        "sha256": "331c8d954422b63b7d2f9d055ab7ce1fe22e2c8b96a9a09d0d357671e7bada66",
+        "imports": [
+          "PySide6.QtWidgets",
+          "sys",
+          "worker"
+        ],
+        "functions": 3
+      },
+      "app/test_build_app.py": {
+        "lines": 22,
+        "sha256": "e97bf316541e7c9863383ba2e85ffad2d274cb0e87e2096acbe41005fd3adb99",
+        "imports": [
+          "app.run_app",
+          "os",
+          "pathlib",
+          "sys"
+        ],
+        "functions": 0
+      },
+      "app/thumbnail/thumbnail_manager.py": {
+        "lines": 131,
+        "sha256": "5edabe9cce2fcc955354352ab2307e9892e37c1a33a8f2c285c6ab33c5e7e351",
+        "imports": [
+          "os",
+          "pathlib",
+          "paths",
+          "subprocess",
+          "sys"
+        ],
+        "functions": 3
+      },
+      "app/thumbnail/thumbnail_workers.py": {
+        "lines": 48,
+        "sha256": "67887dba4acb88087637e4767c41fa7aa481360453be999e508cb5848a30b44b",
+        "imports": [
+          "PySide6.QtCore",
+          "os",
+          "thumbnail.thumbnail_manager"
+        ],
+        "functions": 3
+      },
+      "app/translate/cache.py": {
+        "lines": 75,
+        "sha256": "26f545e33f3fe266d2b2709d2fb9ed85b45de88136cb1bf2f7e5869988c3b642",
+        "imports": [
+          "hashlib",
+          "json",
+          "pathlib",
+          "re"
+        ],
+        "functions": 6
+      },
+      "app/translate/nllb.py": {
+        "lines": 31,
+        "sha256": "26888a55f15ace973313ebfcd337cc87eed54b101ca419263fde3e270d8bc813",
+        "imports": [
+          "torch",
+          "transformers"
+        ],
+        "functions": 1
+      },
+      "app/translate/online_logic.py": {
+        "lines": 203,
+        "sha256": "df54a70d8814fd0be1c0827392f293eb30f8a4556f99751f567db162fb0d9022",
+        "imports": [
+          "PySide6.QtCore",
+          "difflib",
+          "google",
+          "google.genai",
+          "lyricsgenius",
+          "re",
+          "requests",
+          "subtitle.model"
+        ],
+        "functions": 3
+      },
+      "app/translate/pipeline.py": {
+        "lines": 262,
+        "sha256": "6801b3db1f082bdcb34f339e84aca7ac35f5300008ba338dd7b0f5d0a35a1e32",
+        "imports": [
+          ".translator",
+          "gc",
+          "re",
+          "subtitle.model",
+          "sys",
+          "torch",
+          "translate.cache",
+          "translate.online_logic"
+        ],
+        "functions": 5
+      },
+      "app/translate/translator.py": {
+        "lines": 106,
+        "sha256": "000ae8c7cf848460f29f4d28fb9872f13fd8c271f56cde67d69a73c9b384e1cd",
+        "imports": [
+          "os",
+          "sys",
+          "torch",
+          "transformers",
+          "transformers.modeling_utils",
+          "transformers.utils.import_utils"
+        ],
+        "functions": 2
+      },
+      "app/ui/design_system.py": {
+        "lines": 129,
+        "sha256": "05e4e05de3da0f9a3ebf869265f40f4e7b04ec3480ff2563003de6c5bf227dea",
+        "imports": [
+          ".foryou_spacing",
+          ".native_frame_style",
+          "PySide6.QtGui"
+        ],
+        "functions": 1
+      },
+      "app/ui/elided_label.py": {
+        "lines": 63,
+        "sha256": "788e8d86fec9fa25e651f2b8e5b9f649a91e5f11033550a7e3b40c117289b89a",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 5
+      },
+      "app/ui/foryou_playlist_view.py": {
+        "lines": 302,
+        "sha256": "ccecbfc8fa969fe295815f154dff341079074e5f41ad501ab7c28fdc0fcca89c",
+        "imports": [
+          ".elided_label",
+          ".icons",
+          ".playlist_loading_overlay",
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "math",
+          "time"
+        ],
+        "functions": 20
+      },
+      "app/ui/foryou_spacing.py": {
+        "lines": 32,
+        "sha256": "a0948602735e3cf2e0910a21cb3ab1f42ea4b3aab697c4864e9c12ed42c1c168",
+        "imports": [
+          "PySide6.QtCore"
+        ],
+        "functions": 3
+      },
+      "app/ui/icons.py": {
+        "lines": 87,
+        "sha256": "0daff61fa78da6b121ec23409f54f2d7f9bc677d3f2e962c0eacc05806f30fcc",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtSvg",
+          "functools",
+          "pathlib",
+          "paths"
+        ],
+        "functions": 8
+      },
+      "app/ui/main_window.py": {
+        "lines": 2491,
+        "sha256": "89b6a2fe45e9ed825e84e815799e4dea4ecf42ca9e085c4db054bd3e599f0d6b",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtMultimedia",
+          "PySide6.QtMultimediaWidgets",
+          "PySide6.QtWidgets",
+          "config",
+          "core.media_library",
+          "json",
+          "logging",
+          "os",
+          "pathlib",
+          "paths",
+          "pipeline.utils",
+          "psutil",
+          "random",
+          "shutil",
+          "subtitle.mode",
+          "sys",
+          "ui.design_system",
+          "ui.icons",
+          "ui.media_card",
+          "ui.nav.sidebar",
+          "ui.overlay_input_guard",
+          "ui.pages.content_manager",
+          "ui.pages.download",
+          "ui.pages.dynamic_island",
+          "ui.pages.for_you",
+          "ui.pages.mode_manager",
+          "ui.pages.settings",
+          "ui.playback_bar",
+          "ui.subs_ui.lyric_settings_dialog",
+          "ui.subs_ui.sub_panel",
+          "ui.subs_ui.subtitle_layer",
+          "ui.system_media_manager",
+          "ui.vol_panel",
+          "updater"
+        ],
+        "functions": 97
+      },
+      "app/ui/media_card.py": {
+        "lines": 300,
+        "sha256": "fcc14be0df7fd0aa8d06d44502e6cc74873efac2adc9f651e0940f02d3cb1ba3",
+        "imports": [
+          ".icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "datetime",
+          "pathlib"
+        ],
+        "functions": 14
+      },
+      "app/ui/media_player.py": {
+        "lines": 90,
+        "sha256": "ca94c492a173171fef3a6b0807131dc159bbcfc7f37c98e7686b62d52b8d65ba",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtMultimedia",
+          "PySide6.QtMultimediaWidgets",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 10
+      },
+      "app/ui/mini_video_dock.py": {
+        "lines": 63,
+        "sha256": "09dd030708292f74b9c2b36dadddff39d1044f43414987ed6ce9e6b6fe505d73",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtMultimedia"
+        ],
+        "functions": 6
+      },
+      "app/ui/native_frame_style.py": {
+        "lines": 78,
+        "sha256": "dcc379cef026c8de1a555f76bc1380f3a7263fa73406ee490c72ee9c48c69020",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "ctypes",
+          "functools",
+          "sys"
+        ],
+        "functions": 7
+      },
+      "app/ui/nav/sidebar.py": {
+        "lines": 102,
+        "sha256": "98d9dac4af8391570825e89465e84f07481b3dce19727700f944caa7c561ef13",
+        "imports": [
+          "..design_system",
+          "..icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "sys"
+        ],
+        "functions": 5
+      },
+      "app/ui/overlay_input_guard.py": {
+        "lines": 85,
+        "sha256": "de19432cb4f287f9d2899975a33fe690f235a15fa108ce47207b172158c38e6a",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui"
+        ],
+        "functions": 4
+      },
+      "app/ui/pages/content_manager.py": {
+        "lines": 120,
+        "sha256": "6431a94fd792b9c7ce42fee182444bc8a4140d8f3076527dfed9e6209f44d89c",
+        "imports": [
+          "PySide6.QtCore",
+          "random"
+        ],
+        "functions": 12
+      },
+      "app/ui/pages/download.py": {
+        "lines": 605,
+        "sha256": "81662da8dfd1814aba16585bf6251e53a6edba135828628a2d28d7a0c445cb16",
+        "imports": [
+          "..design_system",
+          "..icons",
+          ".settings_dialog",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "config",
+          "download_core.download_worker",
+          "download_core.get_title_worker",
+          "json",
+          "os",
+          "paths"
+        ],
+        "functions": 25
+      },
+      "app/ui/pages/dynamic_island.py": {
+        "lines": 278,
+        "sha256": "1e391890c090511065f25a42e82282aeedf550d9d3b8b9989dbfd7e558676b26",
+        "imports": [
+          "..icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 11
+      },
+      "app/ui/pages/for_you.py": {
+        "lines": 703,
+        "sha256": "9c7c683f8e606da08daa99646efff6f611a4863f0aab1e86a5b69fd8066e9eff",
+        "imports": [
+          "..design_system",
+          "..elided_label",
+          "..foryou_playlist_view",
+          "..foryou_spacing",
+          "..icons",
+          "..playlist_thumbnail",
+          "..playlist_thumbnail_queue",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "math",
+          "os",
+          "random"
+        ],
+        "functions": 37
+      },
+      "app/ui/pages/mode_manager.py": {
+        "lines": 35,
+        "sha256": "1446da8141b077d3c4741c407ef32154f32d4ac27755d0d4cf03731fd5ea83b1",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 1
+      },
+      "app/ui/pages/settings.py": {
+        "lines": 279,
+        "sha256": "8baa6ee2a769a95bbd226f6fb49c8f27295db175d6b3f92a9bb2da3e1a2c6588",
+        "imports": [
+          "..design_system",
+          "..icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "download_core.download_source_app"
+        ],
+        "functions": 11
+      },
+      "app/ui/pages/settings_dialog.py": {
+        "lines": 136,
+        "sha256": "23351a035130b41119c29e815544fb951aebe2e9cd2ce33b8b26b279e97fa221",
+        "imports": [
+          "..design_system",
+          "..icons",
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "json"
+        ],
+        "functions": 4
+      },
+      "app/ui/playback_bar.py": {
+        "lines": 381,
+        "sha256": "63aa6afe526c4caa0cc38cd2b5a5ea2c97f8c6824e73dc74b4776548e5536549",
+        "imports": [
+          ".design_system",
+          ".icons",
+          ".mini_video_dock",
+          ".track_label",
+          ".video_info_popup",
+          "PySide6.QtCore",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 17
+      },
+      "app/ui/playlist_loading_overlay.py": {
+        "lines": 56,
+        "sha256": "7a7bc07409827ea8a36d64350f0a3229020d36ae7de3f55c8048afedfc8756a5",
+        "imports": [
+          ".icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "time"
+        ],
+        "functions": 5
+      },
+      "app/ui/playlist_thumbnail.py": {
+        "lines": 54,
+        "sha256": "67cdaf952776be602b414882e93070c1423297a3cb0d238c2c49b4618dce8f83",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui"
+        ],
+        "functions": 4
+      },
+      "app/ui/playlist_thumbnail_queue.py": {
+        "lines": 62,
+        "sha256": "fa91b60a153d91c7de8b10543dd3573a524dbbea76a14632ad8decfb3e8f76ae",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "collections"
+        ],
+        "functions": 6
+      },
+      "app/ui/styles.py": {
+        "lines": 12,
+        "sha256": "a14c85a661998e9119cdcde690d54a2b66b1b9531745d3bcef8ee5c0f0601be2",
+        "imports": [],
+        "functions": 0
+      },
+      "app/ui/subs_ui/lyric_settings_dialog.py": {
+        "lines": 269,
+        "sha256": "127207f6f365b378b5d5bbba4ffa3356b3a808c61bd0488dafdad94cfe7199d6",
+        "imports": [
+          "..design_system",
+          "..icons",
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "re",
+          "ui.subs_ui.subtitle_dialog_logic",
+          "ui.subs_ui.subtitle_model"
+        ],
+        "functions": 5
+      },
+      "app/ui/subs_ui/sub_panel.py": {
+        "lines": 360,
+        "sha256": "4f18a0f7f5d02512722391b4c22a6b604d150786c6d5e4ee18d980938c573b83",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "subtitle.mode"
+        ],
+        "functions": 12
+      },
+      "app/ui/subs_ui/subtitle_commands.py": {
+        "lines": 44,
+        "sha256": "c3ad430aa2428d32548efe8d613a1d4c710d34d2de1816e5d04e6270ece2d8fb",
+        "imports": [
+          "PySide6.QtGui"
+        ],
+        "functions": 9
+      },
+      "app/ui/subs_ui/subtitle_dialog_logic.py": {
+        "lines": 1000,
+        "sha256": "103561b8e59ab30ecfd407bd35239973257c410b348102d050c41b51fb634467",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "json",
+          "os",
+          "re",
+          "ui.subs_ui.subtitle_commands",
+          "ui.subs_ui.subtitle_io",
+          "ui.subs_ui.subtitle_model",
+          "ui.subs_ui.subtitle_utils",
+          "ui.subs_ui.subtitle_workers"
+        ],
+        "functions": 50
+      },
+      "app/ui/subs_ui/subtitle_editor.py": {
+        "lines": 190,
+        "sha256": "86095afdc49fb420e44041370b87a395d1f5405bb572e631305422bdf639abdc",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "subtitle.mode"
+        ],
+        "functions": 9
+      },
+      "app/ui/subs_ui/subtitle_io.py": {
+        "lines": 159,
+        "sha256": "a3ca722ca76511905fcf1a512e5373deee05cb13a8df286772114813114b8a7e",
+        "imports": [
+          "json",
+          "re",
+          "typing"
+        ],
+        "functions": 8
+      },
+      "app/ui/subs_ui/subtitle_layer.py": {
+        "lines": 500,
+        "sha256": "d4bb41a2e5141f2fd0dc36b199b4784e09c94cc6b5a16ecd77166aebeaa89412",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets",
+          "bisect",
+          "re",
+          "subtitle.mode",
+          "textwrap"
+        ],
+        "functions": 28
+      },
+      "app/ui/subs_ui/subtitle_model.py": {
+        "lines": 176,
+        "sha256": "12158b8d1721257a2e7feac0d2c75c2a345e325a404a6330f7a467bbbf541183",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "typing",
+          "ui.subs_ui.subtitle_utils"
+        ],
+        "functions": 16
+      },
+      "app/ui/subs_ui/subtitle_utils.py": {
+        "lines": 29,
+        "sha256": "64424da59542a5859f82e903216bba3fc309e42a4470e91700e4d5bdc72c794d",
+        "imports": [
+          "os",
+          "sys"
+        ],
+        "functions": 3
+      },
+      "app/ui/subs_ui/subtitle_workers.py": {
+        "lines": 302,
+        "sha256": "1fa8831f0a4dbf0b1c318dff698fa1d0ff6f7b49af3d0918ec0d51320edc7747",
+        "imports": [
+          "PySide6.QtCore",
+          "gc",
+          "google",
+          "google.genai",
+          "json",
+          "re",
+          "requests",
+          "socket",
+          "torch",
+          "traceback",
+          "translate.online_logic",
+          "translate.pipeline"
+        ],
+        "functions": 7
+      },
+      "app/ui/system_media_manager.py": {
+        "lines": 446,
+        "sha256": "263a120efa97d3cc2a606c57c8e62d359a641d57b741e91fe31096fbfdccdb7d",
+        "imports": [
+          "PySide6.QtCore",
+          "collections",
+          "ctypes",
+          "gc",
+          "numpy",
+          "os",
+          "paths",
+          "psutil",
+          "sys",
+          "time",
+          "tracemalloc"
+        ],
+        "functions": 15
+      },
+      "app/ui/track_label.py": {
+        "lines": 30,
+        "sha256": "7782b7a5cd834d289125d52fb7e5052b2643cae942d461df23cd67117e7da825",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtGui",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 2
+      },
+      "app/ui/video_info_popup.py": {
+        "lines": 299,
+        "sha256": "398209afb826bdb0dffff52ae03e9204d49c104d45c7174e20eecbcd58d9b23e",
+        "imports": [
+          ".design_system",
+          ".icons",
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "datetime",
+          "json",
+          "os",
+          "subprocess",
+          "sys"
+        ],
+        "functions": 8
+      },
+      "app/ui/vol_panel.py": {
+        "lines": 102,
+        "sha256": "2ff6d2edebdc3febd21e8690c1cc4a5ffe01076b915f76f029c3d0c56d3c05c6",
+        "imports": [
+          ".icons",
+          "PySide6.QtCore",
+          "PySide6.QtWidgets"
+        ],
+        "functions": 4
+      },
+      "app/updater.py": {
+        "lines": 145,
+        "sha256": "eb4e09de6cb607f295848a4ba9e00f6fead61fb3e427d185c64206ef8681d298",
+        "imports": [
+          "PySide6.QtCore",
+          "PySide6.QtWidgets",
+          "json",
+          "os",
+          "packaging.version",
+          "pathlib",
+          "paths",
+          "requests",
+          "subprocess",
+          "sys",
+          "zipfile"
+        ],
+        "functions": 1
+      },
+      "app/worker.py": {
+        "lines": 215,
+        "sha256": "ca28f46f4c9b446eade126ea3acef83623da63eeac1296cf2ae38aa9f64cc9cd",
+        "imports": [
+          "PySide6.QtCore",
+          "ai.pipeline",
+          "multiprocessing",
+          "os",
+          "sys",
+          "time",
+          "torch",
+          "traceback"
+        ],
+        "functions": 12
+      }
+    }
+  },
+  "unchanged_original_function_asts": {
+    "app/run_app.py": {
+      "global_exception_handler": true
+    },
+    "app/control/ai_controller.py": {
+      "start": true
+    },
+    "app/worker.py": {
+      "stop": true
+    },
+    "app/core/media_library.py": {
+      "scan_folder": true,
+      "update_thumbnail_in_db": true,
+      "save": true
+    },
+    "app/ui/main_window.py": {
+      "load_folder_content": true
+    },
+    "app/ui/subs_ui/subtitle_dialog_logic.py": {
+      "save_subtitle_content": true
+    },
+    "app/translate/pipeline.py": {
+      "translate_pipeline": true,
+      "run_safe_batch": true,
+      "clean_repetitive_text": true
+    },
+    "app/translate/online_logic.py": {
+      "translate_online_pipeline": true
+    }
+  },
+  "probes": {
+    "early_exception": {
+      "secondary_error": "name 'QApplication' is not defined",
+      "original_hook_reached": false
+    },
+    "subtitle_save": {
+      "partial_pair": {
+        "save_returned": null,
+        "json_changed": true,
+        "ass_kept_old": true,
+        "subsequent_request_status": "ready"
+      },
+      "original_baseline_partial_pair": {
+        "save_returned": null,
+        "json_changed": true,
+        "ass_kept_old": true,
+        "subsequent_request_status": "ready"
+      },
+      "json_write_failure": {
+        "return_value": false,
+        "original_file_now_empty": true
+      },
+      "editor_failed_save": {
+        "json_unchanged": true,
+        "reported_success": true,
+        "closed_as_accepted": true
+      }
+    },
+    "translation": {
+      "failed_translation_cached": {
+        "first_vi": "",
+        "retry_vi": "",
+        "healthy_batch_calls": 0,
+        "translator_initialized_despite_all_cache_hits": 1
+      },
+      "local_short_batch": {
+        "input_rows": 2,
+        "output_rows": 1
+      },
+      "repeated_source_cleaner": {
+        "original": "Stay with me Stay with me Stay with me Stay with me",
+        "translator_input": "Stay with me Stay..."
+      },
+      "online_invalid_and_partial": [
+        {
+          "response": "Unable to produce the required format",
+          "truthy_result": true,
+          "translated_rows": 0,
+          "total_rows": 2
+        },
+        {
+          "response": "0===English line===Dòng tiếng Việt",
+          "truthy_result": true,
+          "translated_rows": 1,
+          "total_rows": 2
+        }
+      ]
+    },
+    "library_cache": {
+      "metadata_rows": 1000,
+      "thumbnail_updates": 100,
+      "whole_database_writes": 100,
+      "records_prepared_for_serialization": 100000,
+      "timing_claim": false
+    },
+    "gui_worker_restart": {
+      "synthetic_cleanup_ms": 250,
+      "start_call_ms": 280.05,
+      "gui_timer_ticks_during_call": 0,
+      "called_on_gui_thread": true
+    }
+  },
+  "saved_data": {
+    "count": 31,
+    "unchanged": true,
+    "hashes": {
+      "storage/app_config.json": "275fd83bcb8cca87fecab96f2824d6f65504846bf6e36b82162e7df023ada4aa",
+      "storage/library_cache.json": "352e41e9a5bf493446ea23649226092255d0a78e09f83bd12f108f488a56e32e",
+      "storage/setting.json": "97f9f50476853cee85d44217521805f8574b5f8a40cf932ffa358ca0f2b8ce4e",
+      "storage/subtitles/media_index.json": "ae9968865f0bfb2b54143c6a1fbc6268bc1fd2b0b2eb383d01304242a90092b0",
+      "storage/subtitles/ass/11918bba543b3d394eda866b57fe9c5f.ass": "d5601767e93e245f585b8ed15f77ea4d264bf4ad06093c6aec011bafbcbce9c5",
+      "storage/subtitles/ass/17fe770fe427369d9f44f9efbe7cd410.ass": "9f5a00f2978202c9df13a1a0d46ae765edeec11cad6be145f6a021bc92f748be",
+      "storage/subtitles/ass/265b7e91949aabb2364c50c0c5cb9d32.ass": "9f2d21f0bb61810126b87190a6653793c6dbf976002bed299c0d56a14adc0407",
+      "storage/subtitles/ass/ac01f08b113847ef7b4e5da2711c021f.ass": "04c994d0e304f6f6f8d993288fb540bc7eb13060f3ec30ffda23b7eb5f890bb0",
+      "storage/subtitles/ass/bc84fec0d624e465fb2775b180b61662.ass": "fd878fa50a31df0ec2a64b364b49fc2be83ed94dfb87179f502ca3c8a212ba71",
+      "storage/subtitles/ass/c17176b63126976c922ea8b66ff7a0ff.ass": "d3e1f4ca20a4633bb49958d0af56714f992bd4652de9bbb2173677d428e33aff",
+      "storage/subtitles/ass/f7743c2c44ae0079fb7fea2778993ff4.ass": "1ef1d9dd8e49270cd4035127ad28f9553f53f1ad6754638f7aa2ec1a7d61bd0a",
+      "storage/subtitles/json/11918bba543b3d394eda866b57fe9c5f.json": "dbee9a344f79bdf749cef78e395179461e4840be07dff4e90355ba58cda52240",
+      "storage/subtitles/json/17fe770fe427369d9f44f9efbe7cd410.json": "5bbf8f239ad58b8b48a4acbad557eb5134edc3d1341beff06b97679a4af87a1b",
+      "storage/subtitles/json/265b7e91949aabb2364c50c0c5cb9d32.json": "346f4e881cae751c80913545e7a1892bca6579d88832c1d7df5983d4efac031b",
+      "storage/subtitles/json/ac01f08b113847ef7b4e5da2711c021f.json": "cfcd4f07996e83c1e8da0f5a0aff30c7514b873d327c282d3b7b4c52d61947bf",
+      "storage/subtitles/json/bc84fec0d624e465fb2775b180b61662.json": "160c0ec94d24a58a0bf55f9ab23be9a69220b12791bf5bb7dd635014027a1c4d",
+      "storage/subtitles/json/c17176b63126976c922ea8b66ff7a0ff.json": "6d085d940da776170df2f42ec8fa5d2a8f57d46cbcda6f84f7483d43ce4193f7",
+      "storage/subtitles/json/f7743c2c44ae0079fb7fea2778993ff4.json": "ed643c4411ac9c62798d4857e792e80862f46534f78e1cd321e021806e00930b",
+      "storage/subtitles/source/lrc/A Small Miracle(short).lrc": "3a37f8c52cc75142673252c378e221d30ada663634afbef799c6c7d37b35f95b",
+      "storage/subtitles/source/lrc/Brand New Sky.lrc": "686139ae125def54585462f08128d03d674dcbd16526ad605700d6e18f575d84",
+      "storage/subtitles/source/lrc/Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.lrc": "56e9320a7d3bb61d6d439542fac60fb0fd41d8c593573ae56bac0a3bda1b2827",
+      "storage/subtitles/source/lrc/Unwavering Startorch.lrc": "f17a914c661ccbdf31366c2942bf5036f7970f9fb8a90807ff0ec49fd01e0dda",
+      "storage/subtitles/source/lrc/【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.lrc": "3206410bce366d1df43d4b2d276edfe67550857ab62469ff00627153452a1756",
+      "storage/subtitles/source/lrc/人生エンドロール.lrc": "29b2ea9b841f213127b12ebf2c2542e50b1c87c3c0b2ccd1addf75eb04f3b338",
+      "storage/subtitles/source/srt/A Small Miracle(short).srt": "cfbe82f7c298557fbca5764958d5724f6b8b35f4d0922ac6755ad694b0b9c5c0",
+      "storage/subtitles/source/srt/Brand New Sky.srt": "158251fd06cfa08902778464f95ec03c1c1f82a2c4a2e5e83a39deacecbe0003",
+      "storage/subtitles/source/srt/Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.srt": "7ca34ac3e5481793c969c1fc4528a12e192c536f2b0e35cdef727dd3e3bfc3a2",
+      "storage/subtitles/source/srt/Unwavering Startorch.srt": "ce8b78b9a752123535eefe66f9e08c2368fd34399376c6e27a79daad280780bc",
+      "storage/subtitles/source/srt/【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.srt": "fb27cd8b64b3201d0455caca36728a392b92fa4261a69e244eb009e1827d5a23",
+      "storage/subtitles/source/srt/人生エンドロール.srt": "e225cb20d78958e137fab647e2726bcc424da3d1dcaf24a964e44498bf7c7a45",
+      "output/translation_cache.json": "a6961d62985c06f0e5679c1fea5be07432966c400d10c3c77bf3bf4a3f4407e0"
+    }
+  }
+}

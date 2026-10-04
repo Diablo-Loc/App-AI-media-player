@@ -1,5 +1,6 @@
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget, QHBoxLayout, QSlider, QLabel
+from .icons import label_icon
 
 class VolumePopup(QWidget):
     volumeChanged = Signal(int)  # Tín hiệu gửi ra khi kéo slider
@@ -21,7 +22,8 @@ class VolumePopup(QWidget):
         self.container_layout = QHBoxLayout(self.container)
         
         # 1. Icon nhỏ (trang trí cho giống hình)
-        self.lbl_icon = QLabel("🔊")
+        self.lbl_icon = QLabel()
+        label_icon(self.lbl_icon, "volume-2", size=20)
         self.lbl_icon.setStyleSheet("color: #b3b3b3; font-size: 16px; border: none; background: transparent;")
         
         # 2. Slider (Code style cũ của bạn)
@@ -47,8 +49,8 @@ class VolumePopup(QWidget):
         # --- STYLE SHEET (Copy style slider màu cam vào đây) ---
         self.setStyleSheet("""
             #popupContainer {
-                background-color: #2b2b2b; /* Màu nền hộp popup */
-                border: 1px solid #454545;
+                background-color: #151C26;
+                border: 1px solid #405267;
                 border-radius: 8px; /* Bo góc popup */
             }
             QSlider::groove:horizontal {
@@ -58,12 +60,12 @@ class VolumePopup(QWidget):
                 border-radius: 2px;
             }
             QSlider::sub-page:horizontal {
-                background: #F77F00; /* CAM */
+                background: #77E0BE;
                 height: 4px;
                 border-radius: 2px;
             }
             QSlider::handle:horizontal {
-                background: #F77F00;
+                background: #77E0BE;
                 border: 4px solid #2D2D2D;
                 width: 18px; 
                 height: 18px;
@@ -71,7 +73,7 @@ class VolumePopup(QWidget):
                 border-radius: 9px;
             }
             QSlider::handle:horizontal:hover {
-                background: #ff9c38;
+                background: #9AEDD3;
                 border: 4px solid #3c3c3c;
             }
         """)

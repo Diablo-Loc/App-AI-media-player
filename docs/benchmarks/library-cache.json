@@ -1,0 +1,50 @@
+{
+  "python": "3.11.0",
+  "platform": "Windows-10-10.0.22631-SP0",
+  "items": 1000,
+  "updates": 120,
+  "repeat": 3,
+  "batch_size": 12,
+  "same_final_data": true,
+  "scope": "Temporary synthetic metadata; identical atomic writer in both modes; excludes ffprobe/FFmpeg/UI/GPU/network.",
+  "median_seconds": {
+    "immediate": 1.9612287999989348,
+    "batch": 0.16637660000196774
+  },
+  "samples": {
+    "immediate": [
+      {
+        "seconds": 1.992413600000873,
+        "writes": 120,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      },
+      {
+        "seconds": 1.9516840000032971,
+        "writes": 120,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      },
+      {
+        "seconds": 1.9612287999989348,
+        "writes": 120,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      }
+    ],
+    "batch": [
+      {
+        "seconds": 0.1699838999993517,
+        "writes": 10,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      },
+      {
+        "seconds": 0.16171659999963595,
+        "writes": 10,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      },
+      {
+        "seconds": 0.16637660000196774,
+        "writes": 10,
+        "data_sha256": "1f137a36b1c9fe164fe00009669519d039c095853e67a7427177c533e2e0888c"
+      }
+    ]
+  }
+}

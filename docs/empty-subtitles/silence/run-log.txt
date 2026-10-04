@@ -1,0 +1,13 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: silence.wav...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 00:12.000
+INFO:faster_whisper:Detected language 'en' with probability 0.31
+📡 Ngôn ngữ phát hiện: en (30.9%)
+50 🧹 Làm sạch dữ liệu (en)
+55 ✂️ Căn chỉnh subtitle
+🛠 Kiểm tra coverage: thêm 0 dòng, 0 lượt nhận diện lại.
+100 ℹ️ Hoàn tất: chưa nhận diện được lời (có thể là nhạc không lời).
+Production output: 0 []

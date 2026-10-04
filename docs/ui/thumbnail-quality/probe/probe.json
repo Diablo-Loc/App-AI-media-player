@@ -1,0 +1,14 @@
+{
+  "source": [
+    1120,
+    624
+  ],
+  "target": [
+    140,
+    78
+  ],
+  "original_mean_absolute_rgb_error": 0.6958029830038155,
+  "new_mean_absolute_rgb_error": 0.33480749219562955,
+  "reference": "full JPEG decode then Qt SmoothTransformation; inner pixels",
+  "limits": "One synthetic JPEG, not a real-media perceptual score or speed benchmark."
+}

@@ -2,6 +2,7 @@ import os
 import subprocess
 from PySide6.QtCore import QThread, Signal
 from .yt_dlp import ensure_ytdlp_exists
+from control.worker_lifecycle import OwnedProcesses
 
 class DownloadWorker(QThread):
     progress_signal = Signal(int, int)   # Báo cáo số lượng thành công
@@ -12,6 +13,7 @@ class DownloadWorker(QThread):
 
     def __init__(self, links, names, save_path, options=None):
         super().__init__()
+        self._processes = OwnedProcesses()
         self.links = links
         self.names = names
         self.save_path = save_path
@@ -32,11 +34,19 @@ class DownloadWorker(QThread):
             self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
             
     def run(self):
+        try:
+            self._run_download()
+        finally:
+            self._processes.stop()
+            self._processes.wait()
+
+    def _run_download(self):
         if not ensure_ytdlp_exists(
             self.ytdlp_exe, 
             self.status_signal, 
             self.log_signal, 
-            self.progress_signal # Tận dụng luôn progress_signal bác đã có
+            self.progress_signal, # Tận dụng luôn progress_signal bác đã có
+            cancel_cb=lambda: not self.is_running
         ):
             self.status_signal.emit("❌ Không thể tải bộ máy yt-dlp!")
             self.finished_signal.emit(0)
@@ -51,19 +61,20 @@ class DownloadWorker(QThread):
         self.log_signal.emit("🔄 [HỆ THỐNG] Đang kiểm tra cập nhật yt-dlp...")
         
         try:
-            update_proc = subprocess.Popen(
+            update_proc = self._processes.track(subprocess.Popen(
                 [self.ytdlp_exe, "-U"],
                 stdout=subprocess.PIPE, 
                 stderr=subprocess.STDOUT, 
                 text=True,
                 creationflags=subprocess.CREATE_NO_WINDOW # Ẩn cửa sổ đen của Windows
-            )
+            ))
             # Đọc log update theo thời gian thực
             for line in iter(update_proc.stdout.readline, ''):
                 if line:
                     self.log_signal.emit(line.strip())
             update_proc.stdout.close()
             update_proc.wait()
+            self._processes.release(update_proc)
         except Exception as e:
             self.log_signal.emit(f"⚠️ [LỖI CẬP NHẬT] {e}")
 
@@ -225,7 +236,7 @@ class DownloadWorker(QThread):
             cmd += ["-o", os.path.join(self.save_path, f"{name}.%(ext)s"), link]
             
             try:
-                process = subprocess.Popen(
+                process = self._processes.track(subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
@@ -233,7 +244,7 @@ class DownloadWorker(QThread):
                     encoding='utf-8',
                     errors='replace',
                     creationflags=subprocess.CREATE_NO_WINDOW
-                )
+                ))
 
                 # Đọc log yt-dlp (tiến trình %, MB, Tốc độ) đẩy lên UI
                 for line in iter(process.stdout.readline, ''):
@@ -247,6 +258,7 @@ class DownloadWorker(QThread):
 
                 process.stdout.close()
                 return_code = process.wait()
+                self._processes.release(process)
 
                 # Kiểm tra kết quả
                 if return_code == 0 and self.is_running:
@@ -268,6 +280,8 @@ class DownloadWorker(QThread):
 
     def stop(self):
         self.is_running = False
+        self.requestInterruption()
+        self._processes.stop()
         try:
             # Nếu đang có tiến trình chạy, ép nó dừng luôn để dọn dẹp cho nhanh
             if hasattr(self, 'process') and self.process.poll() is None:
@@ -291,5 +305,3 @@ class DownloadWorker(QThread):
                         continue
         except Exception as e:
             self.log_signal.emit(f"⚠️ Lỗi khi dọn dẹp: {e}")
-    
-    

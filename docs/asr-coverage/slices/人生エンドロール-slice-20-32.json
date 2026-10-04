@@ -1,0 +1,55 @@
+[
+  {
+    "id": 1,
+    "start": 8.76,
+    "end": 11.5,
+    "text": "壊れた世界 息を吸って",
+    "avg_logprob": -0.3600260466337204,
+    "no_speech_prob": 0.047027587890625,
+    "compression_ratio": 0.7380952380952381,
+    "words": [
+      {
+        "start": 8.76,
+        "end": 9.34,
+        "word": "壊",
+        "probability": 0.91943359375
+      },
+      {
+        "start": 9.34,
+        "end": 9.58,
+        "word": "れた",
+        "probability": 0.966796875
+      },
+      {
+        "start": 9.58,
+        "end": 10.02,
+        "word": "世界",
+        "probability": 0.98876953125
+      },
+      {
+        "start": 10.3,
+        "end": 10.6,
+        "word": " 息",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 10.6,
+        "end": 10.78,
+        "word": "を",
+        "probability": 0.99755859375
+      },
+      {
+        "start": 10.78,
+        "end": 11.0,
+        "word": "吸",
+        "probability": 0.98828125
+      },
+      {
+        "start": 11.0,
+        "end": 11.5,
+        "word": "って",
+        "probability": 0.994140625
+      }
+    ]
+  }
+]

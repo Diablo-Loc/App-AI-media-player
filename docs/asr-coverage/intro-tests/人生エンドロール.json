@@ -1,0 +1,391 @@
+{
+  "media": "video\\人生エンドロール.mp4",
+  "model": "large-v3",
+  "device": "cuda",
+  "faster_whisper": "1.0.2",
+  "options": {
+    "language": null,
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": " .+"
+  },
+  "language": "ja",
+  "language_probability": 0.99853515625,
+  "duration": 45.0,
+  "asr_seconds": 1.7809999999954016,
+  "raw": [
+    {
+      "id": 1,
+      "start": 5.52,
+      "end": 28.36,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.4368489633003871,
+      "no_speech_prob": 0.06640625,
+      "compression_ratio": 0.8222222222222222,
+      "words": [
+        {
+          "start": 5.52,
+          "end": 6.92,
+          "word": "作",
+          "probability": 0.027557373046875
+        },
+        {
+          "start": 6.92,
+          "end": 6.92,
+          "word": "詞",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 6.92,
+          "end": 7.38,
+          "word": "・",
+          "probability": 0.95458984375
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "作",
+          "probability": 0.998046875
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "曲",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "・",
+          "probability": 0.95068359375
+        },
+        {
+          "start": 7.38,
+          "end": 8.78,
+          "word": "編",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 8.78,
+          "end": 11.58,
+          "word": "曲",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 11.66,
+          "end": 11.66,
+          "word": " 初",
+          "probability": 0.8984375
+        },
+        {
+          "start": 11.66,
+          "end": 11.66,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 11.66,
+          "end": 27.32,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 27.32,
+          "end": 28.36,
+          "word": "ク",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 30.0,
+      "end": 34.4,
+      "text": "息を吸って解けた靴紐を結んだ",
+      "avg_logprob": -0.21589542667453104,
+      "no_speech_prob": 0.0081634521484375,
+      "compression_ratio": 1.1538461538461537,
+      "words": [
+        {
+          "start": 30.0,
+          "end": 30.4,
+          "word": "息",
+          "probability": 0.325927734375
+        },
+        {
+          "start": 30.4,
+          "end": 30.78,
+          "word": "を",
+          "probability": 0.994140625
+        },
+        {
+          "start": 30.78,
+          "end": 30.98,
+          "word": "吸",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 30.98,
+          "end": 31.52,
+          "word": "って",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 31.52,
+          "end": 31.84,
+          "word": "解",
+          "probability": 0.34521484375
+        },
+        {
+          "start": 31.84,
+          "end": 32.18,
+          "word": "け",
+          "probability": 0.98828125
+        },
+        {
+          "start": 32.18,
+          "end": 32.34,
+          "word": "た",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 32.34,
+          "end": 32.58,
+          "word": "靴",
+          "probability": 0.986328125
+        },
+        {
+          "start": 32.58,
+          "end": 33.12,
+          "word": "紐",
+          "probability": 0.930908203125
+        },
+        {
+          "start": 33.12,
+          "end": 33.26,
+          "word": "を",
+          "probability": 0.994140625
+        },
+        {
+          "start": 33.26,
+          "end": 33.86,
+          "word": "結",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 33.86,
+          "end": 34.4,
+          "word": "んだ",
+          "probability": 0.99560546875
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 34.4,
+      "end": 39.0,
+      "text": "陸心なことばかりでも足を止めないよ",
+      "avg_logprob": -0.21589542667453104,
+      "no_speech_prob": 0.0081634521484375,
+      "compression_ratio": 1.1538461538461537,
+      "words": [
+        {
+          "start": 34.4,
+          "end": 34.88,
+          "word": "陸",
+          "probability": 0.77685546875
+        },
+        {
+          "start": 34.88,
+          "end": 35.1,
+          "word": "心",
+          "probability": 0.37109375
+        },
+        {
+          "start": 35.1,
+          "end": 35.54,
+          "word": "な",
+          "probability": 0.994140625
+        },
+        {
+          "start": 35.54,
+          "end": 35.78,
+          "word": "こと",
+          "probability": 0.40966796875
+        },
+        {
+          "start": 35.78,
+          "end": 36.28,
+          "word": "ば",
+          "probability": 0.99609375
+        },
+        {
+          "start": 36.28,
+          "end": 36.6,
+          "word": "か",
+          "probability": 0.921875
+        },
+        {
+          "start": 36.6,
+          "end": 36.92,
+          "word": "り",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 36.92,
+          "end": 37.06,
+          "word": "でも",
+          "probability": 0.89892578125
+        },
+        {
+          "start": 37.06,
+          "end": 37.66,
+          "word": "足",
+          "probability": 0.80322265625
+        },
+        {
+          "start": 37.66,
+          "end": 38.18,
+          "word": "を",
+          "probability": 0.83935546875
+        },
+        {
+          "start": 38.18,
+          "end": 38.34,
+          "word": "止",
+          "probability": 0.970703125
+        },
+        {
+          "start": 38.34,
+          "end": 38.56,
+          "word": "め",
+          "probability": 1.0
+        },
+        {
+          "start": 38.56,
+          "end": 38.72,
+          "word": "ない",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 38.72,
+          "end": 39.0,
+          "word": "よ",
+          "probability": 0.83251953125
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 39.0,
+      "end": 43.58,
+      "text": "つるぼけた地図を頼りにいこう",
+      "avg_logprob": -0.21589542667453104,
+      "no_speech_prob": 0.0081634521484375,
+      "compression_ratio": 1.1538461538461537,
+      "words": [
+        {
+          "start": 39.0,
+          "end": 39.84,
+          "word": "つ",
+          "probability": 0.359619140625
+        },
+        {
+          "start": 39.84,
+          "end": 40.06,
+          "word": "る",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 40.06,
+          "end": 40.32,
+          "word": "ぼ",
+          "probability": 0.9541015625
+        },
+        {
+          "start": 40.32,
+          "end": 40.48,
+          "word": "け",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 40.48,
+          "end": 40.64,
+          "word": "た",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 40.64,
+          "end": 41.0,
+          "word": "地",
+          "probability": 0.712890625
+        },
+        {
+          "start": 41.0,
+          "end": 41.48,
+          "word": "図",
+          "probability": 1.0
+        },
+        {
+          "start": 41.48,
+          "end": 41.66,
+          "word": "を",
+          "probability": 0.998046875
+        },
+        {
+          "start": 41.66,
+          "end": 42.32,
+          "word": "頼",
+          "probability": 0.97314453125
+        },
+        {
+          "start": 42.32,
+          "end": 42.62,
+          "word": "り",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 42.62,
+          "end": 42.62,
+          "word": "に",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 42.62,
+          "end": 42.96,
+          "word": "い",
+          "probability": 0.64794921875
+        },
+        {
+          "start": 42.96,
+          "end": 43.58,
+          "word": "こう",
+          "probability": 0.7998046875
+        }
+      ]
+    }
+  ],
+  "refined": [
+    {
+      "start": 30.2,
+      "end": 34.575,
+      "text": "息を吸って解けた靴紐を結んだ"
+    },
+    {
+      "start": 34.69500000000001,
+      "end": 39.175,
+      "text": "陸心なことばかりでも足を止めないよ"
+    },
+    {
+      "start": 39.295,
+      "end": 43.85,
+      "text": "つるぼけた地図を頼りにいこう"
+    }
+  ]
+}

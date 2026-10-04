@@ -1,0 +1,97 @@
+[
+  {
+    "media": "Brand New Sky",
+    "duration": 217.0703125,
+    "original_count": 49,
+    "new_count": 49,
+    "all_original_preserved": true,
+    "first_old": 14.400000000000002,
+    "first_new": 14.400000000000002,
+    "added": 0,
+    "attempts": 5,
+    "remaining": [
+      [
+        2.608,
+        6.672
+      ],
+      [
+        89.33999999999999,
+        91.024
+      ],
+      [
+        177.34,
+        181.776
+      ],
+      [
+        185.072,
+        187.76
+      ]
+    ]
+  },
+  {
+    "media": "Unwavering Startorch",
+    "duration": 232.9890625,
+    "original_count": 35,
+    "new_count": 35,
+    "all_original_preserved": true,
+    "first_old": 10.819999999999999,
+    "first_new": 10.819999999999999,
+    "added": 0,
+    "attempts": 6,
+    "remaining": [
+      [
+        0.0,
+        1.744
+      ],
+      [
+        5.552,
+        7.504
+      ],
+      [
+        80.61999999999999,
+        82.96
+      ],
+      [
+        209.776,
+        211.664
+      ]
+    ]
+  },
+  {
+    "media": "人生エンドロール",
+    "duration": 203.486625,
+    "original_count": 27,
+    "new_count": 30,
+    "all_original_preserved": true,
+    "first_old": 30.2,
+    "first_new": 5.6800000000000015,
+    "added": 3,
+    "attempts": 9,
+    "remaining": [
+      [
+        14.35,
+        15.312
+      ],
+      [
+        20.912,
+        22.416
+      ],
+      [
+        73.19,
+        82.06
+      ],
+      [
+        136.95000000000002,
+        144.72
+      ],
+      [
+        146.416,
+        147.92
+      ],
+      [
+        188.19,
+        196.304
+      ]
+    ]
+  }
+]

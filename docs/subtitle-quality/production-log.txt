@@ -1,0 +1,49 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: 人生エンドロール.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:23.487
+INFO:faster_whisper:Detected language 'ja' with probability 1.00
+📡 Ngôn ngữ phát hiện: ja (99.9%)
+50 🧹 Làm sạch dữ liệu (ja)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 10.0–22.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 20.0–32.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 71.0–83.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 134.8–146.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 144.8–156.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 188.4–200.4s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 18.9–24.4s
+INFO:faster_whisper:Processing audio with duration 00:05.504
+57 🛠 Kiểm tra lời bị thiếu: 144.4–149.9s
+INFO:faster_whisper:Processing audio with duration 00:05.504
+🛠 Kiểm tra coverage: thêm 3 dòng, 9 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(14.16, 15.312), (20.912, 22.416), (73.0, 81.81), (136.76, 144.72), (146.416, 147.92), (190.44, 196.304)]
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 26 [{'start': 5.43, 'end': 8.94, 'text': 'くだらない人生の最後の一手'}, {'start': 9.95, 'end': 14.16, 'text': 'エンドロールに名前がなくとも'}, {'start': 28.71, 'end': 29.66, 'text': '壊れた'}]
+Traceback (most recent call last):
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\tools\asr_coverage_probe.py", line 201, in <module>
+    production_probe(args.media, args.output, args.model, args.device)
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\tools\asr_coverage_probe.py", line 165, in production_probe
+    result = pipeline.run_ai_pipeline(str(media_path), str(output), f"probe-{index}",
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app\ai\pipeline.py", line 94, in run_ai_pipeline
+    from faster_whisper import WhisperModel
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\libs\faster_whisper\__init__.py", line 2, in <module>
+    from faster_whisper.transcribe import WhisperModel
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\libs\faster_whisper\transcribe.py", line 12, in <module>
+    import tokenizers
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\libs\tokenizers\__init__.py", line 78, in <module>
+    from .tokenizers import (  # type: ignore[import]
+ImportError: PyO3 modules compiled for CPython 3.8 or older may only be initialized once per interpreter process

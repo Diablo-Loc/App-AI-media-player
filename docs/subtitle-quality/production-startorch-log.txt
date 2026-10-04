@@ -1,0 +1,28 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: Unwavering Startorch.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:52.989
+INFO:faster_whisper:Detected language 'en' with probability 0.50
+📡 Ngôn ngữ phát hiện: en (50.5%)
+50 🧹 Làm sạch dữ liệu (en)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 78.1–90.1s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 205.5–217.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 0.0–3.7s
+INFO:faster_whisper:Processing audio with duration 00:03.744
+57 🛠 Kiểm tra lời bị thiếu: 3.6–9.5s
+INFO:faster_whisper:Processing audio with duration 00:05.952
+57 🛠 Kiểm tra lời bị thiếu: 207.8–213.7s
+INFO:faster_whisper:Processing audio with duration 00:05.888
+🛠 Kiểm tra coverage: thêm 0 dòng, 6 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(0.0, 1.744), (5.552, 7.504), (80.1, 82.96), (209.776, 211.664)]
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 33 [{'start': 10.77, 'end': 15.8, 'text': "See how far we've come together"}, {'start': 16.83, 'end': 20.68, 'text': 'And we are stronger than before'}, {'start': 21.97, 'end': 27.75, 'text': "And these are memories we'll cherish more and more"}]

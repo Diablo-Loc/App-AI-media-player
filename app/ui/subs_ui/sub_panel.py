@@ -32,11 +32,11 @@ class SettingsPanel(QWidget):
 
         # --- Style (CSS) ---
         self.setStyleSheet("""
-            QWidget { background-color: #282828; color: white; border: 1px solid #404040; border-radius: 8px; }
+            QWidget { background-color: #151C26; color: #EDF3FA; border: 1px solid #273445; border-radius: 8px; }
             QLabel { border: none; font-weight: bold; font-size: 13px; margin-top: 5px; }
-            QComboBox { background-color: #444; border: 1px solid #555; padding: 4px; border-radius: 4px; color: white; }
+            QComboBox { background-color: #1B2431; border: 1px solid #405267; padding: 4px; border-radius: 6px; color: white; }
             QComboBox::drop-down { border: none; }
-            QPushButton { background-color: #3E3E3E; border: none; border-radius: 4px; padding: 6px; }
+            QPushButton { background-color: #1B2431; border: none; border-radius: 6px; padding: 6px; }
             QPushButton:hover { background-color: #505050; }
             QSlider::handle:horizontal { background: #1DB954; width: 16px; margin: -5px 0; border-radius: 8px; }
             QPushButton#btn_reset { background-color: #8B0000; color: white; font-weight: bold; }

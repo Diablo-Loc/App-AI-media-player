@@ -1,7 +1,22 @@
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QLabel, 
-                             QPushButton, QSlider, QWidget,QSizePolicy)
+                             QPushButton, QSlider, QWidget,QSizePolicy, QGridLayout)
 from PySide6.QtCore import Qt, Signal, QEvent, QSize
 from .video_info_popup import VideoInfoPopup
+from .icons import button_icon, ACCENT, TEXT, INK
+from .design_system import PLAYBACK_STYLE
+from .track_label import TrackLabel
+from .mini_video_dock import MiniVideoDock
+
+
+class MetadataPanel(QFrame):
+    """A preferred width that does not become the whole window's minimum."""
+    preferred_width = 320
+
+    def sizeHint(self):
+        size = super().sizeHint()
+        size.setWidth(self.preferred_width)
+        return size
+
 
 class PlaybackBar(QFrame):
     play_toggled = Signal()
@@ -22,45 +37,46 @@ class PlaybackBar(QFrame):
         self.setObjectName("playbackBar")
         self.init_ui()
         self.video_mini_placeholder.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
-        # 1. ĐÃ XÓA 'cursor: pointer;' TRONG CSS (Vì Qt không hỗ trợ thuộc tính này trong QSS)
-        self.setStyleSheet("""
-            #playbackBar { background-color: #121212; border-top: 1px solid #282828; }
-            #infoPanel { background-color: transparent; border-radius: 8px; }
-            #infoPanel:hover { background-color: #282828; }
-            QLabel { color: #b3b3b3; font-size: 12px; }
-            #songTitle { color: white; font-weight: bold; font-size: 14px; }
-            QPushButton { background: transparent; color: white; border: none; font-size: 18px; }
-            QPushButton:hover { color: #1DB954; }
-            
-            /* Style cho nút bị Disable (Mờ đi) */
-            QPushButton:disabled { color: #404040; }
-
-            #playButton { 
-                background-color: white; 
-                color: black; 
-                border-radius: 20px; 
-                font-size: 16px;
-            }
-            #playButton:disabled {
-                background-color: #555;
-                color: #888;
-            }
-        """)
+        self.mini_video_dock = MiniVideoDock(self.video_mini_placeholder)
         self.info_popup = VideoInfoPopup(None)
         self._current_item_data = None # Biến lưu data bài hát hiện tại
+        self.setStyleSheet(PLAYBACK_STYLE)
+        controls = (
+            (self.btn_shuffle, "shuffle", "Phát ngẫu nhiên"),
+            (self.btn_prev, "skip-back", "Bài trước"),
+            (self.btn_play, "play", "Phát / Tạm dừng"),
+            (self.btn_next, "skip-forward", "Bài tiếp theo"),
+            (self.btn_repeat, "repeat", "Lặp lại"),
+            (self.btn_info, "info", "Thông tin bài hát"),
+            (self.btn_subseting, "settings", "Cài đặt phụ đề"),
+            (self.btn_sub, "captions", "Công cụ phụ đề"),
+            (self.btn_reload, "refresh-cw", "Tạo lại phụ đề"),
+            (self.btn_vol, "volume-2", "Âm lượng"),
+            (self.btn_dynamic_island, "picture-in-picture-2", "Mini player"),
+            (self.btn_fs, "maximize", "Toàn màn hình"),
+        )
+        for button, name, label in controls:
+            if button is not self.btn_play:
+                button.setFixedSize(36, 36)
+            button_icon(button, name, label, color=INK if button is self.btn_play else TEXT)
+        self._compact_layout = None
+        self._arrange_controls(self.width())
         
     def init_ui(self):
-        self.main_layout = QHBoxLayout(self)
-        self.main_layout.setContentsMargins(15, 5, 15, 5)
-        self.main_layout.setSpacing(5)
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setContentsMargins(14, 8, 14, 8)
+        self.main_layout.setHorizontalSpacing(12)
+        self.main_layout.setVerticalSpacing(4)
+        self.main_layout.setColumnStretch(1, 1)
 
         # --- CỤM 1: THÔNG TIN (Sát trái) ---
-        self.info_area = QFrame()
+        self.info_area = MetadataPanel()
         self.info_area.setObjectName("infoPanel")
         self.info_area.setCursor(Qt.CursorShape.PointingHandCursor)
         self.info_area.setMouseTracking(True)
         self.info_area.installEventFilter(self)
-        self.info_area.setFixedWidth(300)
+        self.info_area.setMinimumWidth(210)
+        self.info_area.setMaximumWidth(320)
         
         self.info_layout = QHBoxLayout(self.info_area)
         self.info_layout.setContentsMargins(5, 5, 5, 5)
@@ -74,13 +90,16 @@ class PlaybackBar(QFrame):
         self.video_container.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         
         text_info_widget = QWidget()
+        text_info_widget.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        text_info_widget.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         text_info_layout = QVBoxLayout(text_info_widget)
         text_info_layout.setContentsMargins(0, 5, 0, 5)
         
-        self.lbl_song_info = QLabel()
+        self.lbl_song_info = TrackLabel()
         self.lbl_song_info.setObjectName("songTitle")
         self.lbl_song_info.setTextFormat(Qt.TextFormat.RichText) # Cho phép hiện HTML
         self.lbl_song_info.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.lbl_song_info.setMinimumWidth(0)
         self.lbl_song_info.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents) # Để click xuyên qua vào info_area
         
         # Set text mặc định
@@ -97,16 +116,22 @@ class PlaybackBar(QFrame):
         self.info_layout.addWidget(text_info_widget)
 
         # --- CỤM 2: ĐIỀU KHIỂN (Chính giữa) ---
-        center_area = QWidget()
+        center_area = self.center_area = QWidget()
         center_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        center_layout = QVBoxLayout(center_area)
-        center_layout.setSpacing(3)
+        center_layout = self.center_layout = QVBoxLayout(center_area)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(8)
+        center_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         
         # Slider nằm trên (Giống ảnh mẫu)
-        slider_layout = QHBoxLayout()
+        self.slider_area = QWidget()
+        slider_layout = QHBoxLayout(self.slider_area)
+        slider_layout.setContentsMargins(0, 0, 0, 0)
+        slider_layout.setSpacing(8)
         self.lbl_current_time = QLabel("00:00")
         self.time_slider = QSlider(Qt.Orientation.Horizontal)
         self.time_slider.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.time_slider.setMinimumWidth(80)
         self.lbl_total_time = QLabel("00:00")
         
         slider_layout.addWidget(self.lbl_current_time)
@@ -115,14 +140,17 @@ class PlaybackBar(QFrame):
         slider_layout.setAlignment(Qt.AlignmentFlag.AlignCenter) # Căn giữa slider
 
         # Nút bấm nằm dưới
-        btns_layout = QHBoxLayout()
-        self.btn_shuffle = QPushButton("🔀")
-        self.btn_prev = QPushButton("⏮")
-        self.btn_play = QPushButton("▶")
+        self.transport_area = QWidget()
+        btns_layout = self.transport_layout = QHBoxLayout(self.transport_area)
+        btns_layout.setContentsMargins(0, 0, 0, 0)
+        btns_layout.setSpacing(8)
+        self.btn_shuffle = QPushButton()
+        self.btn_prev = QPushButton()
+        self.btn_play = QPushButton()
         self.btn_play.setFixedSize(40, 40)
         self.btn_play.setObjectName("playButton")
-        self.btn_next = QPushButton("⏭")
-        self.btn_repeat = QPushButton("🔁")
+        self.btn_next = QPushButton()
+        self.btn_repeat = QPushButton()
 
         for btn in [self.btn_shuffle, self.btn_prev, self.btn_play, self.btn_next, self.btn_repeat]:
             btns_layout.addWidget(btn)
@@ -130,59 +158,54 @@ class PlaybackBar(QFrame):
         
         btns_layout.setAlignment(Qt.AlignmentFlag.AlignCenter) # Căn giữa các nút
 
-        center_layout.addLayout(slider_layout)
-        center_layout.addLayout(btns_layout)
+        center_layout.addWidget(self.slider_area)
+        center_layout.addWidget(self.transport_area)
 
         # --- CỤM 3: TIỆN ÍCH (Sát phải) ---
-        extra_area = QWidget()
+        extra_area = self.extra_area = QWidget()
         extra_layout = QHBoxLayout(extra_area)
+        extra_layout.setContentsMargins(0, 0, 0, 0)
         extra_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        extra_area.setFixedWidth(310)
+        extra_area.setFixedWidth(7 * 36 + 6 * 4)
         
         #0. Nút Mở Popup Info
-        self.btn_info = QPushButton("ℹ️")
+        self.btn_info = QPushButton()
         self.btn_info.setFixedSize(32, 32)
         self.btn_info.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_info.setToolTip("Thong tin chi tiết bài hát")
-        self.btn_info.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 1. Nút Cài đặt Sub
-        self.btn_subseting = QPushButton("⚙️")
+        self.btn_subseting = QPushButton()
         self.btn_subseting.setFixedSize(32, 32)
         self.btn_subseting.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_subseting.setToolTip("Cài đặt phụ đề")
-        self.btn_subseting.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 1. NÚT CÔNG CỤ PHỤ ĐỀ / BẢNG ĐEN (Subtitle Tools)
-        self.btn_sub = QPushButton("📝")
+        self.btn_sub = QPushButton()
         self.btn_sub.setFixedSize(32, 32)
         self.btn_sub.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_sub.setToolTip("Công cụ khớp & chỉnh sửa phụ đề (Subtitle Tools)")
-        self.btn_sub.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 2. NÚT RELOAD
-        self.btn_reload = QPushButton("🔄")
+        self.btn_reload = QPushButton()
         self.btn_reload.setFixedSize(32, 32)
         self.btn_reload.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_reload.setToolTip("Tạo lại phụ đề (AI Force)")
-        self.btn_reload.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         self.btn_reload.setEnabled(False)
         
         # 3. Nút Loa
-        self.btn_vol = QPushButton("🔊")
+        self.btn_vol = QPushButton()
         self.btn_vol.setFixedSize(32, 32)
         self.btn_vol.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_vol.setStyleSheet("QPushButton { border: none; font-size: 18px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 3.5. Nút mở chế độ dynamic island
-        self.btn_dynamic_island = QPushButton("🍬")
+        self.btn_dynamic_island = QPushButton()
         self.btn_dynamic_island.setFixedSize(32, 32)
         self.btn_dynamic_island.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dynamic_island.setToolTip("Chế độ mini player")
-        self.btn_dynamic_island.setStyleSheet("QPushButton { border: none; font-size: 16px; color: #b3b3b3; } QPushButton:hover { color: white; }")
         
         # 4. Nút Fullscreen
-        self.btn_fs = QPushButton("⤢")
+        self.btn_fs = QPushButton()
         
         extra_layout.addWidget(self.btn_info)
         extra_layout.addWidget(self.btn_subseting)
@@ -194,9 +217,9 @@ class PlaybackBar(QFrame):
         extra_layout.setSpacing(4)
         
         # --- THÊM VÀO LAYOUT CHÍNH THEO TỈ LỆ 3:4:3 ---
-        self.main_layout.addWidget(self.info_area, 3)
-        self.main_layout.addWidget(center_area, 4)
-        self.main_layout.addWidget(extra_area, 3)
+        self.main_layout.addWidget(self.info_area, 0, 0)
+        self.main_layout.addWidget(center_area, 0, 1)
+        self.main_layout.addWidget(extra_area, 0, 2)
 
         # Setup Video Mini & Signals
         self.video_mini_placeholder = self.video_container
@@ -214,13 +237,40 @@ class PlaybackBar(QFrame):
         self.time_slider.sliderReleased.connect(lambda: self.seek_requested.emit(self.time_slider.value()))
         self.time_slider.valueChanged.connect(self._on_slider_moved)
         self.btn_sub.clicked.connect(self.subtitle_tools_clicked.emit)
-    
-    def set_shuffle_visual(self, is_active):
-        """Cập nhật màu nút shuffle dựa trên trạng thái"""
-        if is_active:
-            self.btn_shuffle.setStyleSheet("QPushButton { background: transparent; color: #3ea6ff; border: none; font-size: 18px; } QPushButton:hover { color: #1DB954; }")
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "_compact_layout"):
+            self._arrange_controls(event.size().width())
+
+    def _arrange_controls(self, width):
+        """Reflow the same controls; keep the video surface and footer height."""
+        compact = width < 1000
+        info_width = max(210, min(260 if compact else 320, int(width * 0.29)))
+        if self.info_area.preferred_width != info_width:
+            self.info_area.preferred_width = info_width
+            self.info_area.updateGeometry()
+        if self.info_area.maximumWidth() != info_width:
+            self.info_area.setMaximumWidth(info_width)
+        if compact == self._compact_layout:
+            return
+        self._compact_layout = compact
+        self.transport_layout.setSpacing(4 if compact else 8)
+        for widget in (self.info_area, self.center_area, self.extra_area, self.slider_area):
+            self.main_layout.removeWidget(widget)
+        self.center_layout.removeWidget(self.slider_area)
+        if compact:
+            self.main_layout.addWidget(self.info_area, 0, 0, 2, 1)
+            self.main_layout.addWidget(self.slider_area, 0, 1, 1, 2)
+            self.main_layout.addWidget(self.center_area, 1, 1)
+            self.main_layout.addWidget(self.extra_area, 1, 2)
         else:
-            self.btn_shuffle.setStyleSheet("QPushButton { background: transparent; color: white; border: none; font-size: 18px; } QPushButton:hover { color: #1DB954; }")
+            self.center_layout.insertWidget(0, self.slider_area)
+            self.main_layout.addWidget(self.info_area, 0, 0)
+            self.main_layout.addWidget(self.center_area, 0, 1)
+            self.main_layout.addWidget(self.extra_area, 0, 2)
+        self.slider_area.show()
+
         
         # --- HÀM HỖ TRỢ XỬ LÝ CLICK ---
     def eventFilter(self, watched, event):
@@ -241,8 +291,8 @@ class PlaybackBar(QFrame):
             self.lbl_current_time.setText(self.format_time(value))
 
     def update_play_state(self, is_playing):
-        self.btn_play.setText("⏸" if is_playing else "▶")
-        self.btn_play.setStyleSheet("background-color: #1DB954;" if is_playing else "background-color: white;")
+        button_icon(self.btn_play, "pause" if is_playing else "play", color=INK)
+        self.btn_play.setToolTip("Tạm dừng" if is_playing else "Phát")
 
     def update_position(self, ms, time_str):
         if not self.time_slider.isSliderDown():
@@ -260,6 +310,7 @@ class PlaybackBar(QFrame):
         if not hasattr(self, 'lbl_song_info'):
             return
         self._current_item_data = item_data
+        self.mini_video_dock.prepare_media()
         display_title = title
         if len(display_title) > 40:
             display_title = display_title[:37] + "..."
@@ -303,12 +354,16 @@ class PlaybackBar(QFrame):
 
     def set_shuffle_visual(self, is_active):
         """Đổi màu nút Shuffle dựa trên trạng thái từ MainWindow"""
-        if is_active:
-            # Màu xanh (Active)
-            self.btn_shuffle.setStyleSheet("color: #3ea6ff; font-size: 18px; border: none; background: transparent;")
-        else:
-            # Màu trắng (Inactive)
-            self.btn_shuffle.setStyleSheet("color: white; font-size: 18px; border: none; background: transparent;")
+        button_icon(self.btn_shuffle, "shuffle", color=ACCENT if is_active else TEXT)
+        self.btn_shuffle.setToolTip("Phát ngẫu nhiên: bật" if is_active else "Phát ngẫu nhiên: tắt")
+
+    def update_volume_icon(self, volume):
+        name = "volume-x" if volume == 0 else "volume-1" if volume < 0.5 else "volume-2"
+        button_icon(self.btn_vol, name)
+
+    def update_fullscreen_icon(self, fullscreen):
+        button_icon(self.btn_fs, "minimize" if fullscreen else "maximize")
+        self.btn_fs.setToolTip("Thoát toàn màn hình" if fullscreen else "Toàn màn hình")
             
     def show_video_info_popup(self):
         """Hàm test luồng click nút (i)"""

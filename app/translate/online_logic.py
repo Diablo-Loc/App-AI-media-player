@@ -160,7 +160,7 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
             print("⚠️ API trả về text rỗng")
             return None
         
-        matched_count = 0
+        accepted = {}
         for line in translated_text.strip().split("\n"):
             if "===" not in line: continue
             
@@ -172,30 +172,33 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
                     print(f"⚠️ Dòng không đủ phần: {line}")
                     continue
                     
-                idx_match = re.search(r'\d+', parts[0])
+                idx_match = re.fullmatch(r'\s*(?:ID\s*[:#]?\s*)?(\d+)\s*', parts[0], re.IGNORECASE)
                 if not idx_match:
                     continue
                     
-                idx = int(idx_match.group())
-                if idx >= len(subs):
-                    continue
+                idx = int(idx_match.group(1))
+                if idx >= len(subs) or idx in accepted:
+                    return None
                     
                 en_text = parts[1].strip()
                 vi_text = parts[2].strip()
                 
                 # Gán dòng giữa (Tiếng Anh)
-                subs[idx].middle = SubtitleLine(text=en_text, lang="en", style="EN") if en_text else None
-                
-                # Gán dòng dưới (Tiếng Việt)
-                subs[idx].bottom = SubtitleLine(text=vi_text, lang="vi", style="VI") if vi_text else None
-                
-                matched_count += 1
+                if en_text and vi_text:
+                    accepted[idx] = (en_text, vi_text)
                 
             except Exception as e:
                 print(f"⚠️ Lỗi parse dòng: {line[:50]}... -> {e}")
                 continue
         
-        print(f"✅ Dịch xong {matched_count}/{len(subs)} dòng")
+        required = {i for i, s in enumerate(subs) if s.top and s.top.text.strip()}
+        if not required.issubset(accepted):
+            print(f"⚠️ Dịch thiếu {len(required - accepted.keys())} dòng; chuyển sang fallback hiện có.")
+            return None
+        for idx, (en_text, vi_text) in accepted.items():
+            subs[idx].middle = SubtitleLine(text=en_text, lang="en", style="EN")
+            subs[idx].bottom = SubtitleLine(text=vi_text, lang="vi", style="VI")
+        print(f"✅ Dịch xong {len(accepted)}/{len(subs)} dòng")
         return subs
 
     except Exception as e:

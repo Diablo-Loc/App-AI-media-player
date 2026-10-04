@@ -1,0 +1,46 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Main,MS UI Gothic,45,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,1,2,30,30,50,1
+Style: Sub,Arial,28,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,1,2,30,30,15,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:10.77,0:00:15.72,Main,,0,0,0,,See how far we've come together
+Dialogue: 0,0:00:16.83,0:00:20.60,Main,,0,0,0,,And we are stronger than before
+Dialogue: 0,0:00:21.97,0:00:27.75,Main,,0,0,0,,And these are memories we'll cherish more and more
+Dialogue: 0,0:00:27.75,0:00:31.94,Main,,0,0,0,,We'll walk as one with dawn
+Dialogue: 0,0:00:33.89,0:00:38.63,Main,,0,0,0,,May your courage never fail you
+Dialogue: 0,0:00:38.63,0:00:43.32,Main,,0,0,0,,Your future's yours alone to write
+Dialogue: 0,0:00:44.81,0:00:50.56,Main,,0,0,0,,And may our shared ideas cut through the haze of time
+Dialogue: 0,0:00:51.63,0:00:54.30,Main,,0,0,0,,Amidst where stars arise
+Dialogue: 0,0:00:55.99,0:01:03.13,Main,,0,0,0,,I'll carry this light moving strong I'll tell
+Dialogue: 0,0:01:03.13,0:01:07.21,Main,,0,0,0,,it our hardship is to learn
+Dialogue: 0,0:01:07.21,0:01:13.33,Main,,0,0,0,,We're made for this moment We're chosen and we know it
+Dialogue: 0,0:01:13.33,0:01:20.02,Main,,0,0,0,,Today is the day we're never to fly ever so high
+Dialogue: 0,0:01:36.01,0:01:40.97,Main,,0,0,0,,May your courage never fail you
+Dialogue: 0,0:01:40.97,0:01:45.58,Main,,0,0,0,,Your future's yours alone to write
+Dialogue: 0,0:01:46.93,0:01:52.67,Main,,0,0,0,,And may our shared ideas come through the haze of time
+Dialogue: 0,0:01:52.67,0:01:56.48,Main,,0,0,0,,A mist where stars arise
+Dialogue: 0,0:01:58.01,0:02:03.95,Main,,0,0,0,,We're shining so bright as the sun
+Dialogue: 0,0:02:03.95,0:02:09.53,Main,,0,0,0,,We're rising so high above the storm
+Dialogue: 0,0:02:09.53,0:02:12.61,Main,,0,0,0,,In search of good and all in
+Dialogue: 0,0:02:12.61,0:02:14.96,Main,,0,0,0,,We're focusing devoted
+Dialogue: 0,0:02:15.67,0:02:16.76,Main,,0,0,0,,Let's rise
+Dialogue: 0,0:02:17.67,0:02:22.78,Main,,0,0,0,,Night or daylight You know the light of mine
+Dialogue: 0,0:02:37.53,0:02:43.15,Main,,0,0,0,,I'll carry this light moving strong
+Dialogue: 0,0:02:43.15,0:02:48.91,Main,,0,0,0,,I'll tear it when hardship is too far
+Dialogue: 0,0:02:48.91,0:02:52.05,Main,,0,0,0,,We're waiting for this moment
+Dialogue: 0,0:02:52.05,0:02:59.16,Main,,0,0,0,,We're chosen and we know it Today is now or never
+Dialogue: 0,0:03:00.05,0:03:06.01,Main,,0,0,0,,We're shining so bright as the sun
+Dialogue: 0,0:03:06.01,0:03:11.45,Main,,0,0,0,,We're rising so high above the stars
+Dialogue: 0,0:03:11.45,0:03:14.69,Main,,0,0,0,,In search of truth and knowledge
+Dialogue: 0,0:03:14.69,0:03:18.84,Main,,0,0,0,,We're focused and devoted Let's rise
+Dialogue: 0,0:03:19.45,0:03:21.54,Main,,0,0,0,,Night or daylight
+Dialogue: 0,0:03:24.11,0:03:27.44,Main,,0,0,0,,Keep going right or left
+Dialogue: 0,0:03:49.15,0:03:52.08,Main,,0,0,0,,© transcript Emily Beynon

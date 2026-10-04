@@ -1,0 +1,19 @@
+test_captured_real_cases_no_longer_merge_adjacent_asr_lines_or_cut_small_breath (tests.test_lyric_phrases.LyricPhraseTests.test_captured_real_cases_no_longer_merge_adjacent_asr_lines_or_cut_small_breath) ... ok
+test_contiguous_short_complete_asr_lines_and_refrains_stay_separate (tests.test_lyric_phrases.LyricPhraseTests.test_contiguous_short_complete_asr_lines_and_refrains_stay_separate) ... ok
+test_long_source_followed_by_tiny_continuation_does_not_orphan_last_word (tests.test_lyric_phrases.LyricPhraseTests.test_long_source_followed_by_tiny_continuation_does_not_orphan_last_word) ... ok
+test_long_sustained_note_does_not_force_eight_second_mid_sentence_cut (tests.test_lyric_phrases.LyricPhraseTests.test_long_sustained_note_does_not_force_eight_second_mid_sentence_cut) ... ok
+test_missing_word_times_keep_source_text_whole_including_two_sentences (tests.test_lyric_phrases.LyricPhraseTests.test_missing_word_times_keep_source_text_whole_including_two_sentences) ... ok
+test_newline_before_word_breaks_before_not_after_that_word (tests.test_lyric_phrases.LyricPhraseTests.test_newline_before_word_breaks_before_not_after_that_word) ... ok
+test_newline_inside_indivisible_word_has_no_invented_phrase_timestamp (tests.test_lyric_phrases.LyricPhraseTests.test_newline_inside_indivisible_word_has_no_invented_phrase_timestamp) ... ok
+test_only_grouping_and_newline_adapters_change_refinement_source (tests.test_lyric_phrases.LyricPhraseTests.test_only_grouping_and_newline_adapters_change_refinement_source) ... ok
+test_oversized_phrase_is_balanced_without_losing_or_orphaning_tokens (tests.test_lyric_phrases.LyricPhraseTests.test_oversized_phrase_is_balanced_without_losing_or_orphaning_tokens) ... ok
+test_qt_displays_only_active_phrase_and_retains_language_modes (tests.test_lyric_phrases.LyricPhraseTests.test_qt_displays_only_active_phrase_and_retains_language_modes) ... ok
+test_real_pause_stays_empty_and_does_not_extend_previous_sentence (tests.test_lyric_phrases.LyricPhraseTests.test_real_pause_stays_empty_and_does_not_extend_previous_sentence) ... ok
+test_short_refrains_without_punctuation_remain_separate_performances (tests.test_lyric_phrases.LyricPhraseTests.test_short_refrains_without_punctuation_remain_separate_performances) ... ok
+test_small_breath_inside_a_sentence_does_not_split_a_fragment (tests.test_lyric_phrases.LyricPhraseTests.test_small_breath_inside_a_sentence_does_not_split_a_fragment) ... ok
+test_tiny_asr_fragments_are_joined_not_treated_as_complete_lines (tests.test_lyric_phrases.LyricPhraseTests.test_tiny_asr_fragments_are_joined_not_treated_as_complete_lines) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.387s
+
+OK

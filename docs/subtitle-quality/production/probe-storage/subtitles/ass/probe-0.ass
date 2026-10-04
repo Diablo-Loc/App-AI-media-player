@@ -1,0 +1,39 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Main,MS UI Gothic,45,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,1,2,30,30,50,1
+Style: Sub,Arial,28,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,1,2,30,30,15,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:05.43,0:00:08.94,Main,,0,0,0,,くだらない人生の最後の一手
+Dialogue: 0,0:00:09.95,0:00:14.16,Main,,0,0,0,,エンドロールに名前がなくとも
+Dialogue: 0,0:00:28.71,0:00:29.66,Main,,0,0,0,,壊れた
+Dialogue: 0,0:00:29.95,0:00:36.75,Main,,0,0,0,,息を吸って解けた靴紐を結んだ理屈な言葉あたり
+Dialogue: 0,0:00:36.75,0:00:43.64,Main,,0,0,0,,でも足を止めないよつるぼけた地図を頼りにいこう
+Dialogue: 0,0:00:44.65,0:00:49.52,Main,,0,0,0,,隣の芝生が青く見えても
+Dialogue: 0,0:00:51.03,0:00:57.17,Main,,0,0,0,,走り最低限でも止まらなきゃそれでいいから後ろ
+Dialogue: 0,0:00:57.17,0:01:04.17,Main,,0,0,0,,で指差す奴らはほっとけ消失な人生なんてもう特
+Dialogue: 0,0:01:04.17,0:01:11.17,Main,,0,0,0,,に諦めたらエンドロールなんかじゃない生き様で
+Dialogue: 0,0:01:11.17,0:01:13.00,Main,,0,0,0,,刻んでやれ
+Dialogue: 0,0:01:21.81,0:01:27.16,Main,,0,0,0,,一人がいいってどこか強がってみせた
+Dialogue: 0,0:01:27.77,0:01:32.64,Main,,0,0,0,,主人公じゃないから見合わないのに
+Dialogue: 0,0:01:33.10,0:01:40.89,Main,,0,0,0,,けれど千点万か正解はいいぞそう都合主義ならま
+Dialogue: 0,0:01:40.89,0:01:43.04,Main,,0,0,0,,かり通すだよ
+Dialogue: 0,0:01:44.39,0:01:49.45,Main,,0,0,0,,二重人生なんかそういうものっては生きらないで
+Dialogue: 0,0:01:49.45,0:01:56.73,Main,,0,0,0,,泥まみれの生き方でもいいんだ大それた才能なん
+Dialogue: 0,0:01:56.73,0:02:02.41,Main,,0,0,0,,てこっちからお断りだバードエンドなんかじゃない
+Dialogue: 0,0:02:02.41,0:02:10.36,Main,,0,0,0,,それなりの幸せで決められたレールを保っても
+Dialogue: 0,0:02:10.75,0:02:16.21,Main,,0,0,0,,悪くはないんだろうけどそれだけじゃつまらない
+Dialogue: 0,0:02:16.21,0:02:16.76,Main,,0,0,0,,から
+Dialogue: 0,0:02:37.91,0:02:44.29,Main,,0,0,0,,走れ最低限でも止まらなくそれでいいから後ろで
+Dialogue: 0,0:02:44.29,0:02:51.57,Main,,0,0,0,,指さす奴らはほっとけ上質な人生なんてもう特に
+Dialogue: 0,0:02:51.57,0:02:58.37,Main,,0,0,0,,諦めたらエンドロールなんかじゃない生き様で刻
+Dialogue: 0,0:02:58.37,0:03:00.08,Main,,0,0,0,,んでやれ
+Dialogue: 0,0:03:03.89,0:03:08.00,Main,,0,0,0,,くだらない人生の最後の一手を
+Dialogue: 0,0:03:09.63,0:03:10.44,Main,,0,0,0,,今

@@ -1,0 +1,58 @@
+Model loaded {'seconds': 3.102526399998169, 'process_cpu_seconds': 0.28125, 'process_rss_before_mib': 392.74609375, 'process_rss_peak_mib': 3453.8515625, 'process_rss_extra_peak_mib': 3061.10546875, 'gpu_total_memory_peak_mib': 1907.0, 'gpu_utilization_peak_percent': 0.0, 'gpu_samples': 5}
+🎵 Đang trích xuất âm thanh: A Small Miracle(short).mp4...
+START A Small Miracle(short).mp4 round 1
+DONE A Small Miracle(short).mp4 1 ASR 9.52 coverage 6.53 retries 7 added 2 preserved True
+START A Small Miracle(short).mp4 round 2
+DONE A Small Miracle(short).mp4 2 ASR 10.81 coverage 6.42 retries 7 added 2 preserved True
+START A Small Miracle(short).mp4 round 3
+DONE A Small Miracle(short).mp4 3 ASR 10.86 coverage 4.68 retries 7 added 2 preserved True
+🎵 Đang trích xuất âm thanh: Brand New Sky.mp4...
+START Brand New Sky.mp4 round 1
+DONE Brand New Sky.mp4 1 ASR 9.1 coverage 3.99 retries 5 added 0 preserved True
+START Brand New Sky.mp4 round 2
+DONE Brand New Sky.mp4 2 ASR 14.35 coverage 5.49 retries 5 added 0 preserved True
+START Brand New Sky.mp4 round 3
+DONE Brand New Sky.mp4 3 ASR 13.88 coverage 5.35 retries 5 added 0 preserved True
+🎵 Đang trích xuất âm thanh: Empty old City - Looma.mp4...
+START Empty old City - Looma.mp4 round 1
+DONE Empty old City - Looma.mp4 1 ASR 12.32 coverage 9.4 retries 11 added 2 preserved True
+START Empty old City - Looma.mp4 round 2
+DONE Empty old City - Looma.mp4 2 ASR 12.84 coverage 9.79 retries 11 added 2 preserved True
+START Empty old City - Looma.mp4 round 3
+DONE Empty old City - Looma.mp4 3 ASR 12.93 coverage 9.94 retries 11 added 2 preserved True
+🎵 Đang trích xuất âm thanh: Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4...
+START Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 round 1
+DONE Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 1 ASR 31.71 coverage 14.75 retries 7 added 5 preserved True
+START Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 round 2
+DONE Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 2 ASR 31.5 coverage 14.39 retries 7 added 5 preserved True
+START Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 round 3
+DONE Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4 3 ASR 26.21 coverage 9.34 retries 7 added 5 preserved True
+🎵 Đang trích xuất âm thanh: Unwavering Startorch.mp4...
+START Unwavering Startorch.mp4 round 1
+DONE Unwavering Startorch.mp4 1 ASR 8.02 coverage 3.94 retries 6 added 0 preserved True
+START Unwavering Startorch.mp4 round 2
+DONE Unwavering Startorch.mp4 2 ASR 7.91 coverage 3.72 retries 6 added 0 preserved True
+START Unwavering Startorch.mp4 round 3
+DONE Unwavering Startorch.mp4 3 ASR 8.04 coverage 3.83 retries 6 added 0 preserved True
+🎵 Đang trích xuất âm thanh: 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4...
+START 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 1
+DONE 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 1 ASR 11.36 coverage 6.19 retries 10 added 1 preserved True
+START 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 2
+DONE 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 2 ASR 11.24 coverage 6.2 retries 10 added 1 preserved True
+START 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 3
+DONE 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 3 ASR 11.4 coverage 6.19 retries 10 added 1 preserved True
+🎵 Đang trích xuất âm thanh: 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4...
+START 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 1
+DONE 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 1 ASR 13.0 coverage 4.25 retries 8 added 0 preserved True
+START 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 2
+DONE 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 2 ASR 18.82 coverage 7.65 retries 8 added 0 preserved True
+START 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 round 3
+DONE 【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4 3 ASR 23.92 coverage 7.39 retries 8 added 0 preserved True
+🎵 Đang trích xuất âm thanh: 人生エンドロール.mp4...
+START 人生エンドロール.mp4 round 1
+DONE 人生エンドロール.mp4 1 ASR 13.66 coverage 8.24 retries 9 added 3 preserved True
+START 人生エンドロール.mp4 round 2
+DONE 人生エンドロール.mp4 2 ASR 13.21 coverage 8.0 retries 9 added 3 preserved True
+START 人生エンドロール.mp4 round 3
+DONE 人生エンドロール.mp4 3 ASR 12.96 coverage 8.01 retries 9 added 3 preserved True
+FINISHED 8 videos; old subtitle files unchanged: True

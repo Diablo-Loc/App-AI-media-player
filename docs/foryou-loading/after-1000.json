@@ -1,0 +1,47 @@
+{
+  "before": false,
+  "items": 1000,
+  "rounds": 3,
+  "records": [
+    {
+      "load_ms": 31.094099998881575,
+      "filter_ms": 42.4910000001546,
+      "clear_ms": 46.3646999996854,
+      "filter_submit_ms": 0.08309999975608662,
+      "clear_submit_ms": 0.31960000342223793,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 47.72969999612542
+    },
+    {
+      "load_ms": 26.19569999660598,
+      "filter_ms": 45.692700005020015,
+      "clear_ms": 50.275499997951556,
+      "filter_submit_ms": 0.05810000584460795,
+      "clear_submit_ms": 0.931399998080451,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 46.307399999932386
+    },
+    {
+      "load_ms": 19.758700000238605,
+      "filter_ms": 40.78999999910593,
+      "clear_ms": 49.38090000359807,
+      "filter_submit_ms": 0.07709999772487208,
+      "clear_submit_ms": 0.6689000001642853,
+      "clear_cards_created": 0,
+      "live_cards": 8,
+      "scroll_with_40ms_pump": 46.394999997573905
+    }
+  ],
+  "medians": {
+    "load_ms": 26.19569999660598,
+    "filter_ms": 42.4910000001546,
+    "clear_ms": 49.38090000359807,
+    "filter_submit_ms": 0.07709999772487208,
+    "clear_submit_ms": 0.6689000001642853,
+    "clear_cards_created": 0,
+    "live_cards": 8,
+    "scroll_with_40ms_pump": 46.394999997573905
+  }
+}

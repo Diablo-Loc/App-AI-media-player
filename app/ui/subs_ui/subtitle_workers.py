@@ -167,10 +167,12 @@ No explanation.
                 text = ai_results.get(i, seg["text"])
                 output.append(f"[{seg['start']:.2f} --> {seg['end']:.2f}] {text}")
 
-            self.finished_signal.emit(output, len(ai_results))
+            if not self.isInterruptionRequested():
+                self.finished_signal.emit(output, len(ai_results))
 
         except Exception as e:
-            self.error_signal.emit(str(e))
+            if not self.isInterruptionRequested():
+                self.error_signal.emit(str(e))
 
 
 class TranslationWorker(QThread):
@@ -184,6 +186,8 @@ class TranslationWorker(QThread):
 
     def run(self):
         try:
+            if self.isInterruptionRequested():
+                return
             import torch
             from translate.pipeline import translate_pipeline, clear_translator
             from translate.online_logic import translate_online_pipeline
@@ -294,9 +298,11 @@ class TranslationWorker(QThread):
 
                 updated_segments.append(new_seg)
 
-            self.finished_signal.emit(updated_segments)
+            if not self.isInterruptionRequested():
+                self.finished_signal.emit(updated_segments)
 
         except Exception as e:
             import traceback
             traceback.print_exc()
-            self.error_signal.emit(str(e))
+            if not self.isInterruptionRequested():
+                self.error_signal.emit(str(e))

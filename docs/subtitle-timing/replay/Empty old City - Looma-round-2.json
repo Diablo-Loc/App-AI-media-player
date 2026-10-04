@@ -1,0 +1,163 @@
+{
+  "report": {
+    "record": "Empty old City - Looma-round-2.json",
+    "language": "en",
+    "cues": 29,
+    "captured_previous_profile_reproduced": true,
+    "cue_text_and_start_unchanged": true,
+    "accepted_character_inventory_preserved": true,
+    "no_added_tail": true,
+    "no_overlap": true,
+    "word_timestamp_pauses_at_least_two_seconds": 13,
+    "pause_violations": [],
+    "source_reference": "Captured raw ASR; not human lyric or vocal boundary ground truth",
+    "saved_times_equal_refined": true
+  },
+  "refined": [
+    {
+      "start": 0.67,
+      "end": 5.02,
+      "text": "Muse over the antique memories"
+    },
+    {
+      "start": 6.31,
+      "end": 12.48,
+      "text": "Realize again every fragment shown to know why"
+    },
+    {
+      "start": 13.39,
+      "end": 18.86,
+      "text": "On my ugly dress in the millions of laughs occurs"
+    },
+    {
+      "start": 19.97,
+      "end": 25.46,
+      "text": "Fool me but I could and I act like show is luxury"
+    },
+    {
+      "start": 29.95,
+      "end": 31.4,
+      "text": "A fantasy"
+    },
+    {
+      "start": 41.89,
+      "end": 49.01,
+      "text": "For a long time, this body burned in the fire"
+    },
+    {
+      "start": 49.01,
+      "end": 51.1,
+      "text": "Asking for the meaning of the truth"
+    },
+    {
+      "start": 55.57,
+      "end": 58.06,
+      "text": "本当の二十歳の意味を尋ねて本当の二十歳の意味を尋ねて"
+    },
+    {
+      "start": 62.09,
+      "end": 63.54,
+      "text": "それが人の汲めた呪いでもそれが人の汲めた呪いでも"
+    },
+    {
+      "start": 67.85,
+      "end": 73.17,
+      "text": "心が夢る名は咲かせましょう心が夢る名は咲かせましょう"
+    },
+    {
+      "start": 73.17,
+      "end": 79.16,
+      "text": "それでも世が愛しい神様らは悪い"
+    },
+    {
+      "start": 83.15,
+      "end": 86.0,
+      "text": "壊れたと想像するほど生命線が座ってばかりで"
+    },
+    {
+      "start": 89.19,
+      "end": 92.04,
+      "text": "花びらが柔らかい毒薬の味が"
+    },
+    {
+      "start": 97.61,
+      "end": 100.46,
+      "text": "忘れられておられるまで囚われていたい"
+    },
+    {
+      "start": 113.35,
+      "end": 116.16,
+      "text": "Chantelle, egg, flowers,"
+    },
+    {
+      "start": 116.53,
+      "end": 118.54,
+      "text": "pick from my balm"
+    },
+    {
+      "start": 121.03,
+      "end": 125.32,
+      "text": "Hitoriko, tsumuete no kurishin"
+    },
+    {
+      "start": 126.13,
+      "end": 128.52,
+      "text": "My love for Brazil,"
+    },
+    {
+      "start": 128.83,
+      "end": 132.34,
+      "text": "your vital human heart"
+    },
+    {
+      "start": 133.33,
+      "end": 138.08,
+      "text": "Mayu no naka de umarete kita, nagai wa doku"
+    },
+    {
+      "start": 146.71,
+      "end": 148.16,
+      "text": "声も目黒もないこの場所で"
+    },
+    {
+      "start": 153.31,
+      "end": 154.76,
+      "text": "朧に映る影に見とれてる"
+    },
+    {
+      "start": 159.89,
+      "end": 161.34,
+      "text": "それが人の喰うまた呪いでも"
+    },
+    {
+      "start": 163.25,
+      "end": 168.45,
+      "text": "私にくれる Let's make it bloom"
+    },
+    {
+      "start": 168.45,
+      "end": 172.32,
+      "text": "Even so, I don't know"
+    },
+    {
+      "start": 173.95,
+      "end": 179.7,
+      "text": "God's words and love The more I think about it"
+    },
+    {
+      "start": 180.19,
+      "end": 185.85,
+      "text": "The more I can't live The petals are soft"
+    },
+    {
+      "start": 185.85,
+      "end": 193.79,
+      "text": "The taste of poison Thank you so much for watching this video, and I'll see you"
+    },
+    {
+      "start": 193.79,
+      "end": 197.7,
+      "text": "in the next video!"
+    }
+  ]
+}

@@ -46,3 +46,6 @@ class ThumbnailWorker(QThread):
         except Exception:
             pass
         self.queue = []
+
+    def cancel(self):
+        self.is_running = False

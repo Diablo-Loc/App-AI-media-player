@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from subtitle.timing_format import ass_time
 
 class ASSRenderer:
     @staticmethod
@@ -60,9 +61,4 @@ class ASSRenderer:
     @staticmethod
     def format_time(seconds):
         """Định dạng chuẩn ASS: H:MM:SS.cs (centiseconds)"""
-        if seconds < 0: seconds = 0
-        h = int(seconds // 3600)
-        m = int((seconds % 3600) // 60)
-        s = seconds % 60
-        # ASS dùng 2 chữ số sau dấu phẩy (centiseconds)
-        return f"{h}:{m:02d}:{s:05.2f}"
+        return ass_time(seconds)
