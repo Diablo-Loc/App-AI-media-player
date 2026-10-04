@@ -350,7 +350,8 @@ class SourceScopeTests(unittest.TestCase):
         self.assertEqual(set(manifest), set(expected))
         for relative, names in expected.items():
             old = before_presentation_changes(relative)
-            new = (ROOT / relative).read_text(encoding='utf-8-sig')
+            from tests.audio_effects_contracts import before_audio_changes
+            new = before_audio_changes(relative)
             before, after = functions(old), functions(new)
             self.assertEqual({name for name in before if before[name] != after.get(name)}, names)
             self.assertEqual(manifest[relative]['changed_functions'], [name for name in before if name in names])
@@ -366,7 +367,7 @@ class SourceScopeTests(unittest.TestCase):
             self.assertEqual(ast.dump(before_tree), ast.dump(after_tree))
         helpers = json.loads((ROOT / 'docs/subtitle-presentation/helper-hash.json').read_text())
         for relative, expected_hash in helpers.items():
-            self.assertEqual(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), expected_hash)
+            self.assertEqual(hashlib.sha256(before_audio_changes(relative, raw=True)).hexdigest(), expected_hash)
 
 
 if __name__ == '__main__':

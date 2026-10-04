@@ -1,0 +1,207 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "qt": "6.10.1",
+  "mode": "offscreen Qt decoder, muted",
+  "files": [
+    {
+      "name": "A Small Miracle(short).mp4",
+      "source_bytes": 7390691,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 5.941941199998837,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.261022700000467,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "Brand New Sky.mp4",
+      "source_bytes": 11431119,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 8.182165999998688,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.24691830000301707,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "Empty old City - Looma.mp4",
+      "source_bytes": 59846840,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 7.497045399999479,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.2413851999990584,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "source_bytes": 26079017,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 8.292868399999861,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.2520552999994834,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "Unwavering Startorch.mp4",
+      "source_bytes": 18134588,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 7.173123799999303,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.2169313999984297,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "source_bytes": 39880518,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 8.02667179999844,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.21589619999940624,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "source_bytes": 35477074,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 7.08549480000147,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.21281869999802439,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    },
+    {
+      "name": "人生エンドロール.mp4",
+      "source_bytes": 9629175,
+      "runs": [
+        {
+          "phase": "cold",
+          "wait_to_position_50ms_seconds": 6.803538899999694,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 3,
+          "video_track": 0
+        },
+        {
+          "phase": "cache",
+          "wait_to_position_50ms_seconds": 0.2317637999985891,
+          "source_changes": 2,
+          "playing_transitions": 1,
+          "original_played": false,
+          "tool_processes": 0,
+          "video_track": 0
+        }
+      ],
+      "source_unchanged": true
+    }
+  ]
+}

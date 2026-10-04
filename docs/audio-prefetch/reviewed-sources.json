@@ -1,0 +1,58 @@
+{
+  "app/control/audio_effects.py": {
+    "before_sha256": "ffd8aa47d0d535fea4eaa797b909f3e3ed19739e40eed10eef7a1419f26196c4",
+    "after_sha256": "d5aa88fc1e62d1d8e9122a9ba0d914ac6e44395a7b7725d735537466ec02b38d",
+    "changed_functions": [
+      "AudioEffectsController.__init__",
+      "AudioEffectsController._load_profile",
+      "AudioEffectsController.play_source",
+      "AudioEffectsController._save_profile",
+      "AudioEffectsController.set_profile",
+      "AudioEffectsController._queue_latest",
+      "AudioEffectsController._source_changed",
+      "AudioEffectsController._prepared",
+      "AudioEffectsController.shutdown"
+    ],
+    "added_functions": [
+      "AudioEffectsController.set_prefetch",
+      "AudioEffectsController.playback_queue_changed"
+    ]
+  },
+  "app/ui/audio_effects_panel.py": {
+    "before_sha256": "3165c97917c23c40a12b200c3abb9dd90b0d8ca42d47ea8d575a783d98335c3c",
+    "after_sha256": "c97d007c153126a1e8a1f4c6b432987b88cef1e7c3f131d5e3a1edbde72094c6",
+    "changed_functions": [
+      "AudioEffectsPanel.__init__",
+      "AudioEffectsPanel._emit_settings",
+      "AudioEffectsPanel.set_profile",
+      "AudioEffectsPanel.open_at"
+    ],
+    "added_functions": [
+      "AudioEffectsPanel.set_prefetch"
+    ]
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "f72d201d3cffba57bf81c997efca303b6e8580115869a50c2646d0a2c389aa0f",
+    "after_sha256": "4f0c0ecd2a42c72612d1a693225ee5f9a2304984e8cf1d9b98e0e19cf249334c",
+    "changed_functions": [
+      "MainWindow.toggle_global_shuffle"
+    ],
+    "added_functions": []
+  },
+  "tests/test_audio_realtime.py": {
+    "before_sha256": "92a37dc9bb1323d03a5bd3336255524f6cce3c86fa8eb46cc90c41edb93b93e4",
+    "after_sha256": "ea86df204c0e4e1441ebac4240e8eb55202c85febe99a92a8f5ee2420af243cd",
+    "changed_functions": [
+      "ActualNativePlayerTests.test_volume_ui_shortcuts_mute_device_and_off_preserve_user_level"
+    ],
+    "added_functions": []
+  },
+  "tests/test_audio_start.py": {
+    "before_sha256": "abdb601b87e4a72f9a9b6f0f697083bddee0eaaa4c89255ac8998c100f900ec0",
+    "after_sha256": "32222e23f9d6218d3a9660570065ada0f6f17136be9e5704aedfa1c02e416eea",
+    "changed_functions": [
+      "SourceScopeTests.test_only_selection_controls_and_owned_audio_orchestration_changed"
+    ],
+    "added_functions": []
+  }
+}

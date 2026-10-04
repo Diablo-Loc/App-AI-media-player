@@ -123,7 +123,7 @@ class OriginalSourceGates(unittest.TestCase):
     def test_svg_assets_match_pinned_source_hashes_and_ship_license(self):
         directory = ROOT / "app/ui/assets/icons"
         manifest = json.loads((directory / "manifest.json").read_text())
-        self.assertEqual(len(manifest["sha256"]), 40)
+        self.assertEqual(len(manifest["sha256"]), 41)
         self.assertIn("ISC License", (directory / "LICENSE").read_text())
         self.assertIn("The MIT License", (directory / "LICENSE").read_text())
         for name, expected in manifest["sha256"].items():

@@ -9,7 +9,7 @@ from PySide6.QtTest import QTest, QSignalSpy
 
 BUTTONS = ("btn_shuffle", "btn_prev", "btn_play", "btn_next", "btn_repeat",
            "btn_info", "btn_subseting", "btn_sub", "btn_reload", "btn_vol",
-           "btn_dynamic_island", "btn_fs")
+           "btn_audio", "btn_dynamic_island", "btn_fs")
 
 
 class UiStabilityTests(unittest.TestCase):

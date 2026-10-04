@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def before_presentation_changes(relative, raw=False):
-    current = (ROOT / relative).read_bytes()
+    from tests.audio_effects_contracts import before_audio_changes
+    current = before_audio_changes(relative, raw=True)
     manifest = json.loads((ROOT / 'docs/subtitle-presentation/reviewed-sources.json').read_text(encoding='utf-8'))
     if relative in manifest:
         entry = manifest[relative]

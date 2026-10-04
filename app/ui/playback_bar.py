@@ -52,6 +52,7 @@ class PlaybackBar(QFrame):
             (self.btn_sub, "captions", "Công cụ phụ đề"),
             (self.btn_reload, "refresh-cw", "Tạo lại phụ đề"),
             (self.btn_vol, "volume-2", "Âm lượng"),
+            (self.btn_audio, "sliders-horizontal", "Âm thanh"),
             (self.btn_dynamic_island, "picture-in-picture-2", "Mini player"),
             (self.btn_fs, "maximize", "Toàn màn hình"),
         )
@@ -166,7 +167,7 @@ class PlaybackBar(QFrame):
         extra_layout = QHBoxLayout(extra_area)
         extra_layout.setContentsMargins(0, 0, 0, 0)
         extra_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        extra_area.setFixedWidth(7 * 36 + 6 * 4)
+        extra_area.setFixedWidth(8 * 36 + 7 * 4)
         
         #0. Nút Mở Popup Info
         self.btn_info = QPushButton()
@@ -197,6 +198,9 @@ class PlaybackBar(QFrame):
         self.btn_vol = QPushButton()
         self.btn_vol.setFixedSize(32, 32)
         self.btn_vol.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        self.btn_audio = QPushButton()
+        self.btn_audio.setCursor(Qt.CursorShape.PointingHandCursor)
         
         # 3.5. Nút mở chế độ dynamic island
         self.btn_dynamic_island = QPushButton()
@@ -212,6 +216,7 @@ class PlaybackBar(QFrame):
         extra_layout.addWidget(self.btn_sub)
         extra_layout.addWidget(self.btn_reload)
         extra_layout.addWidget(self.btn_vol)
+        extra_layout.addWidget(self.btn_audio)
         extra_layout.addWidget(self.btn_dynamic_island)
         extra_layout.addWidget(self.btn_fs)
         extra_layout.setSpacing(4)
@@ -246,6 +251,13 @@ class PlaybackBar(QFrame):
     def _arrange_controls(self, width):
         """Reflow the same controls; keep the video surface and footer height."""
         compact = width < 1000
+        # Keep the original 760 px minimum with the added audio button.
+        control_side = 32 if compact else 36
+        for button in (self.btn_info, self.btn_subseting, self.btn_sub, self.btn_reload,
+                       self.btn_vol, self.btn_audio, self.btn_dynamic_island, self.btn_fs):
+            if button.width() != control_side:
+                button.setFixedSize(control_side, control_side)
+        self.extra_area.setFixedWidth(8 * control_side + 7 * 4)
         info_width = max(210, min(260 if compact else 320, int(width * 0.29)))
         if self.info_area.preferred_width != info_width:
             self.info_area.preferred_width = info_width

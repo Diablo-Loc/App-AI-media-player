@@ -1,0 +1,113 @@
+test_actual_qt_new_presets_return_to_original_preserving_paused_seek_owners_and_volume (tests.test_audio_listening.ListeningMediaTests.test_actual_qt_new_presets_return_to_original_preserving_paused_seek_owners_and_volume) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-listening-test-qamj8d6o/128k.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 139 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 130 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+Input #0, matroska,webm, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-ui-jthrtho3/storage/audio-playback-cache/020429b999add194c5ee5b9507712dcc61ece642d212f9e95cea39f2ad3fd9fe.mkv':
+  Metadata:
+    COMPATIBLE_BRANDS: isomiso2mp41
+    MAJOR_BRAND     : isom
+    MINOR_VERSION   : 512
+    ENCODER         : Lavf62.1.103
+  Duration: 00:00:12.01, start: 0.000000, bitrate: 955 kb/s
+  Stream #0:0: Video: mpeg4 (Simple Profile), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        HANDLER_NAME    : VideoHandler
+        VENDOR_ID       : [0][0][0][0]
+        ENCODER         : Lavc62.6.100 mpeg4
+        DURATION        : 00:00:12.000000000
+  Stream #0:1: Audio: flac, 48000 Hz, stereo, s32 (24 bit) (default)
+      Metadata:
+        ENCODER         : Lavc62.6.100 flac
+        HANDLER_NAME    : SoundHandler
+        VENDOR_ID       : [0][0][0][0]
+        DURATION        : 00:00:12.011000000
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-listening-test-qamj8d6o/128k.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 139 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 130 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+Input #0, matroska,webm, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-ui-jthrtho3/storage/audio-playback-cache/ff28ae7ddc924f35d29042196bd0077c8b24279a7bdf0b92f134b7496587cd7e.mkv':
+  Metadata:
+    COMPATIBLE_BRANDS: isomiso2mp41
+    MAJOR_BRAND     : isom
+    MINOR_VERSION   : 512
+    ENCODER         : Lavf62.1.103
+  Duration: 00:00:12.01, start: 0.000000, bitrate: 954 kb/s
+  Stream #0:0: Video: mpeg4 (Simple Profile), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        HANDLER_NAME    : VideoHandler
+        VENDOR_ID       : [0][0][0][0]
+        ENCODER         : Lavc62.6.100 mpeg4
+        DURATION        : 00:00:12.000000000
+  Stream #0:1: Audio: flac, 48000 Hz, stereo, s32 (24 bit) (default)
+      Metadata:
+        ENCODER         : Lavc62.6.100 flac
+        HANDLER_NAME    : SoundHandler
+        VENDOR_ID       : [0][0][0][0]
+        DURATION        : 00:00:12.011000000
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-listening-test-qamj8d6o/128k.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 139 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 130 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_real_128k_media_preserves_video_timestamps_source_and_peak_after_full_chain (tests.test_audio_listening.ListeningMediaTests.test_real_128k_media_preserves_video_timestamps_source_and_peak_after_full_chain) ... ok
+test_crossfeed_preserves_center_sample_count_and_has_modest_low_frequency_blend (tests.test_audio_listening.ListeningPolicyTests.test_crossfeed_preserves_center_sample_count_and_has_modest_low_frequency_blend) ... ok
+test_new_presets_are_optional_bounded_and_do_not_replace_defaults_or_old_keys (tests.test_audio_listening.ListeningPolicyTests.test_new_presets_are_optional_bounded_and_do_not_replace_defaults_or_old_keys) ... ok
+test_original_profiles_filters_gain_and_cache_keys_are_exactly_unchanged (tests.test_audio_listening.ListeningPolicyTests.test_original_profiles_filters_gain_and_cache_keys_are_exactly_unchanged) ... ok
+test_warm_is_a_small_linear_cut_not_bass_boost_or_dynamic_compression (tests.test_audio_listening.ListeningPolicyTests.test_warm_is_a_small_linear_cut_not_bass_boost_or_dynamic_compression) ... ok
+test_exact_three_module_scope_and_frozen_pipeline_owners (tests.test_audio_listening.ListeningScopeTests.test_exact_three_module_scope_and_frozen_pipeline_owners) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 7.521s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+📏 Video Size Detected: 64x48
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

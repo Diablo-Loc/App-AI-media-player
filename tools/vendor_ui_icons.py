@@ -6,7 +6,7 @@ import hashlib
 import json
 
 REVISION = "500620a2e8123f8d1db191538886dc0c223f69a9"
-NAMES = "house music library download settings menu folder-open search play pause skip-back skip-forward shuffle repeat info captions refresh-cw volume-x volume-1 volume-2 picture-in-picture-2 maximize minimize disc-3 save rotate-ccw trash square user circle-check chevron-down plus clipboard upload undo redo eye-off x languages sparkles".split()
+NAMES = "house music library download settings menu folder-open search play pause skip-back skip-forward shuffle repeat info captions refresh-cw volume-x volume-1 volume-2 picture-in-picture-2 maximize minimize disc-3 save rotate-ccw trash square user circle-check chevron-down plus clipboard upload undo redo eye-off x languages sparkles sliders-horizontal".split()
 DESTINATION = Path(__file__).resolve().parents[1] / "app/ui/assets/icons"
 BASE = f"https://raw.githubusercontent.com/lucide-icons/lucide/{REVISION}"
 

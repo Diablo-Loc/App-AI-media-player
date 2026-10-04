@@ -1,0 +1,621 @@
+test_actual_decoded_pcm_bytes_are_identical_with_normalization_on (tests.test_audio_realtime.ActualNativePlayerTests.test_actual_decoded_pcm_bytes_are_identical_with_normalization_on) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_device_refresh_during_gain_ramp_does_not_rewrite_user_volume (tests.test_audio_realtime.ActualNativePlayerTests.test_device_refresh_during_gain_ramp_does_not_rewrite_user_volume) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_gain_ramp_monotonic_and_stale_timeout_is_safe_after_reset_or_shutdown (tests.test_audio_realtime.ActualNativePlayerTests.test_gain_ramp_monotonic_and_stale_timeout_is_safe_after_reset_or_shutdown) ... ok
+test_malformed_eq_cache_measurement_never_reaches_source_switch_or_gui_math (tests.test_audio_realtime.ActualNativePlayerTests.test_malformed_eq_cache_measurement_never_reaches_source_switch_or_gui_math) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_paused_toggle_and_measurement_failure_do_not_reload_or_move_position (tests.test_audio_realtime.ActualNativePlayerTests.test_paused_toggle_and_measurement_failure_do_not_reload_or_move_position) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_real_playlist_files_change_source_only_once_per_selection_with_normalization_on (tests.test_audio_realtime.ActualNativePlayerTests.test_real_playlist_files_change_source_only_once_per_selection_with_normalization_on) ... [mov,mp4,m4a,3gp,3g2,mj2 @ 000001F3E72F24C0] stream 0, timescale not set
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'D:/HocTap/11_MusicApp/App-AI-media-player/video/A Small Miracle(short).mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomav01iso2mp41
+    title           : A Small Miracle
+    artist          : Wuthering Waves, Fleet Snowfluff, jixwang, TLK天翔
+    album           : Fly Toward Spring(Original Game Soundtrack)
+    genre           : Music
+    date            : 20260207
+    encoder         : Lavf62.1.103
+    comment         : https://www.youtube.com/watch?v=GdKJ5FZ0KXc
+    description     : Provided to YouTube by KURO GAMES
+                    : 
+                    : A Small Miracle · Wuthering Waves · Fleet Snowfluff · jixwang · TLK天翔
+                    : 
+                    : Fly Toward Spring(Original Game Soundtrack)
+                    : 
+                    : ℗ 2026 KURO GAMES
+                    : 
+                    : Released on: 2026-02-07
+                    : 
+                    : Composer: 王谢波
+                    : Lyricist: 徐来
+                    : Arranger: TLK天翔
+                    : Vocal Solo: Wuthering Waves
+                    : Vocal Solo: Fleet Snowfluff
+                    : Vocal Solo: jixwang
+                    : Vocal Solo: TLK天翔
+                    : Producer: Wuthering Waves
+                    : Mixing Engineer: TLK天翔
+                    : Mastering Engineer: Ed Kim
+                    : 
+                    : Auto-generated by YouTube.
+    synopsis        : Provided to YouTube by KURO GAMES
+                    : 
+                    : A Small Miracle · Wuthering Waves · Fleet Snowfluff · jixwang · TLK天翔
+                    : 
+                    : Fly Toward Spring(Original Game Soundtrack)
+                    : 
+                    : ℗ 2026 KURO GAMES
+                    : 
+                    : Released on: 2026-02-07
+                    : 
+                    : Composer: 王谢波
+                    : Lyricist: 徐来
+                    : Arranger: TLK天翔
+                    : Vocal Solo: Wuthering Waves
+                    : Vocal Solo: Fleet Snowfluff
+                    : Vocal Solo: jixwang
+                    : Vocal Solo: TLK天翔
+                    : Producer: Wuthering Waves
+                    : Mixing Engineer: TLK天翔
+                    : Mastering Engineer: Ed Kim
+                    : 
+                    : Auto-generated by YouTube.
+  Duration: 00:02:23.16, start: 0.000000, bitrate: 413 kb/s
+  Stream #0:0[0x1](und): Video: av1 (Main) (av01 / 0x31307661), yuv420p(tv, bt709), 1080x1080, 244 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s (default)
+      Metadata:
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+  Stream #0:2[0x0]: Video: png, rgb24(pc, gbr/unknown/unknown), 1280x720, 90k tbr, 90k tbn (attached pic)
+[aac @ 000001F3E8FA4D00] Could not update timestamps for skipped samples.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 000001F3E72EF340] stream 0, timescale not set
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'D:/HocTap/11_MusicApp/App-AI-media-player/video/Brand New Sky.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomav01iso2mp41
+    title           : Brand New Sky
+    artist          : Wuthering Waves, Fleet Snowfluff
+    album           : Brand New Sky (Original Game Soundtrack)
+    genre           : Music
+    date            : 20260622
+    encoder         : Lavf62.1.103
+    comment         : https://www.youtube.com/watch?v=78masZti800
+    description     : Provided to YouTube by KURO GAMES
+                    : 
+                    : Brand New Sky · Wuthering Waves · Fleet Snowfluff
+                    : 
+                    : Brand New Sky (Original Game Soundtrack)
+                    : 
+                    : ℗ 2026 KURO GAMES
+                    : 
+                    : Released on: 2026-06-20
+                    : 
+                    : Composer: He Ruichen
+                    : Composer: Chu Yijie
+                    : Lyricist: He Ruichen
+                    : Lyricist: Chu Yijie
+                    : Arranger: yocho
+                    : Vocal Solo: Wuthering Waves
+                    : Vocal Solo: Fleet Snowfluff
+                    : Producer: yocho
+                    : Mixing Engineer: yocho
+                    : Mastering Engineer: yocho
+                    : 
+                    : Auto-generated by YouTube.
+    synopsis        : Provided to YouTube by KURO GAMES
+                    : 
+                    : Brand New Sky · Wuthering Waves · Fleet Snowfluff
+                    : 
+                    : Brand New Sky (Original Game Soundtrack)
+                    : 
+                    : ℗ 2026 KURO GAMES
+                    : 
+                    : Released on: 2026-06-20
+                    : 
+                    : Composer: He Ruichen
+                    : Composer: Chu Yijie
+                    : Lyricist: He Ruichen
+                    : Lyricist: Chu Yijie
+                    : Arranger: yocho
+                    : Vocal Solo: Wuthering Waves
+                    : Vocal Solo: Fleet Snowfluff
+                    : Producer: yocho
+                    : Mixing Engineer: yocho
+                    : Mastering Engineer: yocho
+                    : 
+                    : Auto-generated by YouTube.
+  Duration: 00:03:37.07, start: 0.000000, bitrate: 421 kb/s
+  Stream #0:0[0x1](und): Video: av1 (Main) (av01 / 0x31307661), yuv420p(tv, bt709), 1080x1080, 259 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s (default)
+      Metadata:
+        handler_name    : ISO Media file produced by Google Inc.
+        vendor_id       : [0][0][0][0]
+  Stream #0:2[0x0]: Video: png, rgb24(pc, gbr/unknown/unknown), 1280x720, 90k tbr, 90k tbn (attached pic)
+[aac @ 000001F3E8FA5080] Could not update timestamps for skipped samples.
+ok
+test_toggle_target_and_next_have_only_requested_source_changes_without_pause_or_seek (tests.test_audio_realtime.ActualNativePlayerTests.test_toggle_target_and_next_have_only_requested_source_changes_without_pause_or_seek) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_volume_ui_shortcuts_mute_device_and_off_preserve_user_level (tests.test_audio_realtime.ActualNativePlayerTests.test_volume_ui_shortcuts_mute_device_and_off_preserve_user_level) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpmpmoj3sl/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_cache_hit_keeps_hot_measurement_in_owned_lru (tests.test_audio_realtime.LoudnessCacheTests.test_cache_hit_keeps_hot_measurement_in_owned_lru) ... ok
+test_foreign_symlinks_malformed_context_and_owned_bound_are_safe (tests.test_audio_realtime.LoudnessCacheTests.test_foreign_symlinks_malformed_context_and_owned_bound_are_safe) ... ok
+test_legacy_analysis_reuse_does_not_require_or_touch_media_cache (tests.test_audio_realtime.LoudnessCacheTests.test_legacy_analysis_reuse_does_not_require_or_touch_media_cache) ... ok
+test_default_target_keeps_four_db_more_level_than_previous_eighteen (tests.test_audio_realtime.NativeGainTests.test_default_target_keeps_four_db_more_level_than_previous_eighteen) ... ok
+test_native_volume_ceiling_is_explicit_and_silence_zero_remain_valid (tests.test_audio_realtime.NativeGainTests.test_native_volume_ceiling_is_explicit_and_silence_zero_remain_valid) ... ok
+test_peak_limit_accounts_for_user_volume_without_unnecessary_source_attenuation (tests.test_audio_realtime.NativeGainTests.test_peak_limit_accounts_for_user_volume_without_unnecessary_source_attenuation) ... ok
+test_cache_write_failure_keeps_valid_measurement_and_foreign_record (tests.test_audio_realtime.RealMeasurementTests.test_cache_write_failure_keeps_valid_measurement_and_foreign_record) ... ok
+test_measurement_uses_one_null_pass_no_encoder_and_hit_uses_no_process (tests.test_audio_realtime.RealMeasurementTests.test_measurement_uses_one_null_pass_no_encoder_and_hit_uses_no_process) ... ok
+test_silence_cancel_and_invalid_source_are_distinct (tests.test_audio_realtime.RealMeasurementTests.test_silence_cancel_and_invalid_source_are_distinct) ... ok
+test_prior_gates_remain_frozen_and_only_reviewed_scope_changed (tests.test_audio_realtime.SourceScopeTests.test_prior_gates_remain_frozen_and_only_reviewed_scope_changed) ... ok
+test_crash_recovery_only_removes_owned_dead_job_and_keeps_live_and_foreign (tests.test_audio_effects.CacheTests.test_crash_recovery_only_removes_owned_dead_job_and_keeps_live_and_foreign) ... ok
+test_eviction_is_bounded_and_protects_current_and_foreign_media (tests.test_audio_effects.CacheTests.test_eviction_is_bounded_and_protects_current_and_foreign_media) ... ok
+test_malformed_metadata_is_a_miss_and_never_deletes_foreign_files (tests.test_audio_effects.CacheTests.test_malformed_metadata_is_a_miss_and_never_deletes_foreign_files) ... ok
+test_outside_paths_corrupt_entries_and_full_protected_cache_are_safe (tests.test_audio_effects.CacheTests.test_outside_paths_corrupt_entries_and_full_protected_cache_are_safe) ... ok
+test_audio_popup_and_source_reload_do_not_flash_first_lyric (tests.test_audio_effects.ControllerTests.test_audio_popup_and_source_reload_do_not_flash_first_lyric) ... ok
+test_decoder_failure_during_restore_keeps_fallback_transition_owned (tests.test_audio_effects.ControllerTests.test_decoder_failure_during_restore_keeps_fallback_transition_owned) ... ok
+test_default_off_does_not_prepare_and_button_is_adjacent_to_volume (tests.test_audio_effects.ControllerTests.test_default_off_does_not_prepare_and_button_is_adjacent_to_volume) ... ok
+test_latest_worker_only_no_gui_wait_and_shutdown_reaps_owned_thread (tests.test_audio_effects.ControllerTests.test_latest_worker_only_no_gui_wait_and_shutdown_reaps_owned_thread) ... ok
+test_new_track_from_reentrant_end_callback_wins_during_restore (tests.test_audio_effects.ControllerTests.test_new_track_from_reentrant_end_callback_wins_during_restore) ... ok
+test_new_track_supersedes_transition_and_failed_cache_falls_back (tests.test_audio_effects.ControllerTests.test_new_track_supersedes_transition_and_failed_cache_falls_back) ... ok
+test_off_cancels_preparation_restores_original_and_persists_only_new_settings (tests.test_audio_effects.ControllerTests.test_off_cancels_preparation_restores_original_and_persists_only_new_settings) ... ok
+test_popup_controls_own_status_and_prevent_bar_auto_hide (tests.test_audio_effects.ControllerTests.test_popup_controls_own_status_and_prevent_bar_auto_hide) ... ok
+test_transition_keeps_tracks_loops_and_latest_seek_speed_intent (tests.test_audio_effects.ControllerTests.test_transition_keeps_tracks_loops_and_latest_seek_speed_intent) ... ok
+test_transition_preserves_position_rate_pause_and_original_identity (tests.test_audio_effects.ControllerTests.test_transition_preserves_position_rate_pause_and_original_identity) ... ok
+test_muted_actual_qt_decoder_switches_cache_and_original_with_same_owners (tests.test_audio_effects.NativeDecoderTests.test_muted_actual_qt_decoder_switches_cache_and_original_with_same_owners) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmp41dai37x/native-fixture.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+Input #0, matroska,webm, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-ui-25mgxuxy/storage/audio-playback-cache/64c51d7eb8fe7db0f889224a02d2ebcd6f5a9cb292f0718cceccf30ca71c5407.mkv':
+  Metadata:
+    COMPATIBLE_BRANDS: isomiso2mp41
+    MAJOR_BRAND     : isom
+    MINOR_VERSION   : 512
+    ENCODER         : Lavf62.1.103
+  Duration: 00:00:12.01, start: 0.000000, bitrate: 468 kb/s
+  Stream #0:0: Video: mpeg4 (Simple Profile), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        HANDLER_NAME    : VideoHandler
+        VENDOR_ID       : [0][0][0][0]
+        ENCODER         : Lavc62.6.100 mpeg4
+        DURATION        : 00:00:12.000000000
+  Stream #0:1: Audio: flac, 48000 Hz, mono, s32 (24 bit) (default)
+      Metadata:
+        ENCODER         : Lavc62.6.100 flac
+        HANDLER_NAME    : SoundHandler
+        VENDOR_ID       : [0][0][0][0]
+        DURATION        : 00:00:12.011000000
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmp41dai37x/native-fixture.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+test_cache_key_invalidates_file_profile_track_and_algorithm_context (tests.test_audio_effects.PolicyTests.test_cache_key_invalidates_file_profile_track_and_algorithm_context) ... ok
+test_defaults_and_invalid_settings_preserve_original (tests.test_audio_effects.PolicyTests.test_defaults_and_invalid_settings_preserve_original) ... ok
+test_loud_quiet_targets_and_peak_cap_preserve_dynamic_range (tests.test_audio_effects.PolicyTests.test_loud_quiet_targets_and_peak_cap_preserve_dynamic_range) ... ok
+test_silence_and_invalid_measurement_do_not_create_gain_or_fake_success (tests.test_audio_effects.PolicyTests.test_silence_and_invalid_measurement_do_not_create_gain_or_fake_success) ... ok
+test_tone_only_has_no_boost_and_canonical_profiles_are_bounded (tests.test_audio_effects.PolicyTests.test_tone_only_has_no_boost_and_canonical_profiles_are_bounded) ... ok
+test_gentle_tone_reduces_harsh_band_without_changing_rate_or_duration (tests.test_audio_effects.RealMediaTests.test_gentle_tone_reduces_harsh_band_without_changing_rate_or_duration) ... ok
+test_low_sample_rate_tone_and_cancellation_keep_source_safe (tests.test_audio_effects.RealMediaTests.test_low_sample_rate_tone_and_cancellation_keep_source_safe) ... ok
+test_real_128k_sources_normalize_without_video_change_and_cache_hit_has_no_process (tests.test_audio_effects.RealMediaTests.test_real_128k_sources_normalize_without_video_change_and_cache_hit_has_no_process) ... ok
+test_real_bad_file_fails_without_partial_or_source_change (tests.test_audio_effects.RealMediaTests.test_real_bad_file_fails_without_partial_or_source_change) ... ok
+test_real_silence_and_tone_file_are_valid_and_source_bytes_stay_unchanged (tests.test_audio_effects.RealMediaTests.test_real_silence_and_tone_file_are_valid_and_source_bytes_stay_unchanged) ... ok
+test_exact_reviewed_audio_adapters_and_unchanged_all_other_sources (tests.test_audio_effects.SourceScopeTests.test_exact_reviewed_audio_adapters_and_unchanged_all_other_sources) ... ok
+test_collapsed_sidebar_paints_every_icon (tests.test_ui_stability.UiStabilityTests.test_collapsed_sidebar_paints_every_icon) ... ok
+test_controls_remain_visible_during_popup_seek_and_button_press (tests.test_ui_stability.UiStabilityTests.test_controls_remain_visible_during_popup_seek_and_button_press) ... ok
+test_download_compact_controls_remain_within_page (tests.test_ui_stability.UiStabilityTests.test_download_compact_controls_remain_within_page) ... ok
+test_floating_subtitle_cannot_swallow_volume_click (tests.test_ui_stability.UiStabilityTests.test_floating_subtitle_cannot_swallow_volume_click) ... ok
+test_guard_does_not_reapply_identical_native_masks (tests.test_ui_stability.UiStabilityTests.test_guard_does_not_reapply_identical_native_masks) ... ok
+test_guard_preserves_subtitle_drag_outside_controls (tests.test_ui_stability.UiStabilityTests.test_guard_preserves_subtitle_drag_outside_controls) ... ok
+test_metadata_elision_retains_original_html_and_full_tooltip (tests.test_ui_stability.UiStabilityTests.test_metadata_elision_retains_original_html_and_full_tooltip) ... ok
+test_rapid_sidebar_reversals_use_one_owned_group (tests.test_ui_stability.UiStabilityTests.test_rapid_sidebar_reversals_use_one_owned_group) ... ok
+test_resizing_preserves_all_control_targets_and_video_parent (tests.test_ui_stability.UiStabilityTests.test_resizing_preserves_all_control_targets_and_video_parent) ... ok
+test_volume_receives_real_mouse_click_in_each_layout (tests.test_ui_stability.UiStabilityTests.test_volume_receives_real_mouse_click_in_each_layout) ... ok
+test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent (tests.test_foryou_spacing.ForYouSpacingTests.test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent) ... ok
+test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes (tests.test_foryou_spacing.ForYouSpacingTests.test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes) ... ok
+test_search_top_bottom_and_horizontal_center_are_balanced (tests.test_foryou_spacing.ForYouSpacingTests.test_search_top_bottom_and_horizontal_center_are_balanced) ... ok
+test_style_observer_never_changes_flags_geometry_or_native_video_owners (tests.test_foryou_spacing.ForYouSpacingTests.test_style_observer_never_changes_flags_geometry_or_native_video_owners) ... ok
+test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized (tests.test_foryou_spacing.FrameColorTests.test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized) ... ok
+test_only_for_you_presentation_and_shell_installs_change_captured_sources (tests.test_foryou_spacing.FrameColorTests.test_only_for_you_presentation_and_shell_installs_change_captured_sources) ... ok
+test_unavailable_or_unsupported_dwm_does_not_break_startup (tests.test_foryou_spacing.FrameColorTests.test_unavailable_or_unsupported_dwm_does_not_break_startup) ... ok
+test_canceled_hide_callback_never_hides_next_fade_in (tests.test_subtitle_presentation.FadeTests.test_canceled_hide_callback_never_hides_next_fade_in) ... ok
+test_fade_in_opacity_is_monotonic_and_geometry_stays_stable (tests.test_subtitle_presentation.FadeTests.test_fade_in_opacity_is_monotonic_and_geometry_stays_stable) ... ok
+test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact (tests.test_subtitle_presentation.FadeTests.test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact) ... ok
+test_old_snapshot_reproduces_restart_and_stale_callback (tests.test_subtitle_presentation.FadeTests.test_old_snapshot_reproduces_restart_and_stale_callback) ... ok
+test_repeated_gap_updates_do_not_restart_fade_out (tests.test_subtitle_presentation.FadeTests.test_repeated_gap_updates_do_not_restart_fade_out) ... ok
+test_seek_back_into_same_cue_reverses_fade_without_opacity_reset (tests.test_subtitle_presentation.FadeTests.test_seek_back_into_same_cue_reverses_fade_without_opacity_reset) ... ok
+test_closing_editor_in_gap_never_resurrects_old_text (tests.test_subtitle_presentation.PresentationTests.test_closing_editor_in_gap_never_resurrects_old_text) ... ok
+test_mini_minimized_inactive_and_mode_off_never_show (tests.test_subtitle_presentation.PresentationTests.test_mini_minimized_inactive_and_mode_off_never_show) ... ok
+test_modal_editor_blocks_ticks_direct_show_and_setvisible (tests.test_subtitle_presentation.PresentationTests.test_modal_editor_blocks_ticks_direct_show_and_setvisible) ... ok
+test_modeless_editor_also_blocks_and_paused_cue_restores (tests.test_subtitle_presentation.PresentationTests.test_modeless_editor_also_blocks_and_paused_cue_restores) ... ok
+test_nested_dialog_hidden_owner_empty_cues_and_shutdown (tests.test_subtitle_presentation.PresentationTests.test_nested_dialog_hidden_owner_empty_cues_and_shutdown) ... ok
+test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant (tests.test_subtitle_presentation.PresentationTests.test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant) ... ok
+test_video_hidden_or_detached_blocks_and_restores_latest_cue (tests.test_subtitle_presentation.PresentationTests.test_video_hidden_or_detached_blocks_and_restores_latest_cue) ... ok
+test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump (tests.test_subtitle_presentation.ShellIntegrationTests.test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump) ... ok
+test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner (tests.test_subtitle_presentation.ShellIntegrationTests.test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner) ... ok
+test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots (tests.test_subtitle_presentation.SourceScopeTests.test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots) ... ok
+
+----------------------------------------------------------------------
+Ran 77 tests in 35.834s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔊 Switching audio device: Speakers (Realtek(R) Audio)
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 1080x1080
+📏 Video Size Detected: 1080x1080
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn

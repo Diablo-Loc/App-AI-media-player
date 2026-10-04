@@ -1,0 +1,7 @@
+{
+  "app/core/audio_profile.py": "fde20e49afc0036e9de7fa99a65b36c23d085d4ed4742f9503c0fe0116887301",
+  "app/core/audio_effects.py": "b3afda722a28814d5123358f967d1e0c6c05b84eaa8364c87ef3a92ee83eeb66",
+  "app/control/audio_effects.py": "4eb149ffb1784712ffe143cc62fbc1b04aad97d5da71560e187be7a36ff5ccff",
+  "app/ui/audio_effects_panel.py": "2eb32d6771bf2e840d00322e78b171c44560ac92bfeca4888adc37bd4ff06bb5",
+  "app/ui/assets/icons/sliders-horizontal.svg": "e43a00e5eb684e6cbb61083bed2528d7a3fa5f265693eb2b5f314cd432aa65f4"
+}

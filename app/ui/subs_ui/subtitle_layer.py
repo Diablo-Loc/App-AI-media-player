@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QStyleOption, QStyle
 from PySide6.QtCore import Qt, QPoint, QRect, QPropertyAnimation, QEasingCurve, QAbstractAnimation, Property
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from subtitle.mode import SubtitleMode 
-from app.ui.subtitle_presentation import SubtitlePresentationGuard
+from ui.subtitle_presentation import SubtitlePresentationGuard
 
 class DraggableSubtitle(QLabel):
     def __init__(self, parent=None):

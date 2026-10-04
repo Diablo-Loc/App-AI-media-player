@@ -1,0 +1,35 @@
+{
+  "app/core/audio_effects.py": {
+    "before_sha256": "b3afda722a28814d5123358f967d1e0c6c05b84eaa8364c87ef3a92ee83eeb66",
+    "after_sha256": "95f836462e95b8764542fdc741d56d6e0e256eea1f824a0707859afebb7aa73d",
+    "changed_functions": [
+      "prepare_audio"
+    ],
+    "added_functions": []
+  },
+  "app/core/audio_profile.py": {
+    "before_sha256": "fde20e49afc0036e9de7fa99a65b36c23d085d4ed4742f9503c0fe0116887301",
+    "after_sha256": "9a2d20050d713cbc2f0471183de4509105d0705e26c6369079896c5c5fbb1316",
+    "changed_functions": [
+      "tone_filter",
+      "render_filter"
+    ],
+    "added_functions": []
+  },
+  "app/ui/audio_effects_panel.py": {
+    "before_sha256": "c97d007c153126a1e8a1f4c6b432987b88cef1e7c3f131d5e3a1edbde72094c6",
+    "after_sha256": "e55f98a11b272e6dc3c763d4a03d6e7976e1cda430e784fc02b62c90b3835a39",
+    "changed_functions": [
+      "AudioEffectsPanel.__init__"
+    ],
+    "added_functions": []
+  },
+  "tests/test_audio_realtime.py": {
+    "before_sha256": "ea86df204c0e4e1441ebac4240e8eb55202c85febe99a92a8f5ee2420af243cd",
+    "after_sha256": "83b37e474fbd0e3a48dc74a5b93ba67ce8a9c6a6393308165dc18756e94b7bfd",
+    "changed_functions": [
+      "SourceScopeTests.test_prior_gates_remain_frozen_and_only_reviewed_scope_changed"
+    ],
+    "added_functions": []
+  }
+}

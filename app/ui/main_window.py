@@ -18,6 +18,7 @@ from ui.playback_bar import PlaybackBar
 from ui.icons import button_icon, icon
 from ui.design_system import apply_shell, ICON_BUTTON_STYLE
 from ui.overlay_input_guard import OverlayInputGuard
+from control.audio_effects import install_audio_effects
 from ui.media_card import MediaCard
 from ui.subs_ui.subtitle_layer import SubtitleLayer
 from ui.subs_ui.sub_panel import SettingsPanel
@@ -284,6 +285,7 @@ class MainWindow(QMainWindow):
         # QTimer.singleShot(2000, lambda: download_and_install(self))
         self.media_manager = SystemMediaManager(self)
         self.audio_devices = QMediaDevices()
+        self.audio_effects = install_audio_effects(self)
 
         self._system_media_connected = False
         self.audio_devices.audioOutputsChanged.connect(
@@ -315,11 +317,15 @@ class MainWindow(QMainWindow):
             self._on_video_metadata_ready
         )
     def _hardware_play(self):
+        if self.audio_effects.set_pending_playback(True):
+            return
 
         if hasattr(self, "playback_bar"):
             self.playback_bar.btn_play.click()
 
     def _hardware_pause(self):
+        if self.audio_effects.set_pending_playback(False):
+            return
 
         if hasattr(self, "playback_bar"):
             self.playback_bar.btn_play.click()
@@ -420,6 +426,8 @@ class MainWindow(QMainWindow):
 
             if hasattr(self, '_folder_scan_queue'):
                 self._folder_scan_queue.shutdown()
+            if hasattr(self, 'audio_effects'):
+                self.audio_effects.shutdown()
             if hasattr(self, 'download_page'):
                 self.download_page.shutdown_workers()
             subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
@@ -748,6 +756,9 @@ class MainWindow(QMainWindow):
             self.play_next()
 
     def toggle_play_pause(self):
+        if self.audio_effects.toggle_pending_start():
+            self.sync_mini_player_state()
+            return
         if self.media_player.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self.media_player.player.pause()
         else:
@@ -808,7 +819,7 @@ class MainWindow(QMainWindow):
         y = btn_pos.y() - popup_h - 15
         
         # 5. Cập nhật giá trị và hiển thị
-        current_vol = int(self.audio_output.volume() * 100)
+        current_vol = int(self.audio_effects.volume() * 100)
         self.vol_popup.set_value(current_vol)
         
         self.vol_popup.move(x, y)
@@ -817,7 +828,7 @@ class MainWindow(QMainWindow):
     def update_volume_from_popup(self, value):
         """Hàm nhận giá trị từ popup để chỉnh âm thanh"""
         float_vol = value / 100.0
-        self.audio_output.setVolume(float_vol)
+        self.audio_effects.set_volume(float_vol)
         
         # Update icon loa ở thanh bar chính (Mute/Unmute icon)
         self.playback_bar.update_volume_icon(float_vol)
@@ -826,9 +837,9 @@ class MainWindow(QMainWindow):
         """Xử lý khi bấm phím tắt Tăng/Giảm âm lượng"""
         if not self.audio_output:
             return
-        current_vol = self.audio_output.volume()
+        current_vol = self.audio_effects.volume()
         new_vol = max(0.0, min(1.0, current_vol + delta))
-        self.audio_output.setVolume(new_vol)
+        self.audio_effects.set_volume(new_vol)
         self.vol_popup.set_value(int(new_vol * 100))
         self.playback_bar.update_volume_icon(new_vol)
 
@@ -1210,9 +1221,7 @@ class MainWindow(QMainWindow):
         # 3. RESET PLAYER (CHỈ PLAYER)
         # =============================
         player = self.media_player.player
-        player.stop()
-        player.setSource(QUrl.fromLocalFile(video_path))       
-        player.play()
+        self.audio_effects.play_source(QUrl.fromLocalFile(video_path))
 
         # Fix audio mute state
         if hasattr(self, "audio_output") and self.audio_output:
@@ -1348,7 +1357,7 @@ class MainWindow(QMainWindow):
             return
         if any(popup.isVisible() for popup in (
             self.vol_popup, self.subsettings_panel, self.playback_bar.info_popup,
-        )) or self.playback_bar.time_slider.isSliderDown():
+        )) or (hasattr(self, 'audio_effects') and self.audio_effects.panel.isVisible()) or self.playback_bar.time_slider.isSliderDown():
             return
         if any(button.isDown() for button in self.playback_bar.findChildren(QPushButton)):
             return
@@ -2198,6 +2207,7 @@ class MainWindow(QMainWindow):
         
         # 4. ⭐ QUAN TRỌNG: Cập nhật danh sách phát nhạc (dùng cho next/prev)
         self.active_playlist = new_list
+        self.audio_effects.playback_queue_changed()
 
     # --- [HÀM MỚI] ĐỒNG BỘ CONTROLLER ---
     def sync_playlist_to_backend(self, playlist):
@@ -2255,6 +2265,8 @@ class MainWindow(QMainWindow):
         # 1. Lấy trạng thái Play/Pause từ Player gốc
         state = self.media_player.player.playbackState()
         is_playing = (state == QMediaPlayer.PlaybackState.PlayingState)
+        if hasattr(self, 'audio_effects') and self.audio_effects.pending_playback() is not None:
+            is_playing = self.audio_effects.pending_playback()
 
         # 2. Lấy tên bài hát hiện tại và thumbnail
         cover_path = None

@@ -1,0 +1,379 @@
+--- before/app/control/audio_effects.py
++++ after/app/control/audio_effects.py
+@@ -4,6 +4,7 @@
+ 
+ from PySide6.QtCore import QObject, QThread, QTimer, Signal, QUrl
+ from PySide6.QtMultimedia import QMediaPlayer
++from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QProgressBar
+ 
+ from core.audio_profile import AudioProfile
+ from core.audio_effects import AudioPlaybackCache, AudioPreparationCancelled, prepare_audio
+@@ -83,6 +84,28 @@
+         self._internal = False
+         self._original = self.player.source()
+         self._transition = None
++        self._starting = None
++        self._start_timer = QTimer(self)
++        self._start_timer.setSingleShot(True)
++        self._start_timer.setInterval(15000)
++        self._start_timer.timeout.connect(self._start_failed)
++        self._start_fallback = None
++        self._start_fallback_timer = QTimer(self)
++        self._start_fallback_timer.setSingleShot(True)
++        self._start_fallback_timer.timeout.connect(self._finish_start_fallback)
++        self._start_indicator = QWidget(window)
++        indicator_layout = QHBoxLayout(self._start_indicator)
++        indicator_layout.setContentsMargins(4, 0, 4, 0)
++        indicator_layout.setSpacing(8)
++        self._start_label = QLabel('Chuẩn bị âm thanh…')
++        indicator_layout.addWidget(self._start_label)
++        indicator_progress = QProgressBar()
++        indicator_progress.setRange(0, 0)
++        indicator_progress.setFixedSize(60, 4)
++        indicator_progress.setTextVisible(False)
++        indicator_layout.addWidget(indicator_progress)
++        window.statusBar().addPermanentWidget(self._start_indicator)
++        self._start_indicator.hide()
+         self._track = 0
+         self._applied_key = None
+         self._failed_request = None
+@@ -125,6 +148,116 @@
+     def set_volume(self, value):
+         self.volume_control.set_volume(value)
+ 
++    def play_source(self, source):
++        """New selections wait silently for EQ; the original path stays immediate."""
++        if self._closed:
++            return
++        self._clear_start()
++        self.player.stop()
++        if self.profile.tone != 'off' and source.isLocalFile():
++            self._starting = {'source': source, 'state': QMediaPlayer.PlaybackState.PlayingState,
++                              'position': 0, 'ready': False}
++            self._start_timer.start()
++            self._start_indicator.show()
++        same_source = source == self.player.source()
++        self.player.setSource(source)
++        if same_source:
++            self._source_changed(source)
++        if self._starting:
++            self._refresh_subtitles()
++            self._sync_start_controls()
++        else:
++            self.player.play()
++
++    def toggle_pending_start(self):
++        if not self._starting:
++            return False
++        return self.set_pending_playback(self._starting['state'] != QMediaPlayer.PlaybackState.PlayingState)
++
++    def pending_playback(self):
++        return None if self._starting is None else self._starting['state'] == QMediaPlayer.PlaybackState.PlayingState
++
++    def set_pending_playback(self, playing):
++        if not self._starting:
++            return False
++        self._starting['state'] = (QMediaPlayer.PlaybackState.PlayingState if playing
++                                  else QMediaPlayer.PlaybackState.PausedState)
++        if self._transition:
++            self._transition['state'] = self._starting['state']
++        self._sync_start_controls()
++        return True
++
++    def _sync_start_controls(self):
++        playing = self._starting['state'] == QMediaPlayer.PlaybackState.PlayingState
++        self.window.playback_bar.update_play_state(playing)
++        self._start_label.setText('Chuẩn bị âm thanh…' if playing else 'Chuẩn bị âm thanh · đã tạm dừng')
++        manager = getattr(self.window, 'media_manager', None)
++        if manager is not None and manager.enabled:
++            manager.set_status(False)
++
++    def _clear_start(self):
++        pending = self._starting is not None
++        self._starting = None
++        self._start_timer.stop()
++        self._start_fallback_timer.stop()
++        self._start_fallback = None
++        self._start_indicator.hide()
++        if pending:
++            self.window.update_ui_state(self.player.playbackState())
++
++    def _finish_start(self):
++        start = self._starting
++        if not start or not start['ready'] or self._transition:
++            return
++        if self.player.mediaStatus() not in (QMediaPlayer.MediaStatus.LoadedMedia,
++                                             QMediaPlayer.MediaStatus.BufferedMedia):
++            return
++        self.player.setPosition(start['position'])
++        if self._starting is not start:
++            return
++        self._clear_start()
++        if start['state'] == QMediaPlayer.PlaybackState.PlayingState:
++            self.player.play()
++        else:
++            self.player.pause()
++        self._refresh_subtitles(start['position'])
++
++    def _start_failed(self):
++        if not self._starting:
++            return
++        if self._starting['ready']:
++            self._clear_start()
++            self.panel.set_status('Không nạp được bài đã chọn; bạn có thể chọn bài khác.')
++            return
++        self._generation += 1
++        self._pending = False
++        self._request_timer.stop()
++        if self.worker is not None:
++            self.worker.stop()
++        self._failed_request = (self._original.toLocalFile(), self.profile, self._track)
++        self._starting['ready'] = True
++        self._start_timer.stop()
++        self.panel.set_status('Chưa chuẩn bị được EQ kịp thời; phát âm thanh gốc cho bài này.')
++        self._start_label.setText('Nạp âm thanh gốc…')
++        if self.player.source() != self._original:
++            self._switch(self._original)
++        else:
++            self._finish_start()
++            if self._starting:
++                self._start_timer.start(8000)
++
++    def _defer_start_fallback(self):
++        # Qt may emit InvalidMedia after errorOccurred finishes. Switching inside
++        # that signal can let the old failure clear a newly loading original.
++        self._start_fallback = self._transition
++        self._start_fallback_timer.start(0)
++
++    def _finish_start_fallback(self):
++        transition = self._start_fallback
++        self._start_fallback = None
++        if not self._closed and transition is not None and self._transition is transition:
++            self._transition_failed()
++
+     def _save_profile(self):
+         data = dict(self.profile.as_dict(), target_lufs=self.target_lufs)
+         try:
+@@ -156,7 +289,7 @@
+ 
+     @property
+     def switching(self):
+-        return self._transition is not None
++        return self._transition is not None or self._starting is not None
+ 
+     def _refresh_subtitles(self, position=None):
+         overlay = getattr(self.window, 'sub_layer', None)
+@@ -200,6 +333,12 @@
+             self._measurement = None
+             self._apply_normalization()
+         self._queue_latest()
++        if self._starting:
++            self._starting['ready'] = profile.tone == 'off'
++            if profile.tone == 'off':
++                self._start_timer.stop()
++            else:
++                self._start_timer.start()
+         if profile.tone == 'off' and self._applied_tone != 'off':
+             self._applied_tone = 'off'
+             self._tone_gain = 0.0
+@@ -209,6 +348,7 @@
+             self._applied_key = None
+             self._switch(self._original)
+             self.panel.set_status('Đang dùng âm thanh gốc')
++        self._finish_start()
+ 
+     def _queue_latest(self):
+         self._generation += 1
+@@ -222,6 +362,8 @@
+             return
+         if self._transition and source == self._transition['target']:
+             return
++        if self._starting and source != self._starting['source']:
++            self._clear_start()
+         self._transition_timer.stop()
+         self._transition = None
+         self._refresh_subtitles()
+@@ -313,6 +455,11 @@
+                 self._tone_gain = gain['gain_db']
+                 self._measurement = {'lufs': gain['input_lufs'], 'peak_db': gain['input_peak_db']}
+                 self._applied_tone = self.profile.tone
++                # Apply gain before the prepared decoder is allowed to play.
++                self._apply_normalization(ramp=self._starting is None)
++                if self._starting:
++                    self._starting['ready'] = True
++                    self._start_timer.stop()
+                 self._switch(QUrl.fromLocalFile(worker.result['path']))
+             self._apply_normalization()
+             if not self.profile.normalize:
+@@ -320,6 +467,11 @@
+         elif current and worker.error:
+             self._failed_request = (worker.source, worker.requested_profile, worker.track)
+             self.panel.set_status('Chưa áp dụng cho bài này; giữ âm thanh hiện tại. ' + worker.error[:220])
++            if self._starting:
++                self._start_failed()
++        elif current and self._starting:
++            self._start_failed()
++        self._finish_start()
+         if self._pending:
+             self._request_timer.start()
+ 
+@@ -327,6 +479,13 @@
+         if self._closed or target.isEmpty() or target == self.player.source():
+             return
+         old = self._transition
++        if old is None and self._starting:
++            loaded = self.player.mediaStatus() in (QMediaPlayer.MediaStatus.LoadedMedia,
++                                                   QMediaPlayer.MediaStatus.BufferedMedia)
++            old = dict(self._starting, rate=self.player.playbackRate(), track=self._track,
++                       video=self.player.activeVideoTrack() if loaded else 0,
++                       subtitle=self.player.activeSubtitleTrack() if loaded else -1,
++                       loops=self.player.loops())
+         state = old['state'] if old else self.player.playbackState()
+         position = old['position'] if old else self.player.position()
+         self._transition = {'target': target, 'position': position, 'state': state,
+@@ -364,7 +523,8 @@
+                     if self._transition is not transition:
+                         return
+                     self.player.setPosition(transition['position'])
+-                    if transition['state'] == QMediaPlayer.PlaybackState.PlayingState:
++                    if (transition['state'] == QMediaPlayer.PlaybackState.PlayingState
++                            and (self._starting is None or self._starting['ready'])):
+                         self.player.play()
+                     elif transition['state'] == QMediaPlayer.PlaybackState.PausedState:
+                         self.player.pause()
+@@ -372,9 +532,20 @@
+                     self._internal = False
+                     if self._transition is transition:
+                         self._transition = None
++                        if self._starting is None or self._starting['ready']:
++                            self._clear_start()
+                         self._refresh_subtitles(transition['position'])
+             elif status == QMediaPlayer.MediaStatus.InvalidMedia:
+-                self._transition_failed()
++                if self._starting:
++                    self._defer_start_fallback()
++                else:
++                    self._transition_failed()
++        elif self._starting:
++            if status == QMediaPlayer.MediaStatus.InvalidMedia:
++                self._clear_start()
++                self.panel.set_status('Không nạp được bài đã chọn; giữ nguyên file gốc.')
++            else:
++                self._finish_start()
+ 
+     def _playback_state(self, state):
+         if self._transition and not self._internal and state != QMediaPlayer.PlaybackState.StoppedState:
+@@ -385,6 +556,8 @@
+             self._transition['rate'] = rate
+ 
+     def _seek_requested(self, position):
++        if self._starting and not self._internal:
++            self._starting['position'] = position
+         if self._transition and not self._internal:
+             self._transition['position'] = position
+ 
+@@ -395,7 +568,10 @@
+ 
+     def _player_error(self, *_):
+         if self._transition:
+-            self._transition_failed()
++            if self._starting:
++                self._defer_start_fallback()
++            else:
++                self._transition_failed()
+ 
+     def _transition_failed(self):
+         if not self._transition:
+@@ -410,6 +586,7 @@
+             self._switch(self._original)
+         else:
+             self._transition = None
++            self._clear_start()
+             self._refresh_subtitles()
+         self.panel.set_status('Không nạp được bản xử lý; đã yêu cầu trở về âm thanh gốc.')
+ 
+@@ -419,6 +596,7 @@
+         self._closed = True
+         self._request_timer.stop()
+         self._transition_timer.stop()
++        self._clear_start()
+         self.panel.hide()
+         self.volume_control.shutdown()
+         if self.worker is not None:
+--- before/app/ui/audio_effects_panel.py
++++ after/app/ui/audio_effects_panel.py
+@@ -50,7 +50,8 @@
+         self.tone.setMinimumHeight(36)
+         layout.addWidget(self.tone)
+         note = QLabel('Cân bằng trực tiếp giữ phổ âm và độ động, không nạp lại video. '
+-                      'EQ riêng cần chuẩn bị và nạp lại nguồn; chọn Nguyên bản để phát liền mạch.')
++                      'Chọn bài có EQ: chờ chuẩn bị rồi mới phát. Đổi EQ giữa bài vẫn cần nạp lại nguồn; '
++                      'chọn Nguyên bản để phát liền mạch.')
+         note.setWordWrap(True)
+         note.setStyleSheet('color: #9AAABC; font-size: 12px;')
+         layout.addWidget(note)
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -316,12 +316,16 @@
+         self.media_player.player.metaDataChanged.connect(
+             self._on_video_metadata_ready
+         )
+-    def _hardware_play(self):
++    def _hardware_play(self):
++        if self.audio_effects.set_pending_playback(True):
++            return
+ 
+         if hasattr(self, "playback_bar"):
+             self.playback_bar.btn_play.click()
+ 
+-    def _hardware_pause(self):
++    def _hardware_pause(self):
++        if self.audio_effects.set_pending_playback(False):
++            return
+ 
+         if hasattr(self, "playback_bar"):
+             self.playback_bar.btn_play.click()
+@@ -751,8 +755,11 @@
+         if status == QMediaPlayer.MediaStatus.EndOfMedia:
+             self.play_next()
+ 
+-    def toggle_play_pause(self):
+-        if self.media_player.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
++    def toggle_play_pause(self):
++        if self.audio_effects.toggle_pending_start():
++            self.sync_mini_player_state()
++            return
++        if self.media_player.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+             self.media_player.player.pause()
+         else:
+             self.media_player.player.play()
+@@ -1213,10 +1220,8 @@
+         # =============================
+         # 3. RESET PLAYER (CHỈ PLAYER)
+         # =============================
+-        player = self.media_player.player
+-        player.stop()
+-        player.setSource(QUrl.fromLocalFile(video_path))       
+-        player.play()
++        player = self.media_player.player
++        self.audio_effects.play_source(QUrl.fromLocalFile(video_path))
+ 
+         # Fix audio mute state
+         if hasattr(self, "audio_output") and self.audio_output:
+@@ -2257,10 +2262,12 @@
+         if not hasattr(self, 'mini_player'): return
+ 
+         # 1. Lấy trạng thái Play/Pause từ Player gốc
+-        state = self.media_player.player.playbackState()
+-        is_playing = (state == QMediaPlayer.PlaybackState.PlayingState)
+-
+-        # 2. Lấy tên bài hát hiện tại và thumbnail
++        state = self.media_player.player.playbackState()
++        is_playing = (state == QMediaPlayer.PlaybackState.PlayingState)
++        if hasattr(self, 'audio_effects') and self.audio_effects.pending_playback() is not None:
++            is_playing = self.audio_effects.pending_playback()
++
++        # 2. Lấy tên bài hát hiện tại và thumbnail
+         cover_path = None
+         if hasattr(self, 'current_media_item') and self.current_media_item:
+             title = getattr(self.current_media_item, 'title', '')

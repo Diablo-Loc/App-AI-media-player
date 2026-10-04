@@ -73,7 +73,9 @@ def isolated_window():
         stack.enter_context(patch("ui.main_window.ConfigManager.get_last_folder", return_value=""))
         stack.enter_context(patch("ui.main_window.SystemMediaManager", return_value=Mock(enabled=False)))
         stack.enter_context(patch("ui.main_window.TempFileManager.TEMP_DIR", root / "temp"))
-        stack.enter_context(patch("ui.main_window.psutil.Process"))
+        # Isolate shell CPU telemetry without replacing psutil.Process globally:
+        # other real workers need their actual owned-process identities.
+        stack.enter_context(patch("ui.main_window.psutil", Mock()))
         window = MainWindow(SubtitleManager(str(storage)), Mock(), MediaLibrary(str(storage / "library.json")))
         try:
             window.resize(1280, 820)

@@ -1,0 +1,154 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "qt": "6.10.1",
+  "target_lufs": -14,
+  "user_volume": 0.5,
+  "files": [
+    {
+      "name": "A Small Miracle(short).mp4",
+      "source_bytes": 7390691,
+      "source_unchanged": true,
+      "measure_seconds": 2.522634699998889,
+      "cache_hit_ms": 0.8702999984961934,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -13.47,
+        "peak_db": 1.29,
+        "silent": false
+      },
+      "native_gain_db": -0.5299999999999991,
+      "effective_volume": 0.4704029150182946,
+      "limited": false,
+      "max_child_rss_mib": 67.59375,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "Brand New Sky.mp4",
+      "source_bytes": 11431119,
+      "source_unchanged": true,
+      "measure_seconds": 3.788784799999121,
+      "cache_hit_ms": 0.5264000028546434,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -7.31,
+        "peak_db": 1.77,
+        "silent": false
+      },
+      "native_gain_db": -6.69,
+      "effective_volume": 0.23145683188880267,
+      "limited": false,
+      "max_child_rss_mib": 59.8046875,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "Empty old City - Looma.mp4",
+      "source_bytes": 59846840,
+      "source_unchanged": true,
+      "measure_seconds": 3.5582100999999966,
+      "cache_hit_ms": 0.5995999999868218,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -11.09,
+        "peak_db": 1.23,
+        "silent": false
+      },
+      "native_gain_db": -2.91,
+      "effective_volume": 0.35765969703766864,
+      "limited": false,
+      "max_child_rss_mib": 67.6015625,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "source_bytes": 26079017,
+      "source_unchanged": true,
+      "measure_seconds": 4.2428980999975465,
+      "cache_hit_ms": 0.6302000001596753,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -6.03,
+        "peak_db": 2.4,
+        "silent": false
+      },
+      "native_gain_db": -7.969999999999999,
+      "effective_volume": 0.19974228065414273,
+      "limited": false,
+      "max_child_rss_mib": 67.890625,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "Unwavering Startorch.mp4",
+      "source_bytes": 18134588,
+      "source_unchanged": true,
+      "measure_seconds": 4.086479999998119,
+      "cache_hit_ms": 1.0947000009764452,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -10.05,
+        "peak_db": 0.36,
+        "silent": false
+      },
+      "native_gain_db": -3.9499999999999993,
+      "effective_volume": 0.31729995049064347,
+      "limited": false,
+      "max_child_rss_mib": 67.859375,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "source_bytes": 39880518,
+      "source_unchanged": true,
+      "measure_seconds": 4.472989099998813,
+      "cache_hit_ms": 0.5459999993036035,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -6.29,
+        "peak_db": 1.85,
+        "silent": false
+      },
+      "native_gain_db": -7.71,
+      "effective_volume": 0.2058116736513826,
+      "limited": false,
+      "max_child_rss_mib": 69.22265625,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "source_bytes": 35477074,
+      "source_unchanged": true,
+      "measure_seconds": 3.934959099999105,
+      "cache_hit_ms": 0.5401999987952877,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -7.9,
+        "peak_db": 2.46,
+        "silent": false
+      },
+      "native_gain_db": -6.1,
+      "effective_volume": 0.24772509540239512,
+      "limited": false,
+      "max_child_rss_mib": 66.984375,
+      "max_owned_processes": 1
+    },
+    {
+      "name": "人生エンドロール.mp4",
+      "source_bytes": 9629175,
+      "source_unchanged": true,
+      "measure_seconds": 3.547260700001061,
+      "cache_hit_ms": 0.7041999997454695,
+      "cache_hit": true,
+      "measurement": {
+        "lufs": -8.04,
+        "peak_db": 1.0,
+        "silent": false
+      },
+      "native_gain_db": -5.960000000000002,
+      "effective_volume": 0.25175030439395235,
+      "limited": false,
+      "max_child_rss_mib": 67.92578125,
+      "max_owned_processes": 1
+    }
+  ],
+  "cache_bytes": 3294,
+  "derived_media_files": 0
+}

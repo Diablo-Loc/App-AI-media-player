@@ -1,0 +1,39 @@
+# Audio regression gates deliberately compare exact reviewed source bytes.
+# Preserve mixed/LF/CRLF snapshots instead of core.autocrlf rewriting them.
+docs/audio-*/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/**/original/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+app/control/audio_*.py -text
+app/core/audio_*.py -text
+app/ui/audio_effects_panel.py -text
+app/ui/subtitle_presentation.py -text
+app/ui/assets/icons/*.svg -text
+tests/test_audio_*.py -text
+app/test/test_aligner_optimizations.py -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Archives reproduce old source/patch whitespace verbatim, including old blanks.
+docs/audio-*/original/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/audio-effects/import-compatibility/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/audio-easy/checkout-source/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/audio-*/reviewed.patch whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+# Generated diagnostic evidence, not maintained production source.
+docs/audio-*/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+
+# Existing LF-only helpers have pinned raw hashes; preserve their LF index bytes.
+app/control/library_scan.py -text
+app/control/worker_lifecycle.py -text
+app/core/subtitle_persistence.py -text
+app/pipeline/asr_coverage.py -text
+app/pipeline/lyric_phrases.py -text
+app/pipeline/lyric_refinement.py -text
+app/subtitle/timing_format.py -text
+app/ui/design_system.py -text
+app/ui/elided_label.py -text
+app/ui/foryou_playlist_view.py -text
+app/ui/foryou_spacing.py -text
+app/ui/icons.py -text
+app/ui/mini_video_dock.py -text
+app/ui/native_frame_style.py -text
+app/ui/overlay_input_guard.py -text
+app/ui/playlist_loading_overlay.py -text
+app/ui/playlist_thumbnail.py -text
+app/ui/playlist_thumbnail_queue.py -text
+app/ui/track_label.py -text

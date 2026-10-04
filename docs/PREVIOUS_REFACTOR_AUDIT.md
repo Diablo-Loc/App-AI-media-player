@@ -1,5 +1,19 @@
 # Kiểm tra đợt refactor trước
 
+Dễ nghe/commit 04/10/2026: chỉ policy/popup production đổi trong phase mới; năm tone/filter/gain/key cũ giữ nguyên, không tái áp architectural refactor. Archive raw bytes và adapter newline-only đối chiếu toàn file giúp Git checkout không phá gate hash cũ; không recapture prior manifests. Commit theo yêu cầu gom chuỗi audio chưa commit và tiền đề import đã có; để build/spec/requirements/log thay đổi của user ngoài phạm vi. Xem [AUDIO_EASY_LISTENING.md](AUDIO_EASY_LISTENING.md).
+
+Chất âm 04/10/2026: thay đổi được user cho phép chỉ ở ba production module policy/prepare/popup. Hai tone token mới không đổi profile/cache keys cũ, truyền channels trong analysis/render để không downmix mono/surround. Exact new snapshot gates phục hồi code trước style trước khi test gate lịch sử; một test raw-hash realtime dùng adapter này thay vì bỏ kiểm tra. Không architectural refactor, model/ASR/lifecycle/source-data changes. Xem [AUDIO_LISTENING_STYLES.md](AUDIO_LISTENING_STYLES.md).
+
+Prefetch EQ 04/10/2026: thêm helper incremental, không áp refactor đã rollback. MainWindow chỉ thêm notification trong `toggle_global_shuffle`; controller dùng cùng worker và snapshot restore gate selection-wait/v2/v1. Popup thêm tùy chọn và đo nhãn theo fixed width; source xử lý EQ/gain/cache không đổi. 270 pass +11 skip, 100 DPI tests và 8 read-only video probes không chứng nhận toàn native/EXE parity. Xem [AUDIO_NEXT_PREFETCH.md](AUDIO_NEXT_PREFETCH.md).
+
+Chờ EQ 04/10/2026: đây là thay đổi hành vi lúc chọn bài được user cho phép, không áp refactor kiến trúc. Năm MainWindow adapters + owned audio orchestration/popup note có gate riêng, phục hồi v2 cho test cũ mà không recapture v1/v2. Giữ schema/file nguồn/owner và normalization gốc. Xem [AUDIO_START_WAIT.md](AUDIO_START_WAIT.md).
+
+Rà soát chốt âm thanh 04/10/2026: chỉ review và chạy lại kiểm tra, không đổi production hoặc recapture source manifests. Các tính năng EQ/denoise tiếp theo còn là đề xuất, không áp architectural refactor/DSP mới. Xem [AUDIO_ENHANCEMENT_PLAN.md](AUDIO_ENHANCEMENT_PLAN.md).
+
+Cân bằng trực tiếp 04/10/2026: v1 có source reload/attenuation và EQ cut được user phản hồi; v2 chỉ thay normalization bằng gain trực tiếp, target có lựa chọn, giữ EQ riêng. Không áp architecture refactor hoặc đổi engine/clock/ASR/playlist. Exact v2 adapters phục hồi snapshot v1 cho các gate cũ, manifest cũ không được recapture. 247 pass +11 skip, 77 DPI tests; xem [AUDIO_NORMALIZATION_REALTIME.md](AUDIO_NORMALIZATION_REALTIME.md).
+
+Âm thanh tùy chọn 04/10/2026: đây là tính năng mới được user cho phép sau các phase reliability/presentation, không áp refactor đã rollback. Thêm helper/worker/popup và adapter UI có exact snapshot gates; video/native/subtitle/playlist/ASR owners và dữ liệu gốc được giữ. Import correction + CRLF user có trước phase được normalize riêng với hash/text checks, không recapture manifest cũ. 229 pass +11 skip, 59 DPI tests, 8 media probes; xem [AUDIO_EFFECTS.md](AUDIO_EFFECTS.md).
+
 Hiển thị phụ đề 04/10/2026: nhiều đường show overlay floating và callback hide tồn tại sau cancel fade được sửa theo yêu cầu riêng. Snapshot trước phase tái hiện restart/stale callback; không áp refactor lịch sử hoặc timestamp phase đã rollback. Source gates chỉ normalize hai source đúng hash approved; 203 pass +11 skip, 33 DPI tests, 31 saved files giữ hash. Xem [SUBTITLE_PRESENTATION_FIX.md](SUBTITLE_PRESENTATION_FIX.md).
 
 Reliability 04/10/2026: người dùng cho phép sửa audit A1–A4/A6, giữ file cũ. Đây là phase chức năng/lifecycle có regression và exact scope snapshots, không áp kiến trúc đã rollback. 187 pass +11 skip; ID/schema/time/ASR/hook và hash 31 data files giữ nguyên. Native/GPU/API/EXE còn chờ. Xem [RELIABILITY_FIX.md](RELIABILITY_FIX.md).

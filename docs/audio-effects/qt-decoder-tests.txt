@@ -1,0 +1,70 @@
+test_muted_actual_qt_decoder_switches_cache_and_original_with_same_owners (tests.test_audio_effects.NativeDecoderTests.test_muted_actual_qt_decoder_switches_cache_and_original_with_same_owners) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpx5k8hn04/native-fixture.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+Input #0, matroska,webm, from 'C:/Users/DIABLO/AppData/Local/Temp/botube-ui-rkqt4tp4/storage/audio-playback-cache/024c079f82564f7c3220c97a6a5b9c15b0dd49320dde08e6f5cb7570364a56ea.mkv':
+  Metadata:
+    COMPATIBLE_BRANDS: isomiso2mp41
+    MAJOR_BRAND     : isom
+    MINOR_VERSION   : 512
+    ENCODER         : Lavf62.1.103
+  Duration: 00:00:12.01, start: 0.000000, bitrate: 490 kb/s
+  Stream #0:0: Video: mpeg4 (Simple Profile), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 25 fps, 25 tbr, 1k tbn (default)
+      Metadata:
+        HANDLER_NAME    : VideoHandler
+        VENDOR_ID       : [0][0][0][0]
+        ENCODER         : Lavc62.6.100 mpeg4
+        DURATION        : 00:00:12.000000000
+  Stream #0:1: Audio: flac, 48000 Hz, mono, s32 (24 bit) (default)
+      Metadata:
+        ENCODER         : Lavc62.6.100 flac
+        HANDLER_NAME    : SoundHandler
+        VENDOR_ID       : [0][0][0][0]
+        DURATION        : 00:00:12.011000000
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpx5k8hn04/native-fixture.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:12.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.850s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

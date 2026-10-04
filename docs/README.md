@@ -1,5 +1,19 @@
 # Tài liệu hiện hành sau khi khôi phục
 
+- [Dễ nghe cho loa/tai nghe và commit chốt phần âm thanh, giữ preset/dữ liệu cũ](AUDIO_EASY_LISTENING.md).
+
+- [Chất âm Ấm và Tai nghe: EQ nhẹ/crossfeed tùy chọn, giữ âm gốc khi tắt](AUDIO_LISTENING_STYLES.md).
+
+- [Chuẩn bị EQ trước cho một bài kế tiếp: giảm chờ, giữ âm gốc và giới hạn tài nguyên](AUDIO_NEXT_PREFETCH.md).
+
+- [Chọn bài có EQ: chờ im lặng trước playback, cache và fallback](AUDIO_START_WAIT.md).
+
+- [Chốt cân bằng và phương án EQ/giảm nhiễu, giới hạn phát liền mạch](AUDIO_ENHANCEMENT_PLAN.md).
+
+- [Cân bằng trực tiếp: không reload, user volume riêng, −14/−18 LUFS và EQ có giới hạn](AUDIO_NORMALIZATION_REALTIME.md).
+
+- [Âm thanh tùy chọn: cân bằng độ lớn, EQ nhẹ, cache nền và giới hạn chất lượng](AUDIO_EFFECTS.md).
+
 03/10/2026: người dùng đã khôi phục `app/` về bản gốc. Tài liệu hiện hành:
 
 - [Đánh giá từng thư mục](RESTORED_APP_REVIEW.md).
