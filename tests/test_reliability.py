@@ -557,9 +557,10 @@ class ReviewedScopeTests(unittest.TestCase):
             self.assertEqual(before_reliability_changes(relative, raw=True), original.read_bytes())
             self.assertNotIn('app/run_app.py', manifest)
         inventory = json.loads((ROOT / 'docs/current-flow-audit/probe-results.json').read_text(encoding='utf-8'))['inventory']['files']
+        from tests.subtitle_presentation_contracts import before_presentation_changes
         for relative in ('app/run_app.py', 'app/worker.py', 'app/ai/pipeline.py', 'app/pipeline/asr_coverage.py',
                          'app/pipeline/lyric_refinement.py', 'app/pipeline/lyric_phrases.py', 'app/ui/subs_ui/subtitle_layer.py'):
-            self.assertEqual(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), inventory[relative]['sha256'], relative)
+            self.assertEqual(hashlib.sha256(before_presentation_changes(relative, raw=True)).hexdigest(), inventory[relative]['sha256'], relative)
         helpers = json.loads((ROOT / 'docs/reliability/new-source-hashes.json').read_text(encoding='utf-8'))
         for relative, expected in helpers.items():
             self.assertEqual(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), expected)

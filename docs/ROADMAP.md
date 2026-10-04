@@ -1,5 +1,7 @@
 # Roadmap sau khi khôi phục app gốc
 
+Hiển thị phụ đề 04/10/2026: **hoàn thành theo phạm vi** overlay trên editor, context video và fade chớp/For You cue geometry. Giữ dữ liệu/timing/ASR/translation/owners/flags; 203 pass +11 skip, 33 DPI tests và 31 saved-file hashes. Native screen/driver/multi-monitor/EXE còn chờ. Xem [SUBTITLE_PRESENTATION_FIX.md](SUBTITLE_PRESENTATION_FIX.md). Không mở rộng tối ưu/dependency/refactor khác trong phase này.
+
 Reliability 04/10/2026: **A1–A4/A6 đã triển khai theo phạm vi**, hook Qt không sửa theo yêu cầu. Save recovery; dịch đầy đủ/cache/refrains/lazy NLLB; restart AI/thumbnail không GUI wait, async scan và separate cache I/O lock; shutdown owned. 187 pass +11 skip, 35 DPI tests, hash 31 file cũ giữ nguyên. Batch thumbnail writes, lớn hóa editor/grid, context cache keys và native/GPU/network/EXE còn chờ. Xem [RELIABILITY_FIX.md](RELIABILITY_FIX.md).
 
 Audit luồng (04/10/2026): **hoàn thành rà soát, chưa sửa các phát hiện**. 103 source compile/AST, 159 pass +11 historical skip; fault probes xác nhận save/editor, bản dịch rỗng/thiếu, GUI wait restart AI và hook Qt chưa import. Đối chiếu các nhánh chính với bản gốc; dữ liệu cũ giữ nguyên. Ưu tiên save → translation → worker/scan/lifecycle; startup hook patch riêng. Batch cache/lazy model chưa triển khai. Xem [CURRENT_FLOW_AUDIT.md](CURRENT_FLOW_AUDIT.md).

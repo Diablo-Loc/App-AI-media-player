@@ -5,7 +5,6 @@ from PySide6.QtWidgets import QLabel, QSizePolicy, QStyleOption, QStyle
 from PySide6.QtCore import Qt, QPoint, QRect, QPropertyAnimation, QEasingCurve, QAbstractAnimation, Property
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 from subtitle.mode import SubtitleMode 
-from app.ui.subtitle_presentation import SubtitlePresentationGuard
 
 class DraggableSubtitle(QLabel):
     def __init__(self, parent=None):
@@ -267,11 +266,6 @@ class SubtitleLayer(DraggableSubtitle):
         self.fade_anim = QPropertyAnimation(self, b"opacity")
         self.fade_anim.setDuration(220) 
         self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
-        self.fade_anim.finished.connect(self._finish_fade)
-        self._presentation_guard = (
-            SubtitlePresentationGuard(parent, self)
-            if parent is not None and hasattr(parent, 'video_display') else None
-        )
 
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint | 
@@ -280,21 +274,6 @@ class SubtitleLayer(DraggableSubtitle):
         self.set_opacity(1.0)
         self.setObjectName("SubtitleLayer")
         self.hide() 
-
-    def show(self):
-        self.setVisible(True)
-
-    def setVisible(self, visible):
-        guard = getattr(self, '_presentation_guard', None)
-        if visible and guard is not None and not guard.allows():
-            self.fade_anim.stop()
-            self.set_opacity(0.0)
-            visible = False
-        super().setVisible(visible)
-
-    def _finish_fade(self):
-        if self.fade_anim.endValue() == 0.0 and self._opacity <= 0.0:
-            self.hide()
 
     def set_fade_enabled(self, enabled: bool):
         """Hàm công khai để giao diện Setting gọi bật/tắt Fade"""
@@ -381,9 +360,7 @@ class SubtitleLayer(DraggableSubtitle):
     def update_position(self, pts_ms: int):
         self._current_ms_cache = pts_ms
 
-        guard = self._presentation_guard
-        if (not self.enable_render or self.mode == SubtitleMode.OFF or not self.subtitles
-                or (guard is not None and not guard.context_allows())):
+        if not self.enable_render or self.mode == SubtitleMode.OFF or not self.subtitles:
             self._smart_hide(instant=True)
             return
 
@@ -409,9 +386,6 @@ class SubtitleLayer(DraggableSubtitle):
 
         # Nếu chữ giống hệt đang hiển thị -> Giữ nguyên
         if not self.isHidden() and self.text() == new_text:
-            if (self.fade_anim.state() == QAbstractAnimation.State.Running
-                    and self.fade_anim.endValue() == 0.0):
-                self._smart_show(instant=False)
             return
 
         prev_sub_end = self.subtitles[idx - 1]['end'] if idx > 0 else 0
@@ -421,8 +395,6 @@ class SubtitleLayer(DraggableSubtitle):
         self.setText(new_text)
         self.adjustSize()
         self.recalc_position()
-        if guard is not None:
-            guard.prepare_geometry()
 
         if self.isHidden():
             if gap_from_prev > 400 or idx == 0:
@@ -435,15 +407,14 @@ class SubtitleLayer(DraggableSubtitle):
 
     def _smart_show(self, instant=False):
         """Hiển thị sub chuẩn mượt không chớp nháy"""
-        if (self.use_fade_effect and not instant
-                and self.fade_anim.state() == QAbstractAnimation.State.Running
-                and self.fade_anim.endValue() == 1.0):
-            return
         self.fade_anim.stop()
 
         if not self.use_fade_effect or instant:
             self.set_opacity(1.0)
             self.show()
+            return
+
+        if self.fade_anim.state() == QAbstractAnimation.State.Running and self.fade_anim.endValue() == 1.0:
             return
 
         # Đặt Opacity từ giá trị hiện tại (hoặc 0.0) TRƯỚC KHI show()
@@ -458,13 +429,11 @@ class SubtitleLayer(DraggableSubtitle):
     def _smart_hide(self, instant=False):
         """Ẩn sub an toàn"""
         if self.isHidden():
-            if instant:
-                self.fade_anim.stop()
-                self.set_opacity(0.0)
             return
 
+        self.fade_anim.stop()
+
         if not self.use_fade_effect or instant:
-            self.fade_anim.stop()
             self.set_opacity(0.0)
             self.hide()
             return
@@ -472,10 +441,10 @@ class SubtitleLayer(DraggableSubtitle):
         if self.fade_anim.state() == QAbstractAnimation.State.Running and self.fade_anim.endValue() == 0.0:
             return
 
-        self.fade_anim.stop()
         self.fade_anim.setStartValue(self._opacity)
         self.fade_anim.setEndValue(0.0)
         
+        self.fade_anim.finished.connect(self.hide, Qt.ConnectionType.SingleShotConnection)
         self.fade_anim.start()
 
     def update_after_resize(self):

@@ -144,6 +144,9 @@ class UiStabilityTests(unittest.TestCase):
         # Preserve production focus handling. Only emulate an active main window
         # in offscreen, which otherwise deactivates it when a Tool window opens.
         with patch.object(w, "isActiveWindow", return_value=True):
+            sub.set_fade_enabled(False)
+            sub.load_subtitles([dict(start=0, end=10000, orig='Control hit test')])
+            sub.update_position(500)
             sub.setGeometry(QRect(point.x() - 60, point.y() - 30, 120, 60))
             sub.show()
             sub.raise_()
@@ -167,6 +170,9 @@ class UiStabilityTests(unittest.TestCase):
         sub = w.sub_layer
         sub.set_locked(False)
         with patch.object(w, "isActiveWindow", return_value=True):
+            sub.set_fade_enabled(False)
+            sub.load_subtitles([dict(start=0, end=10000, orig='Drag hit test')])
+            sub.update_position(500)
             video_point = w.video_display.mapToGlobal(QPoint(150, 150))
             sub.setGeometry(QRect(video_point, sub.size()))
             sub.show()

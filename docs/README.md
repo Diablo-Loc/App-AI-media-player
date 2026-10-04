@@ -5,6 +5,7 @@
 - [Đánh giá từng thư mục](RESTORED_APP_REVIEW.md).
 - [Audit luồng hiện hành và các lỗi cần sửa trước khi chốt](CURRENT_FLOW_AUDIT.md).
 - [Sửa save/dịch/GUI wait và đóng app khi tải/dịch, bảo toàn file cũ](RELIABILITY_FIX.md).
+- [Ẩn phụ đề trên editor và sửa fade/nhảy vị trí câu For You](SUBTITLE_PRESENTATION_FIX.md).
 - [Baseline source/cây/import/function/hash](restored-app-baseline.json).
 - [Contract probes offline](restored-contract-probes.json).
 - [Kế hoạch đo hiệu năng và accuracy](ACCURACY_BASELINE_PLAN.md).

@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def before_reliability_changes(relative, raw=False):
-    current = (ROOT / relative).read_bytes()
+    from tests.subtitle_presentation_contracts import before_presentation_changes
+    current = before_presentation_changes(relative, raw=True)
     manifest = json.loads((ROOT / 'docs/reliability/reviewed-sources.json').read_text(encoding='utf-8'))
     if relative not in manifest:
         return current if raw else current.decode('utf-8-sig').replace('\r\n', '\n')

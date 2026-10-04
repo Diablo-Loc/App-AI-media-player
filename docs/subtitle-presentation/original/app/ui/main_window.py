@@ -353,11 +353,6 @@ class MainWindow(QMainWindow):
         # Nếu chưa có sub_layer thì không làm gì cả
         if not hasattr(self, "sub_layer") or self.sub_layer is None:
             return
-        guard = getattr(self.sub_layer, '_presentation_guard', None)
-        if guard is not None and event.type() in (
-                QEvent.Type.ActivationChange, QEvent.Type.WindowStateChange):
-            guard.schedule_refresh()
-            return
         
         # --- CASE 1: XỬ LÝ ALT + TAB (Chuyển cửa sổ) ---
         if event.type() == QEvent.Type.ActivationChange:

@@ -1,5 +1,7 @@
 # Hợp đồng tính năng của baseline đã khôi phục
 
+Hiển thị phụ đề 04/10/2026: chặn overlay trên editor/dialog và khi video/context không phù hợp; đóng khôi phục cue hiện hành, không hiện chữ cũ trong gap. Sửa fade restart/callback cũ và vị trí cue For You trước paint; giữ timing/fade settings/owners/flags/file cũ. 203 pass +11 skip, 33 tests DPI 200%, hash 31 data files giữ nguyên. Native screen/EXE còn chờ. Xem [SUBTITLE_PRESENTATION_FIX.md](SUBTITLE_PRESENTATION_FIX.md).
+
 Reliability 04/10/2026: **đã sửa theo phạm vi** save/editor, dịch thiếu/cache/refrains, GUI restart/scan và shutdown download/editor. 187 pass +11 historical skip, 35 tests DPI 200%; hash 31 saved files và ASR/timing/worker/hook giữ nguyên. Failure/async cố ý nâng cấp, không migration dữ liệu cũ hoặc đổi schema/cache keys. Gates cũ normalize qua exact-reviewed snapshot; không suy ra toàn app hết lỗi/native/EXE parity. Xem [RELIABILITY_FIX.md](RELIABILITY_FIX.md).
 
 Audit 04/10/2026: 159 pass +11 historical skip; **không production change trong audit**. 12 function AST liên quan nhánh lỗi khớp Git baseline; manager gốc cũng tái hiện JSON mới/ASS cũ. Save/editor/translation/restart/startup cần phase riêng, không kết luận parity/tối ưu toàn app từ tests đang có. 31 file saved data giữ hash qua fault probes. Xem [CURRENT_FLOW_AUDIT.md](CURRENT_FLOW_AUDIT.md).

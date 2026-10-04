@@ -1,5 +1,7 @@
 # Kiểm tra đợt refactor trước
 
+Hiển thị phụ đề 04/10/2026: nhiều đường show overlay floating và callback hide tồn tại sau cancel fade được sửa theo yêu cầu riêng. Snapshot trước phase tái hiện restart/stale callback; không áp refactor lịch sử hoặc timestamp phase đã rollback. Source gates chỉ normalize hai source đúng hash approved; 203 pass +11 skip, 33 DPI tests, 31 saved files giữ hash. Xem [SUBTITLE_PRESENTATION_FIX.md](SUBTITLE_PRESENTATION_FIX.md).
+
 Reliability 04/10/2026: người dùng cho phép sửa audit A1–A4/A6, giữ file cũ. Đây là phase chức năng/lifecycle có regression và exact scope snapshots, không áp kiến trúc đã rollback. 187 pass +11 skip; ID/schema/time/ASR/hook và hash 31 data files giữ nguyên. Native/GPU/API/EXE còn chờ. Xem [RELIABILITY_FIX.md](RELIABILITY_FIX.md).
 
 Audit luồng 04/10/2026: không áp refactor hoặc sửa production. Fault probes/AST baseline xác nhận các nhánh có trước UI mới: save dở dang/editor success giả, dịch rỗng/thiếu, restart AI chờ GUI, startup hook NameError. Download/editor shutdown chỉ ghi source-level gap, chưa tái hiện crash. 159 pass +11 historical skip không chứng minh app hết lỗi. Xem [CURRENT_FLOW_AUDIT.md](CURRENT_FLOW_AUDIT.md).
