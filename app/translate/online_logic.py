@@ -11,31 +11,95 @@ except ImportError:
     print("⚠️ google-genai chưa cài. Dùng: pip install google-genai")
     genai = None
 
-def fetch_lyric_genius(song_title, token):
+def fetch_lyric_genius(song_title, token, source_text=None):
+    """Fetch a small candidate set and trust Genius only after local ASR matching."""
     import lyricsgenius  # 🔥 LAZY IMPORT - chỉ load khi dùng Genius lyrics
-    if not token: return None
+    from translate.genius_reference import (
+        clean_genius_lyrics,
+        extract_referent_fragments,
+        extract_song_results,
+        rank_song_results,
+        reference_match_metrics,
+        search_query_variants,
+    )
+
+    if not token:
+        return None
     try:
-        # Cấu hình skip_non_songs để tránh trang danh sách/nghệ sĩ
-        genius = lyricsgenius.Genius(token, verbose=False, skip_non_songs=True, remove_section_headers=False)
-        
-        # Tìm danh sách bài hát thay vì lấy bài đầu tiên ngay
-        search_results = genius.search_songs(song_title) 
-        
-        if search_results and 'songs' in search_results:
-            for hit in search_results['songs']:
-                # Né các trang Wiki danh sách của Genius Japan
-                if "list of" in hit['title'].lower() or "genius japan" in hit['artist_names'].lower():
+        # Keep construction version-tolerant.  LyricsGenius has changed its
+        # optional constructor arguments across releases (notably `verbose`).
+        # This flow uses raw search_songs plus our own filtering/cleanup, so the
+        # access token is the only constructor input we actually require.
+        genius = lyricsgenius.Genius(token)
+        tried = set()
+        reference_fetches = 0
+        for query in search_query_variants(song_title):
+            search_results = genius.search_songs(query, per_page=5)
+            ranked = rank_song_results(song_title, extract_song_results(search_results))
+            for metadata_score, hit in ranked:
+                if metadata_score < 0.28:
                     continue
-                
-                song = genius.get_song(hit['id'])
-                if song and song.lyrics:
-                    # Làm sạch sơ bộ lời (Xóa Embed ở cuối)
-                    lyrics = re.sub(r'\d*Embed$', '', song.lyrics)
-                    # Xóa dòng đầu tiên (thường là tiêu đề bài hát)
-                    lines = lyrics.split('\n')
-                    if len(lines) > 1:
-                        return '\n'.join(lines[1:])
-                    return lyrics
+                identity = hit.get("id") or hit.get("url")
+                if not identity or identity in tried:
+                    continue
+                tried.add(identity)
+                if reference_fetches >= 2:
+                    return None
+                reference_fetches += 1
+
+                url = hit.get("url")
+                song_id = hit.get("id")
+                raw_lyrics = None
+                try:
+                    if url:
+                        raw_lyrics = genius.lyrics(song_url=url)
+                    elif song_id:
+                        raw_lyrics = genius.lyrics(song_id=song_id)
+                    else:
+                        continue
+                except Exception as scrape_error:
+                    print(
+                        "⚠️ Genius: không đọc được trang lyrics "
+                        f"({type(scrape_error).__name__}); thử reference API nếu có."
+                    )
+                lyrics = clean_genius_lyrics(raw_lyrics or "")
+
+                # Genius increasingly protects public lyric pages with browser
+                # challenges.  Use one remaining bounded retrieval attempt for
+                # official API referent fragments instead of retrying/scraping
+                # around the challenge.  Fragments are never trusted without the
+                # same whole-song ASR confidence gate below.
+                used_referents = False
+                if not lyrics and source_text and song_id and reference_fetches < 2:
+                    reference_fetches += 1
+                    try:
+                        referents = genius.referents(
+                            song_id=song_id,
+                            per_page=50,
+                            page=1,
+                            text_format="plain",
+                        )
+                        lyrics = extract_referent_fragments(referents)
+                        used_referents = bool(lyrics)
+                    except Exception as referent_error:
+                        print(
+                            "⚠️ Genius: reference API không khả dụng "
+                            f"({type(referent_error).__name__})."
+                        )
+                if not lyrics:
+                    continue
+
+                if source_text:
+                    metrics = reference_match_metrics(source_text, lyrics)
+                    if metrics["score"] < 0.42 or metrics["sequence_coverage"] < 0.20:
+                        print(
+                            "⚠️ Genius: bỏ kết quả không khớp ASR "
+                            f"(confidence={metrics['score']:.2f})."
+                        )
+                        continue
+                if used_referents:
+                    print("✅ Genius: dùng lyric fragments từ API sau khi trang lyrics không đọc được.")
+                return lyrics
         return None
     except Exception as e:
         print(f"⚠️ Genius Error: {e}")
@@ -67,43 +131,75 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
     if not subs or not key or not key.strip(): 
         return None
     
-    # --- BƯỚC 1: TÌM LỜI GỐC (CHIẾN THUẬT 3 LỚP) ---
+    # --- BƯỚC 1: GENIUS REFERENCE ASSIST CÓ KIỂM CHỨNG ---
     settings = QSettings("MyStudio", "AI_Music_Player")
     # Đọc cấu hình bật/tắt từ Settings
     use_genius = settings.value("use_genius", "Tắt (Nhanh)") == "Bật (Chính xác cao)"
     genius_token = settings.value("genius_key", "").strip()
+    from translate.translation_models import (
+        extract_openai_responses_text,
+        openai_uses_responses_api,
+        resolve_translation_model,
+    )
+    translation_model = resolve_translation_model(
+        provider,
+        settings.value("translation_model", ""),
+    )
     
     reference_lyric = None
-    clean_title = song_title_raw
+    reference_by_id = {}
+    from translate.genius_reference import (
+        build_reference_hints,
+        clean_search_title,
+        source_text_from_subs,
+    )
+    clean_title = clean_search_title(song_title_raw or "") or song_title_raw
 
     # --- CHỈ CHẠY NẾU USER BẬT GENIUS ---
     if use_genius and genius_token and song_title_raw:
         print("🔍 Đang tìm lời gốc từ Genius...")
-        clean_title = ask_ai_for_clean_title(song_title_raw, key)
-        reference_lyric = fetch_lyric_genius(clean_title, genius_token)
-        # Nếu không thấy thì tự động dùng tên bài riêng để tìm tiếp (Lớp 3)
-        if not reference_lyric and "-" in clean_title:
-             only_song_name = clean_title.split("-")[0].strip()
-             reference_lyric = fetch_lyric_genius(only_song_name, genius_token)
+        source_text = source_text_from_subs(subs)
+        reference_lyric = fetch_lyric_genius(clean_title, genius_token, source_text=source_text)
+        if reference_lyric:
+            reference_by_id = build_reference_hints(subs, reference_lyric)
+            if reference_by_id:
+                print(f"✅ Genius: xác minh và ghép tham chiếu {len(reference_by_id)}/{len(subs)} câu.")
+            else:
+                # Whole-song validation passed but no individual cue was safe
+                # enough to bind. Do not send the full lyric to the translator.
+                reference_lyric = None
+                print("⚠️ Genius: đúng bài nhưng không đủ chắc để ghép theo câu; bỏ tham chiếu.")
+        else:
+            print("⚠️ Genius: không có reference đủ tin cậy; tiếp tục dịch bằng lời máy.")
     else:
         print("⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.")
 
-    # --- BƯỚC 2: XÂY DỰNG PROMPT TỐI ƯU ---
-    if reference_lyric:
-        system_prompt = (
-            "Bạn là chuyên gia dịch thuật âm nhạc. Dùng 'Lời gốc' để sửa lỗi cho 'Lời máy'. "
-            "Dịch sang Anh và Việt mượt mà theo phong cách âm nhạc. "
-            "ĐỊNH DẠNG: ID===Bản dịch tiếng Anh===Bản dịch tiếng Việt."
+    # --- BƯỚC 2: XÂY DỰNG PROMPT LYRIC THEO THỜI LƯỢNG CUE ---
+    # Shape online translations for lyric display without a second API call or
+    # post-translation truncation. The old provider/fallback/parser flow stays
+    # intact; only the prompt/request content is replaced with per-cue soft
+    # readability budgets derived from the cue duration.
+    from translate.lyric_translation import (
+        lyric_translation_system_prompt,
+        lyric_translation_user_content,
+    )
+    system_prompt = lyric_translation_system_prompt(
+        song_title=clean_title or "",
+        has_reference=bool(reference_by_id),
+    )
+    reference_context = None
+    if reference_by_id:
+        reference_context = (
+            "VERIFIED CUE REFERENCES. Each line belongs only to the same cue ID; "
+            "never transfer its wording to another ID.\n"
+            + "\n".join(f"ID {idx}: {text}" for idx, text in sorted(reference_by_id.items()))
         )
-        user_content = f"BÀI HÁT: {clean_title}\n--- LỜI GỐC ---\n{reference_lyric}\n\n--- LỜI MÁY ---\n" + \
-                       "\n".join([f"{i}==={s.top.text if s.top else ''}" for i, s in enumerate(subs)])
-    else:
-        system_prompt = (
-            f"Bạn là chuyên gia âm nhạc. Tôi đang nghe bài: '{clean_title}'. "
-            "Dựa vào 'Lời máy' (có thể sai chính tả), hãy dùng kiến thức của bạn để dịch. "
-            "ĐỊNH DẠNG: ID===Bản dịch tiếng Anh===Bản dịch tiếng Việt."
-        )
-        user_content = "\n".join([f"{i}==={s.top.text if s.top else ''}" for i, s in enumerate(subs)])
+    user_content = lyric_translation_user_content(
+        subs,
+        song_title=clean_title or "",
+        reference_lyric=reference_context,
+    )
+
     # --- BƯỚC 3: GỌI API THEO PROVIDER ---
     translated_text = ""
     try:
@@ -116,7 +212,7 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
             
             # Đổi model thành gemini-3-flash-preview
             response = client.models.generate_content(
-                model="gemini-3-flash-preview", 
+                model=translation_model,
                 contents=user_content,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
@@ -133,7 +229,7 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
                 "content-type": "application/json"
             }
             payload = {
-                "model": "claude-3-5-sonnet-20240620",
+                "model": translation_model,
                 "max_tokens": 4096,
                 "system": system_prompt,
                 "messages": [{"role": "user", "content": user_content}]
@@ -144,16 +240,26 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
         # --- NHÁNH 3: OPENAI (MẶC ĐỊNH) ---
         else:
             headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content}
-                ],
-                "temperature": 0.3
-            }
-            r = requests.post("https://api.openai.com/v1/chat/completions", json=payload, timeout=40)
-            translated_text = r.json()['choices'][0]['message']['content']
+            if openai_uses_responses_api(translation_model):
+                payload = {
+                    "model": translation_model,
+                    "instructions": system_prompt,
+                    "input": user_content,
+                    "store": False,
+                }
+                r = requests.post("https://api.openai.com/v1/responses", json=payload, timeout=40)
+                translated_text = extract_openai_responses_text(r.json())
+            else:
+                payload = {
+                    "model": translation_model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_content}
+                    ],
+                    "temperature": 0.3
+                }
+                r = requests.post("https://api.openai.com/v1/chat/completions", json=payload, timeout=40)
+                translated_text = r.json()['choices'][0]['message']['content']
 
         # --- BƯỚC 4: HẬU XỬ LÝ ĐỔ DỮ LIỆU (GÁN CẢ MIDDLE VÀ BOTTOM) ---
         if not translated_text: 

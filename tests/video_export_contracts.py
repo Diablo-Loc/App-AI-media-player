@@ -11,6 +11,8 @@ def before_video_export_changes(relative, current=None, raw=False):
     """Validate the reviewed export edit, then expose the preceding source."""
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.subtitle_editor_visibility_contracts import before_subtitle_editor_visibility_changes
+    current = before_subtitle_editor_visibility_changes(relative, current=current, raw=True)
     from tests.subtitle_sweep_flow_contracts import before_sweep_flow_changes
     current = before_sweep_flow_changes(relative, current=current, raw=True)
     manifest = json.loads(

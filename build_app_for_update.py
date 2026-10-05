@@ -17,6 +17,7 @@ excludes = [
 
 params = [
     'app/run_app.py',
+    '--paths=.',
     f'--name={APP_NAME}',
     '--onedir',        # Vẫn để onedir để nó không nén đống rác vào 1 file
     '--windowed',

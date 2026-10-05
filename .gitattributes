@@ -74,6 +74,13 @@ docs/lyric-accuracy/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-sp
 docs/lyric-accuracy/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/lyric-accuracy/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/lyric-accuracy/production/**/*.srt whitespace=-blank-at-eof
+docs/lyric-translation/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/genius-reference/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/online-translation-models/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/genius-client-compat/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/genius-referents-fallback/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/playback-continuity/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-editor-visibility/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 app/thumbnail/cache_batch.py -text
 app/ui/library_thumbnail_queue.py -text
 app/ui/library_grid_view.py -text

@@ -3,7 +3,7 @@
 
 a = Analysis(
     ['app\\run_app.py'],
-    pathex=[],
+    pathex=['.'],
     binaries=[],
     datas=[('app', 'app')],
     hiddenimports=['PySide6', 'PySide6.QtCore', 'PySide6.QtGui', 'PySide6.QtWidgets', 'ctypes', 'multiprocessing', 'requests', 'urllib3', 'bs4', 'yt_dlp', 'lyricsgenius', 'google.genai', 'av', 'psutil', 'cryptography', 'websockets', 'tenacity', 'huggingface_hub', 'filelock', 'fsspec', 'pickletools', 'pickle', 'struct', 'difflib', 'ast', 'cProfile', 'profile', 'pstats', 'modulefinder', 'pkgutil', 'importlib.metadata'],

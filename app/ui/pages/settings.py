@@ -6,6 +6,7 @@ from ..icons import button_icon, INK
 from ..design_system import FORM_STYLE
 
 from download_core.download_source_app import ResourceDownloadDialog, check_resource_status
+from translate.translation_models import resolve_translation_model, translation_model_options
 
 class SettingsPage(QWidget):
     settings_changed = Signal(dict)  # Tín hiệu phát ra khi cài đặt thay đổi, gửi dict mới
@@ -64,6 +65,15 @@ class SettingsPage(QWidget):
         self.combo_online_ai = QComboBox()
         self.combo_online_ai.addItems(["Local Default", "OpenAI (GPT-4o)", "Google Gemini", "Claude 3.5"])
         self.add_setting_row("Dịch bằng AI:", self.combo_online_ai, "Chọn AI xử lý lời dịch bài hát")
+
+        self.combo_translation_model = QComboBox()
+        self.add_setting_row(
+            "Model dịch:",
+            self.combo_translation_model,
+            "Chọn model theo nhà cung cấp; model nhanh tiết kiệm hơn, model lớn ưu tiên chất lượng lyric."
+        )
+        self.combo_online_ai.currentTextChanged.connect(self._refresh_translation_models)
+        self._refresh_translation_models()
 
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("Nhập API Key tại đây...")
@@ -174,6 +184,7 @@ class SettingsPage(QWidget):
             "ai_model": self.combo_model.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
+            "translation_model": self.combo_translation_model.currentData() or "",
             "api_key": self.api_key_input.text(),
             "use_genius": self.combo_genius_mode.currentText(),
             "genius_key": self.genius_key_input.text()
@@ -201,6 +212,7 @@ class SettingsPage(QWidget):
                 break
         self.combo_device.setCurrentText(self.settings.value("device", "cpu"))
         self.combo_online_ai.setCurrentText(self.settings.value("online_provider", "Local Default"))
+        self._refresh_translation_models(self.settings.value("translation_model", ""))
         self.api_key_input.setText(self.settings.value("api_key", ""))
         self.combo_genius_mode.setCurrentText(self.settings.value("use_genius", "Tắt (Nhanh)"))
         self.genius_key_input.setText(self.settings.value("genius_key", ""))
@@ -219,6 +231,7 @@ class SettingsPage(QWidget):
                     break
             self.combo_device.setCurrentText("cpu")
             self.combo_online_ai.setCurrentText("Local Default")
+            self._refresh_translation_models("")
             self.api_key_input.clear()
             self.combo_genius_mode.setCurrentText("Tắt (Nhanh)")
             self.genius_key_input.clear()
@@ -233,6 +246,7 @@ class SettingsPage(QWidget):
             "ai_model": self.combo_model.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
+            "translation_model": self.combo_translation_model.currentData() or "",
             "api_key": self.api_key_input.text(),
             "use_genius": self.combo_genius_mode.currentText(),
             "genius_key": self.genius_key_input.text()
@@ -243,6 +257,28 @@ class SettingsPage(QWidget):
         
     def get_qss(self):
         return FORM_STYLE
+
+    def _refresh_translation_models(self, requested_model=None):
+        provider = self.combo_online_ai.currentText()
+        if requested_model is None:
+            requested_model = self.settings.value("translation_model", "")
+        selected = resolve_translation_model(provider, requested_model)
+
+        self.combo_translation_model.blockSignals(True)
+        self.combo_translation_model.clear()
+        options = translation_model_options(provider)
+        if not options:
+            self.combo_translation_model.addItem("Local NLLB · Tự động", "")
+            self.combo_translation_model.setEnabled(False)
+        else:
+            self.combo_translation_model.setEnabled(True)
+            selected_index = 0
+            for i, (label, model_id) in enumerate(options):
+                self.combo_translation_model.addItem(label, model_id)
+                if model_id == selected:
+                    selected_index = i
+            self.combo_translation_model.setCurrentIndex(selected_index)
+        self.combo_translation_model.blockSignals(False)
     
     def refresh_model_list(self):
         info = check_resource_status()

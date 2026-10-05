@@ -7,11 +7,17 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def before_resource_changes(relative, raw=False):
-    # The export phase is newer than this frozen resource phase.  Validate and
-    # peel off only that reviewed UI adapter before applying the historical
-    # resource snapshots below; never recapture an older manifest.
+    # Lyric-translation shaping is newer than the resource/playback phases.
+    # Validate and peel it before passing source through historical adapters.
+    from tests.lyric_translation_contracts import before_lyric_translation_changes
+    current = before_lyric_translation_changes(relative, raw=True)
+    # Playback-continuity is newer than the export/resource phases. Validate
+    # and peel it first, then pass those bytes through the existing adapter
+    # chain so historical manifests stay frozen.
+    from tests.playback_continuity_contracts import before_playback_continuity_changes
+    current = before_playback_continuity_changes(relative, current=current, raw=True)
     from tests.video_export_contracts import before_video_export_changes
-    current = before_video_export_changes(relative, raw=True)
+    current = before_video_export_changes(relative, current=current, raw=True)
     manifest = json.loads((ROOT / 'docs/resource-performance/reviewed-sources.json').read_text(encoding='utf-8'))
     if relative in manifest:
         entry = manifest[relative]

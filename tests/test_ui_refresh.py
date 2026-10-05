@@ -329,16 +329,19 @@ class QtUiBehaviorTests(unittest.TestCase):
         page = self.window.settings_page
         page.combo_device.setCurrentText("cpu")
         page.combo_online_ai.setCurrentText("Google Gemini")
+        page._refresh_translation_models("gemini-3.5-flash")
         page.api_key_input.setText("test-key-no-network")
         spy = QSignalSpy(page.settings_changed)
         page.save_settings_silent()
         self.assertEqual(spy.count(), 1)
         values = spy.at(0)[0]
-        self.assertEqual(set(values), {"ai_model", "device", "online_provider", "api_key", "use_genius", "genius_key"})
+        self.assertEqual(set(values), {"ai_model", "device", "online_provider", "translation_model", "api_key", "use_genius", "genius_key"})
         self.assertEqual(values["online_provider"], "Google Gemini")
+        self.assertEqual(values["translation_model"], "gemini-3.5-flash")
         page.api_key_input.clear()
         page.load_settings()
         self.assertEqual(page.api_key_input.text(), "test-key-no-network")
+        self.assertEqual(page.combo_translation_model.currentData(), "gemini-3.5-flash")
 
     def test_subtitle_appearance_modes_and_existing_shortcuts_survive(self):
         panel = self.window.subsettings_panel

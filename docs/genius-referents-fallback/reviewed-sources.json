@@ -1,0 +1,10 @@
+{
+  "app/translate/online_logic.py": {
+    "before_sha256": "6acd047810cd582bdb4bfe513efcac20f1ba47df9712ab8f2c2f1957fe556294",
+    "after_sha256": "0483c9065247731a295a6d158c97a71c48ce01551ce68bb918f415e9e6f7fdcf"
+  },
+  "app/translate/genius_reference.py": {
+    "before_sha256": "7f29d037c24b40dfa5974b8b029b64f2f14271310ecf487510422a24c3dc46a1",
+    "after_sha256": "aba1ef31dda6d2cf64cb4f337b10e9cde56373ba837c34308e210fb1a5dca238"
+  }
+}

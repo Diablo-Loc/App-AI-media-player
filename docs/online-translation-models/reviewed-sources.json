@@ -1,0 +1,10 @@
+{
+  "app/translate/online_logic.py": {
+    "before_sha256": "d674d7f99cec46bc9cfb748cbe0aff707d4233812ce52d26d6e17a422415606d",
+    "after_sha256": "1e5b21cbbf48c4ef57156de9e1a374a3e4ca539dcd480d0b76f1aac14d936625"
+  },
+  "app/ui/pages/settings.py": {
+    "before_sha256": "401ce3b1130b6fda7067373a310d4cfe098087f9cea9fababa79d8894c0cec4f",
+    "after_sha256": "e3b485f10464309e5c226d8a905d42ee955374ed1e99ba9ab2bc448a8e30ca4d"
+  }
+}
