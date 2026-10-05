@@ -194,6 +194,41 @@ class ExportPolicyTests(unittest.TestCase):
         self.assertNotEqual(renderer.frame(2550), blank)
         self.assertEqual(renderer.frame(2800), blank)
 
+    def test_erase_sweep_stays_finished_during_export_fade_out(self):
+        renderer = SubtitleBandRenderer(self.snapshot({
+            'enabled': True,
+            'entrance': 'none',
+            'soft_fade': False,
+            'trail': 'shuriken',
+            'erase_passed': True,
+        }, fade=True), 640, 360)
+
+        renderer.frame(2500)
+        self.assertEqual(renderer.effects.scan_progress, 1.0)
+        self.assertIsNotNone(renderer.effects.cue)
+
+        # The cue is no longer active, but its completed erase mask must stay
+        # attached while opacity fades so the old line cannot flash back.
+        renderer.frame(2550)
+        self.assertEqual(renderer.effects.scan_progress, 1.0)
+        self.assertIsNotNone(renderer.effects.cue)
+        self.assertEqual(renderer.effects.cue[0], 0)
+
+        renderer.frame(2800)
+        self.assertEqual(renderer.frame(2800), bytes(len(renderer.frame(2800))))
+
+    def test_non_erasing_export_effect_keeps_existing_fade_behavior(self):
+        renderer = SubtitleBandRenderer(self.snapshot({
+            'enabled': True,
+            'entrance': 'none',
+            'soft_fade': False,
+            'trail': 'shuriken',
+            'erase_passed': False,
+        }, fade=True), 640, 360)
+        renderer.frame(2550)
+        self.assertIsNone(renderer.effects.cue)
+        self.assertEqual(renderer.effects.scan_progress, 1.0)
+
     def test_effect_off_keeps_text_pixels_and_source_data_immutable(self):
         snap = self.snapshot({'enabled': False}, fade=False)
         cue_before = snap.cues

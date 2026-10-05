@@ -1424,10 +1424,28 @@ class SubtitleBandRenderer:
         size, contents = self._geometry(display_text, cue)
         self.label.configure(display_text, size, contents)
         path = self._path_for(display_text, size, contents)
-        if active:
+        keep_erased_sweep = (
+            not active
+            and options['enabled']
+            and options['trail'] != 'none'
+            and options['erase_passed']
+            and cue.end-cue.start >= 160
+        )
+        if active or keep_erased_sweep:
             self.effects.cue = (cue.index, cue.start, cue.end, display_text)
-            self.effects.progress = self._effect_phase(cue, pts_ms)
-            self.effects.scan_progress = min(1.0, max(0.0, (pts_ms-cue.start)/max(1, cue.end-cue.start)))
+            if active:
+                self.effects.progress = self._effect_phase(cue, pts_ms)
+                self.effects.scan_progress = min(
+                    1.0, max(0.0, (pts_ms-cue.start)/max(1, cue.end-cue.start))
+                )
+            else:
+                # Match the live SubtitleLayer fade-out contract: once an
+                # erase sweep has completed, keep its final mask while the
+                # label opacity fades. Clearing cue here would make paint()
+                # treat the frame as a fresh static phrase and flash the old
+                # glyphs back immediately before the next cue.
+                self.effects.progress = 1.0
+                self.effects.scan_progress = 1.0
         else:
             self.effects.cue = None
             self.effects.progress = 1.0
