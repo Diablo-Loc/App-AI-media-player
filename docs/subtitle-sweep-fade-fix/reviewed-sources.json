@@ -1,0 +1,10 @@
+﻿{
+    "app/ui/subs_ui/subtitle_layer.py":  {
+                                             "before_sha256":  "9995ff28c96d2bd1d38b58a75b919c90ac1224835fd7ee6d1ab92dd53c44f7ff",
+                                             "after_sha256":  "f0e4d91e8e6b45d885d47ef0637888e67c2690ec200cba57c5eb405da5baaf50"
+                                         },
+    "app/ui/subtitle_effects.py":  {
+                                       "before_sha256":  "427ec932051eb0b742e80ae1a3375e525fd8a3b8785aa5c04fe0781acc098529",
+                                       "after_sha256":  "2deeeb80f4b6182debe2f8a99c7e9f491a98ef1eea4a6d0bb723e2aaac73d94b"
+                                   }
+}

@@ -73,11 +73,6 @@ class SubtitleToolsDialog(SubtitleToolsDialogLogic, QDialog):
         self.combo_lang.currentTextChanged.connect(self._on_lang_changed)
         header_layout.addWidget(self.combo_lang)
 
-        # Additive burn-in export action.  The controller snapshots the live
-        # subtitle presentation and never mutates this editor or playback.
-        from ui.video_subtitle_export import VideoExportButton
-        header_layout.addWidget(VideoExportButton(self))
-
         layout.addLayout(header_layout)
 
         self.tabs = QTabWidget()

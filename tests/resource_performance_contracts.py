@@ -7,7 +7,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def before_resource_changes(relative, raw=False):
-    current = (ROOT / relative).read_bytes()
+    # The export phase is newer than this frozen resource phase.  Validate and
+    # peel off only that reviewed UI adapter before applying the historical
+    # resource snapshots below; never recapture an older manifest.
+    from tests.video_export_contracts import before_video_export_changes
+    current = before_video_export_changes(relative, raw=True)
     manifest = json.loads((ROOT / 'docs/resource-performance/reviewed-sources.json').read_text(encoding='utf-8'))
     if relative in manifest:
         entry = manifest[relative]

@@ -62,6 +62,7 @@ docs/subtitle-particles/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof
 docs/subtitle-particles/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/subtitle-particles/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/subtitle-sweep/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
+docs/subtitle-sweep-fade-fix/reviewed/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/subtitle-sweep/reviewed.patch -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 docs/subtitle-sweep/*.txt whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab,cr-at-eol
 app/ui/subtitle_kinetic.py -text

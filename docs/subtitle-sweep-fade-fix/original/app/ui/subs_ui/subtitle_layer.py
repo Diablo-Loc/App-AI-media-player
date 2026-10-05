@@ -467,12 +467,7 @@ class SubtitleLayer(DraggableSubtitle):
 
     def _smart_hide(self, instant=False):
         """Ẩn sub an toàn"""
-        keep_erased_sweep = (
-            not self.isHidden() and not instant and self.use_fade_effect
-            and self._subtitle_effects.finish_erase_sweep_for_fade()
-        )
-        if not keep_erased_sweep:
-            self._subtitle_effects.clear()
+        self._subtitle_effects.clear()
         if self.isHidden():
             if instant:
                 self.fade_anim.stop()

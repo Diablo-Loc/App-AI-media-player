@@ -129,6 +129,29 @@ class EffectTests(unittest.TestCase):
         self.assertTrue(layer.isHidden())
         self.assertEqual(effect.animation.state(), QAbstractAnimation.State.Stopped)
 
+    def test_erased_sentence_stays_hidden_during_live_fade_out(self):
+        layer = self.layer()
+        layer.load_subtitles([dict(start=1000, end=2000, orig='A sentence swept away')])
+        layer.set_fade_enabled(True)
+        effect = layer._subtitle_effects
+        effect.configure(dict(enabled=True, trail='shuriken', erase_passed=True))
+        layer.update_position(1000)
+        effect.scan_progress = .99
+
+        layer.update_position(2001)
+
+        self.assertFalse(layer.isHidden())
+        self.assertEqual(layer.text(), 'A sentence swept away')
+        self.assertEqual(effect.scan_progress, 1.0)
+        self.assertIsNotNone(effect.cue)
+        self.assertEqual(effect.animation.state(), QAbstractAnimation.State.Stopped)
+        self.assertEqual(layer.fade_anim.endValue(), 0.0)
+
+        erased_frame = image_of(layer)
+        effect.clear()
+        restored_frame = image_of(layer)
+        self.assertNotEqual(erased_frame, restored_frame)
+
     def test_hidden_off_empty_and_load_cancel_animation(self):
         layer = self.layer()
         effect = layer._subtitle_effects
@@ -346,6 +369,15 @@ class EffectScopeTests(unittest.TestCase):
                     .replace('        install_subtitle_effects(self)\n', ''), before)
             elif relative.endswith('subtitle_layer.py'):
                 restored = after.replace('from ui.subtitle_effects import SubtitleEffects\n', '')
+                restored = restored.replace(
+                    "        keep_erased_sweep = (\n"
+                    "            not self.isHidden() and not instant and self.use_fade_effect\n"
+                    "            and self._subtitle_effects.finish_erase_sweep_for_fade()\n"
+                    "        )\n"
+                    "        if not keep_erased_sweep:\n"
+                    "            self._subtitle_effects.clear()\n",
+                    "        self._subtitle_effects.clear()\n",
+                )
                 restored = restored.replace("        effects = getattr(self, '_subtitle_effects', None)\n"
                     '        if effects is not None and effects.paint(painter, path):\n'
                     '            painter.end()\n            return\n\n', '')
