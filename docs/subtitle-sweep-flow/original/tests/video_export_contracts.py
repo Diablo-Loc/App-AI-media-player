@@ -11,8 +11,7 @@ def before_video_export_changes(relative, current=None, raw=False):
     """Validate the reviewed export edit, then expose the preceding source."""
     if current is None:
         current = (ROOT / relative).read_bytes()
-    from tests.subtitle_sweep_flow_contracts import before_sweep_flow_changes
-    current = before_sweep_flow_changes(relative, current=current, raw=True)
+    # The live sweep fade fix is restored by before_sweep_changes below.
     manifest = json.loads(
         (ROOT / 'docs/video-subtitle-export/reviewed-sources.json').read_text(encoding='utf-8')
     )
@@ -27,4 +26,7 @@ def before_video_export_changes(relative, current=None, raw=False):
         if hashlib.sha256(original).hexdigest() != entry['before_sha256']:
             raise AssertionError('Video-export baseline changed: ' + relative)
         current = original
+    else:
+        from tests.subtitle_sweep_contracts import before_sweep_changes
+        current = before_sweep_changes(relative, raw=True)
     return current if raw else current.decode('utf-8-sig').replace('\r\n', '\n')

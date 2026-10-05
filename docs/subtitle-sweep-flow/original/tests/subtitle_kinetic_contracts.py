@@ -6,10 +6,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def before_kinetic_changes(relative, current=None, raw=False):
-    if current is None:
-        from tests.lyric_accuracy_contracts import before_accuracy_changes
-        current = before_accuracy_changes(relative, raw=True)
+def before_kinetic_changes(relative, raw=False):
+    from tests.lyric_accuracy_contracts import before_accuracy_changes
+    current = before_accuracy_changes(relative, raw=True)
     manifest = json.loads((ROOT/'docs/subtitle-kinetic/reviewed-sources.json').read_text(encoding='utf-8'))
     if relative in manifest:
         entry = manifest[relative]

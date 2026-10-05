@@ -283,12 +283,11 @@ class ExportPolicyTests(unittest.TestCase):
     def test_multilingual_sweep_groups_survive_snapshot_and_export_rewrap(self):
         orig = ' '.join(f'orig{i}' for i in range(14))
         english = ' '.join(f'english{i}' for i in range(12))
-        vietnamese = ' '.join(f'vietnamese{i}' for i in range(12))
-        layer = SubtitleLayer(SubtitleMode.JP_EN_VI)
+        layer = SubtitleLayer(SubtitleMode.JP_EN)
         self.addCleanup(layer.deleteLater)
         self.addCleanup(layer.hide)
         layer.load_subtitles([
-            {'start': 100, 'end': 4100, 'orig': orig, 'en': english, 'vi': vietnamese},
+            {'start': 100, 'end': 4100, 'orig': orig, 'en': english, 'vi': ''},
         ])
         layer._anchor_rect_global = QRect(0, 0, 900, 600)
         window = SimpleNamespace(
@@ -303,9 +302,7 @@ class ExportPolicyTests(unittest.TestCase):
         )
         snap = snapshot_from_window(window)
         cue = snap.cues[0]
-        expected_groups = layer.build_text_plan(layer.subtitles[0])[1]
-        self.assertEqual(cue.sweep_row_groups, expected_groups)
-        self.assertEqual(set(cue.sweep_row_groups), {0, 1, 2})
+        self.assertEqual(cue.sweep_row_groups, (0, 0, 1, 1))
 
         grouped = ExportSnapshot(
             source=snap.source, cues=snap.cues, style=snap.style,
@@ -319,9 +316,9 @@ class ExportPolicyTests(unittest.TestCase):
         display_text = renderer._display_text(cue.text)
         display_groups = renderer._display_row_groups(cue, display_text)
         self.assertEqual(len(display_groups), len(display_text.split('\n')))
-        self.assertEqual(set(display_groups), {0, 1, 2})
+        self.assertEqual(set(display_groups), {0, 1})
         renderer.frame(2000)
-        self.assertEqual(len(renderer.effects.particles.tracks), 3)
+        self.assertEqual(len(renderer.effects.particles.tracks), 2)
 
     def test_hidden_mode_cue_still_controls_live_fade_gap(self):
         layer = SubtitleLayer(SubtitleMode.VI)

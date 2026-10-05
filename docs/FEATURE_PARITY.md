@@ -100,3 +100,7 @@ Quy trình: fixture hành vi cũ → patch nhỏ → so sánh data/API/signals/l
 Luồng tải/preset/settings/engine và media cũ chưa đổi. Kiểm tra offline 12
 command và 12 fixture selector phát hiện các vấn đề chất lượng/chọn format;
 chưa có xác nhận live YouTube hoặc EXE. Xem [DOWNLOAD_QUALITY_REVIEW.md](DOWNLOAD_QUALITY_REVIEW.md).
+
+Luồng quét subtitle 05/10/2026: **đã sửa theo câu/ngôn ngữ**. Một track tiếp tục qua các hàng wrap thuộc cùng phrase; hai ngôn ngữ/4 hàng tạo hai vệt đồng thời. Hạt, phi tiêu và ẩn chữ sau quét dùng chung nhóm dòng; video export giữ nhóm khi tự wrap. Runtime Qt/export probe đạt, full suite Python 3.11 đang chờ interpreter.
+
+Sweep-track hardening 05/10/2026: explicit logical row-group metadata is now produced by SubtitleLayer at wrap time. Track count is dynamic rather than fixed to two/three languages; the Qt probe verified 3 languages over 6 wrapped rows -> 3 tracks, a future 6-language mode -> 6 tracks, and export rewrap to 24 rows while preserving 3 groups. Existing SubtitleMode display text matched the exact pre-phase implementation. Full Python 3.11 suite remains pending because the venv interpreter is missing. See [SUBTITLE_SWEEP_TRACKS.md](SUBTITLE_SWEEP_TRACKS.md).

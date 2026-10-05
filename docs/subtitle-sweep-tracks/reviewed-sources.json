@@ -1,0 +1,26 @@
+{
+    "app/ui/subs_ui/subtitle_layer.py":  {
+                                             "before_sha256":  "f0e4d91e8e6b45d885d47ef0637888e67c2690ec200cba57c5eb405da5baaf50",
+                                             "after_sha256":  "9c04350781f898fbd0e12ffe67298aa3c3dbc6fc2abe740d1a9bf5592b97cc44"
+                                         },
+    "app/ui/subtitle_particles.py":  {
+                                         "before_sha256":  "1fefc07a0915aaf5b4164a79ae4039608a81bbb66f88afbae34c9745a32d462b",
+                                         "after_sha256":  "7302f15cab97e3d56a3ac84b083fb2fb6e9c18adb2794d1ea3188413fe7a3494"
+                                     },
+    "app/ui/video_subtitle_export.py":  {
+                                            "before_sha256":  "3958081946e8880a6271e9aa1ef1c2e1e57adf54e1d34c123ae7625a80a1b99e",
+                                            "after_sha256":  "d79c498dac8044959b2dbb57a1e92875ba5fecba9260ae4a5382331b40cc895a"
+                                        },
+    "tests/subtitle_sweep_flow_contracts.py":  {
+                                                   "before_sha256":  "f74fe61f7c8dba077019df3f614b736532c4c7c0c835380906a6815e8c6f1dd7",
+                                                   "after_sha256":  "3bc5cb6e4cc9055fcc5d004193ee0c6119b7bd44733b4a3ee776828252bf5b87"
+                                               },
+    "tests/test_subtitle_sweep.py":  {
+                                         "before_sha256":  "711accd80da72c72dde134c5ace4c790a9ed13fafe27bba35621143082e511cd",
+                                         "after_sha256":  "979be731f2f3837ffe897df9bc11ee48bc9d223c4e8b4d8f078a5a9c88f18fb8"
+                                     },
+    "tests/test_video_subtitle_export.py":  {
+                                                "before_sha256":  "707f07a0c6365d4fa82eff95f2c5bce23a582efe403e5e6b86fd3815bea1d63d",
+                                                "after_sha256":  "4f6e0890624a427d8619629a16c2d180cd36bdc431f5d99c913c7ea07f24e42a"
+                                            }
+}

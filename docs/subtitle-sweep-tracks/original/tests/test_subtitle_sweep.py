@@ -56,7 +56,6 @@ class SweepTests(unittest.TestCase):
 
         lines = label.text().split('\n')
         self.assertEqual(len(lines), 4)
-        self.assertEqual(label.sweep_row_groups, (0, 0, 1, 1))
         self.assertEqual(subtitle_row_groups(label.text(), label.mode, cue), (0, 0, 1, 1))
         particles = label._subtitle_effects.particles
         particles.prepare(4000)
@@ -71,54 +70,6 @@ class SweepTests(unittest.TestCase):
         self.assertLess(early[1][0].rect.center().y(), late[1][0].rect.center().y())
         _, active = particles.sweep_masks(.5)
         self.assertEqual(len(active), 2)
-
-    def test_three_languages_and_future_language_count_keep_one_track_per_phrase(self):
-        orig = ' '.join(f'orig{i}' for i in range(14))
-        english = ' '.join(f'english{i}' for i in range(12))
-        vietnamese = ' '.join(f'vietnamese{i}' for i in range(12))
-        label = SubtitleLayer(SubtitleMode.JP_EN_VI)
-        self.addCleanup(label.deleteLater)
-        self.addCleanup(label.hide)
-        label.set_fade_enabled(False)
-        cue = dict(start=0, end=6000, orig=orig, en=english, vi=vietnamese)
-        label.load_subtitles([cue])
-        label._subtitle_effects.configure(dict(
-            enabled=True, trail='comet', erase_passed=True,
-            soft_fade=False, entrance='none',
-        ))
-        label.update_position(0)
-
-        groups = label.sweep_row_groups
-        self.assertEqual(set(groups), {0, 1, 2})
-        self.assertEqual(len(groups), len(label.text().split('\n')))
-        particles = label._subtitle_effects.particles
-        particles.prepare(6000)
-        self.assertEqual(len(particles.tracks), 3)
-        self.assertEqual(len(particles.targets(.5)), 3)
-        _, active = particles.sweep_masks(.5)
-        self.assertEqual(len(active), 3)
-
-        label.mode = types.SimpleNamespace(
-            display_language_keys=('jp', 'en', 'vi', 'fr', 'de', 'es')
-        )
-        future_cue = dict(
-            orig='jp phrase', en='en phrase', vi='vi phrase',
-            fr='fr phrase', de='de phrase', es='es phrase',
-        )
-        text, future_groups = label.build_text_plan(future_cue)
-        self.assertEqual(text.split('\n'), [
-            'jp phrase', 'en phrase', 'vi phrase',
-            'fr phrase', 'de phrase', 'es phrase',
-        ])
-        self.assertEqual(future_groups, (0, 1, 2, 3, 4, 5))
-        self.assertEqual(subtitle_row_groups(text, label.mode, future_cue), future_groups)
-
-        label.setText(text)
-        label.sweep_row_groups = future_groups
-        label.adjustSize()
-        particles.clear()
-        particles.prepare(6000)
-        self.assertEqual(len(particles.tracks), 6)
 
     def test_single_wrapped_language_is_one_sweep_and_ambiguous_text_falls_back(self):
         orig = ' '.join(f'word{i}' for i in range(16))

@@ -36,7 +36,6 @@ from core.audio_effects import find_tool
 from ui.icons import button_icon
 from ui.design_system import ACCENT, BORDER, DIALOG_STYLE, MUTED, RAISED, SURFACE, TEXT
 from ui.subtitle_effects import SubtitleEffects, normalize_options
-from ui.subtitle_particles import subtitle_row_groups
 
 
 FADE_MS = 220
@@ -892,7 +891,6 @@ class ExportCue:
     contents_y: int = 0
     contents_width: int = 0
     contents_height: int = 0
-    sweep_row_groups: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -944,22 +942,7 @@ def snapshot_from_window(window) -> ExportSnapshot:
     cues = []
     source_cues = tuple(getattr(layer, 'subtitles', ()) or ())
     for index, cue in enumerate(source_cues):
-        plan_builder = getattr(layer, 'build_text_plan', None)
-        if callable(plan_builder):
-            text, sweep_row_groups = plan_builder(cue)
-            text = text.strip()
-            sweep_row_groups = tuple(sweep_row_groups or ())
-            if (len(sweep_row_groups) != len(text.split('\n'))
-                    or any(not isinstance(group, int) or isinstance(group, bool)
-                           for group in sweep_row_groups)):
-                sweep_row_groups = subtitle_row_groups(
-                    text, getattr(layer, 'mode', None), cue
-                )
-        else:
-            text = layer.build_text(cue).strip()
-            sweep_row_groups = subtitle_row_groups(
-                text, getattr(layer, 'mode', None), cue
-            )
+        text = layer.build_text(cue).strip()
         if not text:
             continue
         start = float(cue.get('start', 0) or 0)
@@ -983,7 +966,6 @@ def snapshot_from_window(window) -> ExportSnapshot:
             contents_y=int(probe_contents.y()),
             contents_width=max(1, int(probe_contents.width())),
             contents_height=max(1, int(probe_contents.height())),
-            sweep_row_groups=sweep_row_groups,
         ))
     size_probe.deleteLater()
 
@@ -1157,11 +1139,9 @@ class _RenderLabel(QObject):
         self.use_outline = style['outline_enabled']
         self.outline_width = style['outline_width']
         self.outline_color = style['outline_color']
-        self.sweep_row_groups = ()
 
-    def configure(self, text, size, contents, sweep_row_groups=()):
+    def configure(self, text, size, contents):
         self._text, self._size, self._contents = text, QSize(size), QRect(contents)
-        self.sweep_row_groups = tuple(sweep_row_groups or ())
 
     def text(self): return self._text
     def font(self): return self._font
@@ -1346,20 +1326,6 @@ class SubtitleBandRenderer:
         self._wrapped_cache[text] = result
         return result
 
-    def _display_row_groups(self, cue, display_text):
-        source_lines = cue.text.split('\n')
-        groups = tuple(cue.sweep_row_groups or ())
-        if len(groups) != len(source_lines):
-            return tuple(range(len(display_text.split('\n'))))
-        if not self.settings.safe_subtitles:
-            return groups
-        expanded = []
-        for index, line in enumerate(source_lines):
-            expanded.extend([groups[index]] * len(self._wrap_line(line)))
-        if len(expanded) != len(display_text.split('\n')):
-            return tuple(range(len(display_text.split('\n'))))
-        return tuple(expanded)
-
     def _geometry(self, text, cue=None):
         if (not self.settings.override_font_size
                 and cue is not None and text == cue.text
@@ -1435,7 +1401,6 @@ class SubtitleBandRenderer:
         if cue is None or opacity <= 0:
             return self._blank_frame
         display_text = self._display_text(cue.text)
-        display_row_groups = self._display_row_groups(cue, display_text)
 
         # Most subtitle time is static text.  Re-use the already rasterized
         # band once entry/fade motion is settled; animated trails/kinetics keep
@@ -1457,7 +1422,7 @@ class SubtitleBandRenderer:
 
         self.image.fill(Qt.GlobalColor.transparent)
         size, contents = self._geometry(display_text, cue)
-        self.label.configure(display_text, size, contents, display_row_groups)
+        self.label.configure(display_text, size, contents)
         path = self._path_for(display_text, size, contents)
         keep_erased_sweep = (
             not active

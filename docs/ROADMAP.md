@@ -103,3 +103,7 @@ UI mới đã triển khai riêng theo yêu cầu mới; phần parity thực t�
 fallback có thể vượt độ phân giải hoặc thiếu định dạng và command lặp URL.
 Phase tiếp theo cần giữ nguồn, tách lựa chọn chuyển mã, sửa selector/container
 và ownership file tạm. Xem [DOWNLOAD_QUALITY_REVIEW.md](DOWNLOAD_QUALITY_REVIEW.md).
+
+Luồng quét subtitle 05/10/2026: **đã sửa cách chia vệt theo câu/ngôn ngữ**. Mỗi ngôn ngữ có một luồng đi tuần tự qua các hàng wrap; hai ngôn ngữ/4 hàng tạo hai vệt đồng thời. Hạt và erase_passed dùng cùng kế hoạch. Probe Qt/export và source gates liên quan đạt; full suite Python 3.11 còn chờ vì interpreter của venv không tồn tại. Xem [SUBTITLE_SWEEP_FLOW_FIX.md](SUBTITLE_SWEEP_FLOW_FIX.md).
+
+Sweep-track hardening 05/10/2026: completed explicit layout metadata for subtitle sweep grouping. Particle emitters, erase masks and video export consume the same dynamic group ids, so future additional displayed languages do not require renderer-specific grouping logic. Current-mode text parity plus 3-language, 6-language and export-rewrap probes passed; historical manifests remain frozen. Full Python 3.11 suite remains pending because the venv interpreter is missing. See [SUBTITLE_SWEEP_TRACKS.md](SUBTITLE_SWEEP_TRACKS.md).

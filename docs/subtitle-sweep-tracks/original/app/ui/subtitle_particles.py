@@ -31,33 +31,23 @@ def _compact_text(text):
 
 
 def _logical_subtitle_texts(mode, cue):
-    """Compatibility fallback for labels that do not provide explicit row groups."""
+    """Mirror SubtitleLayer language selection without changing its text path."""
     if not isinstance(cue, dict):
         return []
-    explicit = getattr(mode, 'display_language_keys', None)
-    if callable(explicit):
-        explicit = explicit()
-    if isinstance(explicit, (tuple, list)):
-        requested = tuple(str(key).strip() for key in explicit if str(key).strip())
-    else:
-        value = str(getattr(mode, 'value', mode) or '')
-        requested = tuple(part for part in value.split('_') if part and part != 'off')
+    value = getattr(mode, 'value', mode)
     raw_orig = str(cue.get('orig', '') or '').strip()
+    raw_en = str(cue.get('en', '') or '').strip()
+    raw_vi = str(cue.get('vi', '') or '').strip()
+    effective_en = raw_en if raw_en else raw_orig
     result = []
-    emitted_orig = False
-    for requested_key in requested:
-        cue_key = 'orig' if requested_key in ('jp', 'ja') else requested_key
-        if cue_key == 'en':
-            raw_en = str(cue.get('en', '') or '').strip()
-            phrase = raw_en if raw_en else raw_orig
-            if emitted_orig and phrase and phrase.lower() == raw_orig.lower():
-                continue
-        else:
-            phrase = str(cue.get(cue_key, '') or '').strip()
-        if phrase:
-            result.append(phrase)
-            if cue_key == 'orig':
-                emitted_orig = True
+    if value in ('jp', 'jp_vi', 'jp_en', 'jp_en_vi') and raw_orig:
+        result.append(raw_orig)
+    if value in ('en', 'en_vi', 'jp_en', 'jp_en_vi') and effective_en:
+        already_orig = value in ('jp', 'jp_vi', 'jp_en', 'jp_en_vi') and bool(raw_orig)
+        if not (already_orig and effective_en.lower() == raw_orig.lower()):
+            result.append(effective_en)
+    if value in ('vi', 'jp_vi', 'en_vi', 'jp_en_vi') and raw_vi:
+        result.append(raw_vi)
     return result
 
 

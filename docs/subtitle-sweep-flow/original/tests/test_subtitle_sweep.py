@@ -11,11 +11,9 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QRegion
 from PySide6.QtTest import QSignalSpy
 from PySide6.QtMultimedia import QMediaPlayer
-from subtitle.mode import SubtitleMode
-from ui.subs_ui.subtitle_layer import SubtitleLayer
 from ui.subtitle_effects import PRESETS, normalize_options
 from ui.subtitle_effects_panel import SubtitleEffectsPanel
-from ui.subtitle_particles import TRAILS, MAX_REGIONS, subtitle_row_groups
+from ui.subtitle_particles import TRAILS, MAX_REGIONS
 from tests.test_subtitle_particles import MediaClock
 from tests import test_subtitle_particles as particle_tests
 from tests.test_subtitle_effects import image_of
@@ -38,107 +36,6 @@ def bright_pixels(image, region=None):
 
 class SweepTests(unittest.TestCase):
     layer = particle_tests.ParticleTests.layer
-
-    def test_wrapped_language_phrases_use_one_sequential_sweep_each(self):
-        orig = ' '.join(f'orig{i}' for i in range(14))
-        english = ' '.join(f'english{i}' for i in range(12))
-        label = SubtitleLayer(SubtitleMode.JP_EN)
-        self.addCleanup(label.deleteLater)
-        self.addCleanup(label.hide)
-        label.set_fade_enabled(False)
-        cue = dict(start=0, end=4000, orig=orig, en=english, vi='')
-        label.load_subtitles([cue])
-        label._subtitle_effects.configure(dict(
-            enabled=True, trail='shuriken', erase_passed=True,
-            soft_fade=False, entrance='none',
-        ))
-        label.update_position(0)
-
-        lines = label.text().split('\n')
-        self.assertEqual(len(lines), 4)
-        self.assertEqual(label.sweep_row_groups, (0, 0, 1, 1))
-        self.assertEqual(subtitle_row_groups(label.text(), label.mode, cue), (0, 0, 1, 1))
-        particles = label._subtitle_effects.particles
-        particles.prepare(4000)
-        self.assertEqual(particles._row_group_ids, (0, 0, 1, 1))
-        self.assertEqual(len(particles.tracks), 2)
-
-        early = particles.targets(.10)
-        late = particles.targets(.90)
-        self.assertEqual(len(early), 2)
-        self.assertEqual(len(late), 2)
-        self.assertLess(early[0][0].rect.center().y(), late[0][0].rect.center().y())
-        self.assertLess(early[1][0].rect.center().y(), late[1][0].rect.center().y())
-        _, active = particles.sweep_masks(.5)
-        self.assertEqual(len(active), 2)
-
-    def test_three_languages_and_future_language_count_keep_one_track_per_phrase(self):
-        orig = ' '.join(f'orig{i}' for i in range(14))
-        english = ' '.join(f'english{i}' for i in range(12))
-        vietnamese = ' '.join(f'vietnamese{i}' for i in range(12))
-        label = SubtitleLayer(SubtitleMode.JP_EN_VI)
-        self.addCleanup(label.deleteLater)
-        self.addCleanup(label.hide)
-        label.set_fade_enabled(False)
-        cue = dict(start=0, end=6000, orig=orig, en=english, vi=vietnamese)
-        label.load_subtitles([cue])
-        label._subtitle_effects.configure(dict(
-            enabled=True, trail='comet', erase_passed=True,
-            soft_fade=False, entrance='none',
-        ))
-        label.update_position(0)
-
-        groups = label.sweep_row_groups
-        self.assertEqual(set(groups), {0, 1, 2})
-        self.assertEqual(len(groups), len(label.text().split('\n')))
-        particles = label._subtitle_effects.particles
-        particles.prepare(6000)
-        self.assertEqual(len(particles.tracks), 3)
-        self.assertEqual(len(particles.targets(.5)), 3)
-        _, active = particles.sweep_masks(.5)
-        self.assertEqual(len(active), 3)
-
-        label.mode = types.SimpleNamespace(
-            display_language_keys=('jp', 'en', 'vi', 'fr', 'de', 'es')
-        )
-        future_cue = dict(
-            orig='jp phrase', en='en phrase', vi='vi phrase',
-            fr='fr phrase', de='de phrase', es='es phrase',
-        )
-        text, future_groups = label.build_text_plan(future_cue)
-        self.assertEqual(text.split('\n'), [
-            'jp phrase', 'en phrase', 'vi phrase',
-            'fr phrase', 'de phrase', 'es phrase',
-        ])
-        self.assertEqual(future_groups, (0, 1, 2, 3, 4, 5))
-        self.assertEqual(subtitle_row_groups(text, label.mode, future_cue), future_groups)
-
-        label.setText(text)
-        label.sweep_row_groups = future_groups
-        label.adjustSize()
-        particles.clear()
-        particles.prepare(6000)
-        self.assertEqual(len(particles.tracks), 6)
-
-    def test_single_wrapped_language_is_one_sweep_and_ambiguous_text_falls_back(self):
-        orig = ' '.join(f'word{i}' for i in range(16))
-        label = SubtitleLayer(SubtitleMode.JP)
-        self.addCleanup(label.deleteLater)
-        self.addCleanup(label.hide)
-        label.set_fade_enabled(False)
-        cue = dict(start=0, end=4000, orig=orig, en='', vi='')
-        label.load_subtitles([cue])
-        label._subtitle_effects.configure(dict(
-            enabled=True, trail='petals', erase_passed=True,
-            soft_fade=False, entrance='none',
-        ))
-        label.update_position(0)
-        self.assertEqual(len(label.text().split('\n')), 2)
-        particles = label._subtitle_effects.particles
-        particles.prepare(4000)
-        self.assertEqual(len(particles.tracks), 1)
-        self.assertEqual(len(particles.targets(.5)), 1)
-        self.assertEqual(subtitle_row_groups('custom\npreview'), (0, 1))
 
     def test_passed_word_pixels_hide_future_stays_and_end_never_resurrects(self):
         label = self.layer('FIRST SECOND THIRD', options={

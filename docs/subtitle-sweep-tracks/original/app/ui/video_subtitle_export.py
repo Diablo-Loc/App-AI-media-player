@@ -944,22 +944,7 @@ def snapshot_from_window(window) -> ExportSnapshot:
     cues = []
     source_cues = tuple(getattr(layer, 'subtitles', ()) or ())
     for index, cue in enumerate(source_cues):
-        plan_builder = getattr(layer, 'build_text_plan', None)
-        if callable(plan_builder):
-            text, sweep_row_groups = plan_builder(cue)
-            text = text.strip()
-            sweep_row_groups = tuple(sweep_row_groups or ())
-            if (len(sweep_row_groups) != len(text.split('\n'))
-                    or any(not isinstance(group, int) or isinstance(group, bool)
-                           for group in sweep_row_groups)):
-                sweep_row_groups = subtitle_row_groups(
-                    text, getattr(layer, 'mode', None), cue
-                )
-        else:
-            text = layer.build_text(cue).strip()
-            sweep_row_groups = subtitle_row_groups(
-                text, getattr(layer, 'mode', None), cue
-            )
+        text = layer.build_text(cue).strip()
         if not text:
             continue
         start = float(cue.get('start', 0) or 0)
@@ -983,7 +968,7 @@ def snapshot_from_window(window) -> ExportSnapshot:
             contents_y=int(probe_contents.y()),
             contents_width=max(1, int(probe_contents.width())),
             contents_height=max(1, int(probe_contents.height())),
-            sweep_row_groups=sweep_row_groups,
+            sweep_row_groups=subtitle_row_groups(text, getattr(layer, 'mode', None), cue),
         ))
     size_probe.deleteLater()
 

@@ -1,0 +1,26 @@
+{
+  "app/ui/subtitle_particles.py": {
+    "before_sha256": "7f33ce862fd9107ed785ed01c8f4c947c76d3db45ad030e60779803ee6060ad1",
+    "after_sha256": "1fefc07a0915aaf5b4164a79ae4039608a81bbb66f88afbae34c9745a32d462b"
+  },
+  "app/ui/video_subtitle_export.py": {
+    "before_sha256": "ecf8ecb29a32971ee46367a59876c803ed73a5811cdb8ba5da13cbd2f157060a",
+    "after_sha256": "3958081946e8880a6271e9aa1ef1c2e1e57adf54e1d34c123ae7625a80a1b99e"
+  },
+  "tests/video_export_contracts.py": {
+    "before_sha256": "5be91cade40b94f890835e384a6ebdc6807eaf0af399d3409e997b83d3b46779",
+    "after_sha256": "d97afbe05513f48ac6d556bd215bcf4286f9388cfd64f76923f61abc7e450499"
+  },
+  "tests/subtitle_kinetic_contracts.py": {
+    "before_sha256": "42ea1647e77a41b245e640bcdb285ef2503828d88ef996768b671e2c75c4ad74",
+    "after_sha256": "4e2e668cda4229be1b927226c5570c720a20620950f9b50dd33de5dd5c0d2ebb"
+  },
+  "tests/subtitle_sweep_contracts.py": {
+    "before_sha256": "38f9c064125796f13bed59028e6377f7c5e772b23f811fe732f1579352c5bb3d",
+    "after_sha256": "a85b9ddf09712946c37fa9449bca6e8b624120efc7bf0dcdfa989927c32e46a7"
+  },
+  "tests/test_subtitle_sweep.py": {
+    "before_sha256": "05a94d7f9ebfdae9a2982d63f15a82d35a01aed0bee2f8b926efa89890910679",
+    "after_sha256": "711accd80da72c72dde134c5ace4c790a9ed13fafe27bba35621143082e511cd"
+  }
+}

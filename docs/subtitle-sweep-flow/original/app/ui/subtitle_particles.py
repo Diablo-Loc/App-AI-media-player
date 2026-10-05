@@ -26,97 +26,6 @@ class WordRegion(NamedTuple):
     merged: int
 
 
-def _compact_text(text):
-    return ' '.join(str(text or '').split())
-
-
-def _logical_subtitle_texts(mode, cue):
-    """Compatibility fallback for labels that do not provide explicit row groups."""
-    if not isinstance(cue, dict):
-        return []
-    explicit = getattr(mode, 'display_language_keys', None)
-    if callable(explicit):
-        explicit = explicit()
-    if isinstance(explicit, (tuple, list)):
-        requested = tuple(str(key).strip() for key in explicit if str(key).strip())
-    else:
-        value = str(getattr(mode, 'value', mode) or '')
-        requested = tuple(part for part in value.split('_') if part and part != 'off')
-    raw_orig = str(cue.get('orig', '') or '').strip()
-    result = []
-    emitted_orig = False
-    for requested_key in requested:
-        cue_key = 'orig' if requested_key in ('jp', 'ja') else requested_key
-        if cue_key == 'en':
-            raw_en = str(cue.get('en', '') or '').strip()
-            phrase = raw_en if raw_en else raw_orig
-            if emitted_orig and phrase and phrase.lower() == raw_orig.lower():
-                continue
-        else:
-            phrase = str(cue.get(cue_key, '') or '').strip()
-        if phrase:
-            result.append(phrase)
-            if cue_key == 'orig':
-                emitted_orig = True
-    return result
-
-
-def subtitle_row_groups(text, mode=None, cue=None):
-    """Map physical display rows back to logical subtitle-language phrases.
-
-    SubtitleLayer may wrap one language phrase into multiple QLabel rows.  A
-    decorative sweep should traverse those rows sequentially as one phrase,
-    while separate displayed languages keep independent simultaneous sweeps.
-    Ambiguous/custom text falls back to the historical one-track-per-row plan.
-    """
-    lines = str(text or '').split('\n')
-    fallback = tuple(range(len(lines)))
-    logical = _logical_subtitle_texts(mode, cue)
-    if not logical or len(lines) > MAX_REGIONS:
-        return fallback
-
-    groups = []
-    cursor = 0
-    for group_id, phrase in enumerate(logical):
-        target = _compact_text(phrase)
-        if not target:
-            continue
-        start = cursor
-        matched = False
-        while cursor < len(lines):
-            cursor += 1
-            candidate = _compact_text(' '.join(lines[start:cursor]))
-            if candidate == target:
-                groups.extend([group_id] * (cursor-start))
-                matched = True
-                break
-            if len(candidate) > len(target):
-                break
-        if not matched:
-            return fallback
-    if cursor != len(lines) or len(groups) != len(lines):
-        return fallback
-    return tuple(groups)
-
-
-def _label_row_groups(label):
-    text = label.text()
-    lines = text.split('\n')
-    explicit = getattr(label, 'sweep_row_groups', None)
-    if (isinstance(explicit, (tuple, list)) and len(explicit) == len(lines)
-            and all(isinstance(value, int) and not isinstance(value, bool) for value in explicit)):
-        return tuple(explicit)
-    effect = getattr(label, '_subtitle_effects', None)
-    cue_identity = getattr(effect, 'cue', None)
-    subtitles = getattr(label, 'subtitles', None)
-    if (isinstance(cue_identity, tuple) and cue_identity
-            and isinstance(subtitles, (tuple, list))):
-        index = cue_identity[0]
-        if isinstance(index, int) and 0 <= index < len(subtitles):
-            return subtitle_row_groups(text, getattr(label, 'mode', None), subtitles[index])
-    return tuple(range(len(lines)))
-
-
 def word_units(text):
     """UTF-16 grapheme boundaries, preserving accents, emoji ZWJ and shaping.
 
@@ -219,8 +128,6 @@ class ParticlePainter:
         self.label = label
         self.key = None
         self.rows = []
-        self.tracks = []
-        self._row_group_ids = ()
         self._sweep_cells = []
         self._sweep_prefix = []
         self.star = _star(4, .18)
@@ -236,36 +143,16 @@ class ParticlePainter:
     def clear(self):
         self.key = None
         self.rows = []
-        self.tracks = []
-        self._row_group_ids = ()
         self._sweep_cells = []
         self._sweep_prefix = []
         self.last_draw_count = 0
 
     def prepare(self, duration_ms):
-        row_groups = _label_row_groups(self.label)
         key = (self.label.text(), self.label.font().key(),
-               self.label.contentsRect().getRect(), duration_ms, row_groups)
+               self.label.contentsRect().getRect(), duration_ms)
         if key != self.key:
             self.key = key
             self.rows = build_regions(self.label, duration_ms)
-            visible_groups = tuple(group for line, group in zip(
-                self.label.text().split('\n'), row_groups) if line.strip())
-            if len(visible_groups) != len(self.rows):
-                visible_groups = tuple(range(len(self.rows)))
-            self._row_group_ids = visible_groups
-            order = []
-            for group in visible_groups:
-                if group not in order:
-                    order.append(group)
-            self.tracks = []
-            for group in order:
-                track = []
-                for row_index, row in enumerate(self.rows):
-                    if visible_groups[row_index] == group:
-                        track.extend(row)
-                if track:
-                    self.tracks.append(track)
             self._sweep_cells, self._sweep_prefix = [], []
 
     def _prepare_sweep(self):
@@ -274,7 +161,6 @@ class ParticlePainter:
         # so hiding an earlier word cannot redraw or dim a neighbouring cell.
         self._sweep_cells, self._sweep_prefix = [], []
         viewport = QRectF(self.label.contentsRect())
-        row_cells = []
         for row_index, row in enumerate(self.rows):
             top = viewport.top() if row_index == 0 else (
                 self.rows[row_index-1][0].rect.bottom()+row[0].rect.top()) / 2
@@ -295,18 +181,6 @@ class ParticlePainter:
                 band_top, band_bottom = math.floor(top), math.floor(bottom)
                 cells[logical] = QRegion(left, band_top, max(0, right-left),
                                         max(0, band_bottom-band_top))
-            row_cells.append(cells)
-        order = []
-        for group in self._row_group_ids:
-            if group not in order:
-                order.append(group)
-        for group in order:
-            cells = []
-            for row_index, row in enumerate(row_cells):
-                if self._row_group_ids[row_index] == group:
-                    cells.extend(row)
-            if not cells:
-                continue
             prefix = [QRegion()]
             for cell in cells:
                 prefix.append(prefix[-1].united(cell))
@@ -333,10 +207,10 @@ class ParticlePainter:
 
     def targets(self, progress):
         result = []
-        for track in self.tracks:
-            position = min(1.0, max(0.0, progress)) * len(track)
-            index = min(len(track)-1, int(position))
-            region = track[index]
+        for row in self.rows:
+            position = min(1.0, max(0.0, progress)) * len(row)
+            index = min(len(row)-1, int(position))
+            region = row[index]
             local = min(1.0, position-index)
             visible_left, visible_right = region.rect.left(), region.rect.right()
             x = region.leading + (region.trailing-region.leading) * local
