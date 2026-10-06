@@ -750,13 +750,13 @@ class SubtitleToolsDialogLogic:
                 or settings.value("claude_key", "").strip()
             )
 
-        online_provider = settings.value("online_provider", "Gemini")
+        online_provider = settings.value("online_provider", "Local Default")
         if parent and hasattr(parent, 'app_controller'):
             ctrl = parent.app_controller
             online_provider = getattr(ctrl, 'online_provider', online_provider)
 
         app_settings = {
-            "use_online_translation": bool(api_key),
+            "use_online_translation": bool(api_key and online_provider != "Local Default"),
             "online_provider": online_provider,
             "api_key": api_key,
             "detected_lang": self.detected_lang,
@@ -975,7 +975,14 @@ class SubtitleToolsDialogLogic:
             return
 
         settings = QSettings("MyStudio", "AI_Music_Player")
-        provider = settings.value("online_provider", "Gemini")
+        provider = settings.value("online_provider", "Local Default")
+        if provider == "Local Default":
+            QMessageBox.warning(
+                self,
+                "Cảnh báo",
+                "Vui lòng chọn một dịch vụ AI Online trong Cài đặt trước khi Khớp Lời."
+            )
+            return
         api_key = (
             settings.value("api_key", "").strip()
             or settings.value("gemini_key", "").strip()
