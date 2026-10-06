@@ -10,6 +10,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def before_genius_referents_fallback_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    # Translation-stability tuning is newer than Genius referents fallback.
+    # Peel it first so this historical manifest remains frozen.
+    from tests.lyric_translation_stability_contracts import before_lyric_translation_stability_changes
+    current = before_lyric_translation_stability_changes(relative, current=current, raw=True)
     manifest = json.loads(
         (ROOT / "docs/genius-referents-fallback/reviewed-sources.json").read_text(encoding="utf-8")
     )

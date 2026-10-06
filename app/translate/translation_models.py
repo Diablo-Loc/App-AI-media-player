@@ -10,6 +10,7 @@ MODEL_CATALOG = {
     "Local Default": (),
     "Google Gemini": (
         ("Gemini 2.5 Flash · Tương thích", "gemini-2.5-flash"),
+        ("Gemini 3 preview · Tiết kiệm", "gemini-3-flash-preview"),
         ("Gemini 3.5 Flash-Lite · Tiết kiệm", "gemini-3.5-flash-lite"),
         ("Gemini 3.5 Flash · Cân bằng", "gemini-3.5-flash"),
         ("Gemini 3.8 Flash · Chất lượng cao", "gemini-3.8-flash"),

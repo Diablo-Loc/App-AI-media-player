@@ -14,6 +14,11 @@ def before_lyric_translation_changes(relative, current=None, raw=False):
     # Peel it before validating the frozen translation phase.
     from tests.genius_reference_contracts import before_genius_reference_changes
     current = before_genius_reference_changes(relative, current=current, raw=True)
+    # The legacy Gemini compatibility default changed from the preview model to
+    # gemini-2.5-flash between lyric shaping and Genius reference assistance.
+    # It had no adapter of its own, so restore that exact predecessor here.
+    from tests.gemini_default_compat_contracts import before_gemini_default_compat_changes
+    current = before_gemini_default_compat_changes(relative, current=current, raw=True)
     manifest = json.loads(
         (ROOT / 'docs/lyric-translation/reviewed-sources.json').read_text(encoding='utf-8')
     )

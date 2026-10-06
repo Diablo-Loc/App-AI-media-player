@@ -21,6 +21,7 @@ from core.subtitle_manager import SubtitleManager, SubtitleStatus
 from core import subtitle_persistence as persistence
 from subtitle.model import Subtitle, SubtitleLine
 from translate import pipeline
+from translate import online_logic
 from translate.cache import TranslationCache
 from control.ai_controller import AIController
 from control.library_scan import LibraryScanQueue
@@ -245,7 +246,14 @@ class TranslationTests(TemporaryStore):
         settings.value.side_effect = lambda key, default=None: default
         request = Mock()
         request.post.return_value.json.return_value = {'choices': [{'message': {'content': response}}]}
-        namespace = dict(QSettings=Mock(return_value=settings), requests=request, re=__import__('re'), SubtitleLine=SubtitleLine)
+        namespace = dict(
+            QSettings=Mock(return_value=settings),
+            requests=request,
+            re=__import__('re'),
+            SubtitleLine=SubtitleLine,
+            _semantic_review_ids=online_logic._semantic_review_ids,
+            _post_provider_once_with_retry=lambda url, label, **kwargs: request.post(url, **kwargs),
+        )
         translate = isolated_function('app/translate/online_logic.py', 'translate_online_pipeline', namespace)
         return translate(rows, 'OpenAI (GPT-4o)', 'synthetic-key', 'Synthetic song')
 
