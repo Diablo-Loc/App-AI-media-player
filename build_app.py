@@ -37,7 +37,7 @@ def build_plan(root=ROOT, dist_dir=None, stamp=None):
     params = [str(root / 'app/run_app.py'), f'--paths={root}', f'--paths={root / "app"}',
         f'--name={APP_NAME}', '--onedir', '--windowed', '--noconfirm',
         f'--distpath={output}', f'--workpath={work}', f'--specpath={work}',
-        f'--icon={root / "icon/app_icon.ico"}', '--add-data=app;app']
+        f'--icon={root / "icon/app_icon.ico"}', f'--add-data={root / "app"};app']
     params += ['--hidden-import=' + name for name in HIDDEN_IMPORTS]
     return {'root': str(root), 'output': str(output / APP_NAME), 'work': str(work), 'params': params}
 
