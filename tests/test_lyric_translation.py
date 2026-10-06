@@ -1,5 +1,4 @@
-"""Focused contracts for concise, meaning-preserving online lyric translation."""
-import json
+"""Focused contracts for natural, meaning-preserving online lyric translation."""
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -25,6 +24,7 @@ from tests.translation_reference_binding_contracts import before_translation_ref
 from tests.online_translation_authority_contracts import before_online_translation_authority_changes
 from tests.translation_semantic_review_contracts import before_translation_semantic_review_changes
 from tests.translation_single_pass_contracts import before_translation_single_pass_changes
+from tests.translation_v31_prompt_contracts import before_translation_v31_prompt_changes
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,79 +42,64 @@ class LyricTranslationPolicyTests(unittest.TestCase):
         invalid = SimpleNamespace(start=4.0, end=3.0, top=SimpleNamespace(text='x'))
         self.assertEqual(cue_duration_seconds(invalid), 2.5)
 
-    def test_soft_budgets_grow_with_duration_and_remain_bounded(self):
+    def test_legacy_soft_budget_helpers_remain_bounded_for_compatibility(self):
         en_short = soft_character_range(1.0, 'en')
         en_long = soft_character_range(4.0, 'en')
         vi_short = soft_character_range(1.0, 'vi')
         vi_long = soft_character_range(4.0, 'vi')
         self.assertLess(en_short[1], en_long[1])
         self.assertLess(vi_short[1], vi_long[1])
-        self.assertLess(en_short[0], en_short[1])
-        self.assertLess(vi_short[0], vi_short[1])
         self.assertLessEqual(en_long[1], 64)
         self.assertLessEqual(vi_long[1], 68)
 
-    def test_jsonl_rows_keep_ids_unicode_and_skip_empty_cues(self):
+    def test_simple_rows_keep_global_ids_unicode_and_skip_empty_cues(self):
         rows = build_translation_rows([
-            cue('君の声が聞こえる', 0.0, 2.0),
+            cue('\u541b\u306e\u58f0\u304c\u805e\u3053\u3048\u308b', 0.0, 2.0),
             cue('   ', 2.0, 3.0),
             cue('Stay   with\nme', 3.0, 6.0),
         ]).splitlines()
-        self.assertEqual(len(rows), 2)
-        first, second = map(json.loads, rows)
-        self.assertEqual(first['id'], 0)
-        self.assertEqual(first['source'], '君の声が聞こえる')
-        self.assertEqual(second['id'], 2)
-        self.assertEqual(second['source'], 'Stay with me')
-        self.assertIn('-', first['en_preferred_chars'])
-        self.assertIn('-', first['vi_preferred_chars'])
+        self.assertEqual(rows, [
+            '0===\u541b\u306e\u58f0\u304c\u805e\u3053\u3048\u308b',
+            '2===Stay with me',
+        ])
 
-    def test_verified_reference_is_bound_inside_its_exact_global_cue_row(self):
-        rows = build_translation_rows(
-            [cue('全て繋げてく残りの足')],
+    def test_verified_reference_stays_in_simple_same_id_block(self):
+        content = lyric_translation_user_content(
+            [cue('Machine lyric')],
             cue_ids=[47],
-            verified_references={47: '全て繋げてく残りの糸', 48: 'foreign cue'},
-        ).splitlines()
-        self.assertEqual(len(rows), 1)
-        payload = json.loads(rows[0])
-        self.assertEqual(payload['id'], 47)
-        self.assertEqual(payload['source'], '全て繋げてく残りの足')
-        self.assertEqual(payload['verified_reference'], '全て繋げてく残りの糸')
-        self.assertNotIn('foreign cue', rows[0])
+            verified_references={47: 'Verified lyric', 48: 'foreign cue'},
+        )
+        self.assertIn('THAM CHIẾU ĐÃ XÁC MINH (cùng ID):\n47===Verified lyric', content)
+        self.assertIn('LỜI MÁY:\n47===Machine lyric', content)
+        self.assertNotIn('foreign cue', content)
 
-    def test_prompt_requires_semantic_fidelity_without_hard_truncation(self):
+    def test_prompt_is_compact_natural_and_allows_complete_longer_lyrics(self):
         prompt = lyric_translation_system_prompt('Synthetic Song', has_reference=True)
         for phrase in (
-            'reading the whole batch as song context',
-            'Preserve every meaningful source part',
-            'extra wording in repeated refrains',
-            'negation',
-            'meaningful repetition',
-            'exceed the range whenever shortening would lose meaning',
-            'Keep naturally short lines, ad-libs and vocalizations short',
+            'toàn bộ các câu được gửi',
+            'Dịch đầy đủ từng câu',
+            'Giữ đủ ý và các vế có nghĩa',
+            'đừng rút gọn chỉ để câu ngắn',
+            'có thể dài hơn nếu cần để đúng và hay',
+            'THAM CHIẾU ĐÃ XÁC MINH',
             'ID===English translation===Vietnamese translation',
         ):
             self.assertIn(phrase, prompt)
+        self.assertLess(len(prompt), 1300)
+        self.assertNotIn('preferred character', prompt.lower())
+        self.assertNotIn('JSONL', prompt)
 
-        self.assertNotIn('silently check', prompt)
-
-    def test_online_model_may_repair_asr_with_or_without_genius_but_may_not_drop_fragments(self):
-        no_reference = lyric_translation_system_prompt('Synthetic Song', has_reference=False)
-        self.assertIn('full supplied song context', no_reference)
-        self.assertIn('Song metadata only: Synthetic Song', no_reference)
-        self.assertIn('Never insert title or artist wording into a cue', no_reference)
-        self.assertIn('Preserve every meaningful source part', no_reference)
-        self.assertIn('extra wording in repeated refrains', no_reference)
-
-        with_reference = lyric_translation_system_prompt('Synthetic Song', has_reference=True)
-        self.assertIn('verified_reference', with_reference)
-        self.assertIn('strong evidence for correcting obvious recognition errors', with_reference)
-        self.assertIn('reading the whole batch as song context', with_reference)
+    def test_online_model_can_repair_clear_asr_without_verified_reference(self):
+        prompt = lyric_translation_system_prompt('Synthetic Song', has_reference=False)
+        self.assertIn('có thể sai một vài chữ', prompt)
+        self.assertIn('ngữ cảnh bài hát', prompt)
+        self.assertIn('Bài hát: Synthetic Song', prompt)
+        self.assertNotIn('THAM CHIẾU ĐÃ XÁC MINH', prompt)
 
     def test_successful_normal_online_translation_is_single_pass(self):
         rows = [
-            SimpleNamespace(start=0.0, end=2.0, top=SimpleNamespace(text='全て繋げてく'), middle=None, bottom=None),
-            SimpleNamespace(start=2.0, end=5.0, top=SimpleNamespace(text='全て繋げてく残りの足'), middle=None, bottom=None),
+            SimpleNamespace(start=0.0, end=2.0, top=SimpleNamespace(text='Line one'), middle=None, bottom=None),
+            SimpleNamespace(start=2.0, end=5.0, top=SimpleNamespace(text='Line two with tail'), middle=None, bottom=None),
         ]
         settings = Mock()
         settings.value.side_effect = lambda key, default=None: default
@@ -122,8 +107,8 @@ class LyricTranslationPolicyTests(unittest.TestCase):
         first = Mock()
         first.json.return_value = {
             'choices': [{'message': {'content': (
-                '0===Connecting everything===Kết nối tất cả\n'
-                '1===Connecting everything with the remaining steps===Kết nối tất cả cùng những bước chân còn lại'
+                '0===English one===Vietnamese one\n'
+                '1===English two with full tail===Vietnamese two with full tail'
             )}}]
         }
         request.post.return_value = first
@@ -135,22 +120,11 @@ class LyricTranslationPolicyTests(unittest.TestCase):
             )
         self.assertIs(result, rows)
         self.assertEqual(request.post.call_count, 1)
-        self.assertEqual(rows[0].middle.text, 'Connecting everything')
-        self.assertEqual(rows[1].middle.text, 'Connecting everything with the remaining steps')
-        self.assertEqual(rows[1].bottom.text, 'Kết nối tất cả cùng những bước chân còn lại')
+        self.assertEqual(rows[0].middle.text, 'English one')
+        self.assertEqual(rows[1].middle.text, 'English two with full tail')
+        self.assertEqual(rows[1].bottom.text, 'Vietnamese two with full tail')
 
-    def test_prompt_preserves_semantic_risk_markers(self):
-        prompt = lyric_translation_system_prompt()
-        for phrase in (
-            'negation',
-            'relationship',
-            'name',
-            'number',
-            'meaningful repetition',
-        ):
-            self.assertIn(phrase, prompt)
-
-    def test_online_provider_sampling_is_low_variance(self):
+    def test_online_provider_sampling_stays_low_variance(self):
         source = (ROOT / 'app/translate/online_logic.py').read_text(encoding='utf-8-sig')
         self.assertEqual(source.count('temperature=0.2'), 1)
         self.assertEqual(source.count('"temperature": 0.2'), 2)
@@ -161,33 +135,28 @@ class LyricTranslationPolicyTests(unittest.TestCase):
         source = (ROOT / 'app/translate/online_logic.py').read_text(encoding='utf-8-sig')
         self.assertIn('max_output_tokens=16384', source)
 
-    def test_request_contains_reference_context_and_per_cue_budget(self):
+    def test_request_uses_simple_v31_style_rows_without_per_cue_budget(self):
         content = lyric_translation_user_content(
-            [cue('星を探して', 0.0, 1.6)],
+            [cue('Source lyric', 0.0, 1.6)],
             song_title='Synthetic Song',
-            reference_lyric='星を探して',
+            reference_lyric='Reference lyric',
         )
-        self.assertIn('SONG: Synthetic Song', content)
-        self.assertIn('REFERENCE LYRICS:', content)
-        payload = json.loads(content.split('CUES (JSONL; preferred character ranges are soft targets):\n', 1)[1])
-        self.assertEqual(payload['id'], 0)
-        self.assertEqual(payload['source'], '星を探して')
-        self.assertGreater(payload['duration_s'], 0)
+        self.assertIn('BÀI HÁT: Synthetic Song', content)
+        self.assertIn('LỜI THAM CHIẾU:\nReference lyric', content)
+        self.assertIn('LỜI MÁY:\n0===Source lyric', content)
+        self.assertNotIn('duration_s', content)
+        self.assertNotIn('preferred_chars', content)
+        self.assertNotIn('JSONL', content)
 
-    def test_request_embeds_verified_reference_in_same_cue_json_not_loose_block(self):
+    def test_request_keeps_verified_reference_bound_by_same_id(self):
         content = lyric_translation_user_content(
             [cue('Machine recognized tail', 0.0, 2.0)],
             song_title='Synthetic Song',
             cue_ids=[12],
             verified_references={12: 'Verified corrected tail'},
         )
-        self.assertNotIn('VERIFIED CUE REFERENCES', content)
-        payload = json.loads(content.split(
-            'CUES (JSONL; preferred character ranges are soft targets):\n', 1
-        )[1])
-        self.assertEqual(payload['id'], 12)
-        self.assertEqual(payload['source'], 'Machine recognized tail')
-        self.assertEqual(payload['verified_reference'], 'Verified corrected tail')
+        self.assertIn('THAM CHIẾU ĐÃ XÁC MINH (cùng ID):\n12===Verified corrected tail', content)
+        self.assertIn('LỜI MÁY:\n12===Machine recognized tail', content)
 
     def test_long_lyrics_batch_by_count_and_source_size_keep_global_ids(self):
         rows = [cue(f'Line {i}', i, i + 2) for i in range(121)]
@@ -201,7 +170,7 @@ class LyricTranslationPolicyTests(unittest.TestCase):
         size_batches = partition_translation_batches(huge)
         self.assertEqual([[idx for idx, _ in batch] for batch in size_batches], [[0], [1, 2]])
 
-    def test_batched_content_keeps_global_ids_and_boundary_context_outside_jsonl(self):
+    def test_batched_content_ignores_boundary_metadata_and_keeps_global_id(self):
         content = lyric_translation_user_content(
             [cue('Current line')],
             song_title='Synthetic Song',
@@ -209,10 +178,9 @@ class LyricTranslationPolicyTests(unittest.TestCase):
             context_before='Previous line',
             context_after='Next line',
         )
-        self.assertIn('PREVIOUS CONTEXT ONLY (do not translate/output): Previous line', content)
-        self.assertIn('NEXT CONTEXT ONLY (do not translate/output): Next line', content)
-        payload = json.loads(content.split('CUES (JSONL; preferred character ranges are soft targets):\n', 1)[1])
-        self.assertEqual(payload['id'], 60)
+        self.assertIn('LỜI MÁY:\n60===Current line', content)
+        self.assertNotIn('Previous line', content)
+        self.assertNotIn('Next line', content)
 
     def _run_long_online(self, row_count, fail_calls=None):
         rows = [
@@ -231,18 +199,23 @@ class LyricTranslationPolicyTests(unittest.TestCase):
             nonlocal call_number
             call_number += 1
             content = json['messages'][1]['content']
-            payload_text = content.split('CUES (JSONL; preferred character ranges are soft targets):\n', 1)[1]
-            batch_rows = [json_module.loads(line) for line in payload_text.splitlines() if line.strip()]
+            payload_text = content.rsplit('LỜI MÁY:\n', 1)[1]
+            batch_rows = []
+            for line in payload_text.splitlines():
+                if '===' not in line:
+                    continue
+                idx_text, source = line.split('===', 1)
+                if idx_text.strip().isdigit():
+                    batch_rows.append((int(idx_text), source))
             if call_number in set(fail_calls or ()):
                 batch_rows = batch_rows[:-1]
             translated = '\n'.join(
-                f"{row['id']}===EN {row['id']}===VI {row['id']}" for row in batch_rows
+                f"{idx}===EN {idx}===VI {idx}" for idx, _source in batch_rows
             )
             response = Mock()
             response.json.return_value = {'choices': [{'message': {'content': translated}}]}
             return response
 
-        json_module = json
         request.post.side_effect = post
         with patch.object(online_logic, 'QSettings', return_value=settings), \
                 patch.object(online_logic, 'requests', request), \
@@ -318,6 +291,17 @@ class LyricTranslationPolicyTests(unittest.TestCase):
 
 
 class LyricTranslationSourceContractTests(unittest.TestCase):
+    def test_v31_prompt_adapter_restores_exact_pre_phase_sources(self):
+        for relative in (
+            'app/translate/online_logic.py',
+            'app/translate/lyric_translation.py',
+        ):
+            restored = before_translation_v31_prompt_changes(relative, raw=True)
+            original = (
+                ROOT / 'docs/translation-v31-prompt/original' / relative
+            ).read_bytes()
+            self.assertEqual(restored, original)
+
     def test_single_pass_adapter_restores_exact_pre_phase_sources(self):
         for relative in (
             'app/translate/online_logic.py',

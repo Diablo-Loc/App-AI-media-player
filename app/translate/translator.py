@@ -29,7 +29,19 @@ class NLLBTranslator:
         self.lang_map = {
             "ja": "jpn_Jpan",
             "vi": "vie_Latn",
-            "en": "eng_Latn"  # Bổ sung thêm tiếng Anh
+            "en": "eng_Latn",
+            # Whisper returns short ISO-like tags while NLLB requires its own
+            # language+script codes.  Keep the app's main lyric languages valid
+            # when Online falls back to Local.
+            "ko": "kor_Hang",
+            "zh": "zho_Hans",
+            "zh-cn": "zho_Hans",
+            "zh-hans": "zho_Hans",
+            "zh-tw": "zho_Hant",
+            "zh-hant": "zho_Hant",
+            "fr": "fra_Latn",
+            "de": "deu_Latn",
+            "es": "spa_Latn",
         }
         
         if getattr(sys, 'frozen', False):

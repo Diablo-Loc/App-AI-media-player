@@ -88,7 +88,7 @@ def partition_translation_batches(subs, max_cues: int = 60, max_source_chars: in
 def lyric_translation_system_prompt(song_title: str = "", has_reference: bool = False) -> str:
     title = str(song_title or "").strip()
     parts = [
-        "Bạn là chuyên gia dịch lời bài hát, dịch thuật âm nhạc.",
+        "Bạn là chuyên gia dịch lời bài hát.",
         "Lời đầu vào là lời máy nhận diện nên có thể sai một vài chữ; hãy dựa vào toàn bộ các câu được gửi và ngữ cảnh bài hát để hiểu đúng khi đủ rõ.",
     ]
     if title:
@@ -97,6 +97,7 @@ def lyric_translation_system_prompt(song_title: str = "", has_reference: bool = 
         parts.append("Nếu có phần THAM CHIẾU ĐÃ XÁC MINH, mỗi dòng chỉ áp dụng cho đúng ID tương ứng và có thể dùng để sửa lỗi nhận diện của câu đó.")
     parts.extend([
         "Dịch đầy đủ từng câu sang tiếng Anh và tiếng Việt, đúng nghĩa, tự nhiên, mượt và có chất lyric.",
+        "Giữ đủ ý và các vế có nghĩa; đừng rút gọn chỉ để câu ngắn. Bản dịch có thể dài hơn nếu cần để đúng và hay.",
         "Không bịa thêm nội dung không có căn cứ từ lời máy, ngữ cảnh hoặc tham chiếu cùng ID.",
         "Trả đúng một dòng cho mỗi câu theo dạng: ID===English translation===Vietnamese translation. Giữ nguyên ID và không thêm giải thích hay markdown.",
     ])

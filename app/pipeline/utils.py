@@ -62,11 +62,29 @@ class TempFileManager:
 
 #kiểm tra kết nối mạng
 def is_connected():
+    # Prefer Windows' own Internet state so proxy/VPN setups are not rejected by
+    # a raw DNS socket probe. A real provider request still owns the final truth.
     try:
-        socket.create_connection(("8.8.8.8", 53), timeout=2)
-        return True
-    except OSError:
-        return False
+        import ctypes
+        flags = ctypes.c_ulong()
+        if ctypes.windll.wininet.InternetGetConnectedState(ctypes.byref(flags), 0):
+            return True
+    except (AttributeError, OSError):
+        pass
+
+    # Non-Windows/fallback probe: test the actual HTTPS destinations used by
+    # online translation instead of assuming a public DNS service is reachable.
+    for host in (
+        "generativelanguage.googleapis.com",
+        "api.openai.com",
+        "api.anthropic.com",
+    ):
+        try:
+            with socket.create_connection((host, 443), timeout=0.8):
+                return True
+        except OSError:
+            continue
+    return False
 
 import re
 
@@ -96,4 +114,3 @@ def clean_song_title(title):
     title = " ".join(title.split())
 
     return title
-    

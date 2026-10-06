@@ -60,7 +60,7 @@ class FakeWaveform:
 
 
 class IntroFilterTests(unittest.TestCase):
-    def test_only_segments_wholly_before_first_voice_are_removed(self):
+    def test_generic_segments_before_first_voice_are_preserved(self):
         fake_a = segment(0.1, 1.8, "invented intro")
         fake_b = segment(4.0, 6.0, "more invented text")
         real = segment(9.85, 11.2, "real lyric")
@@ -71,8 +71,8 @@ class IntroFilterTests(unittest.TestCase):
             verified_segments=[],
             verified_segments_secondary=[],
         )
-        self.assertEqual(kept, [real, later])
-        self.assertEqual([item[0] for item in removed], [0, 1])
+        self.assertEqual(kept, [fake_a, fake_b, real, later])
+        self.assertEqual(removed, [])
 
     def test_one_local_verification_miss_cannot_delete_primary_text(self):
         maybe_real = segment(0.3, 1.5, "quiet opening lyric")
@@ -84,7 +84,7 @@ class IntroFilterTests(unittest.TestCase):
         self.assertEqual(kept, [maybe_real])
         self.assertEqual(removed, [])
 
-    def test_two_independent_verification_misses_can_remove_prevoice_text(self):
+    def test_two_independent_verification_misses_still_keep_prevoice_text(self):
         fake = segment(0.3, 1.5, "invented instrumental text")
         fake.avg_logprob = -1.20
         fake.no_speech_prob = 0.62
@@ -94,8 +94,8 @@ class IntroFilterTests(unittest.TestCase):
             verified_segments=[],
             verified_segments_secondary=[],
         )
-        self.assertEqual(kept, [])
-        self.assertEqual(removed[0][4], "weak_verification_consensus_miss")
+        self.assertEqual(kept, [fake])
+        self.assertEqual(removed, [])
 
     def test_two_verification_misses_do_not_delete_confident_primary_text(self):
         maybe_real = confident_segment(0.3, 1.5, "quiet opening lyric")
@@ -120,7 +120,7 @@ class IntroFilterTests(unittest.TestCase):
         self.assertEqual(kept, [maybe_real])
         self.assertEqual(removed, [])
 
-    def test_repeated_high_compression_prevoice_hallucination_needs_consensus_miss(self):
+    def test_repeated_high_compression_prevoice_text_is_preserved(self):
         repeated = [
             confident_segment(0.3, 1.0, "same invented phrase"),
             confident_segment(1.2, 1.9, "same invented phrase"),
@@ -134,11 +134,8 @@ class IntroFilterTests(unittest.TestCase):
             verified_segments=[],
             verified_segments_secondary=[],
         )
-        self.assertEqual(kept, [])
-        self.assertEqual(len(removed), 3)
-        self.assertTrue(all(
-            item[4] == "repeated_high_compression_consensus_miss" for item in removed
-        ))
+        self.assertEqual(kept, repeated)
+        self.assertEqual(removed, [])
 
     def test_repeated_real_lyric_survives_when_local_decode_reproduces_it(self):
         repeated = [
@@ -216,8 +213,8 @@ class IntroFilterTests(unittest.TestCase):
             verified_segments=[],
             verified_segments_secondary=[],
         )
-        self.assertEqual(kept, [quiet_vocal])
-        self.assertEqual([item[0] for item in removed], [0])
+        self.assertEqual(kept, [fake, quiet_vocal])
+        self.assertEqual(removed, [])
 
     def test_weak_next_video_boilerplate_is_removed_even_with_continuous_sensitive_vad(self):
         boilerplate = segment(26.7, 29.6, "I'll see you in the next video.")
@@ -549,7 +546,7 @@ class IntroAuditTests(unittest.TestCase):
                 model, "audio.wav", [segment(60, 64, "later")], "pt", 0.80
             ))
 
-    def test_strong_language_correction_reruns_full_song_once_then_filters_intro(self):
+    def test_strong_language_correction_reruns_full_song_once_and_keeps_generic_intro(self):
         fake = segment(0.2, 1.6, "invented")
         real = segment(8.1, 10.0, "real")
         rerun_real = segment(8.0, 10.1, "correct language lyric")
@@ -567,10 +564,10 @@ class IntroAuditTests(unittest.TestCase):
             result, language, report = audit_primary_intro(
                 model, "audio.wav", [fake, real], "cy", 0.28
             )
-        self.assertEqual(result, [rerun_real])
+        self.assertEqual(result, [fake, rerun_real])
         self.assertEqual(language, "zh")
         self.assertTrue(report["language_rerun"])
-        self.assertEqual(len(report["removed"]), 1)
+        self.assertEqual(report["removed"], [])
         self.assertEqual(model.transcribe.call_count, 1)
         self.assertEqual(model.transcribe.call_args.args[0], "audio.wav")
         self.assertEqual(model.transcribe.call_args.kwargs["language"], "zh")
@@ -680,7 +677,7 @@ class IntroAuditTests(unittest.TestCase):
         self.assertEqual(language, "zh")
         self.assertEqual(report.get("language_intro_restored"), 1)
 
-    def test_verification_error_keeps_generic_primary_text(self):
+    def test_intro_audit_does_not_verify_generic_primary_text_for_deletion(self):
         original = [segment(0.2, 1.6, "possibly quiet real lyric")]
         model = Mock()
         with patch("pipeline.asr_intro_guard._intro_speech_probe", return_value={
@@ -689,15 +686,16 @@ class IntroAuditTests(unittest.TestCase):
         }), patch("pipeline.asr_intro_guard._language_probe", return_value=None), patch(
             "pipeline.asr_intro_guard._verify_prevoice_text",
             side_effect=ValueError("verification unavailable"),
-        ):
+        ) as verifier:
             result, language, report = audit_primary_intro(
                 model, "audio.wav", original, "ja", 0.91
             )
         self.assertEqual(result, original)
         self.assertEqual(language, "ja")
-        self.assertIn("verification unavailable", report["verification_error"])
+        self.assertEqual(report["removed"], [])
+        verifier.assert_not_called()
 
-    def test_degenerate_sensitive_vad_uses_corrected_onset_for_final_filter(self):
+    def test_degenerate_sensitive_vad_does_not_delete_generic_intro(self):
         fake = segment(4.0, 7.0, "invented instrumental text")
         fake.avg_logprob = -1.25
         fake.no_speech_prob = 0.66
@@ -715,10 +713,10 @@ class IntroAuditTests(unittest.TestCase):
             result, language, report = audit_primary_intro(
                 model, "audio.wav", [fake], "ja", 0.95
             )
-        self.assertEqual(result, [])
+        self.assertEqual(result, [fake])
         self.assertEqual(language, "ja")
         self.assertEqual(report["first_voice"], 16.8)
-        self.assertEqual(report["removed"][0][4], "weak_verification_consensus_miss")
+        self.assertEqual(report["removed"], [])
 
     def test_vad_error_fails_open_with_original_objects(self):
         original = [segment(0.2, 1.6, "keep me")]

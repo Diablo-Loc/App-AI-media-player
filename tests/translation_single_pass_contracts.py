@@ -10,6 +10,12 @@ ROOT = Path(__file__).resolve().parents[1]
 def before_translation_single_pass_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.translation_v31_prompt_contracts import (
+        before_translation_v31_prompt_changes,
+    )
+    current = before_translation_v31_prompt_changes(
+        relative, current=current, raw=True
+    )
     manifest = json.loads(
         (ROOT / "docs/translation-single-pass/reviewed-sources.json").read_text(
             encoding="utf-8-sig"

@@ -2,9 +2,9 @@
 
 The normal full-song Whisper pass remains authoritative.  Silero VAD is only
 independent evidence: a cue is never removed merely because VAD missed it.
-Known credit/boilerplate can be rejected directly; other pre-voice cues need
-two differently contextualized no-prompt misses before they can be removed. Language
-is probed again only for a long intro plus a low-confidence primary decision.
+Known credit/boilerplate can be rejected directly; ordinary first-window lyric
+text is preserved even when VAD/verifier/confidence signals are weak. Language is
+probed again only for a long intro plus a low-confidence primary decision.
 """
 from __future__ import annotations
 
@@ -414,7 +414,7 @@ def _credit_contamination(segments, confirmed_speech):
 def _first_window_domination(segments):
     """Detect a first window dominated by high-signal non-lyric material.
 
-    Repetition by itself is valid lyric behavior.  Only exact repeated text that
+    Repetition by itself is valid lyric behavior. Only exact repeated text that
     also carries Whisper's pathological high-compression signal may trigger the
     bounded reconciliation path.
     """
@@ -436,13 +436,16 @@ def _first_window_domination(segments):
         if credit_text(text, timed_words=bool(getattr(segment, "words", None))):
             explicit_seconds += clipped
         normalized = _normalized_text(text)
-        compression = _finite(getattr(segment, "compression_ratio", None), 0.0) or 0.0
+        compression = _finite(
+            getattr(segment, "compression_ratio", None), 0.0
+        ) or 0.0
         if len(normalized) >= 2 and compression >= GENERIC_REPEAT_MIN_COMPRESSION:
             count, seconds = compressed_repeats.get(normalized, (0, 0.0))
             compressed_repeats[normalized] = (count + 1, seconds + clipped)
 
     suspicious = {
-        text for text, (count, seconds) in compressed_repeats.items()
+        text
+        for text, (count, seconds) in compressed_repeats.items()
         if count >= GENERIC_REPEAT_MIN_COUNT
         and seconds >= RECOVERY_REPEAT_MIN_SECONDS
     }
@@ -925,71 +928,31 @@ def filter_instrumental_intro_segments(
     segments, speech, verified_segments=None, verified_offset=0.0,
     verified_segments_secondary=None, verified_offset_secondary=0.0,
 ):
-    """Filter intro hallucinations without trusting VAD as a deletion oracle.
+    """Keep first-window ASR by default and remove only explicit junk/credits.
 
-    Explicit credit/boilerplate is already invalid lyric material. Every other
-    cue before the independently detected first voice needs two differently
-    contextualized no-prompt misses before deletion. One local miss fails open.
+    VAD misses, low confidence, verifier misses, repetition and compression are
+    intentionally not deletion signals here. Quiet or stylized opening vocals
+    are common in music, so ordinary lyric text must fail open.
     """
     from pipeline.lyric_accuracy import credit_text
 
-    source, candidates, _ = _prevoice_candidates(segments, speech)
-
-    candidate_by_index = {item[0]: item for item in candidates}
-    repeated_indices = _repeated_prevoice_indices(candidates)
+    source = list(segments or ())
     kept = []
     removed = []
-    verification_available = verified_segments is not None
-    secondary_available = verified_segments_secondary is not None
     for index, segment in enumerate(source):
-        candidate = candidate_by_index.get(index)
         span = _segment_span(segment)
         text = str(getattr(segment, "text", "") or "").strip()
         if span is not None and span[0] < INTRO_SECONDS and _intro_media_boilerplate(text):
-            logprob = _finite(getattr(segment, "avg_logprob", None))
-            no_speech = _finite(getattr(segment, "no_speech_prob", None))
-            weak = (
-                (logprob is not None and logprob < INTRO_MEDIA_BOILERPLATE_MAX_LOGPROB)
-                or (no_speech is not None and no_speech > INTRO_MEDIA_BOILERPLATE_MIN_NO_SPEECH)
-            )
-            if candidate is not None or weak:
-                removed.append((index, span[0], span[1], text, "media_boilerplate"))
-                continue
-        if candidate is None:
-            kept.append(segment)
+            removed.append((index, span[0], span[1], text, "media_boilerplate"))
             continue
-        _, _, start, end = candidate
-        explicit_boilerplate = credit_text(text, timed_words=bool(getattr(segment, "words", None)))
-        reproduced = verification_available and _verification_support(
-            candidate, verified_segments, verified_offset=verified_offset
-        )
-        reproduced_secondary = secondary_available and _verification_support(
-            candidate,
-            verified_segments_secondary,
-            verified_offset=verified_offset_secondary,
-        )
-        consensus_miss = (
-            verification_available
-            and secondary_available
-            and not reproduced
-            and not reproduced_secondary
-        )
-        weak_primary = _segment_acoustically_weak(segment)
-        compression = _finite(getattr(segment, "compression_ratio", None), 0.0) or 0.0
-        repeated_compression = (
-            index in repeated_indices
-            and compression >= GENERIC_REPEAT_MIN_COMPRESSION
-        )
-        if explicit_boilerplate or (consensus_miss and (weak_primary or repeated_compression)):
-            if explicit_boilerplate:
-                reason = "credit"
-            elif repeated_compression:
-                reason = "repeated_high_compression_consensus_miss"
-            else:
-                reason = "weak_verification_consensus_miss"
-            removed.append((index, start, end, text, reason))
-        else:
-            kept.append(segment)
+        if (
+            span is not None
+            and span[0] < INTRO_SECONDS
+            and credit_text(text, timed_words=bool(getattr(segment, "words", None)))
+        ):
+            removed.append((index, span[0], span[1], text, "credit"))
+            continue
+        kept.append(segment)
     return kept, removed
 
 
@@ -1352,52 +1315,9 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
         except Exception as error:
             report["anchored_recovery_error"] = str(error)
 
-    verified_segments = None
-    verified_offset = 0.0
-    verified_segments_secondary = None
-    verified_offset_secondary = 0.0
-    try:
-        verification = _verify_prevoice_text(
-            model,
-            probe["waveform"],
-            working,
-            onset_speech,
-            language,
-            cancel_cb=cancel_cb,
-        )
-        if verification is not None:
-            verified_segments, verified_offset = verification
-            report["verification_count"] = len(verified_segments)
-            if _needs_secondary_prevoice_verification(
-                working, onset_speech, verified_segments, verified_offset
-            ):
-                secondary = _verify_prevoice_text(
-                    model,
-                    probe["waveform"],
-                    working,
-                    onset_speech,
-                    language,
-                    cancel_cb=cancel_cb,
-                    pad=VERIFY_CONTEXT_PAD,
-                )
-                if secondary is not None:
-                    verified_segments_secondary, verified_offset_secondary = secondary
-                    report["verification_secondary_count"] = len(
-                        verified_segments_secondary
-                    )
-    except RuntimeError:
-        raise
-    except Exception as error:
-        # Verification is optional.  VAD alone never authorizes generic deletion.
-        report["verification_error"] = str(error)
-
     filtered, removed = filter_instrumental_intro_segments(
         working,
         onset_speech,
-        verified_segments=verified_segments,
-        verified_offset=verified_offset,
-        verified_segments_secondary=verified_segments_secondary,
-        verified_offset_secondary=verified_offset_secondary,
     )
     report["removed"] = removed
     if onset_speech:
