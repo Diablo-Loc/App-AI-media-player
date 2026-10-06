@@ -40,6 +40,7 @@ import difflib
 from pipeline.extractor import extract_audio
 from pipeline.lyric_refinement import refine_lyrics, finalize_cue_times, mark_final_timing
 from pipeline.asr_coverage import repair_missing_subtitles
+from pipeline.asr_intro_guard import audit_primary_intro
 from pipeline.lyric_formatter import export_srt, export_lrc
 from pipeline.jp_normalizer import normalize_japanese, universal_text_reconstruct
 
@@ -224,6 +225,7 @@ def run_ai_pipeline(
             detected_lang = info.language
             print(f"📡 Ngôn ngữ phát hiện: {detected_lang} ({info.language_probability*100:.1f}%)")
             segments_list = list(segments_generator)
+            language_probability = getattr(info, "language_probability", 0.0)
             
         except Exception as e:
             # Xử lý lỗi tràn VRAM
@@ -238,8 +240,46 @@ def run_ai_pipeline(
                 segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
                 segments_list = list(segments_generator)
                 detected_lang = fallback_info.language
+                language_probability = getattr(fallback_info, "language_probability", 0.0)
             else:
                 raise e
+
+        # Independent first-window sanity check. The full-song primary decode
+        # above is kept unchanged for normal songs; only a long instrumental
+        # intro can trigger filtering or a strongly justified language re-run.
+        segments_list, detected_lang, intro_report = audit_primary_intro(
+            model,
+            temp_wav_path,
+            segments_list,
+            detected_lang,
+            language_probability,
+            cancel_cb=cancel_cb,
+        )
+        if intro_report.get("removed"):
+            first_voice = intro_report.get("first_voice")
+            voice_note = f" (giọng đầu ~{first_voice:.2f}s)" if isinstance(first_voice, (int, float)) else ""
+            print(
+                f"🛡 Intro guard: bỏ {len(intro_report['removed'])} đoạn ASR không được xác minh{voice_note}."
+            )
+        if intro_report.get("language_rerun"):
+            print(
+                "🌐 Kiểm tra lại ngôn ngữ từ đoạn có giọng: "
+                f"{intro_report.get('language_before')} → {intro_report.get('language_after')}."
+            )
+        if intro_report.get("error"):
+            print(f"⚠️ Bỏ qua kiểm tra intro, giữ nguyên ASR chính: {intro_report['error']}")
+        if intro_report.get("language_probe_error"):
+            print(
+                "⚠️ Không kiểm tra lại được ngôn ngữ intro; giữ nguyên ASR chính: "
+                f"{intro_report['language_probe_error']}"
+            )
+        if intro_report.get("language_rerun_rejected"):
+            print("⚠️ Bỏ kết quả nhận diện lại ngôn ngữ vì rỗng; giữ nguyên ASR chính.")
+        if intro_report.get("verification_error"):
+            print(
+                "⚠️ Không xác minh được chữ ở intro; giữ nguyên các câu ASR thường: "
+                f"{intro_report['verification_error']}"
+            )
 
         _check_cancel(cancel_cb)
         
@@ -301,13 +341,19 @@ def run_ai_pipeline(
                      start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,
                      gap_threshold=0.6, memory_reset_t=3.0),
                 cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,
-                boundary_gap=0.0, boundary_tolerance=0.08)
+                boundary_gap=0.0, boundary_tolerance=0.08,
+                primary_segments=segments_list)
             print(f"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, "
                   f"{len(coverage.get('attempts', []))} lượt nhận diện lại.")
             if coverage.get("unresolved_speech"):
                 print(f"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}")
             if coverage.get("error"):
                 print(f"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}")
+            if coverage.get("verification_errors"):
+                print(
+                    f"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery "
+                    "vì lượt xác minh độc lập bị lỗi."
+                )
         except Exception as error:
             _check_cancel(cancel_cb)
             # Preserve primary recognition if optional local coverage detection fails.

@@ -1,0 +1,210 @@
+[
+  {
+    "id": 1,
+    "start": 1.1799999999999986,
+    "end": 6.5,
+    "text": "出逢っちゃったんだ二人 熱い運命の似合い",
+    "avg_logprob": -0.2461890185751566,
+    "no_speech_prob": 0.04840087890625,
+    "compression_ratio": 1.0841121495327102,
+    "words": [
+      {
+        "start": 1.1799999999999986,
+        "end": 1.86,
+        "word": "出",
+        "probability": 0.85107421875
+      },
+      {
+        "start": 1.86,
+        "end": 2.14,
+        "word": "逢",
+        "probability": 0.7060546875
+      },
+      {
+        "start": 2.14,
+        "end": 2.42,
+        "word": "っちゃ",
+        "probability": 0.9931640625
+      },
+      {
+        "start": 2.42,
+        "end": 2.78,
+        "word": "った",
+        "probability": 0.98876953125
+      },
+      {
+        "start": 2.78,
+        "end": 3.06,
+        "word": "んだ",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 3.06,
+        "end": 3.44,
+        "word": "二",
+        "probability": 0.4013671875
+      },
+      {
+        "start": 3.44,
+        "end": 3.84,
+        "word": "人",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 4.02,
+        "end": 4.76,
+        "word": " 熱",
+        "probability": 0.99267578125
+      },
+      {
+        "start": 4.76,
+        "end": 4.92,
+        "word": "い",
+        "probability": 0.98779296875
+      },
+      {
+        "start": 4.92,
+        "end": 5.16,
+        "word": "運",
+        "probability": 0.9931640625
+      },
+      {
+        "start": 5.16,
+        "end": 5.62,
+        "word": "命",
+        "probability": 1.0
+      },
+      {
+        "start": 5.62,
+        "end": 5.9,
+        "word": "の",
+        "probability": 0.99462890625
+      },
+      {
+        "start": 5.9,
+        "end": 6.22,
+        "word": "似",
+        "probability": 0.64306640625
+      },
+      {
+        "start": 6.22,
+        "end": 6.4,
+        "word": "合",
+        "probability": 0.97705078125
+      },
+      {
+        "start": 6.4,
+        "end": 6.5,
+        "word": "い",
+        "probability": 0.97119140625
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "start": 6.5,
+    "end": 13.88,
+    "text": "変わんないまま胸に光る流れ 忘れられない",
+    "avg_logprob": -0.2461890185751566,
+    "no_speech_prob": 0.04840087890625,
+    "compression_ratio": 1.0841121495327102,
+    "words": [
+      {
+        "start": 6.5,
+        "end": 7.28,
+        "word": "変",
+        "probability": 0.81884765625
+      },
+      {
+        "start": 7.28,
+        "end": 7.6,
+        "word": "わ",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 7.6,
+        "end": 7.62,
+        "word": "ん",
+        "probability": 0.96142578125
+      },
+      {
+        "start": 7.62,
+        "end": 8.0,
+        "word": "ない",
+        "probability": 0.99853515625
+      },
+      {
+        "start": 8.0,
+        "end": 8.14,
+        "word": "ま",
+        "probability": 0.9931640625
+      },
+      {
+        "start": 8.14,
+        "end": 8.56,
+        "word": "ま",
+        "probability": 0.970703125
+      },
+      {
+        "start": 8.56,
+        "end": 9.04,
+        "word": "胸",
+        "probability": 0.9912109375
+      },
+      {
+        "start": 9.04,
+        "end": 9.3,
+        "word": "に",
+        "probability": 0.99853515625
+      },
+      {
+        "start": 9.3,
+        "end": 10.18,
+        "word": "光",
+        "probability": 0.489501953125
+      },
+      {
+        "start": 10.18,
+        "end": 10.78,
+        "word": "る",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 10.78,
+        "end": 11.24,
+        "word": "流",
+        "probability": 0.9072265625
+      },
+      {
+        "start": 11.24,
+        "end": 11.86,
+        "word": "れ",
+        "probability": 0.9931640625
+      },
+      {
+        "start": 11.86,
+        "end": 12.18,
+        "word": " 忘",
+        "probability": 0.238525390625
+      },
+      {
+        "start": 12.18,
+        "end": 13.2,
+        "word": "れ",
+        "probability": 0.93017578125
+      },
+      {
+        "start": 13.2,
+        "end": 13.54,
+        "word": "ら",
+        "probability": 0.99365234375
+      },
+      {
+        "start": 13.54,
+        "end": 13.88,
+        "word": "れない",
+        "probability": 0.9423828125
+      }
+    ]
+  }
+]

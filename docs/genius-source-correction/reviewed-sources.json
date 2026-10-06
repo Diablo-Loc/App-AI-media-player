@@ -1,0 +1,10 @@
+{
+  "app/translate/genius_reference.py": {
+    "before_sha256": "aba1ef31dda6d2cf64cb4f337b10e9cde56373ba837c34308e210fb1a5dca238",
+    "after_sha256": "f4778c42314683b5e6e394cc29c0134fecff00e7fa6ed500199e2b8a4e48ad8b"
+  },
+  "app/translate/online_logic.py": {
+    "before_sha256": "6263e9621eeec5c2f1780cdc230ddcf2892f9cb51124ae4fd0d9de53208c0557",
+    "after_sha256": "e9da795c6667f7bb44a21515e1fd8f3ff5bc5a613c44ca0598030bf663f0cc3b"
+  }
+}

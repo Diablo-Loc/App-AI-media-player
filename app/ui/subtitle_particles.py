@@ -314,20 +314,32 @@ class ParticlePainter:
             self._sweep_prefix.append(prefix)
 
     def sweep_masks(self, progress):
-        """Pure media-time mask: passed words stay hidden until a new cue/seek."""
+        """Pure media-time mask with the final cell handed to cue fade-out.
+
+        Passed cells stay hidden, but the last cell of each language/row group
+        remains visible until SubtitleLayer owns the cue-end fade.  This keeps
+        erase-sweep presets on the same visible cue lifetime as effects-off and
+        avoids a blank 220 ms fade after the sweep reaches 100%.
+        """
         progress = min(1.0, max(0.0, progress))
         if not self._sweep_cells and self.rows:
             self._prepare_sweep()
-        if progress >= 1:
-            return QRegion(self.label.contentsRect()), []
         hidden, active = QRegion(), []
         for cells, prefix in zip(self._sweep_cells, self._sweep_prefix):
+            if not cells:
+                continue
+            if progress >= 1:
+                hidden = hidden.united(prefix[len(cells)-1])
+                active.append((cells[-1], 1.0))
+                continue
             position = progress * len(cells)
             index = min(len(cells)-1, int(position))
             local = min(1.0, position-index)
             hidden = hidden.united(prefix[index])
             # Smoothly dissolve the current word into its emitter; no hard blink.
-            alpha = 1-local*local*(3-2*local)
+            # The final cell is the visual hand-off to SubtitleLayer's existing
+            # 220 ms fade-out, so do not dissolve it before the cue really ends.
+            alpha = 1.0 if index == len(cells)-1 else 1-local*local*(3-2*local)
             active.append((cells[index], alpha))
         return hidden, active
 

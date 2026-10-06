@@ -44,6 +44,15 @@ class LyricsTests(unittest.TestCase):
         for text in ('I saw you on Instagram', 'Find me on Instagram and Twitter', 'Eye of the tiger.'):
             self.assertFalse(credit_text(text, timed_words=True), text)
 
+    def test_production_credit_hallucinations_are_rejected_without_banning_real_lyrics(self):
+        for text in (
+            '詞曲李宗盛', '作词曲李宗盛', '制作人李宗盛', '字幕志愿者杨茜茜',
+            '混音混音混音混音混音混音', 'Produced by Someone', 'Mixed by Someone',
+        ):
+            self.assertTrue(credit_text(text, timed_words=True), text)
+        for text in ('制作人也會有夢', '詞曲寫進我的夢', '我不是制作人，只想唱這首歌'):
+            self.assertFalse(credit_text(text, timed_words=True), text)
+
     def test_two_three_four_repeated_performances_are_kept(self):
         text = 'The sign is lightening up'
         for count in (2, 3, 4):
@@ -82,7 +91,8 @@ class AccuracyScopeTests(unittest.TestCase):
     def test_primary_coverage_and_rest_of_orchestration_preserved(self):
         relative = 'app/ai/pipeline.py'
         before = before_accuracy_changes(relative)
-        after = (ROOT / relative).read_text(encoding='utf-8')
+        from tests.asr_intro_guard_contracts import before_asr_intro_guard_changes
+        after = before_asr_intro_guard_changes(relative)
         primary = next(n for n in ast.walk(ast.parse(after)) if isinstance(n, ast.Call)
             and isinstance(n.func, ast.Attribute) and n.func.attr == 'transcribe'
             and any(k.arg == 'beam_size' for k in n.keywords))

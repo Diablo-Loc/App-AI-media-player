@@ -140,7 +140,7 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(len(particles.targets(.5)), 1)
         self.assertEqual(subtitle_row_groups('custom\npreview'), (0, 1))
 
-    def test_passed_word_pixels_hide_future_stays_and_end_never_resurrects(self):
+    def test_passed_word_pixels_hide_and_final_cell_survives_until_layer_hide(self):
         label = self.layer('FIRST SECOND THIRD', options={
             'erase_passed': True, 'entrance': 'none', 'soft_fade': False,
             'color': 'original', 'shimmer': True, 'glow': True})
@@ -157,7 +157,7 @@ class SweepTests(unittest.TestCase):
         self.assertEqual(bright_pixels(middle, hidden), 0)
         self.assertGreater(bright_pixels(middle, QRegion(label.rect()).subtracted(hidden)), 0)
         label.update_position(3000)
-        self.assertEqual(bright_pixels(image_of(label)), 0)
+        self.assertGreater(bright_pixels(image_of(label)), 0)
         self.assertFalse(label.isHidden())  # Old inclusive endpoint is unchanged.
         label.update_position(3001)
         self.assertTrue(label.isHidden())
@@ -169,7 +169,7 @@ class SweepTests(unittest.TestCase):
         effect = label._subtitle_effects
         effect.particles.paint = lambda *a, **k: None
         label.update_position(3000)
-        self.assertEqual(bright_pixels(image_of(label)), 0)
+        self.assertGreater(bright_pixels(image_of(label)), 0)
         label.update_position(0)
         self.assertGreater(bright_pixels(image_of(label)), 0)
         label.update_position(3000)

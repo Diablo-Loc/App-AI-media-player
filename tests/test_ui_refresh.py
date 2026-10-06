@@ -131,7 +131,8 @@ class OriginalSourceGates(unittest.TestCase):
             self.assertEqual(hashlib.sha256((directory / f"{name}.svg").read_bytes()).hexdigest(), expected)
         # The current packaging paths already include the complete app directory.
         for script in ("build_app.py", "build_app_for_update.py"):
-            self.assertIn("--add-data=app;app", (ROOT / script).read_text(encoding="utf-8-sig"))
+            source = (ROOT / script).read_text(encoding="utf-8-sig")
+            self.assertRegex(source, r"--add-data=.*app.*;app")
 
 
 class QtUiBehaviorTests(unittest.TestCase):

@@ -1,0 +1,82 @@
+{
+  "options": {
+    "language": "ja",
+    "word_timestamps": false,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": null,
+    "no_speech_threshold": null,
+    "clip_timestamps": [
+      0,
+      30
+    ]
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 29.98,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.22916666004392836,
+      "no_speech_prob": 0.032989501953125,
+      "compression_ratio": 0.8222222222222222,
+      "words": []
+    },
+    {
+      "id": 2,
+      "start": 30.0,
+      "end": 33.0,
+      "text": "どっちだって届いなさいよ",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": []
+    },
+    {
+      "id": 3,
+      "start": 33.0,
+      "end": 37.0,
+      "text": "君がいなくちゃなんか足りない",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": []
+    },
+    {
+      "id": 4,
+      "start": 37.0,
+      "end": 39.0,
+      "text": "私じゃない",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": []
+    },
+    {
+      "id": 5,
+      "start": 39.0,
+      "end": 42.0,
+      "text": "ぶつかることでも",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": []
+    },
+    {
+      "id": 6,
+      "start": 42.0,
+      "end": 45.0,
+      "text": "どこよく刻まれると",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": []
+    }
+  ],
+  "seconds": 1.5
+}

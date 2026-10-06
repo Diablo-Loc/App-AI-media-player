@@ -129,7 +129,7 @@ class EffectTests(unittest.TestCase):
         self.assertTrue(layer.isHidden())
         self.assertEqual(effect.animation.state(), QAbstractAnimation.State.Stopped)
 
-    def test_erased_sentence_stays_hidden_during_live_fade_out(self):
+    def test_erased_sentence_hands_final_cell_to_live_fade_out(self):
         layer = self.layer()
         layer.load_subtitles([dict(start=1000, end=2000, orig='A sentence swept away')])
         layer.set_fade_enabled(True)
@@ -147,10 +147,13 @@ class EffectTests(unittest.TestCase):
         self.assertEqual(effect.animation.state(), QAbstractAnimation.State.Stopped)
         self.assertEqual(layer.fade_anim.endValue(), 0.0)
 
-        erased_frame = image_of(layer)
+        fading_frame = image_of(layer)
+        blank = QImage(fading_frame.size(), QImage.Format.Format_ARGB32_Premultiplied)
+        blank.fill(Qt.GlobalColor.transparent)
+        self.assertNotEqual(fading_frame, blank)
         effect.clear()
         restored_frame = image_of(layer)
-        self.assertNotEqual(erased_frame, restored_frame)
+        self.assertNotEqual(fading_frame, restored_frame)
 
     def test_hidden_off_empty_and_load_cancel_animation(self):
         layer = self.layer()

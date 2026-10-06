@@ -1,0 +1,282 @@
+{
+  "options": {
+    "language": "zh",
+    "word_timestamps": false,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": null,
+    "no_speech_threshold": null,
+    "clip_timestamps": [
+      0,
+      30
+    ]
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 1.0,
+      "text": "作词作曲 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 2,
+      "start": 1.0,
+      "end": 2.0,
+      "text": "作词 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 3,
+      "start": 2.0,
+      "end": 3.0,
+      "text": "作曲 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 4,
+      "start": 3.0,
+      "end": 4.0,
+      "text": "编曲 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 5,
+      "start": 4.0,
+      "end": 5.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 6,
+      "start": 5.0,
+      "end": 6.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 7,
+      "start": 6.0,
+      "end": 7.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 8,
+      "start": 7.0,
+      "end": 8.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 9,
+      "start": 8.0,
+      "end": 9.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 10,
+      "start": 9.0,
+      "end": 10.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 11,
+      "start": 10.0,
+      "end": 11.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 12,
+      "start": 11.0,
+      "end": 12.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 13,
+      "start": 12.0,
+      "end": 13.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 14,
+      "start": 13.0,
+      "end": 14.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 15,
+      "start": 14.0,
+      "end": 15.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 16,
+      "start": 15.0,
+      "end": 16.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 17,
+      "start": 16.0,
+      "end": 17.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 18,
+      "start": 17.0,
+      "end": 18.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 19,
+      "start": 18.0,
+      "end": 19.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 20,
+      "start": 19.0,
+      "end": 20.0,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.15791666878594293,
+      "no_speech_prob": 0.2230224609375,
+      "compression_ratio": 6.666666666666667,
+      "words": []
+    },
+    {
+      "id": 21,
+      "start": 20.0,
+      "end": 25.44,
+      "text": "風東落雪樹 桑菇枝芽香",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    },
+    {
+      "id": 22,
+      "start": 25.44,
+      "end": 29.32,
+      "text": "墨鏡雲染 燭煙埋著生命溫熱的心臟",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    },
+    {
+      "id": 23,
+      "start": 29.32,
+      "end": 33.24,
+      "text": "一步一附近 一步一離去",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    },
+    {
+      "id": 24,
+      "start": 33.24,
+      "end": 37.120000000000005,
+      "text": "未完的誓言 沉入安靜水面",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    },
+    {
+      "id": 25,
+      "start": 37.120000000000005,
+      "end": 41.0,
+      "text": "棋子散落棋盤 相識自盡塵潭",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    },
+    {
+      "id": 26,
+      "start": 41.0,
+      "end": 45.0,
+      "text": "揚開一圈無聲的波浪",
+      "avg_logprob": -0.38664772564714606,
+      "no_speech_prob": 0.0010538101196289062,
+      "compression_ratio": 1.1135135135135135,
+      "words": []
+    }
+  ],
+  "seconds": 5.109000000000378
+}

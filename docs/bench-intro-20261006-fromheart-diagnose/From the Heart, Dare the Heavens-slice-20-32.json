@@ -1,0 +1,245 @@
+[
+  {
+    "id": 1,
+    "start": 1.2199999999999995,
+    "end": 5.16,
+    "text": "风斗落雪树 三股炙鸭声",
+    "avg_logprob": -0.42399365316003057,
+    "no_speech_prob": 0.302490234375,
+    "compression_ratio": 0.9908256880733946,
+    "words": [
+      {
+        "start": 1.2199999999999995,
+        "end": 1.86,
+        "word": "风",
+        "probability": 0.1693115234375
+      },
+      {
+        "start": 1.86,
+        "end": 2.28,
+        "word": "斗",
+        "probability": 0.574951171875
+      },
+      {
+        "start": 2.28,
+        "end": 2.48,
+        "word": "落",
+        "probability": 0.9384765625
+      },
+      {
+        "start": 2.48,
+        "end": 2.86,
+        "word": "雪",
+        "probability": 0.9580078125
+      },
+      {
+        "start": 2.86,
+        "end": 3.3,
+        "word": "树",
+        "probability": 0.6959228515625
+      },
+      {
+        "start": 3.36,
+        "end": 3.76,
+        "word": " 三",
+        "probability": 0.42724609375
+      },
+      {
+        "start": 3.76,
+        "end": 4.24,
+        "word": "股",
+        "probability": 0.69580078125
+      },
+      {
+        "start": 4.24,
+        "end": 4.66,
+        "word": "炙",
+        "probability": 0.76611328125
+      },
+      {
+        "start": 4.66,
+        "end": 4.84,
+        "word": "鸭",
+        "probability": 0.7684733072916666
+      },
+      {
+        "start": 4.84,
+        "end": 5.16,
+        "word": "声",
+        "probability": 0.65869140625
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "start": 5.16,
+    "end": 9.14,
+    "text": "墨镜云燃出 掩埋着生命温热的心脏",
+    "avg_logprob": -0.42399365316003057,
+    "no_speech_prob": 0.302490234375,
+    "compression_ratio": 0.9908256880733946,
+    "words": [
+      {
+        "start": 5.16,
+        "end": 5.74,
+        "word": "墨",
+        "probability": 0.5606689453125
+      },
+      {
+        "start": 5.74,
+        "end": 6.18,
+        "word": "镜",
+        "probability": 0.6409912109375
+      },
+      {
+        "start": 6.18,
+        "end": 6.56,
+        "word": "云",
+        "probability": 0.968505859375
+      },
+      {
+        "start": 6.56,
+        "end": 6.9,
+        "word": "燃",
+        "probability": 0.778076171875
+      },
+      {
+        "start": 6.9,
+        "end": 7.18,
+        "word": "出",
+        "probability": 0.52685546875
+      },
+      {
+        "start": 7.22,
+        "end": 7.4,
+        "word": " 掩",
+        "probability": 0.701416015625
+      },
+      {
+        "start": 7.4,
+        "end": 7.62,
+        "word": "埋",
+        "probability": 0.99267578125
+      },
+      {
+        "start": 7.62,
+        "end": 7.7,
+        "word": "着",
+        "probability": 0.89990234375
+      },
+      {
+        "start": 7.7,
+        "end": 7.88,
+        "word": "生",
+        "probability": 0.4658203125
+      },
+      {
+        "start": 7.88,
+        "end": 8.12,
+        "word": "命",
+        "probability": 0.99169921875
+      },
+      {
+        "start": 8.12,
+        "end": 8.28,
+        "word": "温",
+        "probability": 0.921630859375
+      },
+      {
+        "start": 8.28,
+        "end": 8.54,
+        "word": "热",
+        "probability": 0.741455078125
+      },
+      {
+        "start": 8.54,
+        "end": 8.68,
+        "word": "的",
+        "probability": 0.9892578125
+      },
+      {
+        "start": 8.68,
+        "end": 8.8,
+        "word": "心",
+        "probability": 0.978515625
+      },
+      {
+        "start": 8.8,
+        "end": 9.14,
+        "word": "脏",
+        "probability": 0.98974609375
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "start": 9.14,
+    "end": 11.98,
+    "text": "一步一风景 一步一风景",
+    "avg_logprob": -0.42399365316003057,
+    "no_speech_prob": 0.302490234375,
+    "compression_ratio": 0.9908256880733946,
+    "words": [
+      {
+        "start": 9.14,
+        "end": 9.58,
+        "word": "一",
+        "probability": 0.724609375
+      },
+      {
+        "start": 9.58,
+        "end": 10.08,
+        "word": "步",
+        "probability": 0.990234375
+      },
+      {
+        "start": 10.08,
+        "end": 10.34,
+        "word": "一",
+        "probability": 0.99169921875
+      },
+      {
+        "start": 10.34,
+        "end": 10.62,
+        "word": "风",
+        "probability": 0.0975341796875
+      },
+      {
+        "start": 10.62,
+        "end": 11.04,
+        "word": "景",
+        "probability": 0.8193359375
+      },
+      {
+        "start": 11.04,
+        "end": 11.52,
+        "word": " 一",
+        "probability": 0.8046875
+      },
+      {
+        "start": 11.52,
+        "end": 11.86,
+        "word": "步",
+        "probability": 0.99658203125
+      },
+      {
+        "start": 11.86,
+        "end": 11.98,
+        "word": "一",
+        "probability": 0.8916015625
+      },
+      {
+        "start": 11.98,
+        "end": 11.98,
+        "word": "风",
+        "probability": 0.183837890625
+      },
+      {
+        "start": 11.98,
+        "end": 11.98,
+        "word": "景",
+        "probability": 0.54052734375
+      }
+    ]
+  }
+]

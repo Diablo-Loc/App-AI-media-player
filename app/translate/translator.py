@@ -85,12 +85,14 @@ class NLLBTranslator:
                 raw_batch = texts[i : i + batch_size]
                 batch = [str(t) if (t and str(t).strip()) else " " for t in raw_batch]
 
+                if hasattr(self.tokenizer, "src_lang"):
+                    self.tokenizer.src_lang = src_code
+
                 encoded = self.tokenizer(
                     batch,
                     return_tensors="pt",
                     padding=True,
                     truncation=True,
-                    src_lang=src_code
                 ).to(self.device)
 
                 generated = self.model.generate(

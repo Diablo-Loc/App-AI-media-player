@@ -1,0 +1,178 @@
+[
+  {
+    "id": 1,
+    "start": 0.0,
+    "end": 3.74,
+    "text": "Zither Harp",
+    "avg_logprob": -0.4912347328372118,
+    "no_speech_prob": 0.384765625,
+    "compression_ratio": 0.8552631578947368,
+    "words": [
+      {
+        "start": 0.0,
+        "end": 0.0,
+        "word": "Z",
+        "probability": 0.00030303001403808594
+      },
+      {
+        "start": 0.0,
+        "end": 0.52,
+        "word": "ither",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 0.52,
+        "end": 1.18,
+        "word": " Har",
+        "probability": 1.0
+      },
+      {
+        "start": 1.18,
+        "end": 3.74,
+        "word": "p",
+        "probability": 1.0
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "start": 6.619999999999997,
+    "end": 8.76,
+    "text": "一龙银玄鸟",
+    "avg_logprob": -0.4912347328372118,
+    "no_speech_prob": 0.384765625,
+    "compression_ratio": 0.8552631578947368,
+    "words": [
+      {
+        "start": 6.619999999999997,
+        "end": 7.18,
+        "word": "一",
+        "probability": 0.3125
+      },
+      {
+        "start": 7.18,
+        "end": 7.62,
+        "word": "龙",
+        "probability": 0.898193359375
+      },
+      {
+        "start": 7.62,
+        "end": 7.9,
+        "word": "银",
+        "probability": 0.7705891927083334
+      },
+      {
+        "start": 7.9,
+        "end": 8.18,
+        "word": "玄",
+        "probability": 0.6468505859375
+      },
+      {
+        "start": 8.18,
+        "end": 8.76,
+        "word": "鸟",
+        "probability": 0.9991861979166666
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "start": 8.76,
+    "end": 10.34,
+    "text": "此小浪月照",
+    "avg_logprob": -0.4912347328372118,
+    "no_speech_prob": 0.384765625,
+    "compression_ratio": 0.8552631578947368,
+    "words": [
+      {
+        "start": 8.76,
+        "end": 9.02,
+        "word": "此",
+        "probability": 0.50048828125
+      },
+      {
+        "start": 9.02,
+        "end": 9.26,
+        "word": "小",
+        "probability": 0.460693359375
+      },
+      {
+        "start": 9.26,
+        "end": 9.62,
+        "word": "浪",
+        "probability": 0.6549072265625
+      },
+      {
+        "start": 9.62,
+        "end": 9.88,
+        "word": "月",
+        "probability": 0.62353515625
+      },
+      {
+        "start": 9.88,
+        "end": 10.34,
+        "word": "照",
+        "probability": 0.9765625
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "start": 10.34,
+    "end": 12.72,
+    "text": "细心上上游过人潮",
+    "avg_logprob": -0.4912347328372118,
+    "no_speech_prob": 0.384765625,
+    "compression_ratio": 0.8552631578947368,
+    "words": [
+      {
+        "start": 10.34,
+        "end": 10.88,
+        "word": "细",
+        "probability": 0.922607421875
+      },
+      {
+        "start": 10.88,
+        "end": 11.12,
+        "word": "心",
+        "probability": 0.79736328125
+      },
+      {
+        "start": 11.12,
+        "end": 11.36,
+        "word": "上",
+        "probability": 0.167236328125
+      },
+      {
+        "start": 11.36,
+        "end": 11.6,
+        "word": "上",
+        "probability": 0.787109375
+      },
+      {
+        "start": 11.6,
+        "end": 11.88,
+        "word": "游",
+        "probability": 0.75830078125
+      },
+      {
+        "start": 11.88,
+        "end": 12.12,
+        "word": "过",
+        "probability": 0.99853515625
+      },
+      {
+        "start": 12.12,
+        "end": 12.26,
+        "word": "人",
+        "probability": 0.99365234375
+      },
+      {
+        "start": 12.26,
+        "end": 12.72,
+        "word": "潮",
+        "probability": 0.99365234375
+      }
+    ]
+  }
+]

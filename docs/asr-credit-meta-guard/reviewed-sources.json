@@ -1,0 +1,6 @@
+{
+  "app/pipeline/lyric_accuracy.py": {
+    "before_sha256": "a93e0cb8a54c541cd6eb4f640ef8c2fefcacb5152196a7c4ea047a5a79d7e6a3",
+    "after_sha256": "00f02fcdfd9b86b427b9760895f2c307f1e96b3913c33bb5a1d0f3a1c5475356"
+  }
+}

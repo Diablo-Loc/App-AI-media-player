@@ -1,0 +1,213 @@
+[
+  {
+    "id": 1,
+    "start": 0.0,
+    "end": 1.86,
+    "text": "光る流れ",
+    "avg_logprob": -0.22808688442881514,
+    "no_speech_prob": 0.1029052734375,
+    "compression_ratio": 1.0568181818181819,
+    "words": [
+      {
+        "start": 0.0,
+        "end": 0.38,
+        "word": "光",
+        "probability": 0.73486328125
+      },
+      {
+        "start": 0.38,
+        "end": 0.8,
+        "word": "る",
+        "probability": 0.99853515625
+      },
+      {
+        "start": 0.8,
+        "end": 1.26,
+        "word": "流",
+        "probability": 0.8984375
+      },
+      {
+        "start": 1.26,
+        "end": 1.86,
+        "word": "れ",
+        "probability": 0.9931640625
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "start": 1.86,
+    "end": 4.68,
+    "text": "忘れられない君と",
+    "avg_logprob": -0.22808688442881514,
+    "no_speech_prob": 0.1029052734375,
+    "compression_ratio": 1.0568181818181819,
+    "words": [
+      {
+        "start": 1.86,
+        "end": 2.08,
+        "word": "忘",
+        "probability": 0.47314453125
+      },
+      {
+        "start": 2.08,
+        "end": 3.08,
+        "word": "れ",
+        "probability": 0.94140625
+      },
+      {
+        "start": 3.08,
+        "end": 3.56,
+        "word": "ら",
+        "probability": 0.9921875
+      },
+      {
+        "start": 3.56,
+        "end": 4.0,
+        "word": "れない",
+        "probability": 0.417236328125
+      },
+      {
+        "start": 4.0,
+        "end": 4.38,
+        "word": "君",
+        "probability": 0.8466796875
+      },
+      {
+        "start": 4.38,
+        "end": 4.68,
+        "word": "と",
+        "probability": 0.998046875
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "start": 4.68,
+    "end": 7.42,
+    "text": "凄い喧嘩した日々も",
+    "avg_logprob": -0.22808688442881514,
+    "no_speech_prob": 0.1029052734375,
+    "compression_ratio": 1.0568181818181819,
+    "words": [
+      {
+        "start": 4.68,
+        "end": 5.64,
+        "word": "凄",
+        "probability": 0.6270751953125
+      },
+      {
+        "start": 5.64,
+        "end": 5.86,
+        "word": "い",
+        "probability": 0.9931640625
+      },
+      {
+        "start": 5.86,
+        "end": 6.16,
+        "word": "喧",
+        "probability": 0.89208984375
+      },
+      {
+        "start": 6.16,
+        "end": 6.36,
+        "word": "嘩",
+        "probability": 0.999755859375
+      },
+      {
+        "start": 6.36,
+        "end": 6.54,
+        "word": "した",
+        "probability": 0.99365234375
+      },
+      {
+        "start": 6.54,
+        "end": 6.96,
+        "word": "日",
+        "probability": 0.9912109375
+      },
+      {
+        "start": 6.96,
+        "end": 7.14,
+        "word": "々",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 7.14,
+        "end": 7.42,
+        "word": "も",
+        "probability": 0.99560546875
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "start": 8.0,
+    "end": 9.96,
+    "text": "実は宝物",
+    "avg_logprob": -0.22808688442881514,
+    "no_speech_prob": 0.1029052734375,
+    "compression_ratio": 1.0568181818181819,
+    "words": [
+      {
+        "start": 7.77,
+        "end": 8.16,
+        "word": "実",
+        "probability": 0.85791015625
+      },
+      {
+        "start": 8.16,
+        "end": 8.72,
+        "word": "は",
+        "probability": 0.998046875
+      },
+      {
+        "start": 8.72,
+        "end": 9.66,
+        "word": "宝",
+        "probability": 0.998046875
+      },
+      {
+        "start": 9.66,
+        "end": 9.96,
+        "word": "物",
+        "probability": 0.99169921875
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "start": 9.96,
+    "end": 11.74,
+    "text": "どっちだって",
+    "avg_logprob": -0.22808688442881514,
+    "no_speech_prob": 0.1029052734375,
+    "compression_ratio": 1.0568181818181819,
+    "words": [
+      {
+        "start": 9.96,
+        "end": 10.84,
+        "word": "ど",
+        "probability": 0.7529296875
+      },
+      {
+        "start": 10.84,
+        "end": 11.24,
+        "word": "っち",
+        "probability": 0.99072265625
+      },
+      {
+        "start": 11.24,
+        "end": 11.36,
+        "word": "だ",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 11.36,
+        "end": 11.74,
+        "word": "って",
+        "probability": 0.96142578125
+      }
+    ]
+  }
+]

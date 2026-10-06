@@ -10,6 +10,9 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 LIBS = ROOT / "app_resources/libs"
 sys.path.insert(0, str(ROOT / "app"))
+VENV_SITE = ROOT / "venv/Lib/site-packages"
+if VENV_SITE.exists():
+    sys.path.insert(0, str(VENV_SITE))
 sys.path.insert(0, str(LIBS))
 os.environ["HF_HUB_OFFLINE"] = "1"
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
@@ -19,6 +22,15 @@ os.environ["PATH"] = str(ROOT / "bin") + os.pathsep + os.environ.get("PATH", "")
 DLL_HANDLES = [os.add_dll_directory(str(path))
                for path in (LIBS / "ctranslate2", LIBS / "torch/lib")
                if os.name == "nt" and path.exists()]
+if os.name == "nt":
+    for _site in sys.path:
+        for _pkg in ("shiboken6", "PySide6"):
+            _d = Path(_site) / _pkg
+            if _d.is_dir():
+                try:
+                    DLL_HANDLES.append(os.add_dll_directory(str(_d)))
+                except Exception:
+                    pass
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")

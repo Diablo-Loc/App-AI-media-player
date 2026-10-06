@@ -135,12 +135,13 @@ class SubtitleEffects(QObject):
         self.last_ms = None
 
     def finish_erase_sweep_for_fade(self):
-        """Keep a completed erase mask while the QLabel fades out.
+        """Freeze the completed sweep while SubtitleLayer fades the cue out.
 
         SubtitleLayer used to clear the effect as soon as a cue ended. That
         restored all glyphs for the 220 ms fade-out, producing a brief flash of
-        the whole sentence after the sweep had hidden it. Keep the final mask
-        until the widget is actually hidden; this changes pixels only.
+        the whole sentence after the sweep had hidden it. Keep the final mask,
+        including the final visible cell owned by the cue fade, until the widget
+        is actually hidden; this changes pixels only.
         """
         if (not self.options['enabled'] or self.options['trail'] == 'none'
                 or not self.options['erase_passed'] or self.cue is None
@@ -406,12 +407,6 @@ class SubtitleEffects(QObject):
         hidden = QRegion()
         erase_sweep = decorative and trail != 'none' and self.options['erase_passed']
         if erase_sweep:
-            if self.scan_progress >= 1.0:
-                # Skip all glyph passes, including DPR-scaled glow outside the
-                # contents rect. The existing widget background/fade stays owned.
-                self.particles.last_draw_count = 0
-                painter.restore()
-                return True
             hidden, regions = self.particles.sweep_masks(self.scan_progress)
 
         def draw_shimmer():

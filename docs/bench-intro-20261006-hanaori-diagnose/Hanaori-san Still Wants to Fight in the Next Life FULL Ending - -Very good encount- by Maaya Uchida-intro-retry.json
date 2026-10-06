@@ -1,0 +1,364 @@
+{
+  "options": {
+    "language": "ja",
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": null,
+    "no_speech_threshold": null,
+    "clip_timestamps": [
+      0,
+      30
+    ]
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 11.879999999999999,
+      "end": 29.98,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.22916666004392836,
+      "no_speech_prob": 0.032989501953125,
+      "compression_ratio": 0.8222222222222222,
+      "words": [
+        {
+          "start": 11.879999999999999,
+          "end": 12.8,
+          "word": "作",
+          "probability": 0.0341796875
+        },
+        {
+          "start": 12.8,
+          "end": 12.8,
+          "word": "詞",
+          "probability": 0.988525390625
+        },
+        {
+          "start": 12.8,
+          "end": 12.8,
+          "word": "・",
+          "probability": 0.9453125
+        },
+        {
+          "start": 12.8,
+          "end": 12.8,
+          "word": "作",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 12.8,
+          "end": 12.86,
+          "word": "曲",
+          "probability": 0.9873046875
+        },
+        {
+          "start": 12.86,
+          "end": 12.86,
+          "word": "・",
+          "probability": 0.94482421875
+        },
+        {
+          "start": 12.86,
+          "end": 13.32,
+          "word": "編",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 13.32,
+          "end": 13.32,
+          "word": "曲",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 13.32,
+          "end": 13.36,
+          "word": " 初",
+          "probability": 0.95166015625
+        },
+        {
+          "start": 13.36,
+          "end": 14.88,
+          "word": "音",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 14.88,
+          "end": 29.86,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 29.86,
+          "end": 29.98,
+          "word": "ク",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 30.0,
+      "end": 33.32,
+      "text": "どっちだって届いなさいよ",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 30.0,
+          "end": 30.84,
+          "word": "ど",
+          "probability": 0.5634765625
+        },
+        {
+          "start": 30.84,
+          "end": 31.22,
+          "word": "っち",
+          "probability": 0.90283203125
+        },
+        {
+          "start": 31.22,
+          "end": 31.36,
+          "word": "だ",
+          "probability": 0.99609375
+        },
+        {
+          "start": 31.36,
+          "end": 31.68,
+          "word": "って",
+          "probability": 0.97119140625
+        },
+        {
+          "start": 31.68,
+          "end": 32.1,
+          "word": "届",
+          "probability": 0.6065673828125
+        },
+        {
+          "start": 32.1,
+          "end": 32.46,
+          "word": "い",
+          "probability": 0.623046875
+        },
+        {
+          "start": 32.46,
+          "end": 32.7,
+          "word": "な",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 32.7,
+          "end": 33.14,
+          "word": "さい",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 33.14,
+          "end": 33.32,
+          "word": "よ",
+          "probability": 0.99365234375
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 33.32,
+      "end": 37.46,
+      "text": "君がいなくちゃなんか足りない",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 33.32,
+          "end": 33.94,
+          "word": "君",
+          "probability": 0.642578125
+        },
+        {
+          "start": 33.94,
+          "end": 34.66,
+          "word": "が",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 34.66,
+          "end": 34.92,
+          "word": "い",
+          "probability": 0.79833984375
+        },
+        {
+          "start": 34.92,
+          "end": 35.54,
+          "word": "なく",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 35.54,
+          "end": 35.98,
+          "word": "ちゃ",
+          "probability": 0.9658203125
+        },
+        {
+          "start": 35.98,
+          "end": 36.58,
+          "word": "なんか",
+          "probability": 0.52587890625
+        },
+        {
+          "start": 36.58,
+          "end": 36.92,
+          "word": "足",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 36.92,
+          "end": 37.22,
+          "word": "り",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 37.22,
+          "end": 37.46,
+          "word": "ない",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 37.46,
+      "end": 38.5,
+      "text": "私じゃない",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 37.46,
+          "end": 37.96,
+          "word": "私",
+          "probability": 0.4931640625
+        },
+        {
+          "start": 37.96,
+          "end": 38.5,
+          "word": "じゃない",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 38.5,
+      "end": 41.66,
+      "text": "ぶつかることでも",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 38.5,
+          "end": 39.32,
+          "word": "ぶ",
+          "probability": 0.8935546875
+        },
+        {
+          "start": 39.32,
+          "end": 39.66,
+          "word": "つ",
+          "probability": 0.998046875
+        },
+        {
+          "start": 39.66,
+          "end": 39.98,
+          "word": "か",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 39.98,
+          "end": 40.34,
+          "word": "る",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 40.34,
+          "end": 40.82,
+          "word": "こと",
+          "probability": 0.6669921875
+        },
+        {
+          "start": 40.82,
+          "end": 41.66,
+          "word": "でも",
+          "probability": 0.85595703125
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 41.66,
+      "end": 44.52,
+      "text": "どこよく刻まれると",
+      "avg_logprob": -0.25492527886577276,
+      "no_speech_prob": 0.2225341796875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 41.66,
+          "end": 42.2,
+          "word": "ど",
+          "probability": 0.266845703125
+        },
+        {
+          "start": 42.2,
+          "end": 42.4,
+          "word": "こ",
+          "probability": 0.47607421875
+        },
+        {
+          "start": 42.4,
+          "end": 42.6,
+          "word": "よ",
+          "probability": 0.91357421875
+        },
+        {
+          "start": 42.6,
+          "end": 42.88,
+          "word": "く",
+          "probability": 0.806640625
+        },
+        {
+          "start": 42.88,
+          "end": 43.36,
+          "word": "刻",
+          "probability": 0.818359375
+        },
+        {
+          "start": 43.36,
+          "end": 43.62,
+          "word": "ま",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 43.62,
+          "end": 43.98,
+          "word": "れる",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 43.98,
+          "end": 44.52,
+          "word": "と",
+          "probability": 0.45361328125
+        }
+      ]
+    }
+  ],
+  "seconds": 1.5779999999995198
+}

@@ -6,11 +6,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def before_resource_changes(relative, raw=False):
+def before_resource_changes(relative, current=None, raw=False):
+    # The intro-ASR guard is newer than all historical resource/playback gates.
+    # Peel only its exact reviewed bytes first; unrelated files pass through.
+    from tests.asr_intro_guard_contracts import before_asr_intro_guard_changes
+    current = before_asr_intro_guard_changes(relative, current=current, raw=True)
     # Lyric-translation shaping is newer than the resource/playback phases.
     # Validate and peel it before passing source through historical adapters.
     from tests.lyric_translation_contracts import before_lyric_translation_changes
-    current = before_lyric_translation_changes(relative, raw=True)
+    current = before_lyric_translation_changes(relative, current=current, raw=True)
     # Playback-continuity is newer than the export/resource phases. Validate
     # and peel it first, then pass those bytes through the existing adapter
     # chain so historical manifests stay frozen.

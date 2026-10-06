@@ -1,0 +1,55 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1280
+PlayResY: 720
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Main,MS UI Gothic,45,&H00FFFFFF,&H00000000,&H00000000,1,0,0,0,100,100,0,0,1,2,1,2,30,30,50,1
+Style: Sub,Arial,28,&H0000FFFF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.5,1,2,30,30,15,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:19.95,0:00:22.95,Main,,0,0,0,,细细上上游过人潮
+Dialogue: 0,0:00:22.95,0:00:25.85,Main,,0,0,0,,河仙桥风雨渺
+Dialogue: 0,0:00:25.85,0:00:27.71,Main,,0,0,0,,一闪投落尘霄
+Dialogue: 0,0:00:27.71,0:00:29.78,Main,,0,0,0,,世间原来不
+Dialogue: 0,0:00:29.93,0:00:30.80,Main,,0,0,0,,不寂寥
+Dialogue: 0,0:00:32.72,0:00:34.53,Main,,0,0,0,,眼前花枝頭
+Dialogue: 0,0:00:34.53,0:00:36.27,Main,,0,0,0,,問心配喜鬧
+Dialogue: 0,0:00:36.27,0:00:38.67,Main,,0,0,0,,抬頭傾灘快意盡照
+Dialogue: 0,0:00:38.67,0:00:40.90,Main,,0,0,0,,長夜
+Dialogue: 0,0:00:41.80,0:00:43.67,Main,,0,0,0,,劫前因緣刀
+Dialogue: 0,0:00:43.67,0:00:47.04,Main,,0,0,0,,不如隨心皆逍遙
+Dialogue: 0,0:00:48.22,0:00:50.92,Main,,0,0,0,,往遠方
+Dialogue: 0,0:00:51.74,0:00:54.92,Main,,0,0,0,,一彩流光
+Dialogue: 0,0:00:56.20,0:00:58.27,Main,,0,0,0,,誰共上
+Dialogue: 0,0:00:58.27,0:01:02.39,Main,,0,0,0,,燈火琳瑯相傍
+Dialogue: 0,0:01:02.39,0:01:05.85,Main,,0,0,0,,眷戀間尋常
+Dialogue: 0,0:01:05.85,0:01:09.84,Main,,0,0,0,,緣有片刻換魂藏
+Dialogue: 0,0:01:10.27,0:01:13.87,Main,,0,0,0,,浮浪樹瘋變
+Dialogue: 0,0:01:13.87,0:01:17.54,Main,,0,0,0,,煙火去寒霜
+Dialogue: 0,0:01:18.27,0:01:21.74,Main,,0,0,0,,昨天像月光
+Dialogue: 0,0:01:22.27,0:01:27.13,Main,,0,0,0,,灑下萬千盞燈微笑
+Dialogue: 0,0:01:27.13,0:01:33.44,Main,,0,0,0,,浩浩悠閃破忘心想
+Dialogue: 0,0:02:11.39,0:02:14.23,Main,,0,0,0,,只醉月遥红线勾一笑
+Dialogue: 0,0:02:14.23,0:02:16.98,Main,,0,0,0,,不亦喧嚣麻木缭绕
+Dialogue: 0,0:02:17.73,0:02:19.87,Main,,0,0,0,,玉盆靠风雨摇
+Dialogue: 0,0:02:19.87,0:02:21.65,Main,,0,0,0,,挥手慈悲烦扰
+Dialogue: 0,0:02:21.65,0:02:23.40,Main,,0,0,0,,向来云端
+Dialogue: 0,0:02:27.11,0:02:30.31,Main,,0,0,0,,眼前花正好溫馨被嬉鬧
+Dialogue: 0,0:02:30.31,0:02:32.82,Main,,0,0,0,,猜到晴天快已盡早
+Dialogue: 0,0:02:33.69,0:02:37.67,Main,,0,0,0,,長夜借塵因緣刀
+Dialogue: 0,0:02:37.67,0:02:41.00,Main,,0,0,0,,不如隨心且逍遙
+Dialogue: 0,0:02:42.47,0:02:44.96,Main,,0,0,0,,望遠方
+Dialogue: 0,0:02:45.51,0:02:48.96,Main,,0,0,0,,一彩流光
+Dialogue: 0,0:02:50.33,0:02:56.33,Main,,0,0,0,,誰共上燈火凌亂相逢
+Dialogue: 0,0:02:56.33,0:03:03.80,Main,,0,0,0,,卷雲間尋常圓腰片的花魂芳
+Dialogue: 0,0:03:04.33,0:03:11.40,Main,,0,0,0,,浮揚是烽煉煙火去暗上
+Dialogue: 0,0:03:12.33,0:03:15.68,Main,,0,0,0,,拖天下月光
+Dialogue: 0,0:03:16.31,0:03:21.27,Main,,0,0,0,,灑下萬千讓它回響
+Dialogue: 0,0:03:21.27,0:03:27.58,Main,,0,0,0,,好梦悠长莫忘倾向
+Dialogue: 0,0:03:28.27,0:03:31.64,Main,,0,0,0,,续人间寻常
+Dialogue: 0,0:03:31.83,0:03:35.75,Main,,0,0,0,,此去一目一无恙
+Dialogue: 0,0:03:35.75,0:03:44.76,Main,,0,0,0,,前灯在烽烟拂远方
