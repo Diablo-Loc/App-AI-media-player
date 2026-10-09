@@ -1,8 +1,12 @@
 # BoTube · AI Media Player
 
-BoTube là ứng dụng phát nhạc và video trên Windows, kết hợp thư viện media, tải nội dung, tạo phụ đề bằng AI, dịch thuật và chỉnh sửa phụ đề. Giao diện được xây dựng bằng Python và PySide6; thư viện AI và model được lưu riêng để dùng cùng bản portable.
+BoTube là ứng dụng phát nhạc và video trên Windows, kết hợp thư viện media, tải nội dung, tạo phụ đề bằng AI, dịch thuật và chỉnh sửa phụ đề. Giao diện được xây dựng bằng Python và PySide6. Có thể cài ứng dụng bằng `BoTube_Setup.exe`; thư viện AI và model được tải riêng trong Settings.
 
 README này mô tả bản mới nhất có hai chế độ **Lời bài hát** và **Hội thoại / Phim**. Các bản cũ có thể chưa có đầy đủ tính năng bên dưới.
+
+![Minh họa giao diện BoTube: thanh điều hướng, trang For You và điều khiển phát](docs/images/botube-interface.png)
+
+*Minh họa được dựng từ các thành phần giao diện thật với danh sách phát trống; không sử dụng thư viện nhạc hoặc dữ liệu cá nhân.*
 
 ## Tính năng
 
@@ -19,18 +23,40 @@ Thư viện hiện quét các đuôi `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov` và 
 
 ## Bắt đầu sử dụng
 
-### Bản portable
+### Cài đặt bằng BoTube_Setup.exe
 
-1. Giải nén toàn bộ gói BoTube vào thư mục có quyền ghi và chạy `BoTube.exe`.
-2. Chọn thư mục chứa media trong ứng dụng, sau đó chọn bài/video để phát.
-3. Mở **Tùy chỉnh → Tải / Cập nhật Resource AI (Thư viện & Model)** để chuẩn bị thư viện AI và model Whisper nếu gói chưa có sẵn. Chọn tải thêm NLLB nếu cần dịch Local.
-4. Chọn **Whisper Model**, **Compute Device** và **Loại nội dung**, rồi lưu cài đặt trước khi tạo sub.
-5. Chọn **Local Default** để dịch trên máy, hoặc chọn dịch vụ Online, model và nhập API key của bạn.
-6. Tạo phụ đề AI; mở công cụ phụ đề để kiểm tra, sửa hoặc xuất kết quả.
+**[Tải BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)** · [Xem các bản phát hành](https://github.com/Diablo-Loc/App-AI-media-player/releases)
+
+1. Vào **Releases**, chọn bản muốn dùng và tải `BoTube_Setup.exe` trong phần **Assets**.
+2. Chạy bộ cài, hoàn tất các bước cài đặt Windows như thông thường, rồi mở BoTube từ shortcut đã tạo.
+3. **Trước lần tạo sub AI đầu tiên**, mở **Tùy chỉnh → Tải / Cập nhật Resource AI (Thư viện & Model)**. Chọn model Whisper và bấm **Bắt đầu cài đặt tự động**; chờ thư viện và model tải/cài xong.
+4. Nếu muốn dịch Local, chọn tải kèm **Model dịch thuật NLLB Offline**. Dịch Online vẫn cần Whisper trên máy để nhận dạng lời; NLLB cũng cần thiết nếu muốn dùng fallback Local khi API lỗi.
+5. Quay lại Settings, chọn **Whisper Model** đã tải, **Compute Device** (`cpu` hoặc `cuda`) và **Loại nội dung** phù hợp, rồi **Lưu cài đặt**.
+6. Chọn **Local Default** hoặc dịch vụ Online. Với Online, chọn model dịch và nhập API key của bạn.
+7. Chọn thư mục chứa media, chọn bài/video và tạo phụ đề AI; mở công cụ phụ đề để kiểm tra, sửa hoặc xuất kết quả.
+
+Người dùng bản cài đặt không cần clone repository hoặc tự build ứng dụng. Cài xong app và chuẩn bị xong tài nguyên AI là hai bước riêng; cần kết nối mạng khi tải tài nguyên lần đầu.
+
+![Các bước cài BoTube, tải tài nguyên AI, chọn cấu hình và tạo phụ đề](docs/images/botube-setup-flow.svg)
+
+### Nếu dùng bản portable
+
+Giải nén toàn bộ gói vào thư mục có quyền ghi, chạy `BoTube.exe`, rồi chuẩn bị tài nguyên AI và chọn cấu hình theo hướng dẫn ở trên.
 
 Giữ nguyên cả thư mục portable, đặc biệt `_internal/`, `bin/`, `icon/` và tài nguyên AI đi kèm. Không chạy hoặc phân phối riêng mỗi file EXE.
 
 Phát media từ bản EXE dùng bộ runtime đóng gói. **Cài mới thư viện AI từ trình tải tài nguyên trong EXE hiện cần Python trong PATH**; nên dùng Python 3.11 64-bit. Nếu gói đã kèm bộ thư viện/model AI tương thích thì không cần bước cài mới đó.
+
+### Lưu ý dung lượng ổ đĩa
+
+**Dung lượng bộ cài không phải tổng dung lượng sau khi chuẩn bị AI.** Bộ cài v5.0.0 hiện khoảng **306 MiB**; thư viện AI, Whisper, NLLB và cache được lưu thêm sau đó. Xem kích thước bộ cài của từng bản trong [Releases](https://github.com/Diablo-Loc/App-AI-media-player/releases).
+
+- Nên dự trù khoảng **15–20 GB trống** nếu dùng một model Whisper lớn và NLLB Local, để có chỗ cho dữ liệu tải tạm và giải nén. Đây là mức dự trù, không phải dung lượng cố định hoặc yêu cầu tối thiểu cho mọi cấu hình.
+- Model Whisper nhỏ cần ít dung lượng hơn; tải thêm nhiều model sẽ cộng dồn dung lượng. Bộ thư viện AI riêng cũng có thể chiếm nhiều GB.
+- Tài nguyên nằm trong `app_resources/` cạnh ứng dụng, nên ổ chứa thư mục cài đặt cần đủ chỗ trống và quyền ghi.
+- Cache âm thanh xử lý có ngân sách khoảng **1 GiB**. Video tải xuống và video xuất kèm sub cần thêm dung lượng tại thư mục lưu bạn chọn; file kết quả có thể lớn hơn file nguồn.
+
+Dung lượng ghi trong giao diện là ước lượng; dung lượng tải và dung lượng sau giải nén có thể khác nhau. Xem lưu ý dung lượng ở trên trước khi cài bộ AI lớn.
 
 ### Chọn loại nội dung
 

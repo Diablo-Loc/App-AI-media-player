@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="276" viewBox="0 0 1060 276" role="img" aria-labelledby="title description">
+  <title id="title">Bắt đầu với BoTube</title>
+  <desc id="description">Cài BoTube_Setup.exe từ Releases, tải tài nguyên AI trong Settings, chọn model và loại nội dung, rồi tạo và kiểm tra phụ đề. Tài nguyên AI cần thêm dung lượng ổ đĩa.</desc>
+  <rect width="1060" height="276" rx="20" fill="#0d1118"/>
+  <g font-family="Segoe UI,Arial,sans-serif">
+    <text x="34" y="43" font-size="22" font-weight="700" fill="#edf3fa">Bắt đầu với BoTube</text>
+    <text x="34" y="69" font-size="14" fill="#9aaabc">Bộ cài Windows + tài nguyên AI được chuẩn bị riêng trong Settings</text>
+    <g fill="#151c26" stroke="#273445">
+      <rect x="34" y="94" width="222" height="100" rx="12"/>
+      <rect x="290" y="94" width="222" height="100" rx="12"/>
+      <rect x="546" y="94" width="222" height="100" rx="12"/>
+      <rect x="802" y="94" width="222" height="100" rx="12"/>
+    </g>
+    <g font-size="13" font-weight="700" fill="#77e0be">
+      <text x="51" y="118">01 · CÀI ỨNG DỤNG</text>
+      <text x="307" y="118">02 · TẢI TÀI NGUYÊN</text>
+      <text x="563" y="118">03 · CHỌN CẤU HÌNH</text>
+      <text x="819" y="118">04 · TẠO PHỤ ĐỀ</text>
+    </g>
+    <g font-size="17" font-weight="600" fill="#edf3fa">
+      <text x="51" y="147">BoTube_Setup.exe</text>
+      <text x="307" y="147">Whisper + thư viện AI</text>
+      <text x="563" y="147">Lời hát / Hội thoại</text>
+      <text x="819" y="147">Tạo → kiểm tra → lưu</text>
+    </g>
+    <g font-size="13" fill="#9aaabc">
+      <text x="51" y="173">Tải từ GitHub Releases</text>
+      <text x="307" y="173">Thêm NLLB nếu dịch Local</text>
+      <text x="563" y="173">Model · CPU/CUDA · dịch</text>
+      <text x="819" y="173">Sửa hoặc xuất video + sub</text>
+    </g>
+    <g fill="none" stroke="#77e0be" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M265 145h16m-5-5 5 5-5 5"/>
+      <path d="M521 145h16m-5-5 5 5-5 5"/>
+      <path d="M777 145h16m-5-5 5 5-5 5"/>
+    </g>
+    <rect x="34" y="214" width="990" height="35" rx="8" fill="#232017"/>
+    <text x="49" y="237" font-size="14" fill="#f2ce82">Ổ đĩa: dự trù 15–20 GB trống cho model lớn + NLLB; video tải/xuất cần thêm dung lượng.</text>
+  </g>
+</svg>
