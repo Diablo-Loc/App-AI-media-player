@@ -1,102 +1,170 @@
-# App-AI-media-player (BoTube)
+# BoTube · AI Media Player
 
-Phụ đề có 8 bộ mẫu typography mạnh: Mưa chữ, Domino, Bung chữ, Xoáy, Lật 2D, Sóng, Máy chữ và Nhịp chữ; chọn lực/chia cụm riêng trong Cài đặt phụ đề. [GIF và phạm vi kiểm chứng](docs/SUBTITLE_KINETIC.md).
+BoTube là ứng dụng phát nhạc và video trên Windows, kết hợp thư viện media, tải nội dung, tạo phụ đề bằng AI, dịch thuật và chỉnh sửa phụ đề. Giao diện được xây dựng bằng Python và PySide6; thư viện AI và model được lưu riêng để dùng cùng bản portable.
 
-Hiệu ứng sub: chọn lại bộ mẫu Phi tiêu/Sao/Sao băng/Tinh thể hoặc bật **Ẩn chữ sau vệt quét** để chữ đã qua giữ ẩn tới hết câu. File/timing sub không đổi. [Preview và cách dùng](docs/SUBTITLE_SWEEP.md).
+README này mô tả bản mới nhất có hai chế độ **Lời bài hát** và **Hội thoại / Phim**. Các bản cũ có thể chưa có đầy đủ tính năng bên dưới.
 
-Phụ đề: 9 bộ mẫu phi tiêu/sao/cánh hoa và các hiệu ứng theo câu, OFF mặc định, chỉnh riêng mật độ/chuyển động/màu trong Cài đặt phụ đề. [Preview và phạm vi kiểm chứng](docs/SUBTITLE_PARTICLES.md).
+## Tính năng
 
-For You: gutter/search cân đối 12 px, thanh tiêu đề native đồng bộ màu trên Windows hỗ trợ. Giữ PySide6 và các luồng cửa sổ/video hiện có. [Báo cáo UI](docs/FORYOU_SPACING_AND_CAPTION.md).
+- **Phát media:** thư viện theo thư mục, tìm kiếm, trang For You, hàng đợi phát, shuffle, lặp, toàn màn hình và mini player.
+- **Tạo phụ đề AI:** nhận dạng ngôn ngữ và nội dung bằng faster-whisper, hỗ trợ CPU hoặc GPU NVIDIA.
+- **Dịch thuật:** dịch Local bằng NLLB-200 hoặc Online qua Google Gemini, OpenAI và Claude; chọn model theo nhà cung cấp trong Settings.
+- **Hiển thị phụ đề:** chọn nội dung gốc, tiếng Anh, tiếng Việt hoặc kết hợp; chỉnh font, màu, vị trí và hiệu ứng chữ. Các hiệu ứng phi tiêu, sao, cánh hoa, typography và ẩn chữ sau vệt quét là tùy chọn.
+- **Chỉnh sửa phụ đề:** sửa nội dung và mốc thời gian, nhập/xuất JSON, SRT, ASS; luồng tạo AI còn xuất lời gốc thành SRT và LRC.
+- **Xuất video kèm phụ đề:** ghi phụ đề đang hiển thị vào video, chọn canvas, tỉ lệ, độ phân giải, FPS và chất lượng xuất.
+- **Âm thanh:** ghi nhớ âm lượng, cân bằng độ lớn giữa các bài và các preset chất âm tùy chọn, bao gồm chế độ cho tai nghe.
+- **Tải video và âm nhạc:** dùng yt-dlp, chọn định dạng và chất lượng trong giao diện tải xuống.
 
-Lyric: cải thiện chia câu cho phụ đề tạo mới, giữ nguyên các bài đã lưu. [Phạm vi sửa và kiểm chứng](docs/LYRIC_PHRASE_GROUPING.md).
+Thư viện hiện quét các đuôi `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov` và `.avi`. Khả năng phát một file cụ thể còn phụ thuộc codec và bộ giải mã.
 
-For You: search và xóa search có vòng loading, chỉ hiện kết quả khi chuẩn bị xong; giữ toàn playlist cho Next/Previous. [Chi tiết kiểm chứng](docs/FORYOU_SEARCH_LOADING.md).
+## Bắt đầu sử dụng
 
-For You search/cuộn: [báo cáo và số đo](docs/FORYOU_SEARCH_PERFORMANCE.md). Search chỉ lọc hiển thị; Next/Previous giữ toàn playlist. Danh sách dùng viewport pool và hai decoder thumbnail để giảm chặn giao diện.
+### Bản portable
 
-A media player with AI-powered subtitle, translation and processing features.
-This repository contains both the application code and tooling for building
-packaged executables.
+1. Giải nén toàn bộ gói BoTube vào thư mục có quyền ghi và chạy `BoTube.exe`.
+2. Chọn thư mục chứa media trong ứng dụng, sau đó chọn bài/video để phát.
+3. Mở **Tùy chỉnh → Tải / Cập nhật Resource AI (Thư viện & Model)** để chuẩn bị thư viện AI và model Whisper nếu gói chưa có sẵn. Chọn tải thêm NLLB nếu cần dịch Local.
+4. Chọn **Whisper Model**, **Compute Device** và **Loại nội dung**, rồi lưu cài đặt trước khi tạo sub.
+5. Chọn **Local Default** để dịch trên máy, hoặc chọn dịch vụ Online, model và nhập API key của bạn.
+6. Tạo phụ đề AI; mở công cụ phụ đề để kiểm tra, sửa hoặc xuất kết quả.
 
-## Development and architecture
+Giữ nguyên cả thư mục portable, đặc biệt `_internal/`, `bin/`, `icon/` và tài nguyên AI đi kèm. Không chạy hoặc phân phối riêng mỗi file EXE.
 
-Use the project Python 3.11 environment from the repository root:
+Phát media từ bản EXE dùng bộ runtime đóng gói. **Cài mới thư viện AI từ trình tải tài nguyên trong EXE hiện cần Python trong PATH**; nên dùng Python 3.11 64-bit. Nếu gói đã kèm bộ thư viện/model AI tương thích thì không cần bước cài mới đó.
+
+### Chọn loại nội dung
+
+| Chế độ | Phù hợp | Cách xử lý |
+| --- | --- | --- |
+| **Lời bài hát** · mặc định | Nhạc, MV, lyric video | Giữ luồng xử lý lyric: kiểm tra intro/thiếu lời, chia câu, căn mốc và prompt dịch lời hát. Genius có thể dùng để tham chiếu nếu bật. |
+| **Hội thoại / Phim** | Hội thoại trong video hoặc phim | Chia câu theo từ, dấu câu và khoảng nghỉ; dùng mốc ASR, bỏ các bộ lọc credit/intro dành cho nhạc và Genius; dịch theo văn phong lời thoại. |
+
+Lựa chọn này áp dụng khi tạo hoặc dịch phụ đề. Đổi chế độ không tự chuyển đổi hoặc căn lại phụ đề đã lưu. Chế độ hội thoại dùng chung Whisper, dịch vụ dịch và trình phát; chưa có tính năng nhận diện, gán nhãn riêng từng người nói.
+
+### Chọn model và dịch vụ dịch
+
+- **Whisper:** có `tiny`, `base`, `small`, `medium`, `large-v2` và `large-v3`. Model lớn thường cần nhiều tài nguyên hơn. Với lyric nhiều ngôn ngữ và ưu tiên chất lượng, có thể bắt đầu bằng `large-v3` nếu máy đáp ứng.
+- **CPU / CUDA:** CPU dùng được khi không có GPU phù hợp; CUDA cần GPU NVIDIA và bộ thư viện/driver tương thích. Chọn CPU nếu gặp lỗi CUDA hoặc thiếu VRAM.
+- **Local Default:** dùng NLLB-200 trên máy, không cần API key. Chỉ hoạt động offline khi thư viện và model cần thiết đã có sẵn.
+- **Online:** nội dung phụ đề được gửi tới nhà cung cấp đã chọn. API key, quyền truy cập model, hạn mức và chi phí thuộc tài khoản của bạn; model có trong danh sách ứng dụng chưa chắc còn khả dụng cho mọi tài khoản.
+- **Genius:** tùy chọn dành cho lời bài hát, dùng **Client Access Token**. Chỉ những tham chiếu vượt qua kiểm tra độ khớp mới được dùng; không có tham chiếu đủ tin cậy thì app tiếp tục dịch từ lời máy.
+
+Một batch Online thành công thông thường dùng một yêu cầu dịch. Nội dung dài được chia batch có giới hạn; chỉ lỗi tạm thời hoặc thiếu ID mới kích hoạt lượt phục hồi có giới hạn. Khi Online thất bại, app giữ luồng fallback Local; fallback vẫn cần bộ NLLB tương thích.
+
+### Phụ đề và xuất video
+
+Hiệu ứng chữ chỉ thay đổi cách trình bày, không sửa nội dung hoặc mốc thời gian đã lưu. Vệt quét chạy theo thời lượng câu, không phải căn karaoke từng từ theo giọng hát.
+
+Trong cài đặt phụ đề, chọn **Xuất video + lyric** để tạo video có phụ đề gắn vào hình. Có thể chọn tỉ lệ nguồn, 16:9, 9:16, 1:1 và các canvas khác; tùy chỉnh cách fit/fill, kích thước, FPS, vùng an toàn và một số thiết lập hiển thị riêng khi xuất.
+
+Gắn phụ đề vào hình cần mã hóa lại video. Âm thanh ưu tiên giữ luồng nguồn; MP4 có thể chuyển sang AAC để tương thích. Bản xuất là file mới, không ghi đè video nguồn.
+
+### Âm thanh
+
+Cân bằng âm lượng và preset chất âm là tùy chọn; nguồn media gốc được giữ nguyên. Cân bằng âm lượng khi không bật EQ dùng gain trên đường phát hiện có. EQ có bước chuẩn bị nguồn phát riêng: đổi preset giữa bài có thể làm nạp lại nguồn và ngắt ngắn.
+
+Cache nguồn phát đã xử lý nằm trong `storage/audio-playback-cache/`, có ngân sách khoảng 1 GiB; file đang dùng được bảo vệ nên mức chiếm dụng thực tế có thể vượt ngân sách. Cache này giúp tái sử dụng kết quả xử lý, không phải model AI hay bản sửa của file nhạc gốc.
+
+## Phím tắt
+
+Khi cửa sổ trình phát nhận phím:
+
+| Phím | Thao tác |
+| --- | --- |
+| `Space` | Phát / tạm dừng |
+| `F` | Bật / tắt toàn màn hình |
+| `Esc` | Thoát chế độ toàn màn hình đang hoạt động |
+| `←` / `→` | Tua lùi / tiến 10 giây |
+| `↑` / `↓` | Tăng / giảm âm lượng |
+
+## Chạy từ mã nguồn
+
+Môi trường mục tiêu là **Windows 64-bit, Python 3.11**. Chuẩn bị [FFmpeg và FFprobe](https://ffmpeg.org/download.html): đặt `ffmpeg.exe`, `ffprobe.exe` trong `bin/` ở gốc dự án; khi chạy từ source, app cũng hỗ trợ tìm trong `app_resources/bin/` hoặc PATH.
+
+Mở PowerShell tại gốc repository:
 
 ```powershell
+py -3.11 -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
 .\venv\Scripts\python.exe app/run_app.py
 ```
 
-FFmpeg/FFprobe can be installed in `PATH`, `bin/`, or `app_resources/bin/`.
-Portable AI libraries and models remain in `app_resources/` beside the executable.
-Persistent data remains in `storage/`; existing media IDs and subtitle JSON are preserved.
+`requirements.txt` chứa dependencies ứng dụng; thư viện AI portable và các model cần được chuẩn bị riêng qua trình tải tài nguyên. Sau khi cài tài nguyên, lưu lựa chọn model/device trong Settings rồi tạo phụ đề.
 
-The user restored `app/` to the original working baseline on 2026-10-03.
-Use the script entry point above; `python -m app` belongs to the reverted refactor
-and is unavailable in the restored tree. The [current review](docs/RESTORED_APP_REVIEW.md)
-analyzes every directory, preserves the current UI and runtime, and proposes
-incremental performance and accuracy work. See the [documentation index](docs/README.md)
-for current reports and historical refactor records.
+Entry point hiện tại là `app/run_app.py`. Các thư mục tài nguyên lớn như `bin/`, `app_resources/` và media mẫu không đi kèm một bản clone mã nguồn thông thường.
 
-```powershell
-.\venv\Scripts\python.exe tools/audit_restored_app.py
-.\venv\Scripts\python.exe tools/probe_restored_contracts.py
+## Dữ liệu và tài nguyên
+
+```text
+BoTube/
+├── BoTube.exe                    # Có trong bản đóng gói
+├── _internal/                    # Runtime của bản đóng gói
+├── bin/                          # FFmpeg, FFprobe
+├── icon/
+├── app_resources/
+│   ├── libs/                     # Thư viện AI portable
+│   ├── whisper_models/           # Model Whisper đã tải
+│   └── translation_models/
+│       └── nllb-200/             # Model dịch Local
+└── storage/                      # Thư viện, phụ đề, tùy chỉnh và cache
 ```
 
-`tests/` currently contains historical tests for the reverted refactor; adapt them
-to the restored baseline before using discovery for validation. `app/test/` contains
-legacy interactive demos that may start Qt/GPU/network work. The audit and contract
-probes above do not start the application, access user settings, or call APIs/models.
+Khi chạy từ source, `storage/` và `app_resources/` nằm ở gốc dự án; khi chạy EXE, chúng nằm cạnh EXE. Một phần tùy chỉnh AI/API được lưu bằng **QSettings của Windows**, nên sao chép thư mục portable sang máy khác không đồng nghĩa mọi setting và API key cũng được chuyển theo.
 
-The current phase keeps the UI and prioritizes architecture and responsiveness.
-See [development](docs/DEVELOPMENT.md), [feature contracts](docs/FEATURE_PARITY.md),
-[previous refactor audit](docs/PREVIOUS_REFACTOR_AUDIT.md),
-[performance results](docs/PERFORMANCE.md), [roadmap](docs/ROADMAP.md),
-and [future UI strategy](docs/UI_STRATEGY.md). Repository working rules live in
-[AGENTS.md](AGENTS.md).
+Sao lưu `storage/` và giữ media nguồn trước khi đổi bản phát hành. Có thể tái sử dụng `app_resources/` nếu bộ tài nguyên tương thích với bản app mới. Không đưa API key, token, dữ liệu cá nhân hoặc bộ model/cache lên GitHub.
 
----
+## Đóng gói EXE
 
-## Updating from older versions
+Build trên Windows, từ đúng mã nguồn của phiên bản muốn phát hành. Cần có FFmpeg/FFprobe trong `bin/`, icon, native DLL và các tài nguyên giao diện mà script kiểm tra.
 
-### Manual hot-patch (v1.0.2)
+```powershell
+.\venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\venv\Scripts\python.exe build_app.py --dry-run
+.\venv\Scripts\python.exe build_app.py
+```
 
-This step is required once for users of the original 4 GB/66 MB installer.
+Script xuất dạng **onedir**:
 
-1. Download `update.zip` from the **v1.0.2** release assets on GitHub.
-2. Extract the archive; it contains `BoTube_patch.exe` and `version.json`.
-3. **Do not copy** `BoTube_patch.exe` over the old `BoTube.exe`.
-   Instead, **run `BoTube_patch.exe`**; it will overwrite the old executable and
-   also update the local `version.json` file.
-4. After the patcher finishes, the real application will start. Future updates
-   will be handled automatically by the built-in updater.
+- Lần đầu: `dist/BoTube/BoTube.exe`.
+- Nếu `dist/BoTube/` đã tồn tại: xuất vào `dist/release-<timestamp>/BoTube/BoTube.exe`, giữ bản cũ.
+- Có thể dùng `--dist-dir` để chọn một thư mục xuất mới. Script in đường dẫn kết quả cuối cùng.
 
-*The patcher binary is deliberately small (__~9 MB__) and contains only the
-update logic—it does not include the full app. Copying it over the original
-exe will render the program unlaunchable!*
+Build chỉ chuẩn bị thư mục AI rời, **không tự sao chép toàn bộ thư viện/model trong `app_resources/` vào gói phát hành**. Nếu muốn gói dùng AI ngay hoặc offline, bổ sung bộ tài nguyên tương thích vào thư mục BoTube trước khi phân phối. Không kèm `storage/` cá nhân.
 
-### Automatic updates (1.0.2+)
+Trước khi phát hành, chạy EXE từ thư mục đã đóng gói và thử phát media, tạo/lưu/mở lại sub ở hai chế độ, dịch Local/Online cần dùng và xuất video. `--dry-run` kiểm tra cấu hình/tài nguyên, không thay thế việc thử EXE thật.
 
-From version 1.0.2 onwards the app can check GitHub for a `version.json` and
-download a tiny `update.zip` when a newer release is available.  The updater
-decides whether to fetch the patcher or the full binary based on the metadata.
+## Cập nhật
 
-Configuration is stored in `config.json` (see `config.example.json`).  You may
-specify:
+Ứng dụng có chức năng kiểm tra cập nhật qua metadata `version.json` trên GitHub. Cơ chế này phụ thuộc gói cập nhật và helper tương ứng của bản phát hành; chạy build ứng dụng không tự tạo hoặc đăng gói cập nhật.
 
-- `version_url`: link to the remote `version.json` metadata (fallback is built in)
-- `update_url`: link to the archive which should be downloaded when an update is
-  found (this typically points to the same GitHub release asset).
+Với bản portable mới, có thể giải nén sang thư mục riêng và chuyển dữ liệu/tài nguyên tương thích sau khi sao lưu. Hướng dẫn hot-patch của các bản cũ không phải quy trình đóng gói bản ứng dụng hiện tại.
 
-The app will display progress, verify the ZIP integrity, and then launch the
-appropriate helper script (`update_helper.bat` or `.sh`) to apply the update.
+## Giới hạn hiện tại
 
----
+- AI có thể nhận sai, thiếu chữ hoặc lệch mốc thời gian khi hát nhanh, luyến, nhạc nền lớn, giọng nhỏ hoặc nhiều người nói chồng nhau. Phụ đề tạo tự động cần được kiểm tra trước khi xuất bản.
+- Chế độ hội thoại đã có kiểm tra chức năng và bảo toàn nhánh nhạc, nhưng chưa có benchmark phim thật đủ rộng để bảo đảm mọi tình huống.
+- Chất lượng dịch phụ thuộc lời máy, ngôn ngữ và model/provider; tham chiếu Genius không thay thế việc kiểm tra kết quả.
+- Tải nội dung và dịch Online phụ thuộc mạng, nguồn nội dung và dịch vụ bên ngoài. Lỗi 503 có thể là lỗi tạm thời; 401/404 cần kiểm tra key hoặc model thay vì chỉ chờ và gọi lại.
+- Preset âm thanh không phục hồi chi tiết đã mất do nén codec. Khả năng offline, GPU và hiệu năng phụ thuộc bộ tài nguyên và phần cứng thực tế.
 
-## Building
+## Phát triển và kiểm thử
 
-- Install the packaging tool with `.\venv\Scripts\python.exe -m pip install -r requirements-build.txt`, then run `.\venv\Scripts\python.exe build_app.py --dry-run` and `.\venv\Scripts\python.exe build_app.py`.
-- Output is `dist/BoTube/BoTube.exe` when that folder is new; an existing portable build is preserved and the new output goes to `dist/release-<timestamp>/BoTube/BoTube.exe`. The script prints the final path. Keep the whole portable folder, including `_internal` and `bin`. See [volume/build verification and limits](docs/VOLUME_AND_BUILD.md).
-- `python patch_build.py` creates a tiny `BoTube_patch.exe` and an accompanying
-  `update.zip` containing the patcher plus current `version.json`.
+Mã nguồn chính nằm trong `app/`: `ai/` và `pipeline/` xử lý nhận dạng; `translate/` xử lý dịch; `subtitle/` và `core/` quản lý dữ liệu; `ui/`, `control/`, `download_core/` phục vụ giao diện, điều khiển và tải nội dung.
 
-Refer to the source files for more details.
+```powershell
+# Kiểm tra tập trung cho chế độ nội dung và timing hiển thị
+.\venv\Scripts\python.exe -m unittest tests.test_dialogue_mode tests.test_subtitle_display_timing -v
+
+# Chạy toàn bộ bộ kiểm tra
+.\venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+Bộ kiểm tra còn chứa snapshot và hợp đồng từ các giai đoạn trước; không mặc định coi toàn bộ suite đã xanh. Unit test, kiểm tra Qt và benchmark từng mẫu không thay thế kiểm thử GPU, API, media thực tế và EXE.
+
+Xem [tài liệu dự án](docs/README.md), [hợp đồng tính năng](docs/FEATURE_PARITY.md), [hướng dẫn kiểm thử](tests/README.md) và [quy tắc phát triển](AGENTS.md). Khi gửi báo lỗi, nêu phiên bản/commit, model/device, loại nội dung, bước tái hiện và mốc thời gian bị lỗi; loại bỏ key/token khỏi log.
+
+## Giấy phép và tài nguyên bên thứ ba
+
+Thư viện, model, bộ giải mã và icon có giấy phép riêng. Icon Lucide đi kèm theo [ISC License](app/ui/assets/icons/LICENSE). Model Local [NLLB-200 distilled 600M](https://huggingface.co/facebook/nllb-200-distilled-600M) được công bố theo **CC-BY-NC-4.0**; cần xem điều kiện của model khi dự định sử dụng hoặc phân phối thương mại.
+
+Hiện repository chưa có tệp `LICENSE` ở gốc cho toàn bộ mã nguồn BoTube.
