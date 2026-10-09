@@ -1,5 +1,7 @@
 # BoTube · AI Media Player
 
+**Tiếng Việt** · [English](README.en.md)
+
 BoTube là ứng dụng phát nhạc và video trên Windows, kết hợp thư viện media, tải nội dung, tạo phụ đề bằng AI, dịch thuật và chỉnh sửa phụ đề. Giao diện được xây dựng bằng Python và PySide6. Có thể cài ứng dụng bằng `BoTube_Setup.exe`; thư viện AI và model được tải riêng trong Settings.
 
 README này mô tả bản mới nhất có hai chế độ **Lời bài hát** và **Hội thoại / Phim**. Các bản cũ có thể chưa có đầy đủ tính năng bên dưới.
