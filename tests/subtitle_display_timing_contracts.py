@@ -9,6 +9,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def before_display_timing_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.dialogue_mode_contracts import before_dialogue_mode_changes
+    current = before_dialogue_mode_changes(relative, current=current, raw=True)
+    from tests.subtitle_display_tail_contracts import before_display_tail_changes
+    current = before_display_tail_changes(relative, current=current, raw=True)
     source = current.decode('utf-8-sig').replace('\r\n', '\n')
     manifest = json.loads((ROOT / 'tests/fixtures/subtitle_display_timing.json').read_text(encoding='utf-8'))
     if relative in manifest:

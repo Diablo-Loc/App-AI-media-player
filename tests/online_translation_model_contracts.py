@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def before_online_translation_model_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.dialogue_mode_contracts import before_dialogue_mode_changes
+    current = before_dialogue_mode_changes(relative, current=current, raw=True)
     from tests.genius_client_compat_contracts import before_genius_client_compat_changes
     current = before_genius_client_compat_changes(relative, current=current, raw=True)
     manifest = json.loads(

@@ -203,12 +203,16 @@ def ask_ai_for_clean_title(raw_title, key):
         print(f"⚠️ Lỗi AI Clean: {e}")
         return raw_title
     
-def translate_online_pipeline(subs, provider, key, song_title_raw=None):   
+def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_mode=None):
     if not subs or not key or not key.strip(): 
         return None
     
     # --- BƯỚC 1: GENIUS REFERENCE ASSIST CÓ KIỂM CHỨNG ---
     settings = QSettings("MyStudio", "AI_Music_Player")
+    from pipeline.content_mode import resolve_content_mode, DIALOGUE
+    content_mode = resolve_content_mode(
+        settings.value("subtitle_content_mode", "lyrics") if content_mode is None else content_mode)
+    dialogue = content_mode == DIALOGUE
     # Đọc cấu hình bật/tắt từ Settings
     use_genius = settings.value("use_genius", "Tắt (Nhanh)") == "Bật (Chính xác cao)"
     genius_token = settings.value("genius_key", "").strip()
@@ -232,7 +236,7 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
     clean_title = clean_search_title(song_title_raw or "") or song_title_raw
 
     # --- CHỈ CHẠY NẾU USER BẬT GENIUS ---
-    if use_genius and genius_token and song_title_raw:
+    if not dialogue and use_genius and genius_token and song_title_raw:
         print("🔍 Đang tìm lời gốc từ Genius...")
         source_text = source_text_from_subs(subs)
         reference_lyric = fetch_lyric_genius(clean_title, genius_token, source_text=source_text)
@@ -259,6 +263,12 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None):
         lyric_translation_system_prompt,
         lyric_translation_user_content,
     )
+    if dialogue:
+        from translate.dialogue_translation import (
+            dialogue_translation_system_prompt, dialogue_translation_user_content,
+        )
+        lyric_translation_system_prompt = dialogue_translation_system_prompt
+        lyric_translation_user_content = dialogue_translation_user_content
     system_prompt = lyric_translation_system_prompt(
         song_title=clean_title or "",
         has_reference=bool(reference_by_id),

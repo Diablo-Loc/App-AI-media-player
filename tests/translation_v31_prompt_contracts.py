@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def before_translation_v31_prompt_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.dialogue_mode_contracts import before_dialogue_mode_changes
+    current = before_dialogue_mode_changes(relative, current=current, raw=True)
     manifest = json.loads(
         (ROOT / "docs/translation-v31-prompt/reviewed-sources.json").read_text(
             encoding="utf-8-sig"

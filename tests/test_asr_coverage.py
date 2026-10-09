@@ -616,7 +616,7 @@ class ProductionOrchestrationTests(unittest.TestCase):
                         for sub in result["segments"]]
             self.assertEqual(rows(old)[0][2:], rows(new)[0][2:])
             self.assertEqual(rows(old)[0][:2], (1, 4.6))
-            self.assertEqual(rows(new)[0][:2], (1.0, 4.7))
+            self.assertEqual(rows(new)[0][:2], (1.0, 4.6))
             self.assertTrue(getattr(new["segments"][0], "_botube_final_timing"))
             self.assertEqual(old.keys(), new.keys())
             for suffix in ("srt", "lrc"):
@@ -624,7 +624,7 @@ class ProductionOrchestrationTests(unittest.TestCase):
                 from pipeline.lyric_formatter import export_srt, export_lrc
                 expected = root / f"expected.{suffix}"
                 writer = export_srt if suffix == "srt" else export_lrc
-                writer([dict(start=1.0, end=4.7, text="A complete original line")], expected)
+                writer([dict(start=1.0, end=4.6, text="A complete original line")], expected)
                 self.assertEqual(expected.read_bytes(), (root / "new" / relative).read_bytes())
             old_constructor.assert_called_once()
             new_constructor.assert_called_once()

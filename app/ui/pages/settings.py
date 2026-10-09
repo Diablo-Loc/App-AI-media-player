@@ -7,6 +7,7 @@ from ..design_system import FORM_STYLE
 
 from download_core.download_source_app import ResourceDownloadDialog, check_resource_status
 from translate.translation_models import resolve_translation_model, translation_model_options
+from pipeline.content_mode import resolve_content_mode, DIALOGUE
 
 class SettingsPage(QWidget):
     settings_changed = Signal(dict)  # Tín hiệu phát ra khi cài đặt thay đổi, gửi dict mới
@@ -44,6 +45,13 @@ class SettingsPage(QWidget):
         
         self.combo_model = QComboBox()
         self.add_setting_row("Whisper Model:", self.combo_model, "Chọn độ chính xác (Càng lớn càng chậm nhưng chuẩn)")
+
+        self.combo_content_mode = QComboBox()
+        self.combo_content_mode.addItem("Lời bài hát", "lyrics")
+        self.combo_content_mode.addItem("Hội thoại / Phim", "dialogue")
+        self.add_setting_row("Loại nội dung:", self.combo_content_mode,
+                             "Áp dụng khi tạo hoặc dịch sub mới; sub đã lưu giữ nguyên.")
+        self.combo_content_mode.currentIndexChanged.connect(self._refresh_content_mode)
 
         self.combo_device = QComboBox()
         self.combo_device.addItems(["cuda", "cpu"])
@@ -182,6 +190,7 @@ class SettingsPage(QWidget):
     def save_settings(self):
         new_config = {
             "ai_model": self.combo_model.currentData(),
+            "subtitle_content_mode": self.combo_content_mode.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "translation_model": self.combo_translation_model.currentData() or "",
@@ -210,6 +219,9 @@ class SettingsPage(QWidget):
             if self.combo_model.itemData(i) == model:
                 self.combo_model.setCurrentIndex(i)
                 break
+        selected_mode = resolve_content_mode(self.settings.value("subtitle_content_mode", "lyrics"))
+        self.combo_content_mode.setCurrentIndex(self.combo_content_mode.findData(selected_mode))
+        self._refresh_content_mode()
         self.combo_device.setCurrentText(self.settings.value("device", "cpu"))
         self.combo_online_ai.setCurrentText(self.settings.value("online_provider", "Local Default"))
         self._refresh_translation_models(self.settings.value("translation_model", ""))
@@ -229,6 +241,8 @@ class SettingsPage(QWidget):
                 if self.combo_model.itemData(i) == "base":
                     self.combo_model.setCurrentIndex(i)
                     break
+            self.combo_content_mode.setCurrentIndex(0)
+            self._refresh_content_mode()
             self.combo_device.setCurrentText("cpu")
             self.combo_online_ai.setCurrentText("Local Default")
             self._refresh_translation_models("")
@@ -244,6 +258,7 @@ class SettingsPage(QWidget):
     def save_settings_silent(self):
         new_config = {
             "ai_model": self.combo_model.currentData(),
+            "subtitle_content_mode": self.combo_content_mode.currentData(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "translation_model": self.combo_translation_model.currentData() or "",
@@ -255,6 +270,14 @@ class SettingsPage(QWidget):
             self.settings.setValue(key, value)
         self.settings_changed.emit(new_config)
         
+    def _refresh_content_mode(self, *_):
+        # Keep the saved Genius preference for returning to music.
+        if hasattr(self, "combo_genius_mode"):
+            enabled = self.combo_content_mode.currentData() != DIALOGUE
+            self.combo_genius_mode.setEnabled(enabled)
+            self.genius_key_input.setEnabled(enabled)
+            self.combo_genius_mode.setToolTip("" if enabled else "Genius chỉ dùng cho lời bài hát.")
+
     def get_qss(self):
         return FORM_STYLE
 

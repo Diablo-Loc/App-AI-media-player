@@ -1,0 +1,158 @@
+{
+  "app/ai/pipeline.py": {
+    "before_sha256": "edd01bf6824b2a7420ac850c13e29c5ffc9d5762d38692a1906dab7fa08a0379",
+    "after_sha256": "0de27f902d873b0ad819dbb01704981890137f175ccefddfb946f3ca0df77727",
+    "allowed_older_sha256": [
+      "01923f084d1b3c831bfc63e4d02a626fde26c1c751374adee05e4cd76d30d467",
+      "06e0c0d034655f716b7d48104b60dfba7768308e1c244ce586e95dcba8f1bcda",
+      "0b4b12bd731c3f6e6b457d2c0e1d8b1bdf6b524691267d3d46dffe5976f26411",
+      "5ec20ab71c7f9335953c12ecb268b32c7660aa623039858d4c898825d8dede8b",
+      "71cce5a50787761b70c3aaba0cc1f0e2849ceae99474bdf44cd68654ed7f143e",
+      "7e5be6a1a74c26f9189952472a67632f3d8e28cf14e6c0807d9a0fa69aaa80c6",
+      "849e6b0bc76c1f1b6b180d987f7731b7b87d71cda706676e0dc1e2a4cc34fda0",
+      "a73b0455c1c5b3139ecc95850ad098c95b28764b4247332a3d29f319e28e218c",
+      "bb406497a8b9ce5dbf5b2830985d13dafc2cdea77ef3b3fd1518c57dd7515d9e",
+      "de11d28fb3b34075521ce43dbd8e22fe54cc47b3ba8ea8d43fdd03bc9b2f1772"
+    ],
+    "edits": [
+      {
+        "before": "",
+        "after": "    from pipeline.content_mode import resolve_content_mode, DIALOGUE\n    content_mode = resolve_content_mode(settings.value(\"subtitle_content_mode\", \"lyrics\"))\n    dialogue = content_mode == DIALOGUE\n",
+        "after_start": 105
+      },
+      {
+        "before": "            segments_generator, info = model.transcribe(\n                str(temp_wav_path),\n                language=None,\n                word_timestamps=True,\n                condition_on_previous_text=False,\n                beam_size=3,\n                temperature=0.0,   \n                vad_filter=False,  \n                vad_parameters=dict(min_silence_duration_ms=1000),\n                initial_prompt= prompt_text\n                #prompt_reset_on_temperature=0.5\n                #log_prob_threshold=None,      # Ép AI nhận diện ngay cả khi âm thanh mờ nhạt\n                #compression_ratio_threshold=2.4, # Cho phép nhạc dạo đầu lặp lại không bị coi là rác\n                #no_speech_threshold=0.4        # Chấp nhận tiếng người nhỏ hơn nhạc nền\n            )\n",
+        "after": "            if dialogue:\n                from pipeline.dialogue import transcription_options\n                segments_generator, info = model.transcribe(\n                    str(temp_wav_path), **transcription_options())\n            else:\n                segments_generator, info = model.transcribe(\n                    str(temp_wav_path),\n                    language=None,\n                    word_timestamps=True,\n                    condition_on_previous_text=False,\n                    beam_size=3,\n                    temperature=0.0,\n                    vad_filter=False,\n                    vad_parameters=dict(min_silence_duration_ms=1000),\n                    initial_prompt= prompt_text\n                    #prompt_reset_on_temperature=0.5\n                    #log_prob_threshold=None,      # Ép AI nhận diện ngay cả khi âm thanh mờ nhạt\n                    #compression_ratio_threshold=2.4, # Cho phép nhạc dạo đầu lặp lại không bị coi là rác\n                    #no_speech_threshold=0.4        # Chấp nhận tiếng người nhỏ hơn nhạc nền\n                )\n",
+        "after_start": 212
+      },
+      {
+        "before": "                segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())\n",
+        "after": "                if dialogue:\n                    from pipeline.dialogue import transcription_options\n                    segments_generator, fallback_info = model.transcribe(\n                        str(temp_wav_path), **transcription_options())\n                else:\n                    segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())\n",
+        "after_start": 247
+      },
+      {
+        "before": "        segments_list, detected_lang, intro_report = audit_primary_intro(\n            model,\n            temp_wav_path,\n            segments_list,\n            detected_lang,\n            language_probability,\n            cancel_cb=cancel_cb,\n        )\n",
+        "after": "        intro_report = {}\n        if not dialogue:\n            segments_list, detected_lang, intro_report = audit_primary_intro(\n                model,\n                temp_wav_path,\n                segments_list,\n                detected_lang,\n                language_probability,\n                cancel_cb=cancel_cb,\n            )\n",
+        "after_start": 262
+      },
+      {
+        "before": "            if s.words:\n",
+        "after": "            if dialogue:\n                processed_text = s.text.strip()\n            elif s.words:\n",
+        "after_start": 310
+      },
+      {
+        "before": "        final_segments = refine_lyrics(\n            raw_segments,\n            max_chars=22 if is_cjk else 74,\n            min_pause=0.54 if is_cjk else 0.6,\n            start_offset=-0.2 if is_cjk else 0,\n            end_padding=0.27 if is_cjk else 0.6,\n            gap_threshold=0.6,\n            memory_reset_t=3.0\n        )\n",
+        "after": "        if dialogue:\n            from pipeline.dialogue import refine_dialogue\n            final_segments = refine_dialogue(raw_segments, cjk=is_cjk)\n        else:\n            final_segments = refine_lyrics(\n                raw_segments,\n                max_chars=22 if is_cjk else 74,\n                min_pause=0.54 if is_cjk else 0.6,\n                start_offset=-0.2 if is_cjk else 0,\n                end_padding=0.27 if is_cjk else 0.6,\n                gap_threshold=0.6,\n                memory_reset_t=3.0\n            )\n",
+        "after_start": 342
+      },
+      {
+        "before": "            final_segments, coverage = repair_missing_subtitles(\n                model, temp_wav_path, detected_lang, final_segments,\n                dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,\n                     start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,\n                     gap_threshold=0.6, memory_reset_t=3.0),\n                cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,\n                boundary_gap=0.0, boundary_tolerance=0.08,\n                primary_segments=segments_list)\n            print(f\"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, \"\n                  f\"{len(coverage.get('attempts', []))} lượt nhận diện lại.\")\n            if coverage.get(\"unresolved_speech\"):\n                print(f\"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}\")\n            if coverage.get(\"error\"):\n                print(f\"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}\")\n            if coverage.get(\"verification_errors\"):\n                print(\n                    f\"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery \"\n                    \"vì lượt xác minh độc lập bị lỗi.\"\n                )\n            # Align only already accepted text, after all coverage decisions.\n            # The loaded local model stays owned by this worker; no new ASR or\n            # provider request, and unreliable candidates keep the old timing.\n            from pipeline.lyric_timing import align_lyric_onsets\n            _check_cancel(cancel_cb)\n            _report(progress_cb, 58, \"⏱ Căn mốc lời hát\")\n            final_segments, timing_report = align_lyric_onsets(\n                model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)\n            print(f\"⏱ Căn mốc local: {timing_report['changed']} câu, \"\n                  f\"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.\")\n            if timing_report[\"errors\"] or timing_report[\"capped\"]:\n                print(\"ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.\")\n",
+        "after": "            if not dialogue:\n                final_segments, coverage = repair_missing_subtitles(\n                    model, temp_wav_path, detected_lang, final_segments,\n                    dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,\n                         start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,\n                         gap_threshold=0.6, memory_reset_t=3.0),\n                    cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,\n                    boundary_gap=0.0, boundary_tolerance=0.08,\n                    primary_segments=segments_list)\n                print(f\"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, \"\n                      f\"{len(coverage.get('attempts', []))} lượt nhận diện lại.\")\n                if coverage.get(\"unresolved_speech\"):\n                    print(f\"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}\")\n                if coverage.get(\"error\"):\n                    print(f\"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}\")\n                if coverage.get(\"verification_errors\"):\n                    print(\n                        f\"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery \"\n                        \"vì lượt xác minh độc lập bị lỗi.\"\n                    )\n                # Align only already accepted text, after all coverage decisions.\n                # The loaded local model stays owned by this worker; no new ASR or\n                # provider request, and unreliable candidates keep the old timing.\n                from pipeline.lyric_timing import align_lyric_onsets\n                _check_cancel(cancel_cb)\n                _report(progress_cb, 58, \"⏱ Căn mốc lời hát\")\n                final_segments, timing_report = align_lyric_onsets(\n                    model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)\n                print(f\"⏱ Căn mốc local: {timing_report['changed']} câu, \"\n                      f\"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.\")\n                if timing_report[\"errors\"] or timing_report[\"capped\"]:\n                    print(\"ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.\")\n",
+        "after_start": 358
+      },
+      {
+        "before": "        final_segments = finalize_display_times(\n            final_segments, cjk=is_cjk, duration=coverage.get(\"duration\"))\n",
+        "after": "        if not dialogue:\n            final_segments = finalize_display_times(\n                final_segments, cjk=is_cjk, duration=coverage.get(\"duration\"))\n",
+        "after_start": 403
+      },
+      {
+        "before": "                        song_title_raw=song_title_raw\n",
+        "after": "                        song_title_raw=song_title_raw,\n                        content_mode=content_mode\n",
+        "after_start": 453
+      }
+    ]
+  },
+  "app/ui/pages/settings.py": {
+    "before_sha256": "15d919c0a359eca4a90820542097ee4a9c75c781ef6b10acede256c3d5ce9493",
+    "after_sha256": "0f27720e802c71930a45da9724cad6aedd7ed66d47182ae98fcf76bb9ee2ba5c",
+    "allowed_older_sha256": [
+      "1169788c9ad6691d1c7b0e02d728691feca6e6713f579bdf113d16eab277edc0",
+      "15d919c0a359eca4a90820542097ee4a9c75c781ef6b10acede256c3d5ce9493",
+      "401ce3b1130b6fda7067373a310d4cfe098087f9cea9fababa79d8894c0cec4f"
+    ],
+    "edits": [
+      {
+        "before": "",
+        "after": "from pipeline.content_mode import resolve_content_mode, DIALOGUE\n",
+        "after_start": 9
+      },
+      {
+        "before": "",
+        "after": "\n        self.combo_content_mode = QComboBox()\n        self.combo_content_mode.addItem(\"Lời bài hát\", \"lyrics\")\n        self.combo_content_mode.addItem(\"Hội thoại / Phim\", \"dialogue\")\n        self.add_setting_row(\"Loại nội dung:\", self.combo_content_mode,\n                             \"Áp dụng khi tạo hoặc dịch sub mới; sub đã lưu giữ nguyên.\")\n        self.combo_content_mode.currentIndexChanged.connect(self._refresh_content_mode)\n",
+        "after_start": 47
+      },
+      {
+        "before": "",
+        "after": "            \"subtitle_content_mode\": self.combo_content_mode.currentData(),\n",
+        "after_start": 192
+      },
+      {
+        "before": "",
+        "after": "        selected_mode = resolve_content_mode(self.settings.value(\"subtitle_content_mode\", \"lyrics\"))\n        self.combo_content_mode.setCurrentIndex(self.combo_content_mode.findData(selected_mode))\n        self._refresh_content_mode()\n",
+        "after_start": 221
+      },
+      {
+        "before": "",
+        "after": "            self.combo_content_mode.setCurrentIndex(0)\n            self._refresh_content_mode()\n",
+        "after_start": 243
+      },
+      {
+        "before": "",
+        "after": "            \"subtitle_content_mode\": self.combo_content_mode.currentData(),\n",
+        "after_start": 260
+      },
+      {
+        "before": "",
+        "after": "    def _refresh_content_mode(self, *_):\n        # Keep the saved Genius preference for returning to music.\n        if hasattr(self, \"combo_genius_mode\"):\n            enabled = self.combo_content_mode.currentData() != DIALOGUE\n            self.combo_genius_mode.setEnabled(enabled)\n            self.genius_key_input.setEnabled(enabled)\n            self.combo_genius_mode.setToolTip(\"\" if enabled else \"Genius chỉ dùng cho lời bài hát.\")\n\n",
+        "after_start": 272
+      }
+    ]
+  },
+  "app/translate/online_logic.py": {
+    "before_sha256": "94a67e0aa0381ee07713e41056fdce698b804b69a097f3a3afed68e3280e8b74",
+    "after_sha256": "51f5813f8fe8996eec67b3a068bf5a02bcfeb6cf71a2b60e3b01fe78b1a6d671",
+    "allowed_older_sha256": [
+      "19fd777f63b0e91676f42bbaad5fe7269ac34dca08ee64907aab2a1c57da259a",
+      "1f2346864ccccaf26f80680e276f4c510f0a450b8c7c87e5b267fad98de02338",
+      "208c5458512a6501f95df41d862bb40085316caf36d55ed1c7f396a77eac9016",
+      "2546f4bb892959438d00cbe4caf7afda08241c09dc54512202f793da7a18f343",
+      "3e0dd1776bbfd65527d6acce46734dacd8d98f914ab9c8e32836cc49016eda0f",
+      "49f2fd1a3685f0ffc58a9452d474c37bd7664b411f83104ea5a17f5125a346d0",
+      "57c3642692fbd27c0cef064f487570031a58e8f8b71d22787683ec48ad123f19",
+      "585ab8ae5eab528df24105f0dd92560b89624a444fa58dca78a4d58621accbec",
+      "619730fdd58edd2b70d719a9c6c0fdafeb3f67e5fd2dfd1e1fb0d26ae1cfe848",
+      "6263e9621eeec5c2f1780cdc230ddcf2892f9cb51124ae4fd0d9de53208c0557",
+      "7da8c84132d11660e61f33b2b16dc07be2ad9cec1c3c1d1e5152f397155604b3",
+      "8a337d7ef7ec278dcbfec4a465b443501a7404abed3c01f3b069dcb21d1efa0c",
+      "94a67e0aa0381ee07713e41056fdce698b804b69a097f3a3afed68e3280e8b74",
+      "b3a43bebf727704626ba35a38cc1d8c7e5f0e8d28903381d13f6990552c82d33",
+      "c77eb5e2e75468c5c8011628d4d73957237b2cbf0906f8e8fb39dba775756fbe",
+      "cc55f1ea70f639c5f77acc5870b6bc1185ea1acb2c7da3ae4cf86be7f24edbbc",
+      "d78df9f590d75c0691c104d12d88e740602de592d41d0629aeebaab4ba2164ae",
+      "e19555ecb231505d04d387f614d13d53002ea0aef1bef0c73280faa827b0ddbb",
+      "f34751a685a830eb492f8febbb4746b41c3e2ecb242baf3f8a5e80f1ba5961b4"
+    ],
+    "edits": [
+      {
+        "before": "def translate_online_pipeline(subs, provider, key, song_title_raw=None):   \n",
+        "after": "def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_mode=None):\n",
+        "after_start": 205
+      },
+      {
+        "before": "",
+        "after": "    from pipeline.content_mode import resolve_content_mode, DIALOGUE\n    content_mode = resolve_content_mode(\n        settings.value(\"subtitle_content_mode\", \"lyrics\") if content_mode is None else content_mode)\n    dialogue = content_mode == DIALOGUE\n",
+        "after_start": 211
+      },
+      {
+        "before": "    if use_genius and genius_token and song_title_raw:\n",
+        "after": "    if not dialogue and use_genius and genius_token and song_title_raw:\n",
+        "after_start": 238
+      },
+      {
+        "before": "",
+        "after": "    if dialogue:\n        from translate.dialogue_translation import (\n            dialogue_translation_system_prompt, dialogue_translation_user_content,\n        )\n        lyric_translation_system_prompt = dialogue_translation_system_prompt\n        lyric_translation_user_content = dialogue_translation_user_content\n",
+        "after_start": 265
+      }
+    ]
+  }
+}

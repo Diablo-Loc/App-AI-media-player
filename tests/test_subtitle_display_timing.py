@@ -28,13 +28,13 @@ class DisplayTimingTests(unittest.TestCase):
         with self.assertRaises(AssertionError):
             before_display_timing_changes(relative, current=changed)
 
-    def test_v31_cjk_onset_and_tail_are_applied_once_to_new_generation(self):
+    def test_cjk_onset_and_reduced_tail_are_applied_once_to_new_generation(self):
         raw = [dict(start=10, end=12, text='君の声', words=[
             dict(start=10, end=11, word='君の'), dict(start=11, end=12, word='声')])]
         acoustic = refine_lyrics(raw)
         before = copy.deepcopy(acoustic)
         display = finalize_display_times(acoustic, cjk=True)
-        self.assertEqual(display, [dict(start=10.1, end=12.37, text='君の声')])
+        self.assertEqual(display, [dict(start=10.1, end=12.27, text='君の声')])
         self.assertEqual(acoustic, before)
         subs = refined_to_subtitles(display, lang='ja')
         mark_final_timing(subs)
@@ -42,13 +42,13 @@ class DisplayTimingTests(unittest.TestCase):
             manager = SubtitleManager(folder)
             self.assertTrue(manager.save_segments('new-song', subs))
             saved = manager.get_raw_data('new-song')['segments'][0]
-            self.assertEqual((saved['start'], saved['end']), (10.1, 12.37))
+            self.assertEqual((saved['start'], saved['end']), (10.1, 12.27))
             self.assertEqual(saved['jp'], '君の声')
 
-    def test_latin_onset_never_anticipates_word_and_tail_matches_v31_saved_tail(self):
+    def test_latin_onset_never_anticipates_word_and_tail_is_100ms_shorter(self):
         cues = refine_lyrics([dict(start=1, end=4, text='Stay with me.', words=[])])
         self.assertEqual(finalize_display_times(cues), [
-            dict(start=1, end=4.7, text='Stay with me.')])
+            dict(start=1, end=4.6, text='Stay with me.')])
 
     def test_close_cues_keep_incoming_onset_and_clip_only_outgoing_tail(self):
         raw = [dict(start=1, end=3, text='First line.', words=[]),
@@ -109,7 +109,7 @@ class DisplayTimingTests(unittest.TestCase):
             layer._subtitle_effects.configure(dict(enabled=enabled, trail='shuriken', erase_passed=True))
             for ms, text in ((1099, None), (1100, 'First line.'),
                              (3099, 'First line.'), (3100, 'Second line.'),
-                             (5370, 'Second line.'), (5371, None),
+                             (5270, 'Second line.'), (5271, None),
                              (8000, None), (8100, 'Third line.'),
                              (2000, 'First line.'), (6000, None)):
                 layer.update_position(ms)

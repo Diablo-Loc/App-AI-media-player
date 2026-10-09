@@ -222,14 +222,15 @@ def finalize_display_times(cues, cjk=False, duration=None):
     """Apply playback margins once, after recognition and coverage are complete.
 
     Coverage keeps the existing narrow word margins. Playback restores v3.1's
-    CJK onset (+100 ms from the word) and saved tails (370/700 ms). Latin cues
+    CJK onset (+100 ms from the word), with saved tails 100 ms shorter
+    (270/600 ms). Latin cues
     start at their word onset instead of adding the old early storage padding.
     Only the outgoing tail is clipped at the next cue; no padded midpoint moves
     that cue's onset. Very short cues retain room for their original text.
     """
     cues = finalize_cue_times(cues, duration=duration)
     onset_shift = ONSET_LEAD + (0.1 if cjk else 0.0)
-    tail_shift = (0.37 if cjk else 0.7) - OFFSET_TAIL
+    tail_shift = (0.27 if cjk else 0.6) - OFFSET_TAIL
     output = []
     for cue in cues:
         start = min(cue["start"] + onset_shift,
