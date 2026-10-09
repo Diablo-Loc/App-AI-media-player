@@ -1,0 +1,97 @@
+--- before/app/core/audio_effects.py
++++ after/app/core/audio_effects.py
+@@ -201,7 +201,8 @@
+         raise RuntimeError('Không đủ dung lượng cache; giữ âm thanh gốc.')
+     progress('Đang đo độ lớn và đỉnh âm thanh…')
+     sample_rate = int(audio.get('sample_rate', 48000))
+-    eq = tone_filter(profile, sample_rate)
++    channels = int(audio.get('channels', 2))
++    eq = tone_filter(profile, sample_rate, channels)
+     analysis = ','.join(part for part in (eq, 'loudnorm=I=-18:TP=-1.5:LRA=50:print_format=json') if part)
+     _, stderr = run_tool([ffmpeg, '-nostdin', '-hide_banner', '-threads', '1', '-filter_threads', '1',
+                          '-i', signature['path'], '-map', f'0:a:{track}', '-vn', '-sn', '-dn',
+@@ -229,7 +230,7 @@
+         run_tool([ffmpeg, '-nostdin', '-hide_banner', '-loglevel', 'error', '-threads', '1',
+                   '-filter_threads', '1', '-i', signature['path'], '-map', '0', '-map_metadata', '0',
+                   '-map_chapters', '0', '-c', 'copy', f'-c:a:{track}', 'flac', f'-filter:a:{track}',
+-                  render_filter(profile, decision, sample_rate), f'-sample_fmt:a:{track}', 's32',
++                  render_filter(profile, decision, sample_rate, channels), f'-sample_fmt:a:{track}', 's32',
+                   f'-threads:a:{track}', '1', '-compression_level', '5', '-f', 'matroska', str(partial)], processes, cancelled)
+         if cancelled():
+             raise AudioPreparationCancelled()
+--- before/app/core/audio_profile.py
++++ after/app/core/audio_profile.py
+@@ -11,6 +11,11 @@
+     'off': '',
+     'gentle': 'equalizer=f=3200:t=q:w=0.8:g=-2.5,treble=f=8000:g=-1.5',
+     'balanced': 'equalizer=f=3500:t=q:w=1:g=-1.2,treble=f=10000:g=-0.7',
++    # Conservative cut-only voicing. Existing profiles/version/keys stay frozen.
++    'warm': 'equalizer=f=280:t=q:w=0.7:g=-0.7:r=f64,'
++            'equalizer=f=3200:t=q:w=0.8:g=-1.5:r=f64,treble=f=8500:g=-0.8:r=f64',
++    'headphones': 'equalizer=f=280:t=q:w=0.7:g=-0.7:r=f64,'
++                  'equalizer=f=3200:t=q:w=0.8:g=-1.5:r=f64,treble=f=8500:g=-0.8:r=f64',
+ }
+ 
+ 
+@@ -68,11 +73,15 @@
+     return GainDecision(round(gain, 4), loudness, peak, gain < desired - 0.001)
+ 
+ 
+-def tone_filter(profile, sample_rate=48000):
++def tone_filter(profile, sample_rate=48000, channels=2):
+     ceiling = max(1, float(sample_rate) * 0.45)
+-    return re.sub(r'(?<=f=)\d+', lambda match: str(int(min(int(match[0]), ceiling))), TONES[profile.tone])
++    filters = re.sub(r'(?<=f=)\d+', lambda match: str(int(min(int(match[0]), ceiling))), TONES[profile.tone])
++    if profile.tone == 'headphones' and channels == 2 and sample_rate >= 8000:
++        # No reverse-IIR block delay, resampling, widening or artificial reverb.
++        filters += ',crossfeed=strength=0.08:range=0.25:slope=0.5:level_in=1:level_out=1:block_size=0'
++    return filters
+ 
+ 
+-def render_filter(profile, decision, sample_rate=48000):
+-    parts = [tone_filter(profile, sample_rate), f'volume={decision.gain_db:.4f}dB']
++def render_filter(profile, decision, sample_rate=48000, channels=2):
++    parts = [tone_filter(profile, sample_rate, channels), f'volume={decision.gain_db:.4f}dB']
+     return ','.join(part for part in parts if part)
+--- before/app/ui/audio_effects_panel.py
++++ after/app/ui/audio_effects_panel.py
+@@ -46,10 +46,18 @@
+         self.level.setEnabled(False)
+         self.level.currentIndexChanged.connect(lambda _: self.level_changed.emit(self.level.currentData()))
+         layout.addWidget(self.level)
+-        layout.addWidget(QLabel('EQ tùy chọn'))
++        layout.addWidget(QLabel('Chất âm tùy chọn'))
+         self.tone = QComboBox()
+-        for text, key in (('Nguyên bản', 'off'), ('Dịu — giảm chói', 'gentle'), ('Cân bằng nhẹ', 'balanced')):
++        for text, key in (('Nguyên bản', 'off'), ('Dịu — giảm chói', 'gentle'), ('Cân bằng nhẹ', 'balanced'),
++                          ('Ấm — nghe lâu', 'warm'), ('Tai nghe — tự nhiên', 'headphones')):
+             self.tone.addItem(text, key)
++        self.tone.setItemData(self.tone.findData('warm'),
++            'Giảm nhẹ vùng đục và chói, giữ bass và độ động. Không phục hồi chi tiết codec đã mất.', Qt.ItemDataRole.ToolTipRole)
++        self.tone.setItemData(self.tone.findData('headphones'),
++            'EQ ấm và crossfeed nhẹ cho tai nghe stereo: bớt tách cứng hai bên; không thêm vang. '
++            'Nguồn mono/nhiều kênh chỉ dùng EQ, không đổi số kênh.', Qt.ItemDataRole.ToolTipRole)
++        self.tone.setToolTip('Thử Ấm để nghe dịu hơn; Tai nghe thêm crossfeed nhẹ cho stereo. '
++                             'Hiệu quả tùy bản thu và tai nghe; chọn Nguyên bản để bỏ xử lý.')
+         self.tone.setMinimumHeight(36)
+         layout.addWidget(self.tone)
+         self.prefetch_next = QCheckBox('Chuẩn bị trước bài kế tiếp')
+--- before/tests/test_audio_realtime.py
++++ after/tests/test_audio_realtime.py
+@@ -381,6 +381,7 @@
+ 
+ class SourceScopeTests(unittest.TestCase):
+     def test_prior_gates_remain_frozen_and_only_reviewed_scope_changed(self):
++        from tests.audio_listening_contracts import before_listening_changes
+         manifest = json.loads((ROOT / 'docs/audio-realtime/reviewed-sources.json').read_text())
+         expected_main = {'MainWindow.show_volume_popup', 'MainWindow.update_volume_from_popup', 'MainWindow.adjust_volume'}
+         self.assertEqual(set(manifest['app/ui/main_window.py']['changed_functions']), expected_main)
+@@ -390,7 +391,7 @@
+         changed = {'app/control/audio_effects.py', 'app/ui/audio_effects_panel.py', 'app/ui/main_window.py'}
+         for path, digest in original.items():
+             if path not in changed:
+-                self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest, path)
++                self.assertEqual(hashlib.sha256(before_listening_changes(path, raw=True)).hexdigest(), digest, path)
+             before_realtime_changes(path)
+         for path, digest in json.loads((ROOT / 'docs/audio-realtime/new-source-hashes.json').read_text()).items():
+             self.assertEqual(hashlib.sha256((ROOT / path).read_bytes()).hexdigest(), digest)

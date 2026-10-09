@@ -1,0 +1,28 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:56.542
+INFO:faster_whisper:Detected language 'ja' with probability 0.98
+📡 Ngôn ngữ phát hiện: ja (98.4%)
+50 🧹 Làm sạch dữ liệu (ja)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 80.3–92.3s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 90.3–102.3s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 141.9–153.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 189.3–201.3s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 220.7–232.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 83.5–91.7s
+INFO:faster_whisper:Processing audio with duration 00:08.256
+57 🛠 Kiểm tra lời bị thiếu: 227.3–232.6s
+INFO:faster_whisper:Processing audio with duration 00:05.312
+🛠 Kiểm tra coverage: thêm 5 dòng, 7 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(88.87, 89.744), (93.424, 94.47), (143.92, 145.04), (222.7, 225.04), (229.296, 230.608)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 189.0–200.5s
+INFO:faster_whisper:Processing audio with duration 00:11.490

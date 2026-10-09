@@ -1,0 +1,85 @@
+{
+  "production_python_unchanged": 122,
+  "initial_data_count": 819,
+  "final_data_count": 821,
+  "unchanged_initial_files": 812,
+  "existing_subtitle_output_media_unchanged": 49,
+  "data_changes": [
+    {
+      "path": "storage/audio-playback-cache/48f3a1061960506ea6e82e1648813667e896bce7f906b6fbd95b5669d87491b3.json",
+      "before": null,
+      "after": "8c07ac66fb8ade6ffa216a1b69750ce8d7a2ac463ad10239444c8bc66b49b721"
+    },
+    {
+      "path": "storage/audio-playback-cache/48f3a1061960506ea6e82e1648813667e896bce7f906b6fbd95b5669d87491b3.mkv",
+      "before": null,
+      "after": "c131fadfd04d2c4fcd11a98c4423dbd46b2eff043ed52c275dfe18ec7c427650"
+    },
+    {
+      "path": "storage/audio-playback-cache/56e6d7bf7452a9d91bacf325a1e9fddedb3c9851f76d1c47641e036918c5d847.json",
+      "before": null,
+      "after": "12ccde1a1f7f22fb115e34d01e663b7577c6f841baf508ed834e26dc779136cb"
+    },
+    {
+      "path": "storage/audio-playback-cache/56e6d7bf7452a9d91bacf325a1e9fddedb3c9851f76d1c47641e036918c5d847.mkv",
+      "before": null,
+      "after": "4d30e365d42e4465cd51a8d161f2ab02cf619d1a9a3008de5eb4762f310c45c9"
+    },
+    {
+      "path": "storage/audio-playback-cache/6f9fd42a6d0da998cac186a7d447dc15db0444cfd453818c8437ca379f4a625e.json",
+      "before": "59ede470befc16b1f499d7d33ff4da16cdaa7a5e18428e3eda859d22f3a8040b",
+      "after": null
+    },
+    {
+      "path": "storage/audio-playback-cache/6f9fd42a6d0da998cac186a7d447dc15db0444cfd453818c8437ca379f4a625e.mkv",
+      "before": "97b42b7687f5ef4484c0beaa4cf8bd00d90d0c99419182d77530e183bee19282",
+      "after": null
+    },
+    {
+      "path": "storage/audio-playback-cache/755ad0fef1db0930258161307dd218fbff213274c5d713bc066e3cd253175da5.json",
+      "before": "2e97ee4b4ec44657bcb29aade792da910703494712da627a9cedef4449cc1222",
+      "after": null
+    },
+    {
+      "path": "storage/audio-playback-cache/755ad0fef1db0930258161307dd218fbff213274c5d713bc066e3cd253175da5.mkv",
+      "before": "67b9f3f90a1e4898ddf48f58fe1e6b2da6b4da4083e714e9509ce0a6f85d7222",
+      "after": null
+    },
+    {
+      "path": "storage/audio-playback-cache/798defd1da2606f2729592e2c6e0bf5bb2df04fc4a2b0df05b14e9a9378f57e7.json",
+      "before": "0a894c66f5600620e746ebcca30d79e1eafac3eecf8dbbc5416cf5b31a382ab2",
+      "after": null
+    },
+    {
+      "path": "storage/audio-playback-cache/798defd1da2606f2729592e2c6e0bf5bb2df04fc4a2b0df05b14e9a9378f57e7.mkv",
+      "before": "9400960620eca68b726f085e255a8924d549de50a96fc53249c258f4ce523ac4",
+      "after": null
+    },
+    {
+      "path": "storage/subtitles/ass/81c97809136fd2624d19a854adb8b728.ass",
+      "before": null,
+      "after": "76f16efdf4cbaada6736d9c27231d537fd225741ed6951a2b02b92cc421723e8"
+    },
+    {
+      "path": "storage/subtitles/json/81c97809136fd2624d19a854adb8b728.json",
+      "before": null,
+      "after": "d26ddef1dd0530801d7817faa3355223120078932d969ef7106b51fb557956fa"
+    },
+    {
+      "path": "storage/subtitles/media_index.json",
+      "before": "dc39b0d061857f8311745bba587b3cb20d6823208cc426c83b5b2b775a30b45a",
+      "after": "76e1373bc9a416e61f92769a58de9fadb1c55ea08462c8f57bfa6fcfe98a2496"
+    },
+    {
+      "path": "storage/subtitles/source/lrc/夏空メドレー-Tell Your World × ただ風を追いかけて - 初音ミク＆ロビン【崩壊-スターレイル】.lrc",
+      "before": null,
+      "after": "caa76d44a77b7dea4388ffb2286be8367be6c78633d3d3ad7028897d2b4b047a"
+    },
+    {
+      "path": "storage/subtitles/source/srt/夏空メドレー-Tell Your World × ただ風を追いかけて - 初音ミク＆ロビン【崩壊-スターレイル】.srt",
+      "before": null,
+      "after": "12c83c7e6f9c9c5d0ec46537357145d1c0159967490118a268784192b03c0534"
+    }
+  ],
+  "origin_of_concurrent_data_changes": "not established; audit probes do not run AI/audio workers or write this storage"
+}

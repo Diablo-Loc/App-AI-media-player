@@ -1,0 +1,43 @@
+[
+  {
+    "id": 1,
+    "start": 0.0,
+    "end": 1.82,
+    "text": "詞曲 李宗盛",
+    "avg_logprob": -0.4794921775658925,
+    "no_speech_prob": 0.68994140625,
+    "compression_ratio": 0.64,
+    "words": [
+      {
+        "start": 0.0,
+        "end": 0.62,
+        "word": "詞",
+        "probability": 0.4993324279785156
+      },
+      {
+        "start": 0.62,
+        "end": 1.44,
+        "word": "曲",
+        "probability": 0.431396484375
+      },
+      {
+        "start": 1.44,
+        "end": 1.78,
+        "word": " 李",
+        "probability": 0.65673828125
+      },
+      {
+        "start": 1.78,
+        "end": 1.82,
+        "word": "宗",
+        "probability": 0.781494140625
+      },
+      {
+        "start": 1.82,
+        "end": 1.82,
+        "word": "盛",
+        "probability": 0.9990234375
+      }
+    ]
+  }
+]

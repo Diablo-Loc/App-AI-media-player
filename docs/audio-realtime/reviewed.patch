@@ -1,0 +1,379 @@
+--- before/app/control/audio_effects.py
++++ after/app/control/audio_effects.py
+@@ -7,7 +7,9 @@
+ 
+ from core.audio_profile import AudioProfile
+ from core.audio_effects import AudioPlaybackCache, AudioPreparationCancelled, prepare_audio
++from core.audio_loudness import LoudnessCache, measure_loudness, native_gain, valid_measurement, DEFAULT_TARGET, TARGETS
+ from core.subtitle_persistence import atomic_bytes
++from control.audio_volume import AudioVolumeControl
+ from control.worker_lifecycle import OwnedProcesses
+ from ui.audio_effects_panel import AudioEffectsPanel
+ from ui.icons import button_icon, TEXT, ACCENT
+@@ -41,16 +43,39 @@
+         self.processes.stop()
+ 
+ 
++class LoudnessMeasurementWorker(AudioPreparationWorker):
++    def run(self):
++        try:
++            self.result = measure_loudness(self.source, self.track, self.cache, self.processes,
++                                          self.isInterruptionRequested, self.progress.emit)
++        except AudioPreparationCancelled:
++            pass
++        except Exception as error:
++            self.error = str(error)
++        finally:
++            self.processes.stop()
++            self.processes.wait()
++
++
+ class AudioEffectsController(QObject):
+     def __init__(self, window, root):
+         super().__init__(window)
+         self.window = window
+         self.player = window.media_player.player
+         self.cache = AudioPlaybackCache(Path(root) / 'audio-playback-cache')
++        self.loudness_cache = LoudnessCache(Path(root) / 'audio-loudness-cache', self.cache.root)
+         self.settings_path = Path(root) / 'audio-effects.json'
++        self.target_lufs = DEFAULT_TARGET
+         self.profile = self._load_profile()
++        self._measurement = None
++        self._applied_tone = 'off'
++        self._tone_gain = 0.0
++        self.volume_control = AudioVolumeControl(window.audio_output, self)
++        self.volume_control.user_changed.connect(lambda value: self._apply_normalization(ramp=False))
+         self.panel = AudioEffectsPanel(window)
+         self.panel.set_profile(self.profile.normalize, self.profile.tone)
++        self.panel.set_target(self.target_lufs)
++        self.panel.level_changed.connect(self.set_target)
+         self.worker = None
+         self._pending = False
+         self._generation = 0
+@@ -87,9 +112,47 @@
+ 
+     def _load_profile(self):
+         try:
+-            return AudioProfile.from_dict(json.loads(self.settings_path.read_text(encoding='utf-8')))
++            data = json.loads(self.settings_path.read_text(encoding='utf-8'))
++            if isinstance(data, dict) and data.get('target_lufs') in TARGETS:
++                self.target_lufs = int(data['target_lufs'])
++            return AudioProfile.from_dict(data)
+         except (OSError, ValueError):
+             return AudioProfile()
++
++    def volume(self):
++        return self.volume_control.volume()
++
++    def set_volume(self, value):
++        self.volume_control.set_volume(value)
++
++    def _save_profile(self):
++        data = dict(self.profile.as_dict(), target_lufs=self.target_lufs)
++        try:
++            atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
++        except OSError:
++            self.panel.set_status('Đã đổi cho phiên này; chưa lưu được tùy chọn.')
++
++    def set_target(self, target):
++        if self._closed or target not in TARGETS:
++            return
++        self.target_lufs = target
++        self.panel.set_target(target)
++        self._save_profile()
++        self._apply_normalization()
++
++    def _apply_normalization(self, ramp=True):
++        if self._closed:
++            return
++        if not self.profile.normalize or self._measurement is None:
++            self.volume_control.set_gain(0.0, ramp)
++            return
++        level, peak = self._measurement['lufs'], self._measurement['peak_db']
++        if level is not None:
++            level, peak = level + self._tone_gain, peak + self._tone_gain
++        decision = native_gain(level, peak, self.target_lufs, self.volume())
++        self.volume_control.set_gain(decision.gain_db, ramp)
++        suffix = ' · Giới hạn đầu ra: một số bài có thể chưa đạt độ lớn mục tiêu' if decision.limited else ''
++        self.panel.set_status(f'Cân bằng trực tiếp · {self.target_lufs} LUFS{suffix}')
+ 
+     @property
+     def switching(self):
+@@ -122,15 +185,25 @@
+         profile = AudioProfile.from_dict({'normalize': normalize, 'tone': tone})
+         if profile == self.profile:
+             return
++        old_tone = self.profile.tone
+         self.profile = profile
+         self._failed_request = None
+         self.panel.set_profile(profile.normalize, profile.tone)
+-        try:
+-            atomic_bytes(self.settings_path, json.dumps(profile.as_dict()).encode('utf-8'))
+-        except OSError:
+-            self.panel.set_status('Đã đổi cho phiên này; chưa lưu được tùy chọn.')
++        self._save_profile()
+         self._update_button()
++        self._apply_normalization()
++        if old_tone == profile.tone and self._measurement is not None:
++            if not profile.normalize:
++                self.panel.set_status('Đang dùng âm thanh gốc' if profile.tone == 'off' else 'Đang dùng EQ đã chọn')
++            return
++        if old_tone != profile.tone:
++            self._measurement = None
++            self._apply_normalization()
+         self._queue_latest()
++        if profile.tone == 'off' and self._applied_tone != 'off':
++            self._applied_tone = 'off'
++            self._tone_gain = 0.0
++            self._switch(self._original)
+         if not profile.enabled:
+             self._request_timer.stop()
+             self._applied_key = None
+@@ -156,7 +229,15 @@
+         self._applied_key = None
+         self._failed_request = None
+         self._track = 0
++        self._measurement = None
++        self._applied_tone = 'off'
++        self._tone_gain = 0.0
++        self._apply_normalization(ramp=False)
+         self._queue_latest()
++        if self.profile.enabled:
++            # A cached measurement can apply as the new file starts. Keep
++            # analysis off the GUI thread and let rapid source edits supersede it.
++            self._request_timer.start(0)
+ 
+     def _tracks_changed(self):
+         if self._closed or self._internal or self._transition:
+@@ -164,6 +245,8 @@
+         track = self.player.activeAudioTrack()
+         if track >= 0 and track != self._track:
+             self._track = track
++            self._measurement = None
++            self._apply_normalization(ramp=False)
+             self._queue_latest()
+ 
+     def _prepare(self):
+@@ -183,7 +266,12 @@
+             return
+         self.panel.set_status('Chuẩn bị nền; bài vẫn đang phát âm thanh hiện tại…', busy=True)
+         protected = (self.player.source().toLocalFile(),)
+-        worker = AudioPreparationWorker(*request, self.cache, protected, self)
++        if self.profile.tone == 'off':
++            worker = LoudnessMeasurementWorker(*request, self.loudness_cache, protected, self)
++        else:
++            worker = AudioPreparationWorker(request[0], AudioProfile(False, self.profile.tone), self._track,
++                                            self.cache, protected, self)
++        worker.requested_profile = self.profile
+         worker.generation = self._generation
+         self.worker = worker
+         worker.progress.connect(self._progress)
+@@ -204,13 +292,33 @@
+             return
+         current = worker.generation == self._generation and not worker.isInterruptionRequested()
+         if current and worker.result:
+-            self._applied_key = worker.result['record']['key']
+-            self._switch(QUrl.fromLocalFile(worker.result['path']))
+-            gain = worker.result['record']['gain']
+-            suffix = ' · Giữ đỉnh an toàn, độ lớn chưa tới mục tiêu' if gain['peak_limited'] else ''
+-            self.panel.set_status(f"Đã sẵn sàng · Gain {gain['gain_db']:+.1f} dB{suffix}")
++            try:
++                if 'measurement' in worker.result:
++                    measured = worker.result['measurement']
++                else:
++                    gain = worker.result['record']['gain']
++                    measured = {'lufs': gain['input_lufs'], 'peak_db': gain['input_peak_db'],
++                                'silent': gain['input_lufs'] is None and gain['input_peak_db'] is None}
++                if not valid_measurement(measured):
++                    raise ValueError()
++            except (KeyError, TypeError, ValueError):
++                worker.result = None
++                worker.error = 'Số đo trong cache chưa hợp lệ; giữ âm thanh hiện tại.'
++        if current and worker.result:
++            if 'measurement' in worker.result:
++                self._measurement = worker.result['measurement']
++            else:
++                self._applied_key = worker.result['record']['key']
++                gain = worker.result['record']['gain']
++                self._tone_gain = gain['gain_db']
++                self._measurement = {'lufs': gain['input_lufs'], 'peak_db': gain['input_peak_db']}
++                self._applied_tone = self.profile.tone
++                self._switch(QUrl.fromLocalFile(worker.result['path']))
++            self._apply_normalization()
++            if not self.profile.normalize:
++                self.panel.set_status('Đang dùng EQ đã chọn')
+         elif current and worker.error:
+-            self._failed_request = (worker.source, worker.profile, worker.track)
++            self._failed_request = (worker.source, worker.requested_profile, worker.track)
+             self.panel.set_status('Chưa áp dụng cho bài này; giữ âm thanh hiện tại. ' + worker.error[:220])
+         if self._pending:
+             self._request_timer.start()
+@@ -295,6 +403,10 @@
+         failed = self._transition['target']
+         self._transition_timer.stop()
+         if failed != self._original:
++            self._measurement = None
++            self._tone_gain = 0.0
++            self._applied_tone = 'off'
++            self._apply_normalization(ramp=False)
+             self._switch(self._original)
+         else:
+             self._transition = None
+@@ -308,6 +420,7 @@
+         self._request_timer.stop()
+         self._transition_timer.stop()
+         self.panel.hide()
++        self.volume_control.shutdown()
+         if self.worker is not None:
+             self.worker.stop()
+             self.worker.wait()
+--- before/app/ui/audio_effects_panel.py
++++ after/app/ui/audio_effects_panel.py
+@@ -7,6 +7,7 @@
+ 
+ class AudioEffectsPanel(QWidget):
+     settings_changed = Signal(bool, str)
++    level_changed = Signal(int)
+ 
+     def __init__(self, parent=None):
+         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+@@ -34,13 +35,22 @@
+         self.normalize = QCheckBox('Cân bằng âm lượng giữa các bài')
+         self.normalize.setToolTip('Điều chỉnh độ lớn toàn bài, giữ độ động; giới hạn gain để tránh quá tải.')
+         layout.addWidget(self.normalize)
+-        layout.addWidget(QLabel('Chất âm'))
++        layout.addWidget(QLabel('Mức cân bằng'))
++        self.level = QComboBox()
++        self.level.addItem('Thông thường (−14 LUFS)', -14)
++        self.level.addItem('Nhỏ hơn (−18 LUFS)', -18)
++        self.level.setMinimumHeight(36)
++        self.level.setEnabled(False)
++        self.level.currentIndexChanged.connect(lambda _: self.level_changed.emit(self.level.currentData()))
++        layout.addWidget(self.level)
++        layout.addWidget(QLabel('EQ tùy chọn'))
+         self.tone = QComboBox()
+         for text, key in (('Nguyên bản', 'off'), ('Dịu — giảm chói', 'gentle'), ('Cân bằng nhẹ', 'balanced')):
+             self.tone.addItem(text, key)
+         self.tone.setMinimumHeight(36)
+         layout.addWidget(self.tone)
+-        note = QLabel('Giữ nguyên file nguồn. Chỉnh chất âm không khôi phục chi tiết đã mất do nén.')
++        note = QLabel('Cân bằng trực tiếp giữ phổ âm và độ động, không nạp lại video. '
++                      'EQ riêng cần chuẩn bị và nạp lại nguồn; chọn Nguyên bản để phát liền mạch.')
+         note.setWordWrap(True)
+         note.setStyleSheet('color: #9AAABC; font-size: 12px;')
+         layout.addWidget(note)
+@@ -62,6 +72,7 @@
+         self.reset.clicked.connect(self._reset)
+ 
+     def _emit_settings(self, *_):
++        self.level.setEnabled(self.normalize.isChecked())
+         self.settings_changed.emit(self.normalize.isChecked(), self.tone.currentData())
+ 
+     def _reset(self):
+@@ -72,9 +83,15 @@
+         self.normalize.blockSignals(True)
+         self.tone.blockSignals(True)
+         self.normalize.setChecked(normalize)
++        self.level.setEnabled(normalize)
+         self.tone.setCurrentIndex(max(0, self.tone.findData(tone)))
+         self.normalize.blockSignals(False)
+         self.tone.blockSignals(False)
++
++    def set_target(self, target):
++        self.level.blockSignals(True)
++        self.level.setCurrentIndex(max(0, self.level.findData(target)))
++        self.level.blockSignals(False)
+ 
+     def set_status(self, text, busy=False):
+         self.status.setText(text)
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -812,7 +812,7 @@
+         y = btn_pos.y() - popup_h - 15
+         
+         # 5. Cập nhật giá trị và hiển thị
+-        current_vol = int(self.audio_output.volume() * 100)
++        current_vol = int(self.audio_effects.volume() * 100)
+         self.vol_popup.set_value(current_vol)
+         
+         self.vol_popup.move(x, y)
+@@ -821,7 +821,7 @@
+     def update_volume_from_popup(self, value):
+         """Hàm nhận giá trị từ popup để chỉnh âm thanh"""
+         float_vol = value / 100.0
+-        self.audio_output.setVolume(float_vol)
++        self.audio_effects.set_volume(float_vol)
+         
+         # Update icon loa ở thanh bar chính (Mute/Unmute icon)
+         self.playback_bar.update_volume_icon(float_vol)
+@@ -830,9 +830,9 @@
+         """Xử lý khi bấm phím tắt Tăng/Giảm âm lượng"""
+         if not self.audio_output:
+             return
+-        current_vol = self.audio_output.volume()
++        current_vol = self.audio_effects.volume()
+         new_vol = max(0.0, min(1.0, current_vol + delta))
+-        self.audio_output.setVolume(new_vol)
++        self.audio_effects.set_volume(new_vol)
+         self.vol_popup.set_value(int(new_vol * 100))
+         self.playback_bar.update_volume_icon(new_vol)
+ 
+--- before/tests/test_audio_effects.py
++++ after/tests/test_audio_effects.py
+@@ -20,6 +20,7 @@
+ from control.audio_effects import AudioEffectsController
+ from control.worker_lifecycle import OwnedProcesses
+ from tests.audio_effects_contracts import before_audio_changes
++from tests.audio_realtime_contracts import before_realtime_changes
+ from tools.capture_reliability_contracts import functions
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+@@ -348,7 +349,8 @@
+         self.assertEqual(self.player.source(), controller._original)
+         self.assertEqual(self.player.position(), 12345)
+         self.assertFalse(controller._request_timer.isActive())
+-        self.assertEqual(json.loads(controller.settings_path.read_text()), {'normalize': False, 'tone': 'off'})
++        settings = json.loads(controller.settings_path.read_text())
++        self.assertEqual((settings['normalize'], settings['tone']), (False, 'off'))
+         self.assertEqual(old_config.read_bytes() if old_config.exists() else None, prior)
+ 
+     def test_transition_keeps_tracks_loops_and_latest_seek_speed_intent(self):
+@@ -409,7 +411,10 @@
+             while time.monotonic() < end:
+                 time.sleep(0.005)
+             return None
+-        with patch('control.audio_effects.prepare_audio', side_effect=slow):
++        def slow_measure(source, track, cache, processes, cancelled, progress):
++            return slow(source, AudioProfile(True, 'off'), track, cache, processes, cancelled, (), progress)
++        with patch('control.audio_effects.prepare_audio', side_effect=slow), \
++                patch('control.audio_effects.measure_loudness', side_effect=slow_measure):
+             controller.set_profile(True, 'gentle')
+             controller._request_timer.stop()
+             controller._prepare()
+@@ -481,7 +486,7 @@
+         }
+         for relative, allowed in expected.items():
+             old = (ROOT / 'docs/audio-effects/original' / relative).read_text(encoding='utf-8-sig')
+-            current = (ROOT / relative).read_text(encoding='utf-8-sig')
++            current = before_realtime_changes(relative)
+             before, after = functions(old), functions(current)
+             self.assertEqual({name for name in before if before[name] != after.get(name)}, allowed)
+             self.assertEqual(set(before), set(after))
+@@ -492,7 +497,7 @@
+                 self.assertEqual(hashlib.sha256((ROOT / entry['Path']).read_bytes()).hexdigest().upper(), entry['Hash'])
+         helpers = json.loads((ROOT / 'docs/audio-effects/new-source-hashes.json').read_text())
+         for relative, digest in helpers.items():
+-            self.assertEqual(hashlib.sha256((ROOT / relative).read_bytes()).hexdigest(), digest)
++            self.assertEqual(hashlib.sha256(before_realtime_changes(relative, raw=True)).hexdigest(), digest)
+         original_icons = json.loads((ROOT / 'docs/audio-effects/original/app/ui/assets/icons/manifest.json').read_text())
+         icons = json.loads((ROOT / 'app/ui/assets/icons/manifest.json').read_text())
+         self.assertEqual({k: icons['sha256'][k] for k in original_icons['sha256']}, original_icons['sha256'])
+@@ -531,7 +536,7 @@
+                 self.assertIs(player.audioOutput(), output)
+                 self.assertIs(player.videoOutput(), video)
+                 self.assertTrue(output.isMuted())
+-                self.assertAlmostEqual(output.volume(), 0.37, places=5)
++                self.assertAlmostEqual(controller.volume(), 0.37, places=5)
+                 self.assertEqual(output.device(), device)
+                 player.play()
+                 wait_until(lambda: player.position() > before + 100)

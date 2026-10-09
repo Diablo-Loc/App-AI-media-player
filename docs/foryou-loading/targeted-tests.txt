@@ -1,0 +1,37 @@
+test_search_play_clear_next_previous_use_full_playlist_without_reloading_master (tests.test_foryou_search.MainWindowSearchTests.test_search_play_clear_next_previous_use_full_playlist_without_reloading_master) ... ok
+test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle (tests.test_foryou_search.MainWindowSearchTests.test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle) ... ok
+test_decoder_quality_body_is_exactly_pre_phase (tests.test_foryou_search.ThumbnailBudgetTests.test_decoder_quality_body_is_exactly_pre_phase) ... ok
+test_failed_cancelled_decode_always_completes_without_fake_image (tests.test_foryou_search.ThumbnailBudgetTests.test_failed_cancelled_decode_always_completes_without_fake_image) ... ok
+test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel (tests.test_foryou_search.ThumbnailBudgetTests.test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel) ... ok
+test_debounce_latest_query_and_empty_reload_have_no_stale_rows (tests.test_foryou_search.VirtualPlaylistTests.test_debounce_latest_query_and_empty_reload_have_no_stale_rows) ... ok
+test_far_active_item_scroll_and_filter_keep_widget_count_bounded (tests.test_foryou_search.VirtualPlaylistTests.test_far_active_item_scroll_and_filter_keep_widget_count_bounded) ... ok
+test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner (tests.test_foryou_search.VirtualPlaylistTests.test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner) ... ok
+test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick (tests.test_foryou_search.VirtualPlaylistTests.test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick) ... ok
+test_recycled_card_click_emits_current_exact_object_and_active_style (tests.test_foryou_search.VirtualPlaylistTests.test_recycled_card_click_emits_current_exact_object_and_active_style) ... ok
+test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable (tests.test_foryou_search.VirtualPlaylistTests.test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable) ... ok
+test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results (tests.test_foryou_search.VirtualPlaylistTests.test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results) ... ok
+test_search_clear_other_query_preserves_full_queue_identity_and_order (tests.test_foryou_search.VirtualPlaylistTests.test_search_clear_other_query_preserves_full_queue_identity_and_order) ... ok
+test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search (tests.test_foryou_search.VirtualPlaylistTests.test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search) ... ok
+test_superseded_preparation_and_clear_only_publish_latest_query (tests.test_foryou_search.VirtualPlaylistTests.test_superseded_preparation_and_clear_only_publish_latest_query) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 6.901s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Midnight in Tokyo - Luna (Force: False)
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+▶️ Bắt đầu phát: City lights - Luna (Force: False)
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+⚠️ Không tìm thấy Grid Layout!
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn

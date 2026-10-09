@@ -1,0 +1,138 @@
+{
+  "report": {
+    "record": "A Small Miracle(short)-round-2.json",
+    "language": "jw",
+    "cues": 24,
+    "captured_previous_profile_reproduced": true,
+    "cue_text_and_start_unchanged": true,
+    "accepted_character_inventory_preserved": true,
+    "no_added_tail": true,
+    "no_overlap": true,
+    "word_timestamp_pauses_at_least_two_seconds": 3,
+    "pause_violations": [],
+    "source_reference": "Captured raw ASR; not human lyric or vocal boundary ground truth",
+    "saved_times_equal_refined": true
+  },
+  "refined": [
+    {
+      "start": 0.0,
+      "end": 4.5,
+      "text": "I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 4.59,
+      "end": 12.27,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm"
+    },
+    {
+      "start": 12.27,
+      "end": 14.68,
+      "text": "sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 14.97,
+      "end": 15.11,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 15.11,
+      "end": 19.07,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.07,
+      "end": 19.32,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.39,
+      "end": 22.57,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.57,
+      "end": 22.63,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.63,
+      "end": 25.16,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 25.27,
+      "end": 29.98,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry"
+    },
+    {
+      "start": 38.87,
+      "end": 43.08,
+      "text": "Isn't it so incredible"
+    },
+    {
+      "start": 43.57,
+      "end": 50.64,
+      "text": "We're here sharing the same tired space"
+    },
+    {
+      "start": 50.89,
+      "end": 55.73,
+      "text": "In your eyes, the stars look like"
+    },
+    {
+      "start": 55.73,
+      "end": 58.99,
+      "text": "Thousands of bright stars"
+    },
+    {
+      "start": 58.99,
+      "end": 63.23,
+      "text": "I have gazed at four thousands of time"
+    },
+    {
+      "start": 63.23,
+      "end": 67.67,
+      "text": "Da da da, da da da"
+    },
+    {
+      "start": 67.67,
+      "end": 70.78,
+      "text": "Da da da"
+    },
+    {
+      "start": 84.77,
+      "end": 89.51,
+      "text": "You build a world of miracles"
+    },
+    {
+      "start": 89.51,
+      "end": 95.33,
+      "text": "Some wanting the precious This dream of shimmering daily moments"
+    },
+    {
+      "start": 95.33,
+      "end": 101.49,
+      "text": "Return way to my soul Stop me from drifting in my feet"
+    },
+    {
+      "start": 101.49,
+      "end": 104.85,
+      "text": "That solid ground I stand So I sing together"
+    },
+    {
+      "start": 104.85,
+      "end": 109.19,
+      "text": "Every light I'm giving all goes back to you"
+    },
+    {
+      "start": 109.19,
+      "end": 111.56,
+      "text": "Goes back to you"
+    },
+    {
+      "start": 135.05,
+      "end": 142.78,
+      "text": "Terima kasih telah menonton!"
+    }
+  ]
+}

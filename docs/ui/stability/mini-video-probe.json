@@ -1,0 +1,65 @@
+{
+  "python": "3.11.0",
+  "pyside": "6.10.1",
+  "platform": "Qt offscreen / Windows",
+  "media": "A Small Miracle(short).mp4",
+  "bytes": 7390691,
+  "decoded_frames": 2,
+  "first_frame_valid": true,
+  "video_size": [
+    1080,
+    1080
+  ],
+  "initial_mini_geometry": [
+    0,
+    0,
+    140,
+    80
+  ],
+  "initial_surface_visible": true,
+  "error": "",
+  "stale_stage_checks": [
+    {
+      "aspect": [
+        1920,
+        1080
+      ],
+      "geometry": [
+        0,
+        0,
+        140,
+        80
+      ],
+      "contained": true,
+      "owner_is_mini": true
+    },
+    {
+      "aspect": [
+        1080,
+        1080
+      ],
+      "geometry": [
+        0,
+        0,
+        140,
+        80
+      ],
+      "contained": true,
+      "owner_is_mini": true
+    },
+    {
+      "aspect": [
+        1080,
+        1920
+      ],
+      "geometry": [
+        0,
+        0,
+        140,
+        80
+      ],
+      "contained": true,
+      "owner_is_mini": true
+    }
+  ]
+}

@@ -317,7 +317,7 @@ class PipDownloadWorker(QThread):
             self.progress_value_signal.emit(100)
             _set_resource_ready_flag(True)
             try:
-                from app.control.ai_controller import _set_resource_cache_state
+                from control.ai_controller import _set_resource_cache_state
                 _set_resource_cache_state(True, True)
             except Exception:
                 pass
@@ -328,7 +328,7 @@ class PipDownloadWorker(QThread):
             tb_str = traceback.format_exc()
             _set_resource_ready_flag(False)
             try:
-                from app.control.ai_controller import _set_resource_cache_state
+                from control.ai_controller import _set_resource_cache_state
                 _set_resource_cache_state(False, False)
             except Exception:
                 pass
@@ -491,7 +491,7 @@ class ResourceDownloadDialog(QDialog):
                 if PORTABLE_LIBS_DIR not in sys.path:
                     sys.path.insert(0, PORTABLE_LIBS_DIR)
                 try:
-                    from app.control.ai_controller import _set_resource_cache_state
+                    from control.ai_controller import _set_resource_cache_state
                     _set_resource_cache_state(True, True)
                 except Exception:
                     pass
@@ -529,7 +529,7 @@ class ResourceDownloadDialog(QDialog):
             if PORTABLE_LIBS_DIR not in sys.path:
                 sys.path.insert(0, PORTABLE_LIBS_DIR)
             try:
-                from app.control.ai_controller import _set_resource_cache_state
+                from control.ai_controller import _set_resource_cache_state
                 _set_resource_cache_state(True, True)
             except Exception:
                 pass
@@ -538,7 +538,7 @@ class ResourceDownloadDialog(QDialog):
             self.accept()
         else:
             try:
-                from app.control.ai_controller import _set_resource_cache_state
+                from control.ai_controller import _set_resource_cache_state
                 _set_resource_cache_state(False, False)
             except Exception:
                 pass

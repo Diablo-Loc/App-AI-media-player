@@ -1,0 +1,58 @@
+test_actual_av1_square_fps_aac_values_not_extension_guesses (tests.test_media_info.MetadataParsingTests.test_actual_av1_square_fps_aac_values_not_extension_guesses) ... ok
+test_cache_hit_invalidation_source_sidecar_and_lru_bound (tests.test_media_info.MetadataParsingTests.test_cache_hit_invalidation_source_sidecar_and_lru_bound) ... ok
+test_cover_art_unknown_vbr_and_default_audio_selection (tests.test_media_info.MetadataParsingTests.test_cover_art_unknown_vbr_and_default_audio_selection) ... ok
+test_description_precedence_dict_object_sidecars_tags_plain_unicode (tests.test_media_info.MetadataParsingTests.test_description_precedence_dict_object_sidecars_tags_plain_unicode) ... ok
+test_errors_keep_description_retry_and_changed_source_not_cached (tests.test_media_info.MetadataParsingTests.test_errors_keep_description_retry_and_changed_source_not_cached) ... ok
+test_missing_format_duration_retains_existing_metadata_duration (tests.test_media_info.MetadataParsingTests.test_missing_format_duration_retains_existing_metadata_duration) ... ok
+test_missing_streams_invalid_rational_and_pixel_aspect (tests.test_media_info.MetadataParsingTests.test_missing_streams_invalid_rational_and_pixel_aspect) ... ok
+test_real_mp4_wav_flac_probe_and_source_hashes (tests.test_media_info.MetadataProcessTests.test_real_mp4_wav_flac_probe_and_source_hashes) ... ok
+test_real_timeout_and_cancellation_reap_owned_process_without_gui_wait (tests.test_media_info.MetadataProcessTests.test_real_timeout_and_cancellation_reap_owned_process_without_gui_wait) ... ok
+test_latest_selection_single_worker_pending_coalescing_and_close (tests.test_media_info.MetadataQtTests.test_latest_selection_single_worker_pending_coalescing_and_close) ... ok
+test_modal_exec_close_cancels_and_empty_selection_clears_old_rows (tests.test_media_info.MetadataQtTests.test_modal_exec_close_cancels_and_empty_selection_clears_old_rows) ... D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\video_info_popup.py:203: DeprecationWarning: 'exec_' will be removed in the future. Use 'exec' instead.
+  self.exec_()
+ok
+test_shell_visible_switch_original_path_player_owners_and_shutdown (tests.test_media_info.MetadataQtTests.test_shell_visible_switch_original_path_player_owners_and_shutdown) ... ok
+test_slow_probe_keeps_gui_responsive_and_cached_reopen_does_not_probe (tests.test_media_info.MetadataQtTests.test_slow_probe_keeps_gui_responsive_and_cached_reopen_does_not_probe) ... ok
+test_exact_three_source_adapters_and_no_other_ast_changes (tests.test_media_info.MetadataScopeTests.test_exact_three_source_adapters_and_no_other_ast_changes) ... ok
+test_original_functions_remain_identical_after_removing_only_adapters (tests.test_ui_media_surface.PresentationAdapterSourceGate.test_original_functions_remain_identical_after_removing_only_adapters) ... ok
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_delayed_for_you_layout_cannot_move_video_in_mini_or_large (tests.test_ui_media_surface.UiMediaSurfaceTests.test_delayed_for_you_layout_cannot_move_video_in_mini_or_large) ... ok
+test_first_valid_frame_refreshes_once_and_never_steals_video (tests.test_ui_media_surface.UiMediaSurfaceTests.test_first_valid_frame_refreshes_once_and_never_steals_video) ... ok
+test_live_for_you_stage_still_uses_original_aspect_layout (tests.test_ui_media_surface.UiMediaSurfaceTests.test_live_for_you_stage_still_uses_original_aspect_layout) ... ok
+test_mouse_toggle_updates_both_shuffle_buttons_and_restores_order (tests.test_ui_media_surface.UiMediaSurfaceTests.test_mouse_toggle_updates_both_shuffle_buttons_and_restores_order) ... ok
+test_new_media_repairs_hidden_offset_surface_without_page_switch (tests.test_ui_media_surface.UiMediaSurfaceTests.test_new_media_repairs_hidden_offset_surface_without_page_switch) ... ok
+test_off_icons_keep_off_colour_even_in_active_hover_mode (tests.test_ui_media_surface.UiMediaSurfaceTests.test_off_icons_keep_off_colour_even_in_active_hover_mode) ... ok
+test_repeat_on_off_signal_and_hover_follow_original_boolean (tests.test_ui_media_surface.UiMediaSurfaceTests.test_repeat_on_off_signal_and_hover_follow_original_boolean) ... ok
+test_repeated_bind_does_not_duplicate_frame_listeners (tests.test_ui_media_surface.UiMediaSurfaceTests.test_repeated_bind_does_not_duplicate_frame_listeners) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 5.559s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

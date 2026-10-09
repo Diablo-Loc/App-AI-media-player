@@ -1,0 +1,5 @@
+{
+  "app/core/subtitle_persistence.py": "f58851296cf0e9cb0da8c3ff1fd685b1169f91cf9e4378637cce058b8e4d5d07",
+  "app/control/library_scan.py": "caa9eb8d7f9920927bc76fbd67604013335b7ed45e59fc3c41eaded98a0d996f",
+  "app/control/worker_lifecycle.py": "e29d55ad75eff675e613cb05e64461596b555811b89276bb272c81463c45e864"
+}

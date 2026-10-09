@@ -1,0 +1,222 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "logical_cpus": 20,
+  "grid": [
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 17.62350000353763,
+      "completion_ms": 2483.905799999775,
+      "cpu_ms": 781.25,
+      "rss_delta_mib": 120.7578125,
+      "resident_cards": 1000,
+      "run": 0
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 37.004700003308244,
+      "completion_ms": 136.55909999943106,
+      "cpu_ms": 62.5,
+      "rss_delta_mib": 5.16796875,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 0.0,
+          "wall_ms": 48.72580000665039,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 15.625,
+          "wall_ms": 46.04200000176206,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 0.0,
+          "wall_ms": 46.72750000463566,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 15.625,
+          "wall_ms": 47.12419999850681,
+          "cards": 25
+        }
+      ],
+      "run": 0
+    },
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 16.68410000274889,
+      "completion_ms": 2514.6209000013187,
+      "cpu_ms": 812.5,
+      "rss_delta_mib": 120.6953125,
+      "resident_cards": 1000,
+      "run": 1
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 37.28720000071917,
+      "completion_ms": 139.2450000057579,
+      "cpu_ms": 46.875,
+      "rss_delta_mib": 5.56640625,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.41890000150306,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 0.0,
+          "wall_ms": 46.52619999978924,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 15.625,
+          "wall_ms": 46.665599998959806,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 0.0,
+          "wall_ms": 46.254699998826254,
+          "cards": 25
+        }
+      ],
+      "run": 1
+    },
+    {
+      "mode": "before",
+      "items": 1000,
+      "submission_ms": 19.088299995928537,
+      "completion_ms": 2495.0209999951767,
+      "cpu_ms": 859.375,
+      "rss_delta_mib": 121.09765625,
+      "resident_cards": 1000,
+      "run": 2
+    },
+    {
+      "mode": "after",
+      "items": 1000,
+      "submission_ms": 36.50439999910304,
+      "completion_ms": 139.0023999992991,
+      "cpu_ms": 0.0,
+      "rss_delta_mib": 5.23828125,
+      "resident_cards": 25,
+      "metadata_queue_items": 1000,
+      "scroll_samples": [
+        {
+          "fraction": 0.25,
+          "cpu_ms": 0.0,
+          "wall_ms": 46.310300000186544,
+          "cards": 30
+        },
+        {
+          "fraction": 0.5,
+          "cpu_ms": 0.0,
+          "wall_ms": 45.69110000011278,
+          "cards": 30
+        },
+        {
+          "fraction": 0.75,
+          "cpu_ms": 15.625,
+          "wall_ms": 47.021500002301764,
+          "cards": 30
+        },
+        {
+          "fraction": 1,
+          "cpu_ms": 0.0,
+          "wall_ms": 47.84569999901578,
+          "cards": 25
+        }
+      ],
+      "run": 2
+    }
+  ],
+  "cache": [
+    {
+      "mode": "before",
+      "run": 0,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 639.5893999942928,
+      "cpu_ms": 328.125,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 0,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 45.88520000106655,
+      "cpu_ms": 0.0,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "before",
+      "run": 1,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 640.1900999990175,
+      "cpu_ms": 187.5,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 1,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 38.69010000198614,
+      "cpu_ms": 31.25,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "before",
+      "run": 2,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 50,
+      "serialized_records": 50000,
+      "written_bytes": 9446820,
+      "wall_ms": 643.3768000060809,
+      "cpu_ms": 359.375,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    },
+    {
+      "mode": "after",
+      "run": 2,
+      "library_items": 1000,
+      "thumbnails": 50,
+      "saves": 3,
+      "serialized_records": 3000,
+      "written_bytes": 567309,
+      "wall_ms": 37.585200007015374,
+      "cpu_ms": 31.25,
+      "json_sha256": "990cc2710f0844c38bf87aa3a6463aad41b26283794cdb8f904cbb171624d2d9"
+    }
+  ],
+  "limitations": "Offscreen Qt, synthetic metadata, no images/native video/AI/GPU/network/EXE; CPU timer quantized."
+}

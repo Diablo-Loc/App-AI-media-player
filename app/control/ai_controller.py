@@ -1,5 +1,5 @@
 import os
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, Signal, Slot, QTimer
 from PySide6.QtWidgets import QDialog, QMessageBox
 # Không cần import gc hay torch ở đây nữa vì Worker xử lý ở Process riêng
 # from worker import AIWorker # <--- Đảm bảo import đúng đường dẫn worker của bạn
@@ -42,6 +42,11 @@ class AIController(QObject):
         self._current_media_id: str | None = None
         self._resource_checked = _RESOURCE_CHECK_CACHE["checked"]
         self._resource_ready = _RESOURCE_CHECK_CACHE["ready"]
+        self._pending_start = None
+        self._closing = False
+        self._restart_timer = QTimer(self)
+        self._restart_timer.setSingleShot(True)
+        self._restart_timer.timeout.connect(self._start_pending)
 
     # =========================
     # PUBLIC API
@@ -50,6 +55,8 @@ class AIController(QObject):
         """
         Bắt đầu job mới. Cửa ngõ trung tâm kiểm soát an toàn hệ thống.
         """
+        if self._closing:
+            return
         # 🌟 Luồng check nhẹ theo cờ + cache đúng 1 lần cho mỗi phiên chạy.
         from download_core.download_source_app import check_resource_status, _set_resource_ready_flag, _get_resource_ready_flag
 
@@ -101,10 +108,13 @@ class AIController(QObject):
             try:
                 if self._worker.isRunning():
                     self.status_changed.emit(
-                        self._current_media_id,
+                        self._current_media_id or self._worker.media_id,
                         "⚠️ Đang dừng tác vụ cũ..."
                     )
-                    self._worker.stop()
+                    self._pending_start = (media_id, input_path)
+                    self._current_media_id = None
+                    self._worker.cancel()
+                    return
             except RuntimeError:
                 pass
 
@@ -120,6 +130,8 @@ class AIController(QObject):
             self._worker = None
 
         # 2. Thiết lập trạng thái mới
+        self._pending_start = None
+        self._restart_timer.stop()
         self._current_media_id = media_id
 
         # 3. Khởi tạo Worker mới
@@ -136,8 +148,8 @@ class AIController(QObject):
             self._worker.progress.connect(self._on_progress)
             self._worker.data_ready.connect(self._on_data_ready)
             self._worker.failed.connect(self._on_failed)
-            self._worker.finished.connect(self._worker.deleteLater)
             self._worker.finished.connect(self._on_thread_stopped)
+            self._worker.finished.connect(self._worker.deleteLater)
         except RuntimeError:
             pass
         # 5. Chạy
@@ -145,12 +157,15 @@ class AIController(QObject):
 
     def cancel(self):
         """Huỷ job hiện tại (dùng nút Cancel trên UI)"""
+        self._pending_start = None
+        self._restart_timer.stop()
         if self._worker and self._worker.isRunning():
             self.status_changed.emit(
-                self._current_media_id,
+                self._current_media_id or self._worker.media_id,
                 "⛔ Đang huỷ xử lý AI..."
             )
             self._worker.cancel() # Đánh dấu hủy
+            self._current_media_id = None
             # Không cần gọi stop() ở đây để UI không bị đơ, 
             # worker sẽ tự emit failed/finished sau khi cleanup.
 
@@ -167,6 +182,9 @@ class AIController(QObject):
 
     def abort_all_jobs(self):
         """Hàm này được gọi khi tắt App để dừng worker AI một cách an toàn."""
+        self._closing = True
+        self._pending_start = None
+        self._restart_timer.stop()
         if self._worker and self._worker.isRunning():
             print("🛑 Controller: Đang yêu cầu dừng Worker Thread...")
             self._worker.cancel()
@@ -182,17 +200,20 @@ class AIController(QObject):
     # =========================
     @Slot(str)
     def _on_started(self, media_id: str):
+        if not self._accept_worker(): return
         if media_id != self._current_media_id: return
         self.status_changed.emit(media_id, "🤖 AI đang khởi động...")
 
     @Slot(int, str)
     def _on_progress(self, percent: int, message: str):
+        if not self._accept_worker(): return
         if media_id := self._current_media_id: # Python 3.8+ walrus operator
             self.progress_updated.emit(percent)
             self.status_changed.emit(media_id, message)
 
     @Slot(str, list)
     def _on_data_ready(self, media_id: str, segments: list):
+        if not self._accept_worker(): return
         if media_id != self._current_media_id: return
         self.job_finished.emit(media_id, segments)
         #self._cleanup_ref()
@@ -200,13 +221,18 @@ class AIController(QObject):
     @Slot()
     def _on_thread_stopped(self):
         """Hàm này được gọi khi Worker đã thực sự tắt hẳn"""
+        if self.sender() is not None and self.sender() is not self._worker:
+            return
         if self._worker and not self._worker.isRunning():
             self._worker = None
             self._current_media_id = None
+            if self._pending_start and not self._closing:
+                self._restart_timer.start(0)
             # print("✅ Worker đã được dọn dẹp an toàn.")
             
     @Slot(str, str)
     def _on_failed(self, media_id: str, error_msg: str):
+        if not self._accept_worker(): return
         if media_id != self._current_media_id: return
         self.job_failed.emit(media_id, error_msg)
         #self._cleanup_ref()
@@ -224,3 +250,14 @@ class AIController(QObject):
         
         # Vì dùng Multiprocessing, Process con chết là VRAM tự sạch.
         # Main process không load torch nên không cần empty_cache().
+
+    def _accept_worker(self):
+        sender = self.sender()
+        return (not self._closing and self._pending_start is None
+                and (sender is None or sender is self._worker)
+                and not getattr(self._worker, '_cancelled', False))
+
+    def _start_pending(self):
+        pending = self._pending_start
+        if pending and not self._closing:
+            self.start(*pending)

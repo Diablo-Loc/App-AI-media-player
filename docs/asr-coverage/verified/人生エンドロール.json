@@ -1,0 +1,2340 @@
+{
+  "media": "video\\人生エンドロール.mp4",
+  "model": "large-v3",
+  "device": "cuda",
+  "faster_whisper": "1.0.2",
+  "options": {
+    "language": null,
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": " .+"
+  },
+  "language": "ja",
+  "language_probability": 0.99853515625,
+  "duration": 203.486625,
+  "asr_seconds": 8.046999999998661,
+  "raw": [
+    {
+      "id": 1,
+      "start": 5.52,
+      "end": 28.36,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.4368489633003871,
+      "no_speech_prob": 0.06640625,
+      "compression_ratio": 0.8222222222222222,
+      "words": [
+        {
+          "start": 5.52,
+          "end": 6.92,
+          "word": "作",
+          "probability": 0.027557373046875
+        },
+        {
+          "start": 6.92,
+          "end": 6.92,
+          "word": "詞",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 6.92,
+          "end": 7.38,
+          "word": "・",
+          "probability": 0.95458984375
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "作",
+          "probability": 0.998046875
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "曲",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 7.38,
+          "end": 7.38,
+          "word": "・",
+          "probability": 0.95068359375
+        },
+        {
+          "start": 7.38,
+          "end": 8.78,
+          "word": "編",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 8.78,
+          "end": 11.58,
+          "word": "曲",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 11.66,
+          "end": 11.66,
+          "word": " 初",
+          "probability": 0.8984375
+        },
+        {
+          "start": 11.66,
+          "end": 11.66,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 11.66,
+          "end": 27.32,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 27.32,
+          "end": 28.36,
+          "word": "ク",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 30.0,
+      "end": 34.44,
+      "text": "息を吸って解けた靴紐を結んだ",
+      "avg_logprob": -0.21231617647058823,
+      "no_speech_prob": 0.1361083984375,
+      "compression_ratio": 1.3179190751445087,
+      "words": [
+        {
+          "start": 30.0,
+          "end": 30.34,
+          "word": "息",
+          "probability": 0.3505859375
+        },
+        {
+          "start": 30.34,
+          "end": 30.78,
+          "word": "を",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 30.78,
+          "end": 30.98,
+          "word": "吸",
+          "probability": 0.98828125
+        },
+        {
+          "start": 30.98,
+          "end": 31.58,
+          "word": "って",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 31.58,
+          "end": 31.84,
+          "word": "解",
+          "probability": 0.387939453125
+        },
+        {
+          "start": 31.84,
+          "end": 32.16,
+          "word": "け",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 32.16,
+          "end": 32.34,
+          "word": "た",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 32.34,
+          "end": 32.58,
+          "word": "靴",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 32.58,
+          "end": 33.12,
+          "word": "紐",
+          "probability": 0.921630859375
+        },
+        {
+          "start": 33.12,
+          "end": 33.46,
+          "word": "を",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 33.46,
+          "end": 33.86,
+          "word": "結",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 33.86,
+          "end": 34.44,
+          "word": "んだ",
+          "probability": 0.99609375
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 34.44,
+      "end": 39.0,
+      "text": "理屈な言葉あたりでも足を止めないよ",
+      "avg_logprob": -0.21231617647058823,
+      "no_speech_prob": 0.1361083984375,
+      "compression_ratio": 1.3179190751445087,
+      "words": [
+        {
+          "start": 34.44,
+          "end": 34.7,
+          "word": "理",
+          "probability": 0.2283935546875
+        },
+        {
+          "start": 34.7,
+          "end": 34.94,
+          "word": "屈",
+          "probability": 0.8505859375
+        },
+        {
+          "start": 34.94,
+          "end": 35.26,
+          "word": "な",
+          "probability": 0.95947265625
+        },
+        {
+          "start": 35.26,
+          "end": 35.72,
+          "word": "言",
+          "probability": 0.1761474609375
+        },
+        {
+          "start": 35.72,
+          "end": 36.36,
+          "word": "葉",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 36.36,
+          "end": 36.52,
+          "word": "あ",
+          "probability": 0.822265625
+        },
+        {
+          "start": 36.52,
+          "end": 36.62,
+          "word": "た",
+          "probability": 0.9697265625
+        },
+        {
+          "start": 36.62,
+          "end": 36.8,
+          "word": "り",
+          "probability": 1.0
+        },
+        {
+          "start": 36.8,
+          "end": 37.1,
+          "word": "でも",
+          "probability": 0.9326171875
+        },
+        {
+          "start": 37.1,
+          "end": 37.66,
+          "word": "足",
+          "probability": 0.75
+        },
+        {
+          "start": 37.66,
+          "end": 38.18,
+          "word": "を",
+          "probability": 0.810546875
+        },
+        {
+          "start": 38.18,
+          "end": 38.34,
+          "word": "止",
+          "probability": 0.9765625
+        },
+        {
+          "start": 38.34,
+          "end": 38.54,
+          "word": "め",
+          "probability": 1.0
+        },
+        {
+          "start": 38.54,
+          "end": 38.72,
+          "word": "ない",
+          "probability": 0.998046875
+        },
+        {
+          "start": 38.72,
+          "end": 39.0,
+          "word": "よ",
+          "probability": 0.93603515625
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 39.66,
+      "end": 43.56,
+      "text": "つるぼけた地図を頼りにいこう",
+      "avg_logprob": -0.21231617647058823,
+      "no_speech_prob": 0.1361083984375,
+      "compression_ratio": 1.3179190751445087,
+      "words": [
+        {
+          "start": 39.5,
+          "end": 39.84,
+          "word": "つ",
+          "probability": 0.391357421875
+        },
+        {
+          "start": 39.84,
+          "end": 40.06,
+          "word": "る",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 40.06,
+          "end": 40.3,
+          "word": "ぼ",
+          "probability": 0.9697265625
+        },
+        {
+          "start": 40.3,
+          "end": 40.4,
+          "word": "け",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 40.4,
+          "end": 40.64,
+          "word": "た",
+          "probability": 0.998046875
+        },
+        {
+          "start": 40.64,
+          "end": 41.0,
+          "word": "地",
+          "probability": 0.90576171875
+        },
+        {
+          "start": 41.0,
+          "end": 41.46,
+          "word": "図",
+          "probability": 1.0
+        },
+        {
+          "start": 41.46,
+          "end": 41.68,
+          "word": "を",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 41.68,
+          "end": 42.26,
+          "word": "頼",
+          "probability": 0.97509765625
+        },
+        {
+          "start": 42.26,
+          "end": 42.62,
+          "word": "り",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 42.62,
+          "end": 42.62,
+          "word": "に",
+          "probability": 0.998046875
+        },
+        {
+          "start": 42.62,
+          "end": 42.96,
+          "word": "い",
+          "probability": 0.533203125
+        },
+        {
+          "start": 42.96,
+          "end": 43.56,
+          "word": "こう",
+          "probability": 0.7568359375
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 44.7,
+      "end": 49.44,
+      "text": "隣の芝生が青く見えても",
+      "avg_logprob": -0.21231617647058823,
+      "no_speech_prob": 0.1361083984375,
+      "compression_ratio": 1.3179190751445087,
+      "words": [
+        {
+          "start": 44.7,
+          "end": 45.38,
+          "word": "隣",
+          "probability": 0.968505859375
+        },
+        {
+          "start": 45.38,
+          "end": 45.74,
+          "word": "の",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 45.74,
+          "end": 46.28,
+          "word": "芝",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 46.28,
+          "end": 46.46,
+          "word": "生",
+          "probability": 0.93603515625
+        },
+        {
+          "start": 46.46,
+          "end": 46.9,
+          "word": "が",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 46.9,
+          "end": 47.56,
+          "word": "青",
+          "probability": 0.93359375
+        },
+        {
+          "start": 47.56,
+          "end": 47.84,
+          "word": "く",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 47.84,
+          "end": 48.04,
+          "word": "見",
+          "probability": 0.953125
+        },
+        {
+          "start": 48.04,
+          "end": 49.04,
+          "word": "えて",
+          "probability": 0.998046875
+        },
+        {
+          "start": 49.04,
+          "end": 49.44,
+          "word": "も",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 51.08,
+      "end": 55.88,
+      "text": "走り最低限でも止まらなきゃそれでいいから",
+      "avg_logprob": -0.21231617647058823,
+      "no_speech_prob": 0.1361083984375,
+      "compression_ratio": 1.3179190751445087,
+      "words": [
+        {
+          "start": 51.08,
+          "end": 51.76,
+          "word": "走",
+          "probability": 0.94140625
+        },
+        {
+          "start": 51.76,
+          "end": 52.04,
+          "word": "り",
+          "probability": 0.6328125
+        },
+        {
+          "start": 52.04,
+          "end": 52.2,
+          "word": "最",
+          "probability": 0.86572265625
+        },
+        {
+          "start": 52.2,
+          "end": 52.54,
+          "word": "低",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 52.54,
+          "end": 52.92,
+          "word": "限",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 52.92,
+          "end": 53.26,
+          "word": "でも",
+          "probability": 0.9658203125
+        },
+        {
+          "start": 53.26,
+          "end": 53.66,
+          "word": "止",
+          "probability": 0.9365234375
+        },
+        {
+          "start": 53.66,
+          "end": 53.84,
+          "word": "ま",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 53.84,
+          "end": 53.94,
+          "word": "ら",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 53.94,
+          "end": 54.16,
+          "word": "な",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 54.16,
+          "end": 54.3,
+          "word": "き",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 54.3,
+          "end": 54.46,
+          "word": "ゃ",
+          "probability": 1.0
+        },
+        {
+          "start": 54.46,
+          "end": 54.8,
+          "word": "それで",
+          "probability": 0.93212890625
+        },
+        {
+          "start": 54.8,
+          "end": 55.46,
+          "word": "いい",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 55.46,
+          "end": 55.88,
+          "word": "から",
+          "probability": 0.9931640625
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 55.88,
+      "end": 61.22,
+      "text": "後ろで指差す奴らはほっとけ",
+      "avg_logprob": -0.26727765798568726,
+      "no_speech_prob": 0.34765625,
+      "compression_ratio": 1.1953125,
+      "words": [
+        {
+          "start": 55.88,
+          "end": 56.88,
+          "word": "後",
+          "probability": 0.2037353515625
+        },
+        {
+          "start": 56.88,
+          "end": 57.22,
+          "word": "ろ",
+          "probability": 0.98046875
+        },
+        {
+          "start": 57.22,
+          "end": 57.38,
+          "word": "で",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 57.38,
+          "end": 57.76,
+          "word": "指",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 57.76,
+          "end": 58.4,
+          "word": "差",
+          "probability": 0.529296875
+        },
+        {
+          "start": 58.4,
+          "end": 58.58,
+          "word": "す",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 58.58,
+          "end": 59.1,
+          "word": "奴",
+          "probability": 0.907470703125
+        },
+        {
+          "start": 59.1,
+          "end": 59.36,
+          "word": "ら",
+          "probability": 0.8818359375
+        },
+        {
+          "start": 59.36,
+          "end": 59.7,
+          "word": "は",
+          "probability": 0.990234375
+        },
+        {
+          "start": 59.7,
+          "end": 60.02,
+          "word": "ほ",
+          "probability": 0.52294921875
+        },
+        {
+          "start": 60.02,
+          "end": 60.94,
+          "word": "っと",
+          "probability": 0.9638671875
+        },
+        {
+          "start": 60.94,
+          "end": 61.22,
+          "word": "け",
+          "probability": 0.99658203125
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 61.22,
+      "end": 66.48,
+      "text": "消失な人生なんてもう特に諦めたら",
+      "avg_logprob": -0.26727765798568726,
+      "no_speech_prob": 0.34765625,
+      "compression_ratio": 1.1953125,
+      "words": [
+        {
+          "start": 61.22,
+          "end": 61.74,
+          "word": "消",
+          "probability": 0.380615234375
+        },
+        {
+          "start": 61.74,
+          "end": 62.12,
+          "word": "失",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 62.12,
+          "end": 62.42,
+          "word": "な",
+          "probability": 0.982421875
+        },
+        {
+          "start": 62.42,
+          "end": 62.64,
+          "word": "人",
+          "probability": 0.998046875
+        },
+        {
+          "start": 62.64,
+          "end": 63.04,
+          "word": "生",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 63.04,
+          "end": 63.26,
+          "word": "なん",
+          "probability": 0.982421875
+        },
+        {
+          "start": 63.26,
+          "end": 63.5,
+          "word": "て",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 63.5,
+          "end": 63.78,
+          "word": "もう",
+          "probability": 0.6904296875
+        },
+        {
+          "start": 63.78,
+          "end": 64.22,
+          "word": "特",
+          "probability": 0.51611328125
+        },
+        {
+          "start": 64.22,
+          "end": 64.64,
+          "word": "に",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 64.64,
+          "end": 65.18,
+          "word": "諦",
+          "probability": 0.888427734375
+        },
+        {
+          "start": 65.18,
+          "end": 65.74,
+          "word": "め",
+          "probability": 0.87060546875
+        },
+        {
+          "start": 65.74,
+          "end": 66.1,
+          "word": "た",
+          "probability": 0.984375
+        },
+        {
+          "start": 66.1,
+          "end": 66.48,
+          "word": "ら",
+          "probability": 0.98388671875
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 66.48,
+      "end": 69.0,
+      "text": "エンドロールなんかじゃない",
+      "avg_logprob": -0.26727765798568726,
+      "no_speech_prob": 0.34765625,
+      "compression_ratio": 1.1953125,
+      "words": [
+        {
+          "start": 66.48,
+          "end": 67.0,
+          "word": "エ",
+          "probability": 0.966796875
+        },
+        {
+          "start": 67.0,
+          "end": 67.26,
+          "word": "ンド",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 67.26,
+          "end": 67.44,
+          "word": "ロ",
+          "probability": 0.998046875
+        },
+        {
+          "start": 67.44,
+          "end": 67.78,
+          "word": "ール",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 67.78,
+          "end": 68.36,
+          "word": "なんか",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 68.36,
+          "end": 69.0,
+          "word": "じゃない",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 69.0,
+      "end": 72.92,
+      "text": "生き様で刻んでやれ",
+      "avg_logprob": -0.26727765798568726,
+      "no_speech_prob": 0.34765625,
+      "compression_ratio": 1.1953125,
+      "words": [
+        {
+          "start": 69.0,
+          "end": 69.66,
+          "word": "生",
+          "probability": 0.79296875
+        },
+        {
+          "start": 69.66,
+          "end": 69.74,
+          "word": "き",
+          "probability": 0.994140625
+        },
+        {
+          "start": 69.74,
+          "end": 70.24,
+          "word": "様",
+          "probability": 0.9521484375
+        },
+        {
+          "start": 70.24,
+          "end": 71.22,
+          "word": "で",
+          "probability": 0.958984375
+        },
+        {
+          "start": 71.22,
+          "end": 71.46,
+          "word": "刻",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 71.46,
+          "end": 72.6,
+          "word": "んで",
+          "probability": 0.927734375
+        },
+        {
+          "start": 72.6,
+          "end": 72.64,
+          "word": "や",
+          "probability": 0.3095703125
+        },
+        {
+          "start": 72.64,
+          "end": 72.92,
+          "word": "れ",
+          "probability": 0.99267578125
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 81.86,
+      "end": 87.08,
+      "text": "一人がいいって どこか強がってみせた",
+      "avg_logprob": -0.24643343427906866,
+      "no_speech_prob": 0.11248779296875,
+      "compression_ratio": 1.175,
+      "words": [
+        {
+          "start": 81.86,
+          "end": 82.6,
+          "word": "一",
+          "probability": 0.370849609375
+        },
+        {
+          "start": 82.6,
+          "end": 82.96,
+          "word": "人",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 82.96,
+          "end": 83.1,
+          "word": "が",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 83.1,
+          "end": 83.44,
+          "word": "いい",
+          "probability": 0.90673828125
+        },
+        {
+          "start": 83.44,
+          "end": 83.94,
+          "word": "って",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 83.94,
+          "end": 84.82,
+          "word": " ど",
+          "probability": 0.45166015625
+        },
+        {
+          "start": 84.82,
+          "end": 85.38,
+          "word": "こ",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 85.38,
+          "end": 85.58,
+          "word": "か",
+          "probability": 0.998046875
+        },
+        {
+          "start": 85.58,
+          "end": 85.84,
+          "word": "強",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 85.84,
+          "end": 86.06,
+          "word": "が",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 86.06,
+          "end": 86.3,
+          "word": "って",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 86.3,
+          "end": 86.56,
+          "word": "み",
+          "probability": 0.66748046875
+        },
+        {
+          "start": 86.56,
+          "end": 86.8,
+          "word": "せ",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 86.8,
+          "end": 87.08,
+          "word": "た",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 87.82000000000001,
+      "end": 92.56,
+      "text": "主人公じゃないから 見合わないのに",
+      "avg_logprob": -0.24643343427906866,
+      "no_speech_prob": 0.11248779296875,
+      "compression_ratio": 1.175,
+      "words": [
+        {
+          "start": 87.82000000000001,
+          "end": 88.3,
+          "word": "主",
+          "probability": 0.947265625
+        },
+        {
+          "start": 88.3,
+          "end": 88.72,
+          "word": "人",
+          "probability": 1.0
+        },
+        {
+          "start": 88.72,
+          "end": 89.2,
+          "word": "公",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 89.2,
+          "end": 89.7,
+          "word": "じゃない",
+          "probability": 0.986328125
+        },
+        {
+          "start": 89.7,
+          "end": 90.3,
+          "word": "から",
+          "probability": 0.994140625
+        },
+        {
+          "start": 90.58,
+          "end": 90.96,
+          "word": " 見",
+          "probability": 0.666015625
+        },
+        {
+          "start": 90.96,
+          "end": 91.1,
+          "word": "合",
+          "probability": 0.998046875
+        },
+        {
+          "start": 91.1,
+          "end": 91.32,
+          "word": "わ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 91.32,
+          "end": 91.7,
+          "word": "ない",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 91.7,
+          "end": 92.08,
+          "word": "の",
+          "probability": 0.998046875
+        },
+        {
+          "start": 92.08,
+          "end": 92.56,
+          "word": "に",
+          "probability": 1.0
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 93.16,
+      "end": 96.98,
+      "text": "けれど千点万か 正解はいいぞ",
+      "avg_logprob": -0.24643343427906866,
+      "no_speech_prob": 0.11248779296875,
+      "compression_ratio": 1.175,
+      "words": [
+        {
+          "start": 93.14999999999999,
+          "end": 93.52,
+          "word": "けれ",
+          "probability": 0.828125
+        },
+        {
+          "start": 93.52,
+          "end": 93.74,
+          "word": "ど",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 93.74,
+          "end": 93.9,
+          "word": "千",
+          "probability": 0.638671875
+        },
+        {
+          "start": 93.9,
+          "end": 94.2,
+          "word": "点",
+          "probability": 0.419677734375
+        },
+        {
+          "start": 94.2,
+          "end": 94.6,
+          "word": "万",
+          "probability": 0.365966796875
+        },
+        {
+          "start": 94.6,
+          "end": 95.0,
+          "word": "か",
+          "probability": 0.278076171875
+        },
+        {
+          "start": 95.18,
+          "end": 95.34,
+          "word": " 正",
+          "probability": 0.79296875
+        },
+        {
+          "start": 95.34,
+          "end": 95.8,
+          "word": "解",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 95.8,
+          "end": 96.32,
+          "word": "はい",
+          "probability": 0.321044921875
+        },
+        {
+          "start": 96.32,
+          "end": 96.78,
+          "word": "い",
+          "probability": 0.970703125
+        },
+        {
+          "start": 96.78,
+          "end": 96.98,
+          "word": "ぞ",
+          "probability": 0.908203125
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 96.98,
+      "end": 102.96,
+      "text": "そう 都合主義ならまかり通すだよ",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 96.98,
+          "end": 97.52,
+          "word": "そう",
+          "probability": 0.175048828125
+        },
+        {
+          "start": 97.54,
+          "end": 98.62,
+          "word": " 都",
+          "probability": 0.10894775390625
+        },
+        {
+          "start": 98.62,
+          "end": 98.94,
+          "word": "合",
+          "probability": 0.7373046875
+        },
+        {
+          "start": 98.94,
+          "end": 99.54,
+          "word": "主",
+          "probability": 0.281005859375
+        },
+        {
+          "start": 99.54,
+          "end": 99.74,
+          "word": "義",
+          "probability": 1.0
+        },
+        {
+          "start": 99.74,
+          "end": 100.36,
+          "word": "なら",
+          "probability": 0.8798828125
+        },
+        {
+          "start": 100.36,
+          "end": 100.94,
+          "word": "ま",
+          "probability": 0.255615234375
+        },
+        {
+          "start": 100.94,
+          "end": 101.02,
+          "word": "か",
+          "probability": 0.88427734375
+        },
+        {
+          "start": 101.02,
+          "end": 101.34,
+          "word": "り",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 101.34,
+          "end": 101.64,
+          "word": "通",
+          "probability": 0.73388671875
+        },
+        {
+          "start": 101.64,
+          "end": 102.56,
+          "word": "す",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 102.56,
+          "end": 102.68,
+          "word": "だ",
+          "probability": 0.425537109375
+        },
+        {
+          "start": 102.68,
+          "end": 102.96,
+          "word": "よ",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 104.44,
+      "end": 109.5,
+      "text": "二重人生なんかそういうものっては生きらないで",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 104.44,
+          "end": 105.12,
+          "word": "二",
+          "probability": 0.2369384765625
+        },
+        {
+          "start": 105.12,
+          "end": 105.44,
+          "word": "重",
+          "probability": 0.82666015625
+        },
+        {
+          "start": 105.44,
+          "end": 105.66,
+          "word": "人",
+          "probability": 0.80615234375
+        },
+        {
+          "start": 105.66,
+          "end": 106.04,
+          "word": "生",
+          "probability": 0.69189453125
+        },
+        {
+          "start": 106.04,
+          "end": 106.4,
+          "word": "なんか",
+          "probability": 0.4443359375
+        },
+        {
+          "start": 106.4,
+          "end": 106.8,
+          "word": "そう",
+          "probability": 0.83154296875
+        },
+        {
+          "start": 106.8,
+          "end": 107.18,
+          "word": "いう",
+          "probability": 0.98828125
+        },
+        {
+          "start": 107.18,
+          "end": 107.54,
+          "word": "もの",
+          "probability": 0.88720703125
+        },
+        {
+          "start": 107.54,
+          "end": 107.84,
+          "word": "って",
+          "probability": 0.474609375
+        },
+        {
+          "start": 107.84,
+          "end": 108.02,
+          "word": "は",
+          "probability": 0.448974609375
+        },
+        {
+          "start": 108.02,
+          "end": 108.22,
+          "word": "生",
+          "probability": 0.83544921875
+        },
+        {
+          "start": 108.22,
+          "end": 108.58,
+          "word": "き",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 108.58,
+          "end": 108.86,
+          "word": "ら",
+          "probability": 0.98046875
+        },
+        {
+          "start": 108.86,
+          "end": 109.16,
+          "word": "ない",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 109.16,
+          "end": 109.5,
+          "word": "で",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 109.5,
+      "end": 114.64,
+      "text": "泥まみれの生き方でもいいんだ",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 109.5,
+          "end": 110.54,
+          "word": "泥",
+          "probability": 0.6812744140625
+        },
+        {
+          "start": 110.54,
+          "end": 110.72,
+          "word": "ま",
+          "probability": 0.94189453125
+        },
+        {
+          "start": 110.72,
+          "end": 110.8,
+          "word": "み",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 110.8,
+          "end": 111.1,
+          "word": "れ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 111.1,
+          "end": 111.5,
+          "word": "の",
+          "probability": 0.99609375
+        },
+        {
+          "start": 111.5,
+          "end": 111.86,
+          "word": "生",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 111.86,
+          "end": 112.0,
+          "word": "き",
+          "probability": 1.0
+        },
+        {
+          "start": 112.0,
+          "end": 112.6,
+          "word": "方",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 112.6,
+          "end": 113.0,
+          "word": "でも",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 113.0,
+          "end": 113.5,
+          "word": "いい",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 113.5,
+          "end": 114.64,
+          "word": "んだ",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 114.64,
+      "end": 119.82,
+      "text": "大それた才能なんてこっちからお断りだ",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 114.64,
+          "end": 115.34,
+          "word": "大",
+          "probability": 0.154541015625
+        },
+        {
+          "start": 115.34,
+          "end": 115.68,
+          "word": "それ",
+          "probability": 0.84521484375
+        },
+        {
+          "start": 115.68,
+          "end": 115.88,
+          "word": "た",
+          "probability": 0.87744140625
+        },
+        {
+          "start": 115.88,
+          "end": 116.22,
+          "word": "才",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 116.22,
+          "end": 116.44,
+          "word": "能",
+          "probability": 1.0
+        },
+        {
+          "start": 116.44,
+          "end": 116.78,
+          "word": "なん",
+          "probability": 0.994140625
+        },
+        {
+          "start": 116.78,
+          "end": 117.1,
+          "word": "て",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 117.1,
+          "end": 117.24,
+          "word": "こ",
+          "probability": 0.8818359375
+        },
+        {
+          "start": 117.24,
+          "end": 117.58,
+          "word": "っち",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 117.58,
+          "end": 117.96,
+          "word": "から",
+          "probability": 0.99609375
+        },
+        {
+          "start": 117.96,
+          "end": 118.36,
+          "word": "お",
+          "probability": 0.388427734375
+        },
+        {
+          "start": 118.36,
+          "end": 118.82,
+          "word": "断",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 118.82,
+          "end": 119.74,
+          "word": "り",
+          "probability": 1.0
+        },
+        {
+          "start": 119.74,
+          "end": 119.82,
+          "word": "だ",
+          "probability": 0.9951171875
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 119.82,
+      "end": 122.46,
+      "text": "バードエンドなんかじゃない",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 119.82,
+          "end": 120.6,
+          "word": "バ",
+          "probability": 0.43359375
+        },
+        {
+          "start": 120.6,
+          "end": 120.76,
+          "word": "ード",
+          "probability": 0.93212890625
+        },
+        {
+          "start": 120.76,
+          "end": 120.94,
+          "word": "エ",
+          "probability": 0.65869140625
+        },
+        {
+          "start": 120.94,
+          "end": 121.22,
+          "word": "ンド",
+          "probability": 0.9140625
+        },
+        {
+          "start": 121.22,
+          "end": 121.82,
+          "word": "なんか",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 121.82,
+          "end": 122.46,
+          "word": "じゃない",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 122.46,
+      "end": 126.42,
+      "text": "それなりの幸せで",
+      "avg_logprob": -0.3266189809305122,
+      "no_speech_prob": 0.361328125,
+      "compression_ratio": 1.4728260869565217,
+      "words": [
+        {
+          "start": 122.46,
+          "end": 123.2,
+          "word": "それ",
+          "probability": 0.93310546875
+        },
+        {
+          "start": 123.2,
+          "end": 123.54,
+          "word": "な",
+          "probability": 1.0
+        },
+        {
+          "start": 123.54,
+          "end": 123.84,
+          "word": "り",
+          "probability": 1.0
+        },
+        {
+          "start": 123.84,
+          "end": 124.76,
+          "word": "の",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 124.76,
+          "end": 124.88,
+          "word": "幸",
+          "probability": 0.99072265625
+        },
+        {
+          "start": 124.88,
+          "end": 126.14,
+          "word": "せ",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 126.14,
+          "end": 126.42,
+          "word": "で",
+          "probability": 0.9306640625
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 126.42,
+      "end": 130.28,
+      "text": "決められたレールを保っても",
+      "avg_logprob": -0.24076704545454544,
+      "no_speech_prob": 0.034515380859375,
+      "compression_ratio": 1.1808510638297873,
+      "words": [
+        {
+          "start": 126.42,
+          "end": 127.12,
+          "word": "決",
+          "probability": 0.8212890625
+        },
+        {
+          "start": 127.12,
+          "end": 127.36,
+          "word": "め",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 127.36,
+          "end": 127.48,
+          "word": "ら",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 127.48,
+          "end": 127.92,
+          "word": "れた",
+          "probability": 0.99609375
+        },
+        {
+          "start": 127.92,
+          "end": 128.62,
+          "word": "レ",
+          "probability": 0.78369140625
+        },
+        {
+          "start": 128.62,
+          "end": 128.98,
+          "word": "ール",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 128.98,
+          "end": 129.2,
+          "word": "を",
+          "probability": 0.998046875
+        },
+        {
+          "start": 129.2,
+          "end": 129.52,
+          "word": "保",
+          "probability": 0.24853515625
+        },
+        {
+          "start": 129.52,
+          "end": 130.04,
+          "word": "って",
+          "probability": 0.88427734375
+        },
+        {
+          "start": 130.04,
+          "end": 130.28,
+          "word": "も",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "start": 130.8,
+      "end": 133.44,
+      "text": "悪くはないんだろうけど",
+      "avg_logprob": -0.24076704545454544,
+      "no_speech_prob": 0.034515380859375,
+      "compression_ratio": 1.1808510638297873,
+      "words": [
+        {
+          "start": 130.8,
+          "end": 131.54,
+          "word": "悪",
+          "probability": 0.969970703125
+        },
+        {
+          "start": 131.54,
+          "end": 131.72,
+          "word": "く",
+          "probability": 0.99609375
+        },
+        {
+          "start": 131.72,
+          "end": 132.0,
+          "word": "は",
+          "probability": 0.998046875
+        },
+        {
+          "start": 132.0,
+          "end": 132.48,
+          "word": "ない",
+          "probability": 0.978515625
+        },
+        {
+          "start": 132.48,
+          "end": 132.82,
+          "word": "んだ",
+          "probability": 0.70947265625
+        },
+        {
+          "start": 132.82,
+          "end": 133.0,
+          "word": "ろう",
+          "probability": 0.90576171875
+        },
+        {
+          "start": 133.0,
+          "end": 133.44,
+          "word": "けど",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "start": 133.44,
+      "end": 136.68,
+      "text": "それだけじゃつまらないから",
+      "avg_logprob": -0.24076704545454544,
+      "no_speech_prob": 0.034515380859375,
+      "compression_ratio": 1.1808510638297873,
+      "words": [
+        {
+          "start": 133.44,
+          "end": 133.96,
+          "word": "それ",
+          "probability": 0.96044921875
+        },
+        {
+          "start": 133.96,
+          "end": 134.34,
+          "word": "だけ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 134.34,
+          "end": 134.66,
+          "word": "じゃ",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 134.66,
+          "end": 134.78,
+          "word": "つ",
+          "probability": 0.8349609375
+        },
+        {
+          "start": 134.78,
+          "end": 135.08,
+          "word": "ま",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 135.08,
+          "end": 135.42,
+          "word": "ら",
+          "probability": 0.984375
+        },
+        {
+          "start": 135.42,
+          "end": 136.26,
+          "word": "ない",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 136.26,
+          "end": 136.68,
+          "word": "から",
+          "probability": 0.98388671875
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "start": 157.96,
+      "end": 162.88,
+      "text": "走れ最低限でも止まらなくそれでいいから",
+      "avg_logprob": -0.19333022299097546,
+      "no_speech_prob": 0.07244873046875,
+      "compression_ratio": 1.2962962962962963,
+      "words": [
+        {
+          "start": 157.96,
+          "end": 158.72,
+          "word": "走",
+          "probability": 0.90234375
+        },
+        {
+          "start": 158.72,
+          "end": 159.02,
+          "word": "れ",
+          "probability": 0.98681640625
+        },
+        {
+          "start": 159.02,
+          "end": 159.16,
+          "word": "最",
+          "probability": 0.53369140625
+        },
+        {
+          "start": 159.16,
+          "end": 159.5,
+          "word": "低",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 159.5,
+          "end": 159.88,
+          "word": "限",
+          "probability": 1.0
+        },
+        {
+          "start": 159.88,
+          "end": 160.24,
+          "word": "でも",
+          "probability": 0.94482421875
+        },
+        {
+          "start": 160.24,
+          "end": 160.62,
+          "word": "止",
+          "probability": 0.87060546875
+        },
+        {
+          "start": 160.62,
+          "end": 160.74,
+          "word": "ま",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 160.74,
+          "end": 160.88,
+          "word": "ら",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 160.88,
+          "end": 161.26,
+          "word": "なく",
+          "probability": 0.69921875
+        },
+        {
+          "start": 161.26,
+          "end": 161.78,
+          "word": "それで",
+          "probability": 0.849609375
+        },
+        {
+          "start": 161.78,
+          "end": 162.4,
+          "word": "いい",
+          "probability": 0.982421875
+        },
+        {
+          "start": 162.4,
+          "end": 162.88,
+          "word": "から",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "start": 162.88,
+      "end": 168.18,
+      "text": "後ろで指さす奴らはほっとけ",
+      "avg_logprob": -0.19333022299097546,
+      "no_speech_prob": 0.07244873046875,
+      "compression_ratio": 1.2962962962962963,
+      "words": [
+        {
+          "start": 162.88,
+          "end": 163.88,
+          "word": "後",
+          "probability": 0.93603515625
+        },
+        {
+          "start": 163.88,
+          "end": 164.18,
+          "word": "ろ",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 164.18,
+          "end": 164.34,
+          "word": "で",
+          "probability": 0.966796875
+        },
+        {
+          "start": 164.34,
+          "end": 164.72,
+          "word": "指",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 164.72,
+          "end": 165.32,
+          "word": "さ",
+          "probability": 0.63134765625
+        },
+        {
+          "start": 165.32,
+          "end": 165.52,
+          "word": "す",
+          "probability": 0.986328125
+        },
+        {
+          "start": 165.52,
+          "end": 166.02,
+          "word": "奴",
+          "probability": 0.938720703125
+        },
+        {
+          "start": 166.02,
+          "end": 166.28,
+          "word": "ら",
+          "probability": 0.955078125
+        },
+        {
+          "start": 166.28,
+          "end": 166.72,
+          "word": "は",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 166.72,
+          "end": 167.04,
+          "word": "ほ",
+          "probability": 0.71484375
+        },
+        {
+          "start": 167.04,
+          "end": 167.86,
+          "word": "っと",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 167.86,
+          "end": 168.18,
+          "word": "け",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "start": 168.18,
+      "end": 173.26,
+      "text": "上質な人生なんてもう特に諦めたら",
+      "avg_logprob": -0.19333022299097546,
+      "no_speech_prob": 0.07244873046875,
+      "compression_ratio": 1.2962962962962963,
+      "words": [
+        {
+          "start": 168.18,
+          "end": 168.74,
+          "word": "上",
+          "probability": 0.9267578125
+        },
+        {
+          "start": 168.74,
+          "end": 169.04,
+          "word": "質",
+          "probability": 0.99609375
+        },
+        {
+          "start": 169.04,
+          "end": 169.36,
+          "word": "な",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 169.36,
+          "end": 169.6,
+          "word": "人",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 169.6,
+          "end": 170.0,
+          "word": "生",
+          "probability": 1.0
+        },
+        {
+          "start": 170.0,
+          "end": 170.26,
+          "word": "なん",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 170.26,
+          "end": 170.5,
+          "word": "て",
+          "probability": 1.0
+        },
+        {
+          "start": 170.5,
+          "end": 170.74,
+          "word": "もう",
+          "probability": 0.892578125
+        },
+        {
+          "start": 170.74,
+          "end": 171.2,
+          "word": "特",
+          "probability": 0.7861328125
+        },
+        {
+          "start": 171.2,
+          "end": 171.62,
+          "word": "に",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 171.62,
+          "end": 172.14,
+          "word": "諦",
+          "probability": 0.962890625
+        },
+        {
+          "start": 172.14,
+          "end": 172.74,
+          "word": "め",
+          "probability": 0.88427734375
+        },
+        {
+          "start": 172.74,
+          "end": 173.06,
+          "word": "た",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 173.06,
+          "end": 173.26,
+          "word": "ら",
+          "probability": 0.8349609375
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "start": 173.26,
+      "end": 175.92,
+      "text": "エンドロールなんかじゃない",
+      "avg_logprob": -0.19333022299097546,
+      "no_speech_prob": 0.07244873046875,
+      "compression_ratio": 1.2962962962962963,
+      "words": [
+        {
+          "start": 173.26,
+          "end": 173.94,
+          "word": "エ",
+          "probability": 0.98974609375
+        },
+        {
+          "start": 173.94,
+          "end": 174.22,
+          "word": "ンド",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 174.22,
+          "end": 174.38,
+          "word": "ロ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 174.38,
+          "end": 174.84,
+          "word": "ール",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 174.84,
+          "end": 175.4,
+          "word": "なんか",
+          "probability": 0.96875
+        },
+        {
+          "start": 175.4,
+          "end": 175.92,
+          "word": "じゃない",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "start": 175.92,
+      "end": 180.0,
+      "text": "生き様で刻んでやれ",
+      "avg_logprob": -0.19333022299097546,
+      "no_speech_prob": 0.07244873046875,
+      "compression_ratio": 1.2962962962962963,
+      "words": [
+        {
+          "start": 175.92,
+          "end": 176.62,
+          "word": "生",
+          "probability": 0.7978515625
+        },
+        {
+          "start": 176.62,
+          "end": 176.72,
+          "word": "き",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 176.72,
+          "end": 177.2,
+          "word": "様",
+          "probability": 0.8623046875
+        },
+        {
+          "start": 177.2,
+          "end": 178.12,
+          "word": "で",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 178.12,
+          "end": 178.42,
+          "word": "刻",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 178.42,
+          "end": 179.56,
+          "word": "んで",
+          "probability": 0.98681640625
+        },
+        {
+          "start": 179.56,
+          "end": 179.62,
+          "word": "や",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 179.62,
+          "end": 180.0,
+          "word": "れ",
+          "probability": 0.9873046875
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "start": 183.94,
+      "end": 187.92,
+      "text": "くだらない人生の最後の一手を",
+      "avg_logprob": -0.3237847354676988,
+      "no_speech_prob": 0.0027256011962890625,
+      "compression_ratio": 0.8035714285714286,
+      "words": [
+        {
+          "start": 183.94,
+          "end": 184.62,
+          "word": "く",
+          "probability": 0.243408203125
+        },
+        {
+          "start": 184.62,
+          "end": 184.86,
+          "word": "だ",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 184.86,
+          "end": 185.02,
+          "word": "ら",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 185.02,
+          "end": 185.34,
+          "word": "ない",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 185.34,
+          "end": 185.56,
+          "word": "人",
+          "probability": 0.99609375
+        },
+        {
+          "start": 185.56,
+          "end": 185.96,
+          "word": "生",
+          "probability": 1.0
+        },
+        {
+          "start": 185.96,
+          "end": 186.18,
+          "word": "の",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 186.18,
+          "end": 186.58,
+          "word": "最後",
+          "probability": 0.91748046875
+        },
+        {
+          "start": 186.58,
+          "end": 187.06,
+          "word": "の",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 187.06,
+          "end": 187.22,
+          "word": "一",
+          "probability": 0.9248046875
+        },
+        {
+          "start": 187.22,
+          "end": 187.56,
+          "word": "手",
+          "probability": 0.9638671875
+        },
+        {
+          "start": 187.56,
+          "end": 187.92,
+          "word": "を",
+          "probability": 0.9970703125
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "start": 189.68,
+      "end": 190.36,
+      "text": "今",
+      "avg_logprob": -0.3237847354676988,
+      "no_speech_prob": 0.0027256011962890625,
+      "compression_ratio": 0.8035714285714286,
+      "words": [
+        {
+          "start": 189.68,
+          "end": 190.36,
+          "word": "今",
+          "probability": 0.8037109375
+        }
+      ]
+    }
+  ],
+  "refined": [
+    {
+      "start": 30.2,
+      "end": 34.614999999999995,
+      "text": "息を吸って解けた靴紐を結んだ"
+    },
+    {
+      "start": 34.735,
+      "end": 39.27,
+      "text": "理屈な言葉あたりでも足を止めないよ"
+    },
+    {
+      "start": 39.7,
+      "end": 43.830000000000005,
+      "text": "つるぼけた地図を頼りにいこう"
+    },
+    {
+      "start": 44.900000000000006,
+      "end": 49.71,
+      "text": "隣の芝生が青く見えても"
+    },
+    {
+      "start": 51.28,
+      "end": 56.05500000000001,
+      "text": "走り最低限でも止まらなきゃそれでいいから"
+    },
+    {
+      "start": 56.17500000000001,
+      "end": 61.394999999999996,
+      "text": "後ろで指差す奴らはほっとけ"
+    },
+    {
+      "start": 61.515,
+      "end": 66.655,
+      "text": "消失な人生なんてもう特に諦めたら"
+    },
+    {
+      "start": 66.775,
+      "end": 69.175,
+      "text": "エンドロールなんかじゃない"
+    },
+    {
+      "start": 69.295,
+      "end": 73.19,
+      "text": "生き様で刻んでやれ"
+    },
+    {
+      "start": 82.06,
+      "end": 87.35,
+      "text": "一人がいいってどこか強がってみせた"
+    },
+    {
+      "start": 88.02000000000001,
+      "end": 92.83,
+      "text": "主人公じゃないから見合わないのに"
+    },
+    {
+      "start": 93.35,
+      "end": 97.155,
+      "text": "けれど千点万か正解はいいぞ"
+    },
+    {
+      "start": 97.275,
+      "end": 103.22999999999999,
+      "text": "そう都合主義ならまかり通すだよ"
+    },
+    {
+      "start": 104.64,
+      "end": 109.675,
+      "text": "二重人生なんかそういうものっては生きらないで"
+    },
+    {
+      "start": 109.795,
+      "end": 114.815,
+      "text": "泥まみれの生き方でもいいんだ"
+    },
+    {
+      "start": 114.935,
+      "end": 119.99499999999999,
+      "text": "大それた才能なんてこっちからお断りだ"
+    },
+    {
+      "start": 120.115,
+      "end": 122.63499999999999,
+      "text": "バードエンドなんかじゃない"
+    },
+    {
+      "start": 122.755,
+      "end": 126.595,
+      "text": "それなりの幸せで"
+    },
+    {
+      "start": 126.715,
+      "end": 130.55,
+      "text": "決められたレールを保っても"
+    },
+    {
+      "start": 131.0,
+      "end": 133.615,
+      "text": "悪くはないんだろうけど"
+    },
+    {
+      "start": 133.735,
+      "end": 136.95000000000002,
+      "text": "それだけじゃつまらないから"
+    },
+    {
+      "start": 158.16,
+      "end": 163.055,
+      "text": "走れ最低限でも止まらなくそれでいいから"
+    },
+    {
+      "start": 163.175,
+      "end": 168.35500000000002,
+      "text": "後ろで指さす奴らはほっとけ"
+    },
+    {
+      "start": 168.47500000000002,
+      "end": 173.435,
+      "text": "上質な人生なんてもう特に諦めたら"
+    },
+    {
+      "start": 173.555,
+      "end": 176.09499999999997,
+      "text": "エンドロールなんかじゃない"
+    },
+    {
+      "start": 176.21499999999997,
+      "end": 180.27,
+      "text": "生き様で刻んでやれ"
+    },
+    {
+      "start": 184.14,
+      "end": 188.19,
+      "text": "くだらない人生の最後の一手を"
+    }
+  ]
+}

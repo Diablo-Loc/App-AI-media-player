@@ -1,0 +1,13 @@
+🎵 Đang trích xuất âm thanh: Brand New Sky.mp4...
+78 90 retry [(78.0, 81.0, " And though I don't need to see the proof"), (81.0, 83.08, ' The sign is lighting up'), (83.08, 86.18, ' The sign is lighting up'), (86.18, 88.52, " Like he's calling me to you")]
+78 90 context [(78.0, 81.0, " And though I don't need to see the proof"), (81.0, 83.08, ' The sign is lighting up'), (83.08, 86.18, ' The sign is lighting up'), (86.18, 88.52, " Like he's calling me to you")]
+78 90 segment [(78.0, 81.2, " And though I don't need to see the proof"), (81.2, 83.26, ' The sign is lighting up'), (83.26, 86.32, ' The sign is lighting up'), (86.32, 88.86, " Like he's calling me to you")]
+80 88 retry [(80.0, 80.92, ' To see it through'), (80.92, 83.08, ' The sign is lining up'), (83.08, 86.14, ' The sign is lining up'), (86.14, 87.74, " Like he's calling me")]
+80 88 context [(80.0, 80.92, ' To see it through'), (80.92, 83.08, ' The sign is lining up'), (83.08, 86.14, ' The sign is lining up'), (86.14, 87.74, " Like he's calling me")]
+80 88 segment [(80.0, 81.18, ' To see it through'), (81.18, 83.24, ' The sign is lining up'), (83.24, 86.34, ' The sign is lining up'), (86.34, 87.98, " Like he's calling me")]
+82.8 86 retry [(82.8, 85.8, ' The sign is writing')]
+82.8 86 context [(82.8, 85.8, ' The sign is writing')]
+82.8 86 segment [(82.8, 85.98, ' The sign is writing')]
+82 86.5 retry [(82.0, 83.08, ' The sign is lining up'), (84.0, 86.08, ' The sign is lining up')]
+82 86.5 context [(82.0, 83.08, ' The sign is lighting up'), (83.08, 86.1, ' The sign is lighting up')]
+82 86.5 segment [(82.0, 84.0, ' The sign is lining up'), (84.0, 86.0, ' The sign is lining up')]

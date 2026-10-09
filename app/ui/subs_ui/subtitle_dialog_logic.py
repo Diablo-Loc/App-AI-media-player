@@ -117,6 +117,7 @@ class SubtitleToolsDialogLogic:
             pass
 
     def closeEvent(self, event):
+        self._cancel_editor_workers()
         try:
             self._disconnect_player_signals()
         except Exception:
@@ -142,6 +143,25 @@ class SubtitleToolsDialogLogic:
             pass
         return super().closeEvent(event)
 
+    def _own_editor_worker(self, worker):
+        from control.worker_lifecycle import editor_worker_owner
+        self._workers_closed = False
+        if not getattr(self, '_worker_close_connected', False):
+            self.finished.connect(self._cancel_editor_workers)
+            self._worker_close_connected = True
+        editor_worker_owner().own(worker)
+
+    def _cancel_editor_workers(self):
+        self._workers_closed = True
+        for name in ('trans_worker', 'align_worker'):
+            worker = getattr(self, name, None)
+            if worker is not None:
+                try:
+                    if worker.isRunning():
+                        worker.requestInterruption()
+                except RuntimeError:
+                    pass
+
     def _on_playback_state_changed(self, state):
         if self.tabs.currentIndex() != 1:
             return
@@ -166,7 +186,7 @@ class SubtitleToolsDialogLogic:
             except Exception:
                 pass
 
-        if not self.raw_data or 'segments' not in self.raw_data or not self.raw_data['segments']:
+        if not self.raw_data or not isinstance(self.raw_data.get('segments'), list):
             return False
 
         if 'language' in self.raw_data and self.raw_data['language']:
@@ -730,13 +750,13 @@ class SubtitleToolsDialogLogic:
                 or settings.value("claude_key", "").strip()
             )
 
-        online_provider = settings.value("online_provider", "Gemini")
+        online_provider = settings.value("online_provider", "Local Default")
         if parent and hasattr(parent, 'app_controller'):
             ctrl = parent.app_controller
             online_provider = getattr(ctrl, 'online_provider', online_provider)
 
         app_settings = {
-            "use_online_translation": bool(api_key),
+            "use_online_translation": bool(api_key and online_provider != "Local Default"),
             "online_provider": online_provider,
             "api_key": api_key,
             "detected_lang": self.detected_lang,
@@ -749,11 +769,13 @@ class SubtitleToolsDialogLogic:
         self.progress_bar.show()
 
         self.trans_worker = TranslationWorker(parsed_orig, app_settings, self)
+        self._own_editor_worker(self.trans_worker)
         self.trans_worker.finished_signal.connect(self._on_translation_finished)
         self.trans_worker.error_signal.connect(self._on_translation_error)
         self.trans_worker.start()
 
     def _on_translation_finished(self, updated_segments):
+        if getattr(self, '_workers_closed', False): return
         self.btn_translate.setEnabled(True)
         self.btn_translate.setText("🤖 Tự Động Dịch (AI)")
         self.progress_bar.hide()
@@ -767,6 +789,7 @@ class SubtitleToolsDialogLogic:
         )
 
     def _on_translation_error(self, err_msg):
+        if getattr(self, '_workers_closed', False): return
         self.btn_translate.setEnabled(True)
         self.btn_translate.setText("🤖 Tự Động Dịch (AI)")
         self.progress_bar.hide()
@@ -884,12 +907,9 @@ class SubtitleToolsDialogLogic:
             raw['segments'] = new_segments
             raw['language'] = self.detected_lang if self.detected_lang != "auto" else "en"
             try:
-                subtitle_mgr.save_raw_data(media_id, raw)
-                try:
-                    if hasattr(subtitle_mgr, 'render_ass_from_json'):
-                        subtitle_mgr.render_ass_from_json(media_id)
-                except Exception as render_err:
-                    print(f"⚠️ Warning render ASS: {render_err}")
+                if subtitle_mgr.save_raw_data(media_id, raw) is not True:
+                    QMessageBox.warning(self, "Không lưu được", "Không thể lưu phụ đề. Bản đã lưu trước đó được giữ nguyên; hãy thử lại.")
+                    return
                 if hasattr(subtitle_mgr, 'cache'):
                     subtitle_mgr.cache.pop(media_id, None)
                 if hasattr(subtitle_mgr, 'raw_cache'):
@@ -906,17 +926,18 @@ class SubtitleToolsDialogLogic:
                 self.accept()
                 return
             except Exception as e:
-                print(f"⚠️ Thử ghi file trực tiếp do lỗi Manager: {e}")
+                QMessageBox.warning(self, "Không lưu được", f"Không thể lưu phụ đề: {e}")
+                return
         if self.sub_path:
             try:
                 os.makedirs(os.path.dirname(os.path.abspath(self.sub_path)), exist_ok=True)
                 if self.sub_path.endswith('.json'):
                     json_data = {"media_id": media_id or "default", "language": self.detected_lang, "segments": parsed_data}
-                    with open(self.sub_path, "w", encoding="utf-8") as f:
-                        json.dump(json_data, f, ensure_ascii=False, indent=2)
+                    from core.subtitle_persistence import atomic_bytes
+                    atomic_bytes(self.sub_path, json.dumps(json_data, ensure_ascii=False, indent=2).encode('utf-8'))
                 else:
-                    with open(self.sub_path, "w", encoding="utf-8") as f:
-                        f.write(self.editor_orig.toPlainText())
+                    from core.subtitle_persistence import atomic_bytes
+                    atomic_bytes(self.sub_path, self.editor_orig.toPlainText().encode('utf-8'))
                 QMessageBox.information(self, "Thành công", "✅ Đã ghi file phụ đề thành công!")
                 self.accept()
             except Exception as e:
@@ -954,7 +975,14 @@ class SubtitleToolsDialogLogic:
             return
 
         settings = QSettings("MyStudio", "AI_Music_Player")
-        provider = settings.value("online_provider", "Gemini")
+        provider = settings.value("online_provider", "Local Default")
+        if provider == "Local Default":
+            QMessageBox.warning(
+                self,
+                "Cảnh báo",
+                "Vui lòng chọn một dịch vụ AI Online trong Cài đặt trước khi Khớp Lời."
+            )
+            return
         api_key = (
             settings.value("api_key", "").strip()
             or settings.value("gemini_key", "").strip()
@@ -974,11 +1002,13 @@ class SubtitleToolsDialogLogic:
         self.progress_bar.show()
 
         self.align_worker = AlignWorker(whisper_lines, ref_text, provider, api_key, self)
+        self._own_editor_worker(self.align_worker)
         self.align_worker.finished_signal.connect(self._on_align_finished)
         self.align_worker.error_signal.connect(self._on_align_error)
         self.align_worker.start()
 
     def _on_align_finished(self, lines_output, count_updated):
+        if getattr(self, '_workers_closed', False): return
         self.btn_align.setEnabled(True)
         self.btn_align.setText("✨ Khớp & Sửa Lời Chuẩn (Align Lyrics)")
         self.progress_bar.hide()
@@ -990,6 +1020,7 @@ class SubtitleToolsDialogLogic:
         )
 
     def _on_align_error(self, err_msg):
+        if getattr(self, '_workers_closed', False): return
         self.btn_align.setEnabled(True)
         self.btn_align.setText("✨ Khớp & Sửa Lời Chuẩn (Align Lyrics)")
         self.progress_bar.hide()

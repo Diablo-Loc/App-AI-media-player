@@ -1,0 +1,286 @@
+test_appearance (unittest.loader.ModuleSkipped.test_appearance) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_architecture (unittest.loader.ModuleSkipped.test_architecture) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_cancel_before_decode_and_during_generator_is_propagated (test_asr_coverage.CoverageOrchestrationTests.test_cancel_before_decode_and_during_generator_is_propagated) ... ok
+test_complete_primary_pass_does_no_extra_audio_decode_or_asr (test_asr_coverage.CoverageOrchestrationTests.test_complete_primary_pass_does_no_extra_audio_decode_or_asr) ... ok
+test_decoder_failure_does_not_erase_primary_cues (test_asr_coverage.CoverageOrchestrationTests.test_decoder_failure_does_not_erase_primary_cues) ... ok
+test_empty_primary_pass_can_recover_real_speech (test_asr_coverage.CoverageOrchestrationTests.test_empty_primary_pass_can_recover_real_speech) ... ok
+test_instrumental_intro_does_not_force_a_fake_subtitle (test_asr_coverage.CoverageOrchestrationTests.test_instrumental_intro_does_not_force_a_fake_subtitle) ... ok
+test_missing_intro_uses_same_model_and_keeps_primary_timing (test_asr_coverage.CoverageOrchestrationTests.test_missing_intro_uses_same_model_and_keeps_primary_timing) ... ok
+test_credit_low_confidence_and_padded_tail_are_not_added (test_asr_coverage.CoverageRulesTests.test_credit_low_confidence_and_padded_tail_are_not_added) ... ok
+test_end_padding_is_clipped_only_for_new_boundary_cue (test_asr_coverage.CoverageRulesTests.test_end_padding_is_clipped_only_for_new_boundary_cue) ... ok
+test_gaps_include_intro_middle_tail_without_rewriting_cues (test_asr_coverage.CoverageRulesTests.test_gaps_include_intro_middle_tail_without_rewriting_cues) ... ok
+test_original_cues_always_win_and_repeated_chorus_is_kept (test_asr_coverage.CoverageRulesTests.test_original_cues_always_win_and_repeated_chorus_is_kept) ... ok
+test_silence_thanks_and_nonlexical_hallucinations_are_not_added (test_asr_coverage.CoverageRulesTests.test_silence_thanks_and_nonlexical_hallucinations_are_not_added) ... ok
+test_windows_are_bounded_and_only_retry_uncovered_speech (test_asr_coverage.CoverageRulesTests.test_windows_are_bounded_and_only_retry_uncovered_speech) ... ok
+test_zero_duration_cjk_word_and_global_offsets_are_preserved (test_asr_coverage.CoverageRulesTests.test_zero_duration_cjk_word_and_global_offsets_are_preserved) ... ok
+test_only_main_pipeline_body_and_coverage_import_are_changed (test_asr_coverage.PipelineContractTests.test_only_main_pipeline_body_and_coverage_import_are_changed) ... ok
+test_original_flow_survives_removing_only_coverage_adapter (test_asr_coverage.PipelineContractTests.test_original_flow_survives_removing_only_coverage_adapter) ... ok
+test_primary_whisper_and_refine_options_are_exactly_original (test_asr_coverage.PipelineContractTests.test_primary_whisper_and_refine_options_are_exactly_original) ... ok
+test_cpu_fallback_uses_returned_language_before_preprocessing (test_asr_coverage.ProductionOrchestrationTests.test_cpu_fallback_uses_returned_language_before_preprocessing) ... ok
+test_empty_asr_recovery_reaches_export_and_old_result_schema (test_asr_coverage.ProductionOrchestrationTests.test_empty_asr_recovery_reaches_export_and_old_result_schema) ... ok
+test_pipeline_only_changes_intended_timing_retains_exports_schema_and_load_count (test_asr_coverage.ProductionOrchestrationTests.test_pipeline_only_changes_intended_timing_retains_exports_schema_and_load_count) ... ok
+test_30_and_100_fused_or_stalled_fillers_do_not_expand_into_huge_subtitles (test_asr_repeat_stress.RepeatStressTests.test_30_and_100_fused_or_stalled_fillers_do_not_expand_into_huge_subtitles) ... ok
+test_progressing_word_times_are_not_evidence_of_hallucination_even_for_100_repetitions (test_asr_repeat_stress.RepeatStressTests.test_progressing_word_times_are_not_evidence_of_hallucination_even_for_100_repetitions) ... ok
+test_two_or_three_close_repeated_lyric_lines_keep_every_performance (test_asr_repeat_stress.RepeatStressTests.test_two_or_three_close_repeated_lyric_lines_keep_every_performance) ... ok
+test_two_or_three_syllables_are_not_capped_even_when_asr_word_times_stall (test_asr_repeat_stress.RepeatStressTests.test_two_or_three_syllables_are_not_capped_even_when_asr_word_times_stall) ... ok
+test_editor_loads_empty_source_as_zero_rows_instead_of_showing_raw_json (test_empty_subtitles.EmptyControllerTests.test_editor_loads_empty_source_as_zero_rows_instead_of_showing_raw_json) ... ok
+test_failed_save_reports_failure_without_claiming_subtitle_ready (test_empty_subtitles.EmptyControllerTests.test_failed_save_reports_failure_without_claiming_subtitle_ready) ... ok
+test_switch_before_ai_finishes_clears_old_cues_and_stale_empty_result_is_ignored (test_empty_subtitles.EmptyControllerTests.test_switch_before_ai_finishes_clears_old_cues_and_stale_empty_result_is_ignored) ... ⚠️ AI xong nhưng media đã đổi → bỏ qua
+ok
+test_worker_empty_callback_saves_hides_and_cached_reopen_does_not_start_ai (test_empty_subtitles.EmptyControllerTests.test_worker_empty_callback_saves_hides_and_cached_reopen_does_not_start_ai) ... ok
+test_all_filtered_credit_text_is_saved_empty_not_reinserted_as_lyrics (test_empty_subtitles.EmptyPipelineTests.test_all_filtered_credit_text_is_saved_empty_not_reinserted_as_lyrics) ... ok
+test_completed_empty_asr_and_recovery_export_empty_files_without_translation (test_empty_subtitles.EmptyPipelineTests.test_completed_empty_asr_and_recovery_export_empty_files_without_translation) ... ok
+test_optional_coverage_failure_with_empty_primary_does_not_fail_job (test_empty_subtitles.EmptyPipelineTests.test_optional_coverage_failure_with_empty_primary_does_not_fail_job) ... ok
+test_real_asr_error_export_failure_and_cancel_are_not_saved_as_no_lyrics (test_empty_subtitles.EmptyPipelineTests.test_real_asr_error_export_failure_and_cancel_are_not_saved_as_no_lyrics) ... ok
+test_only_explicit_empty_result_edits_change_the_four_captured_sources (test_empty_subtitles.EmptySourceGates.test_only_explicit_empty_result_edits_change_the_four_captured_sources) ... ok
+test_timing_refinement_except_reviewed_phrase_edits_and_worker_are_unchanged (test_empty_subtitles.EmptySourceGates.test_timing_refinement_except_reviewed_phrase_edits_and_worker_are_unchanged) ... ok
+test_empty_json_recovers_missing_ass_and_mode_render_keeps_zero_dialogue (test_empty_subtitles.EmptyStorageTests.test_empty_json_recovers_missing_ass_and_mode_render_keeps_zero_dialogue) ... ok
+test_empty_result_saves_original_schema_and_header_only_ass_and_reopens_without_rerender (test_empty_subtitles.EmptyStorageTests.test_empty_result_saves_original_schema_and_header_only_ass_and_reopens_without_rerender) ... ok
+test_invalid_json_or_ass_alone_is_not_cached_as_instrumental (test_empty_subtitles.EmptyStorageTests.test_invalid_json_or_ass_alone_is_not_cached_as_instrumental) ... ok
+test_none_and_write_failure_are_not_completed_empty_results (test_empty_subtitles.EmptyStorageTests.test_none_and_write_failure_are_not_completed_empty_results) ... ⚠️ AI không trả về dữ liệu subtitle
+ok
+test_saving_empty_song_does_not_touch_existing_nonempty_song_bytes (test_empty_subtitles.EmptyStorageTests.test_saving_empty_song_does_not_touch_existing_nonempty_song_bytes) ... ok
+test_real_qthread_spawn_queue_returns_empty_list_as_data_ready_without_failure (test_empty_subtitles.EmptyWorkerTests.test_real_qthread_spawn_queue_returns_empty_list_as_data_ready_without_failure) ... ok
+test_search_play_clear_next_previous_use_full_playlist_without_reloading_master (test_foryou_search.MainWindowSearchTests.test_search_play_clear_next_previous_use_full_playlist_without_reloading_master) ... ok
+test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle (test_foryou_search.MainWindowSearchTests.test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle) ... ok
+test_decoder_quality_body_is_exactly_pre_phase (test_foryou_search.ThumbnailBudgetTests.test_decoder_quality_body_is_exactly_pre_phase) ... ok
+test_failed_cancelled_decode_always_completes_without_fake_image (test_foryou_search.ThumbnailBudgetTests.test_failed_cancelled_decode_always_completes_without_fake_image) ... ok
+test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel (test_foryou_search.ThumbnailBudgetTests.test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel) ... ok
+test_debounce_latest_query_and_empty_reload_have_no_stale_rows (test_foryou_search.VirtualPlaylistTests.test_debounce_latest_query_and_empty_reload_have_no_stale_rows) ... ok
+test_far_active_item_scroll_and_filter_keep_widget_count_bounded (test_foryou_search.VirtualPlaylistTests.test_far_active_item_scroll_and_filter_keep_widget_count_bounded) ... ok
+test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner (test_foryou_search.VirtualPlaylistTests.test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner) ... ok
+test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick (test_foryou_search.VirtualPlaylistTests.test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick) ... ok
+test_recycled_card_click_emits_current_exact_object_and_active_style (test_foryou_search.VirtualPlaylistTests.test_recycled_card_click_emits_current_exact_object_and_active_style) ... ok
+test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable (test_foryou_search.VirtualPlaylistTests.test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable) ... ok
+test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results (test_foryou_search.VirtualPlaylistTests.test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results) ... ok
+test_search_clear_other_query_preserves_full_queue_identity_and_order (test_foryou_search.VirtualPlaylistTests.test_search_clear_other_query_preserves_full_queue_identity_and_order) ... ok
+test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search (test_foryou_search.VirtualPlaylistTests.test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search) ... ok
+test_superseded_preparation_and_clear_only_publish_latest_query (test_foryou_search.VirtualPlaylistTests.test_superseded_preparation_and_clear_only_publish_latest_query) ... ok
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent (test_foryou_spacing.ForYouSpacingTests.test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent) ... ok
+test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes (test_foryou_spacing.ForYouSpacingTests.test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes) ... ok
+test_search_top_bottom_and_horizontal_center_are_balanced (test_foryou_spacing.ForYouSpacingTests.test_search_top_bottom_and_horizontal_center_are_balanced) ... ok
+test_style_observer_never_changes_flags_geometry_or_native_video_owners (test_foryou_spacing.ForYouSpacingTests.test_style_observer_never_changes_flags_geometry_or_native_video_owners) ... ok
+test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized (test_foryou_spacing.FrameColorTests.test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized) ... ok
+test_only_for_you_presentation_and_shell_installs_change_captured_sources (test_foryou_spacing.FrameColorTests.test_only_for_you_presentation_and_shell_installs_change_captured_sources) ... ok
+test_unavailable_or_unsupported_dwm_does_not_break_startup (test_foryou_spacing.FrameColorTests.test_unavailable_or_unsupported_dwm_does_not_break_startup) ... ok
+test_legacy_contracts (unittest.loader.ModuleSkipped.test_legacy_contracts) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_library_workers (unittest.loader.ModuleSkipped.test_library_workers) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_captured_real_cases_no_longer_merge_adjacent_asr_lines_or_cut_small_breath (test_lyric_phrases.LyricPhraseTests.test_captured_real_cases_no_longer_merge_adjacent_asr_lines_or_cut_small_breath) ... ok
+test_contiguous_short_complete_asr_lines_and_refrains_stay_separate (test_lyric_phrases.LyricPhraseTests.test_contiguous_short_complete_asr_lines_and_refrains_stay_separate) ... ok
+test_long_source_followed_by_tiny_continuation_does_not_orphan_last_word (test_lyric_phrases.LyricPhraseTests.test_long_source_followed_by_tiny_continuation_does_not_orphan_last_word) ... ok
+test_long_sustained_note_does_not_force_eight_second_mid_sentence_cut (test_lyric_phrases.LyricPhraseTests.test_long_sustained_note_does_not_force_eight_second_mid_sentence_cut) ... ok
+test_missing_word_times_keep_source_text_whole_including_two_sentences (test_lyric_phrases.LyricPhraseTests.test_missing_word_times_keep_source_text_whole_including_two_sentences) ... ok
+test_newline_before_word_breaks_before_not_after_that_word (test_lyric_phrases.LyricPhraseTests.test_newline_before_word_breaks_before_not_after_that_word) ... ok
+test_newline_inside_indivisible_word_has_no_invented_phrase_timestamp (test_lyric_phrases.LyricPhraseTests.test_newline_inside_indivisible_word_has_no_invented_phrase_timestamp) ... ok
+test_only_grouping_and_newline_adapters_change_refinement_source (test_lyric_phrases.LyricPhraseTests.test_only_grouping_and_newline_adapters_change_refinement_source) ... ok
+test_oversized_phrase_is_balanced_without_losing_or_orphaning_tokens (test_lyric_phrases.LyricPhraseTests.test_oversized_phrase_is_balanced_without_losing_or_orphaning_tokens) ... ok
+test_qt_displays_only_active_phrase_and_retains_language_modes (test_lyric_phrases.LyricPhraseTests.test_qt_displays_only_active_phrase_and_retains_language_modes) ... ok
+test_real_pause_stays_empty_and_does_not_extend_previous_sentence (test_lyric_phrases.LyricPhraseTests.test_real_pause_stays_empty_and_does_not_extend_previous_sentence) ... ok
+test_short_refrains_without_punctuation_remain_separate_performances (test_lyric_phrases.LyricPhraseTests.test_short_refrains_without_punctuation_remain_separate_performances) ... ok
+test_small_breath_inside_a_sentence_does_not_split_a_fragment (test_lyric_phrases.LyricPhraseTests.test_small_breath_inside_a_sentence_does_not_split_a_fragment) ... ok
+test_tiny_asr_fragments_are_joined_not_treated_as_complete_lines (test_lyric_phrases.LyricPhraseTests.test_tiny_asr_fragments_are_joined_not_treated_as_complete_lines) ... ok
+test_actual_export_helpers_use_shared_unit_rounding (test_lyric_refinement.ExportTimingTests.test_actual_export_helpers_use_shared_unit_rounding) ... ok
+test_only_time_format_bodies_and_shared_import_changed (test_lyric_refinement.ExportTimingTests.test_only_time_format_bodies_and_shared_import_changed) ... ok
+test_rounding_preserves_milliseconds_and_carries_seconds_minutes_hours (test_lyric_refinement.ExportTimingTests.test_rounding_preserves_milliseconds_and_carries_seconds_minutes_hours) ... ok
+test_legacy_default_outputs_match_captured_source_on_real_and_repeat_cases (test_lyric_refinement.LegacyAlignerCompatibilityTests.test_legacy_default_outputs_match_captured_source_on_real_and_repeat_cases) ... ok
+test_only_optional_short_lyric_guard_is_added_to_original_aligner (test_lyric_refinement.LegacyAlignerCompatibilityTests.test_only_optional_short_lyric_guard_is_added_to_original_aligner) ... ok
+test_captured_three_video_word_inventory_is_retained_after_splitting (test_lyric_refinement.LyricRefinementTests.test_captured_three_video_word_inventory_is_retained_after_splitting) ... ok
+test_cross_chunk_boundary_word_duplicate_only_removed_at_same_acoustic_span (test_lyric_refinement.LyricRefinementTests.test_cross_chunk_boundary_word_duplicate_only_removed_at_same_acoustic_span) ... ok
+test_duplicate_acoustic_span_is_removed_but_repeated_performance_is_kept (test_lyric_refinement.LyricRefinementTests.test_duplicate_acoustic_span_is_removed_but_repeated_performance_is_kept) ... ok
+test_finalization_preserves_text_and_never_overlaps_on_many_short_intervals (test_lyric_refinement.LyricRefinementTests.test_finalization_preserves_text_and_never_overlaps_on_many_short_intervals) ... ok
+test_identical_and_near_identical_lyrics_at_distinct_times_survive (test_lyric_refinement.LyricRefinementTests.test_identical_and_near_identical_lyrics_at_distinct_times_survive) ... ok
+test_invalid_times_are_excluded_and_input_is_not_mutated (test_lyric_refinement.LyricRefinementTests.test_invalid_times_are_excluded_and_input_is_not_mutated) ... ok
+test_join_punctuation_cjk_latin_and_korean (test_lyric_refinement.LyricRefinementTests.test_join_punctuation_cjk_latin_and_korean) ... ok
+test_long_filler_run_with_stalled_word_times_is_shortened_not_real_performance (test_lyric_refinement.LyricRefinementTests.test_long_filler_run_with_stalled_word_times_is_shortened_not_real_performance) ... ok
+test_onset_does_not_invert_negative_offset_or_add_large_tail (test_lyric_refinement.LyricRefinementTests.test_onset_does_not_invert_negative_offset_or_add_large_tail) ... ok
+test_recovery_keeps_whole_boundary_word_without_overlapping_next_cue (test_lyric_refinement.LyricRefinementTests.test_recovery_keeps_whole_boundary_word_without_overlapping_next_cue) ... ok
+test_recovery_uses_new_profile_and_preserves_two_repeated_lines (test_lyric_refinement.LyricRefinementTests.test_recovery_uses_new_profile_and_preserves_two_repeated_lines) ... ok
+test_repeated_lyrics_with_overlapping_imprecise_asr_spans_are_not_deleted (test_lyric_refinement.LyricRefinementTests.test_repeated_lyrics_with_overlapping_imprecise_asr_spans_are_not_deleted) ... ok
+test_repeated_timed_words_and_real_la_ha_chorus_are_not_truncated (test_lyric_refinement.LyricRefinementTests.test_repeated_timed_words_and_real_la_ha_chorus_are_not_truncated) ... ok
+test_runaway_filter_does_not_edit_meaningful_words_or_separate_repetitions (test_lyric_refinement.LyricRefinementTests.test_runaway_filter_does_not_edit_meaningful_words_or_separate_repetitions) ... ok
+test_sentence_punctuation_and_newlines_take_priority_over_chunk_boundaries (test_lyric_refinement.LyricRefinementTests.test_sentence_punctuation_and_newlines_take_priority_over_chunk_boundaries) ... ok
+test_short_cues_do_not_reintroduce_overlap_via_minimum_duration (test_lyric_refinement.LyricRefinementTests.test_short_cues_do_not_reintroduce_overlap_via_minimum_duration) ... ok
+test_short_real_lyrics_are_not_deleted_by_weak_you_or_music_filter (test_lyric_refinement.LyricRefinementTests.test_short_real_lyrics_are_not_deleted_by_weak_you_or_music_filter) ... ok
+test_soft_length_target_does_not_cut_phrase_before_natural_pause (test_lyric_refinement.LyricRefinementTests.test_soft_length_target_does_not_cut_phrase_before_natural_pause) ... ok
+test_zero_duration_cjk_repetitions_and_single_character_lines_survive (test_lyric_refinement.LyricRefinementTests.test_zero_duration_cjk_repetitions_and_single_character_lines_survive) ... ok
+test_manager_only_adds_marker_guard_all_other_original_logic_is_frozen (test_lyric_refinement.SavedSubtitleCompatibilityTests.test_manager_only_adds_marker_guard_all_other_original_logic_is_frozen) ... ok
+test_marked_new_objects_survive_pickle_and_save_without_second_padding (test_lyric_refinement.SavedSubtitleCompatibilityTests.test_marked_new_objects_survive_pickle_and_save_without_second_padding) ... ok
+test_missing_old_ass_renders_existing_json_times_without_realignment (test_lyric_refinement.SavedSubtitleCompatibilityTests.test_missing_old_ass_renders_existing_json_times_without_realignment) ... ok
+test_open_old_subtitles_and_save_new_song_do_not_modify_old_bytes (test_lyric_refinement.SavedSubtitleCompatibilityTests.test_open_old_subtitles_and_save_new_song_do_not_modify_old_bytes) ... ok
+test_unmarked_legacy_objects_keep_original_cleaning_contract (test_lyric_refinement.SavedSubtitleCompatibilityTests.test_unmarked_legacy_objects_keep_original_cleaning_contract) ... ok
+test_main_window (unittest.loader.ModuleSkipped.test_main_window) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_media_subtitles (unittest.loader.ModuleSkipped.test_media_subtitles) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_persistence (unittest.loader.ModuleSkipped.test_persistence) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_playback (unittest.loader.ModuleSkipped.test_playback) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_actual_screen_load_keeps_physical_resolution_in_widget (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_actual_screen_load_keeps_physical_resolution_in_widget) ... ok
+test_cache_reuses_correct_dpr_and_reloads_old_monitor_resolution (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_cache_reuses_correct_dpr_and_reloads_old_monitor_resolution) ... ok
+test_decode_uses_background_qimage_and_delivers_on_gui_thread (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_decode_uses_background_qimage_and_delivers_on_gui_thread) ... ok
+test_fractional_dpr_keeps_full_pixel_canvas_and_center_crop (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_fractional_dpr_keeps_full_pixel_canvas_and_center_crop) ... ok
+test_late_wrong_key_or_dpr_cannot_replace_visible_image (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_late_wrong_key_or_dpr_cannot_replace_visible_image) ... ok
+test_monitor_change_requests_refresh (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_monitor_change_requests_refresh) ... ok
+test_real_jpeg_downsampling_is_closer_to_full_source_reference (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_real_jpeg_downsampling_is_closer_to_full_source_reference) ... ok
+test_small_source_is_not_upscaled_before_filter_and_cancel_is_silent (test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_small_source_is_not_upscaled_before_filter_and_cancel_is_silent) ... ok
+test_qt_workers (unittest.loader.ModuleSkipped.test_qt_workers) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_runtime_paths (unittest.loader.ModuleSkipped.test_runtime_paths) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+test_thumbnail_persistence (unittest.loader.ModuleSkipped.test_thumbnail_persistence) ... skipped 'Historical refactor was reverted by the user; see tests/README.md. Current baseline/UI gates: test_ui_refresh.py.'
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_download_combo_text_and_buttons_fit_in_popup (test_ui_layout_polish.UiLayoutPolishTests.test_download_combo_text_and_buttons_fit_in_popup) ... ok
+test_download_options_and_saved_schema_stay_original (test_ui_layout_polish.UiLayoutPolishTests.test_download_options_and_saved_schema_stay_original) ... ok
+test_hamburger_center_matches_rail_in_both_modes (test_ui_layout_polish.UiLayoutPolishTests.test_hamburger_center_matches_rail_in_both_modes) ... ok
+test_long_text_elides_without_losing_full_unicode_metadata (test_ui_layout_polish.UiLayoutPolishTests.test_long_text_elides_without_losing_full_unicode_metadata) ... ok
+test_playlist_balances_index_thumbnail_and_metadata (test_ui_layout_polish.UiLayoutPolishTests.test_playlist_balances_index_thumbnail_and_metadata) ... ok
+test_playlist_click_order_and_highlight_remain_original (test_ui_layout_polish.UiLayoutPolishTests.test_playlist_click_order_and_highlight_remain_original) ... ok
+test_original_functions_remain_identical_after_removing_only_adapters (test_ui_media_surface.PresentationAdapterSourceGate.test_original_functions_remain_identical_after_removing_only_adapters) ... ok
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_delayed_for_you_layout_cannot_move_video_in_mini_or_large (test_ui_media_surface.UiMediaSurfaceTests.test_delayed_for_you_layout_cannot_move_video_in_mini_or_large) ... ok
+test_first_valid_frame_refreshes_once_and_never_steals_video (test_ui_media_surface.UiMediaSurfaceTests.test_first_valid_frame_refreshes_once_and_never_steals_video) ... ok
+test_live_for_you_stage_still_uses_original_aspect_layout (test_ui_media_surface.UiMediaSurfaceTests.test_live_for_you_stage_still_uses_original_aspect_layout) ... ok
+test_mouse_toggle_updates_both_shuffle_buttons_and_restores_order (test_ui_media_surface.UiMediaSurfaceTests.test_mouse_toggle_updates_both_shuffle_buttons_and_restores_order) ... ok
+test_new_media_repairs_hidden_offset_surface_without_page_switch (test_ui_media_surface.UiMediaSurfaceTests.test_new_media_repairs_hidden_offset_surface_without_page_switch) ... ok
+test_off_icons_keep_off_colour_even_in_active_hover_mode (test_ui_media_surface.UiMediaSurfaceTests.test_off_icons_keep_off_colour_even_in_active_hover_mode) ... ok
+test_repeat_on_off_signal_and_hover_follow_original_boolean (test_ui_media_surface.UiMediaSurfaceTests.test_repeat_on_off_signal_and_hover_follow_original_boolean) ... ok
+test_repeated_bind_does_not_duplicate_frame_listeners (test_ui_media_surface.UiMediaSurfaceTests.test_repeated_bind_does_not_duplicate_frame_listeners) ... ok
+test_all_non_ui_sources_match_restored_hashes (test_ui_refresh.OriginalSourceGates.test_all_non_ui_sources_match_restored_hashes) ... ok
+test_all_python_sources_compile_on_project_python (test_ui_refresh.OriginalSourceGates.test_all_python_sources_compile_on_project_python) ... ok
+test_every_original_ui_api_and_signal_signature_survives (test_ui_refresh.OriginalSourceGates.test_every_original_ui_api_and_signal_signature_survives) ... ok
+test_original_qt_signal_wiring_is_identical (test_ui_refresh.OriginalSourceGates.test_original_qt_signal_wiring_is_identical) ... ok
+test_svg_assets_match_pinned_source_hashes_and_ship_license (test_ui_refresh.OriginalSourceGates.test_svg_assets_match_pinned_source_hashes_and_ship_license) ... ok
+test_ui_methods_outside_presentation_are_identical (test_ui_refresh.OriginalSourceGates.test_ui_methods_outside_presentation_are_identical) ... ok
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_all_icons_render_and_disabled_states_differ_at_high_dpi (test_ui_refresh.QtUiBehaviorTests.test_all_icons_render_and_disabled_states_differ_at_high_dpi) ... ok
+test_all_pages_remain_reachable_by_existing_handler (test_ui_refresh.QtUiBehaviorTests.test_all_pages_remain_reachable_by_existing_handler) ... ok
+test_download_custom_path_toggle_and_plain_paste_survive (test_ui_refresh.QtUiBehaviorTests.test_download_custom_path_toggle_and_plain_paste_survive) ... ok
+test_for_you_repeat_signal_and_shuffle_preserve_playlist (test_ui_refresh.QtUiBehaviorTests.test_for_you_repeat_signal_and_shuffle_preserve_playlist) ... ok
+test_fullscreen_enters_and_restores_original_video_ownership (test_ui_refresh.QtUiBehaviorTests.test_fullscreen_enters_and_restores_original_video_ownership) ... ok
+test_main_window_mini_mode_round_trip_keeps_video_owner (test_ui_refresh.QtUiBehaviorTests.test_main_window_mini_mode_round_trip_keeps_video_owner) ... ok
+test_mini_player_signals_and_existing_title_truncation (test_ui_refresh.QtUiBehaviorTests.test_mini_player_signals_and_existing_title_truncation) ... ok
+test_navigation_indexes_roles_and_compact_restore (test_ui_refresh.QtUiBehaviorTests.test_navigation_indexes_roles_and_compact_restore) ... ok
+test_play_pause_icons_do_not_parse_stylesheets_per_update (test_ui_refresh.QtUiBehaviorTests.test_play_pause_icons_do_not_parse_stylesheets_per_update) ... ok
+test_playback_buttons_emit_original_signals_once (test_ui_refresh.QtUiBehaviorTests.test_playback_buttons_emit_original_signals_once) ... ok
+test_playlist_card_click_keeps_exact_media_object (test_ui_refresh.QtUiBehaviorTests.test_playlist_card_click_keeps_exact_media_object) ... ok
+test_seek_and_position_keep_slider_drag_contract (test_ui_refresh.QtUiBehaviorTests.test_seek_and_position_keep_slider_drag_contract) ... ok
+test_settings_still_save_original_keys_and_values (test_ui_refresh.QtUiBehaviorTests.test_settings_still_save_original_keys_and_values) ... ok
+test_short_namespace_bundle_path_resolves_packaged_svg_assets (test_ui_refresh.QtUiBehaviorTests.test_short_namespace_bundle_path_resolves_packaged_svg_assets) ... ok
+test_subtitle_appearance_modes_and_existing_shortcuts_survive (test_ui_refresh.QtUiBehaviorTests.test_subtitle_appearance_modes_and_existing_shortcuts_survive) ... ok
+test_volume_pathways_preserve_values_and_threshold_icons (test_ui_refresh.QtUiBehaviorTests.test_volume_pathways_preserve_values_and_threshold_icons) ... ok
+D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\system_media_manager.py:7: UserWarning: The NumPy module was reloaded (imported a second time). This can in some cases result in small but subtle issues and is discouraged.
+  import numpy as np
+test_collapsed_sidebar_paints_every_icon (test_ui_stability.UiStabilityTests.test_collapsed_sidebar_paints_every_icon) ... ok
+test_controls_remain_visible_during_popup_seek_and_button_press (test_ui_stability.UiStabilityTests.test_controls_remain_visible_during_popup_seek_and_button_press) ... ok
+test_download_compact_controls_remain_within_page (test_ui_stability.UiStabilityTests.test_download_compact_controls_remain_within_page) ... ok
+test_floating_subtitle_cannot_swallow_volume_click (test_ui_stability.UiStabilityTests.test_floating_subtitle_cannot_swallow_volume_click) ... ok
+test_guard_does_not_reapply_identical_native_masks (test_ui_stability.UiStabilityTests.test_guard_does_not_reapply_identical_native_masks) ... ok
+test_guard_preserves_subtitle_drag_outside_controls (test_ui_stability.UiStabilityTests.test_guard_preserves_subtitle_drag_outside_controls) ... ok
+test_metadata_elision_retains_original_html_and_full_tooltip (test_ui_stability.UiStabilityTests.test_metadata_elision_retains_original_html_and_full_tooltip) ... ok
+test_rapid_sidebar_reversals_use_one_owned_group (test_ui_stability.UiStabilityTests.test_rapid_sidebar_reversals_use_one_owned_group) ... ok
+test_resizing_preserves_all_control_targets_and_video_parent (test_ui_stability.UiStabilityTests.test_resizing_preserves_all_control_targets_and_video_parent) ... ok
+test_volume_receives_real_mouse_click_in_each_layout (test_ui_stability.UiStabilityTests.test_volume_receives_real_mouse_click_in_each_layout) ... ok
+
+----------------------------------------------------------------------
+Ran 170 tests in 26.827s
+
+OK (skipped=11)
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Midnight in Tokyo - Luna (Force: False)
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+▶️ Bắt đầu phát: City lights - Luna (Force: False)
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+⚠️ Không tìm thấy Grid Layout!
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+
+[DEBUG] >>> ĐÃ BẤM NÚT 'CLEAR'
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

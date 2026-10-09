@@ -38,7 +38,9 @@ def fix_nvidia_dlls():
 # ================================================================
 import difflib
 from pipeline.extractor import extract_audio
-from pipeline.aligner import refine_segments
+from pipeline.lyric_refinement import refine_lyrics, finalize_cue_times, mark_final_timing
+from pipeline.asr_coverage import repair_missing_subtitles
+from pipeline.asr_intro_guard import audit_primary_intro
 from pipeline.lyric_formatter import export_srt, export_lrc
 from pipeline.jp_normalizer import normalize_japanese, universal_text_reconstruct
 
@@ -101,6 +103,9 @@ def run_ai_pipeline(
     
     # --- BƯỚC KẾT NỐI SETTING: Đọc từ Registry ---
     settings = QSettings("MyStudio", "AI_Music_Player")
+    from pipeline.content_mode import resolve_content_mode, DIALOGUE
+    content_mode = resolve_content_mode(settings.value("subtitle_content_mode", "lyrics"))
+    dialogue = content_mode == DIALOGUE
     
     # Nếu chưa có gì, mặc định dùng "medium" cho an toàn (vì large-v3 nặng 3GB RAM)
     saved_model = settings.value("ai_model", "medium") 
@@ -205,24 +210,30 @@ def run_ai_pipeline(
         
         try:
             # Truyền file temp_wav_path vào
-            segments_generator, info = model.transcribe(
-                str(temp_wav_path),
-                language=None,
-                word_timestamps=True,
-                condition_on_previous_text=False,
-                beam_size=3,
-                temperature=0.0,   
-                vad_filter=False,  
-                vad_parameters=dict(min_silence_duration_ms=1000),
-                initial_prompt= prompt_text
-                #prompt_reset_on_temperature=0.5
-                #log_prob_threshold=None,      # Ép AI nhận diện ngay cả khi âm thanh mờ nhạt
-                #compression_ratio_threshold=2.4, # Cho phép nhạc dạo đầu lặp lại không bị coi là rác
-                #no_speech_threshold=0.4        # Chấp nhận tiếng người nhỏ hơn nhạc nền
-            )
+            if dialogue:
+                from pipeline.dialogue import transcription_options
+                segments_generator, info = model.transcribe(
+                    str(temp_wav_path), **transcription_options())
+            else:
+                segments_generator, info = model.transcribe(
+                    str(temp_wav_path),
+                    language=None,
+                    word_timestamps=True,
+                    condition_on_previous_text=False,
+                    beam_size=3,
+                    temperature=0.0,
+                    vad_filter=False,
+                    vad_parameters=dict(min_silence_duration_ms=1000),
+                    initial_prompt= prompt_text
+                    #prompt_reset_on_temperature=0.5
+                    #log_prob_threshold=None,      # Ép AI nhận diện ngay cả khi âm thanh mờ nhạt
+                    #compression_ratio_threshold=2.4, # Cho phép nhạc dạo đầu lặp lại không bị coi là rác
+                    #no_speech_threshold=0.4        # Chấp nhận tiếng người nhỏ hơn nhạc nền
+                )
             detected_lang = info.language
             print(f"📡 Ngôn ngữ phát hiện: {detected_lang} ({info.language_probability*100:.1f}%)")
             segments_list = list(segments_generator)
+            language_probability = getattr(info, "language_probability", 0.0)
             
         except Exception as e:
             # Xử lý lỗi tràn VRAM
@@ -230,18 +241,60 @@ def run_ai_pipeline(
                 print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
                 del model
                 torch.cuda.empty_cache()
-                model = WhisperModel("medium", device="cpu", compute_type="int8")
+                model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
+                                     else "medium", device="cpu", compute_type="int8")
                 # Chạy lại với file temp
-                segments_generator, _ = model.transcribe(str(temp_wav_path), word_timestamps=True)
+                from pipeline.lyric_accuracy import primary_options
+                if dialogue:
+                    from pipeline.dialogue import transcription_options
+                    segments_generator, fallback_info = model.transcribe(
+                        str(temp_wav_path), **transcription_options())
+                else:
+                    segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
                 segments_list = list(segments_generator)
+                detected_lang = fallback_info.language
+                language_probability = getattr(fallback_info, "language_probability", 0.0)
             else:
                 raise e
 
-        # Dọn dẹp Model
-        del model
-        gc.collect()
-        if hasattr(torch, "cuda") and torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        # Independent first-window sanity check. The full-song primary decode
+        # above is kept unchanged for normal songs; only a long instrumental
+        # intro can trigger filtering or a strongly justified language re-run.
+        intro_report = {}
+        if not dialogue:
+            segments_list, detected_lang, intro_report = audit_primary_intro(
+                model,
+                temp_wav_path,
+                segments_list,
+                detected_lang,
+                language_probability,
+                cancel_cb=cancel_cb,
+            )
+        if intro_report.get("removed"):
+            first_voice = intro_report.get("first_voice")
+            voice_note = f" (giọng đầu ~{first_voice:.2f}s)" if isinstance(first_voice, (int, float)) else ""
+            print(
+                f"🛡 Intro guard: bỏ {len(intro_report['removed'])} đoạn ASR không được xác minh{voice_note}."
+            )
+        if intro_report.get("language_rerun"):
+            print(
+                "🌐 Kiểm tra lại ngôn ngữ từ đoạn có giọng: "
+                f"{intro_report.get('language_before')} → {intro_report.get('language_after')}."
+            )
+        if intro_report.get("error"):
+            print(f"⚠️ Bỏ qua kiểm tra intro, giữ nguyên ASR chính: {intro_report['error']}")
+        if intro_report.get("language_probe_error"):
+            print(
+                "⚠️ Không kiểm tra lại được ngôn ngữ intro; giữ nguyên ASR chính: "
+                f"{intro_report['language_probe_error']}"
+            )
+        if intro_report.get("language_rerun_rejected"):
+            print("⚠️ Bỏ kết quả nhận diện lại ngôn ngữ vì rỗng; giữ nguyên ASR chính.")
+        if intro_report.get("verification_error"):
+            print(
+                "⚠️ Không xác minh được chữ ở intro; giữ nguyên các câu ASR thường: "
+                f"{intro_report['verification_error']}"
+            )
 
         _check_cancel(cancel_cb)
         
@@ -255,7 +308,9 @@ def run_ai_pipeline(
             # 🔥 SỬ DỤNG HÀM TÁI CẤU TRÚC
             # Bỏ qua s.text của Whisper (vì nó có thể bị dính hoặc sai format)
             # Tự xây lại câu từ s.words
-            if s.words:
+            if dialogue:
+                processed_text = s.text.strip()
+            elif s.words:
                 processed_text = universal_text_reconstruct(s.words, s.text)
             else:
                 processed_text = s.text.strip() # Fallback nếu xui xẻo không có words
@@ -274,8 +329,6 @@ def run_ai_pipeline(
                 "words": words_data,
             })
 
-        if not raw_segments:
-            raise RuntimeError("⚠️ Không tìm thấy lời thoại nào.")
                         
         # ============================================================
         # 5️⃣ REFINE SEGMENTS & EXPORT RAW
@@ -283,18 +336,75 @@ def run_ai_pipeline(
         _report(progress_cb, 55, "✂️ Căn chỉnh subtitle")
         _check_cancel(cancel_cb)
 
-        # Thiết lập thông số dựa trên detected_lang
+        # Keep the orchestration options compatible with legacy refinement.
+        # The new profile uses its own 50 ms lead / 80 ms tail, not these offsets.
         is_cjk = detected_lang in LANG_CONFIG["cjk"]
         
-        final_segments = refine_segments(
-            raw_segments,
-            max_chars=22 if is_cjk else 74,      # Thay 45 thành 80 cho hệ Latin
-            min_pause=0.54 if is_cjk else 0.6,   # Thay 0.54 thành 0.75 cho hệ Latin
-            start_offset=-0.2 if is_cjk else 0, # Tiếng Anh nên giảm offset chút để bắt kịp âm gió
-            end_padding=0.27 if is_cjk else 0.6,
-            gap_threshold=0.6,    # Dễ dàng điều chỉnh
-            memory_reset_t=3.0    # Tự động quên câu cũ sau 3s im lặng
-        )
+        if dialogue:
+            from pipeline.dialogue import refine_dialogue
+            final_segments = refine_dialogue(raw_segments, cjk=is_cjk)
+        else:
+            final_segments = refine_lyrics(
+                raw_segments,
+                max_chars=22 if is_cjk else 74,
+                min_pause=0.54 if is_cjk else 0.6,
+                start_offset=-0.2 if is_cjk else 0,
+                end_padding=0.27 if is_cjk else 0.6,
+                gap_threshold=0.6,
+                memory_reset_t=3.0
+            )
+
+        coverage = {}
+        try:
+            if not dialogue:
+                final_segments, coverage = repair_missing_subtitles(
+                    model, temp_wav_path, detected_lang, final_segments,
+                    dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,
+                         start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,
+                         gap_threshold=0.6, memory_reset_t=3.0),
+                    cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,
+                    boundary_gap=0.0, boundary_tolerance=0.08,
+                    primary_segments=segments_list)
+                print(f"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, "
+                      f"{len(coverage.get('attempts', []))} lượt nhận diện lại.")
+                if coverage.get("unresolved_speech"):
+                    print(f"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}")
+                if coverage.get("error"):
+                    print(f"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}")
+                if coverage.get("verification_errors"):
+                    print(
+                        f"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery "
+                        "vì lượt xác minh độc lập bị lỗi."
+                    )
+                # Align only already accepted text, after all coverage decisions.
+                # The loaded local model stays owned by this worker; no new ASR or
+                # provider request, and unreliable candidates keep the old timing.
+                from pipeline.lyric_timing import align_lyric_onsets
+                _check_cancel(cancel_cb)
+                _report(progress_cb, 58, "⏱ Căn mốc lời hát")
+                final_segments, timing_report = align_lyric_onsets(
+                    model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)
+                print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
+                      f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
+                if timing_report["errors"] or timing_report["capped"]:
+                    print("ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.")
+        except Exception as error:
+            _check_cancel(cancel_cb)
+            # Preserve primary recognition if optional local coverage detection fails.
+            print(f"⚠️ Không kiểm tra được coverage bổ sung: {error}")
+        finally:
+            del model
+            gc.collect()
+            if hasattr(torch, "cuda") and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+        # Display margins belong after coverage, so they never change which
+        # vocal gaps trigger recovery or which recovered words are accepted.
+        from pipeline.lyric_refinement import finalize_display_times
+        if not dialogue:
+            final_segments = finalize_display_times(
+                final_segments, cjk=is_cjk, duration=coverage.get("duration"))
+        _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng
         base_name = input_path.stem
@@ -306,6 +416,13 @@ def run_ai_pipeline(
 
         export_srt(final_segments, output_dir / "subtitles" / "source" / "srt" / f"{clean_name}.srt")
         export_lrc(final_segments, output_dir / "subtitles" / "source" / "lrc" / f"{clean_name}.lrc")
+
+        if not final_segments:
+            # A completed recognition pass can legitimately contain no lyrics.
+            # Keep the usual result/export contracts, without loading translators.
+            _check_cancel(cancel_cb)
+            _report(progress_cb, 100, "ℹ️ Hoàn tất: chưa nhận diện được lời (có thể là nhạc không lời).")
+            return {"media_id": media_id, "segments": []}
 
         # ============================================================
         # 6️⃣ TRANSLATE (ĐIỀU HƯỚNG CHUẨN: USER LÀ NHẤT)
@@ -334,7 +451,8 @@ def run_ai_pipeline(
                         subs, 
                         online_provider, 
                         api_key, 
-                        song_title_raw=song_title_raw
+                        song_title_raw=song_title_raw,
+                        content_mode=content_mode
                     )
                     if result:
                         subs = result
@@ -368,6 +486,7 @@ def run_ai_pipeline(
         # 7️⃣ KẾT THÚC
         # ============================================================
         _report(progress_cb, 100, "✅ Hoàn tất AI")
+        mark_final_timing(subs)
         #serialized_result = _serialize_subtitles(subs)
         return {
             "media_id": media_id,

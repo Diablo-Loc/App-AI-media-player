@@ -1,0 +1,44 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: Moon's Voice Ends, Heart's Light Shines.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 04:14.617
+INFO:faster_whisper:Detected language 'zh' with probability 0.98
+📡 Ngôn ngữ phát hiện: zh (97.9%)
+50 🧹 Làm sạch dữ liệu (zh)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 10.0–22.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 84.5–96.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 1.9–7.0s
+INFO:faster_whisper:Processing audio with duration 00:05.120
+🛠 Kiểm tra coverage: thêm 1 dòng, 4 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(3.888, 5.008), (14.192, 14.71), (86.54, 90.832)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 20.0–32.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 19.7–31.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 221.8–233.0s
+INFO:faster_whisper:Processing audio with duration 00:11.270
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 221.1–232.7s
+INFO:faster_whisper:Processing audio with duration 00:11.670
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 190.8–201.6s
+INFO:faster_whisper:Processing audio with duration 00:10.820
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 190.1–201.3s
+INFO:faster_whisper:Processing audio with duration 00:11.220
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 93.7–105.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 93.4–105.4s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+🎵 Đối chiếu lyric: 8 lượt, []
+⚠️ Đối chiếu lyric chưa hoàn tất: {'attempts': [{'start': 20.0, 'end': 32.0, 'reason': 'short_gap'}, {'start': 19.7, 'end': 31.7, 'reason': 'short_gap'}, {'start': 221.76, 'end': 233.03, 'reason': 'short_gap'}, {'start': 221.06, 'end': 232.73, 'reason': 'short_gap'}, {'start': 190.79, 'end': 201.60999999999999, 'reason': 'short_gap'}, {'start': 190.09, 'end': 201.30999999999997, 'reason': 'short_gap'}, {'start': 93.65, 'end': 105.65, 'reason': 'short_gap'}, {'start': 93.35000000000001, 'end': 105.35000000000001, 'reason': 'short_gap'}], 'changes': [], 'duration': 254.617, 'budget_exhausted': True, 'decoded_audio_seconds': 92.97999999999996, 'seconds': 5.860000000000582}
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 55 [{'start': 0.0, 'end': 2.3, 'text': '字幕志愿者'}, {'start': 14.71, 'end': 25.0, 'text': '月光會不會記得今夜一顆心去的彼此緣'}, {'start': 27.93, 'end': 32.85, 'text': '该怎样认真轻轻的爱恋'}]
+QUALITY: {"attempts": [{"start": 20.0, "end": 32.0, "reason": "short_gap"}, {"start": 19.7, "end": 31.7, "reason": "short_gap"}, {"start": 221.76, "end": 233.03, "reason": "short_gap"}, {"start": 221.06, "end": 232.73, "reason": "short_gap"}, {"start": 190.79, "end": 201.60999999999999, "reason": "short_gap"}, {"start": 190.09, "end": 201.30999999999997, "reason": "short_gap"}, {"start": 93.65, "end": 105.65, "reason": "short_gap"}, {"start": 93.35000000000001, "end": 105.35000000000001, "reason": "short_gap"}], "changes": [], "duration": 254.617, "budget_exhausted": true, "decoded_audio_seconds": 92.97999999999996, "seconds": 5.860000000000582}
+80-90: [(79.93, 82.35, '回憶從未停在起點'), (82.35, 86.54, '只在你心間你心間')]

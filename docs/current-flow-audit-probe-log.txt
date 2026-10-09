@@ -1,0 +1,74 @@
+ERROR:core.subtitle_manager:❌ Save JSON failed: synthetic interrupted write
+🌍 [LOCAL AI] Bắt đầu dịch 1 dòng từ 'en' (Mode: pivot_vi)...
+🚀 Mode: Direct Translate (en -> VI)
+⚠️ Lỗi dịch batch 0-8 (en->vi): synthetic translator failure
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+✅ Dịch xong 0/2 dòng
+⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.
+✅ Dịch xong 1/2 dòng
+{
+  "sources": 103,
+  "probes": {
+    "early_exception": {
+      "secondary_error": "name 'QApplication' is not defined",
+      "original_hook_reached": false
+    },
+    "subtitle_save": {
+      "partial_pair": {
+        "save_returned": null,
+        "json_changed": true,
+        "ass_kept_old": true,
+        "subsequent_request_status": "ready"
+      },
+      "json_write_failure": {
+        "return_value": false,
+        "original_file_now_empty": true
+      }
+    },
+    "translation": {
+      "failed_translation_cached": {
+        "first_vi": "",
+        "retry_vi": "",
+        "healthy_batch_calls": 0,
+        "translator_initialized_despite_all_cache_hits": 1
+      },
+      "local_short_batch": {
+        "input_rows": 2,
+        "output_rows": 1
+      },
+      "repeated_source_cleaner": {
+        "original": "Stay with me Stay with me Stay with me Stay with me",
+        "translator_input": "Stay with me Stay..."
+      },
+      "online_invalid_and_partial": [
+        {
+          "response": "Unable to produce the required format",
+          "truthy_result": true,
+          "translated_rows": 0,
+          "total_rows": 2
+        },
+        {
+          "response": "0===English line===Dòng tiếng Việt",
+          "truthy_result": true,
+          "translated_rows": 1,
+          "total_rows": 2
+        }
+      ]
+    },
+    "library_cache": {
+      "metadata_rows": 1000,
+      "thumbnail_updates": 100,
+      "whole_database_writes": 100,
+      "records_prepared_for_serialization": 100000,
+      "timing_claim": false
+    },
+    "gui_worker_restart": {
+      "synthetic_cleanup_ms": 250,
+      "start_call_ms": 291.74,
+      "gui_timer_ticks_during_call": 0,
+      "called_on_gui_thread": true
+    }
+  },
+  "saved_files": 31,
+  "saved_unchanged": true
+}

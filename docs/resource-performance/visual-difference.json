@@ -1,0 +1,17 @@
+{
+  "different_pixels": 24031,
+  "total_pixels": 1049600,
+  "bbox": [
+    365,
+    89,
+    1087,
+    819
+  ],
+  "different_pixels_by_column": [
+    0,
+    3308,
+    8627,
+    8831,
+    3265
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "checked": 31,
+  "all_unchanged": true,
+  "files": [
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\app_config.json",
+      "before": "275FD83BCB8CCA87FECAB96F2824D6F65504846BF6E36B82162E7DF023ADA4AA",
+      "after": "275FD83BCB8CCA87FECAB96F2824D6F65504846BF6E36B82162E7DF023ADA4AA",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\library_cache.json",
+      "before": "352E41E9A5BF493446EA23649226092255D0A78E09F83BD12F108F488A56E32E",
+      "after": "352E41E9A5BF493446EA23649226092255D0A78E09F83BD12F108F488A56E32E",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\setting.json",
+      "before": "4F5B17CD687C9A1AA22D28C4E49C0AF8C0B2A9D34DDC213C17261C11A006AAA9",
+      "after": "4F5B17CD687C9A1AA22D28C4E49C0AF8C0B2A9D34DDC213C17261C11A006AAA9",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\media_index.json",
+      "before": "AE9968865F0BFB2B54143C6A1FBC6268BC1FD2B0B2EB383D01304242A90092B0",
+      "after": "AE9968865F0BFB2B54143C6A1FBC6268BC1FD2B0B2EB383D01304242A90092B0",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\11918bba543b3d394eda866b57fe9c5f.ass",
+      "before": "D5601767E93E245F585B8ED15F77EA4D264BF4AD06093C6AEC011BAFBCBCE9C5",
+      "after": "D5601767E93E245F585B8ED15F77EA4D264BF4AD06093C6AEC011BAFBCBCE9C5",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\17fe770fe427369d9f44f9efbe7cd410.ass",
+      "before": "9F5A00F2978202C9DF13A1A0D46AE765EDEEC11CAD6BE145F6A021BC92F748BE",
+      "after": "9F5A00F2978202C9DF13A1A0D46AE765EDEEC11CAD6BE145F6A021BC92F748BE",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\265b7e91949aabb2364c50c0c5cb9d32.ass",
+      "before": "9F2D21F0BB61810126B87190A6653793C6DBF976002BED299C0D56A14ADC0407",
+      "after": "9F2D21F0BB61810126B87190A6653793C6DBF976002BED299C0D56A14ADC0407",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\ac01f08b113847ef7b4e5da2711c021f.ass",
+      "before": "04C994D0E304F6F6F8D993288FB540BC7EB13060F3EC30FFDA23B7EB5F890BB0",
+      "after": "04C994D0E304F6F6F8D993288FB540BC7EB13060F3EC30FFDA23B7EB5F890BB0",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\bc84fec0d624e465fb2775b180b61662.ass",
+      "before": "FD878FA50A31DF0EC2A64B364B49FC2BE83ED94DFB87179F502CA3C8A212BA71",
+      "after": "FD878FA50A31DF0EC2A64B364B49FC2BE83ED94DFB87179F502CA3C8A212BA71",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\c17176b63126976c922ea8b66ff7a0ff.ass",
+      "before": "D3E1F4CA20A4633BB49958D0AF56714F992BD4652DE9BBB2173677D428E33AFF",
+      "after": "D3E1F4CA20A4633BB49958D0AF56714F992BD4652DE9BBB2173677D428E33AFF",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\f7743c2c44ae0079fb7fea2778993ff4.ass",
+      "before": "1EF1D9DD8E49270CD4035127AD28F9553F53F1AD6754638F7AA2EC1A7D61BD0A",
+      "after": "1EF1D9DD8E49270CD4035127AD28F9553F53F1AD6754638F7AA2EC1A7D61BD0A",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\11918bba543b3d394eda866b57fe9c5f.json",
+      "before": "DBEE9A344F79BDF749CEF78E395179461E4840BE07DFF4E90355BA58CDA52240",
+      "after": "DBEE9A344F79BDF749CEF78E395179461E4840BE07DFF4E90355BA58CDA52240",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\17fe770fe427369d9f44f9efbe7cd410.json",
+      "before": "5BBF8F239AD58B8B48A4ACBAD557EB5134EDC3D1341BEFF06B97679A4AF87A1B",
+      "after": "5BBF8F239AD58B8B48A4ACBAD557EB5134EDC3D1341BEFF06B97679A4AF87A1B",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\265b7e91949aabb2364c50c0c5cb9d32.json",
+      "before": "346F4E881CAE751C80913545E7A1892BCA6579D88832C1D7DF5983D4EFAC031B",
+      "after": "346F4E881CAE751C80913545E7A1892BCA6579D88832C1D7DF5983D4EFAC031B",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\ac01f08b113847ef7b4e5da2711c021f.json",
+      "before": "CFCD4F07996E83C1E8DA0F5A0AFF30C7514B873D327C282D3B7B4C52D61947BF",
+      "after": "CFCD4F07996E83C1E8DA0F5A0AFF30C7514B873D327C282D3B7B4C52D61947BF",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\bc84fec0d624e465fb2775b180b61662.json",
+      "before": "160C0EC94D24A58A0BF55F9AB23BE9A69220B12791BF5BB7DD635014027A1C4D",
+      "after": "160C0EC94D24A58A0BF55F9AB23BE9A69220B12791BF5BB7DD635014027A1C4D",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\c17176b63126976c922ea8b66ff7a0ff.json",
+      "before": "6D085D940DA776170DF2F42EC8FA5D2A8F57D46CBCDA6F84F7483D43CE4193F7",
+      "after": "6D085D940DA776170DF2F42EC8FA5D2A8F57D46CBCDA6F84F7483D43CE4193F7",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\f7743c2c44ae0079fb7fea2778993ff4.json",
+      "before": "ED643C4411AC9C62798D4857E792E80862F46534F78E1CD321E021806E00930B",
+      "after": "ED643C4411AC9C62798D4857E792E80862F46534F78E1CD321E021806E00930B",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\A Small Miracle(short).lrc",
+      "before": "3A37F8C52CC75142673252C378E221D30ADA663634AFBEF799C6C7D37B35F95B",
+      "after": "3A37F8C52CC75142673252C378E221D30ADA663634AFBEF799C6C7D37B35F95B",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Brand New Sky.lrc",
+      "before": "686139AE125DEF54585462F08128D03D674DCBD16526AD605700D6E18F575D84",
+      "after": "686139AE125DEF54585462F08128D03D674DCBD16526AD605700D6E18F575D84",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.lrc",
+      "before": "56E9320A7D3BB61D6D439542FAC60FB0FD41D8C593573AE56BAC0A3BDA1B2827",
+      "after": "56E9320A7D3BB61D6D439542FAC60FB0FD41D8C593573AE56BAC0A3BDA1B2827",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Unwavering Startorch.lrc",
+      "before": "F17A914C661CCBDF31366C2942BF5036F7970F9FB8A90807FF0EC49FD01E0DDA",
+      "after": "F17A914C661CCBDF31366C2942BF5036F7970F9FB8A90807FF0EC49FD01E0DDA",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\\u3010\u6b4c\u3063\u3066\u307f\u305f\u3011\u30ed\u30f3\u30ea\u30fc\u30e6\u30cb\u30d0\u30fc\u30b9 \u2013 Aqu3ra - covered by \u6708\u898b\u30e4\u30c1\u30e8(cv.\u65e9\u898b\u6c99\u7e54) from \u8d85\u304b\u3050\u3084\u59eb\uff01.lrc",
+      "before": "3206410BCE366D1DF43D4B2D276EDFE67550857AB62469FF00627153452A1756",
+      "after": "3206410BCE366D1DF43D4B2D276EDFE67550857AB62469FF00627153452A1756",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\\u4eba\u751f\u30a8\u30f3\u30c9\u30ed\u30fc\u30eb.lrc",
+      "before": "29B2EA9B841F213127B12EBF2C2542E50B1C87C3C0B2CCD1ADDF75EB04F3B338",
+      "after": "29B2EA9B841F213127B12EBF2C2542E50B1C87C3C0B2CCD1ADDF75EB04F3B338",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\A Small Miracle(short).srt",
+      "before": "CFBE82F7C298557FBCA5764958D5724F6B8B35F4D0922AC6755AD694B0B9C5C0",
+      "after": "CFBE82F7C298557FBCA5764958D5724F6B8B35F4D0922AC6755AD694B0B9C5C0",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Brand New Sky.srt",
+      "before": "158251FD06CFA08902778464F95EC03C1C1F82A2C4A2E5E83A39DEACECBE0003",
+      "after": "158251FD06CFA08902778464F95EC03C1C1F82A2C4A2E5E83A39DEACECBE0003",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.srt",
+      "before": "7CA34AC3E5481793C969C1FC4528A12E192C536F2B0E35CDEF727DD3E3BFC3A2",
+      "after": "7CA34AC3E5481793C969C1FC4528A12E192C536F2B0E35CDEF727DD3E3BFC3A2",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Unwavering Startorch.srt",
+      "before": "CE8B78B9A752123535EEFE66F9E08C2368FD34399376C6E27A79DAAD280780BC",
+      "after": "CE8B78B9A752123535EEFE66F9E08C2368FD34399376C6E27A79DAAD280780BC",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\\u3010\u6b4c\u3063\u3066\u307f\u305f\u3011\u30ed\u30f3\u30ea\u30fc\u30e6\u30cb\u30d0\u30fc\u30b9 \u2013 Aqu3ra - covered by \u6708\u898b\u30e4\u30c1\u30e8(cv.\u65e9\u898b\u6c99\u7e54) from \u8d85\u304b\u3050\u3084\u59eb\uff01.srt",
+      "before": "FB27CD8B64B3201D0455CACA36728A392B92FA4261A69E244EB009E1827D5A23",
+      "after": "FB27CD8B64B3201D0455CACA36728A392B92FA4261A69E244EB009E1827D5A23",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\\u4eba\u751f\u30a8\u30f3\u30c9\u30ed\u30fc\u30eb.srt",
+      "before": "E225CB20D78958E137FAB647E2726BCC424DA3D1DCAF24A964E44498BF7C7A45",
+      "after": "E225CB20D78958E137FAB647E2726BCC424DA3D1DCAF24A964E44498BF7C7A45",
+      "unchanged": true
+    },
+    {
+      "Path": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\output\\translation_cache.json",
+      "before": "A6961D62985C06F0E5679C1FEA5BE07432966C400D10C3C77BF3BF4A3F4407E0",
+      "after": "A6961D62985C06F0E5679C1FEA5BE07432966C400D10C3C77BF3BF4A3F4407E0",
+      "unchanged": true
+    }
+  ]
+}

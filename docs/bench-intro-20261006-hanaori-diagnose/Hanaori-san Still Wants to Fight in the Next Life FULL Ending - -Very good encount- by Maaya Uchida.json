@@ -1,0 +1,925 @@
+{
+  "media": "video\\Hanaori-san Still Wants to Fight in the Next Life FULL Ending - -Very good encount- by Maaya Uchida.mp4",
+  "model": "large-v3",
+  "device": "cuda",
+  "faster_whisper": "1.0.2",
+  "options": {
+    "language": null,
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": " .+"
+  },
+  "language": "ja",
+  "language_probability": 0.99658203125,
+  "duration": 45.0,
+  "asr_seconds": 3.25,
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.7599999999999993,
+      "end": 3.96,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 0.7599999999999993,
+          "end": 1.4,
+          "word": "作",
+          "probability": 0.033935546875
+        },
+        {
+          "start": 1.4,
+          "end": 1.64,
+          "word": "詞",
+          "probability": 0.988525390625
+        },
+        {
+          "start": 1.64,
+          "end": 1.64,
+          "word": "・",
+          "probability": 0.9453125
+        },
+        {
+          "start": 1.64,
+          "end": 1.78,
+          "word": "作",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 1.78,
+          "end": 2.4,
+          "word": "曲",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 2.4,
+          "end": 2.4,
+          "word": "・",
+          "probability": 0.94482421875
+        },
+        {
+          "start": 2.4,
+          "end": 3.96,
+          "word": "編",
+          "probability": 0.994384765625
+        },
+        {
+          "start": 3.96,
+          "end": 3.96,
+          "word": "曲",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 3.96,
+          "end": 3.96,
+          "word": " 初",
+          "probability": 0.95166015625
+        },
+        {
+          "start": 3.96,
+          "end": 3.96,
+          "word": "音",
+          "probability": 0.994140625
+        },
+        {
+          "start": 3.96,
+          "end": 3.96,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 3.96,
+          "end": 3.96,
+          "word": "ク",
+          "probability": 0.99951171875
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 3.96,
+      "end": 4.6,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 3.96,
+          "end": 4.04,
+          "word": "歌",
+          "probability": 0.294189453125
+        },
+        {
+          "start": 4.04,
+          "end": 4.6,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 4.6,
+          "end": 4.6,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 4.6,
+          "end": 4.6,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 4.6,
+          "end": 4.6,
+          "word": "ク",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 4.6,
+      "end": 7.42,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 4.6,
+          "end": 4.6,
+          "word": "歌",
+          "probability": 0.58251953125
+        },
+        {
+          "start": 4.88,
+          "end": 6.76,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 6.76,
+          "end": 6.76,
+          "word": "音",
+          "probability": 0.998046875
+        },
+        {
+          "start": 6.76,
+          "end": 7.28,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 7.28,
+          "end": 7.42,
+          "word": "ク",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 7.42,
+      "end": 9.84,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 7.42,
+          "end": 8.16,
+          "word": "歌",
+          "probability": 0.70947265625
+        },
+        {
+          "start": 8.48,
+          "end": 8.52,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 8.52,
+          "end": 8.52,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 8.52,
+          "end": 9.52,
+          "word": "ミ",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 9.52,
+          "end": 9.84,
+          "word": "ク",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 9.84,
+      "end": 13.08,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 9.84,
+          "end": 11.02,
+          "word": "歌",
+          "probability": 0.77880859375
+        },
+        {
+          "start": 12.1,
+          "end": 12.22,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 12.22,
+          "end": 12.5,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 12.5,
+          "end": 13.02,
+          "word": "ミ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 13.02,
+          "end": 13.08,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 13.08,
+      "end": 16.2,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 13.08,
+          "end": 13.52,
+          "word": "歌",
+          "probability": 0.83203125
+        },
+        {
+          "start": 13.78,
+          "end": 14.7,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 14.7,
+          "end": 14.9,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 14.9,
+          "end": 15.44,
+          "word": "ミ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 15.44,
+          "end": 16.2,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 16.2,
+      "end": 18.66,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 16.2,
+          "end": 16.78,
+          "word": "歌",
+          "probability": 0.8671875
+        },
+        {
+          "start": 16.78,
+          "end": 17.6,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 17.6,
+          "end": 17.6,
+          "word": "音",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 17.6,
+          "end": 18.12,
+          "word": "ミ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 18.12,
+          "end": 18.66,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 18.66,
+      "end": 19.34,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 18.66,
+          "end": 18.66,
+          "word": "歌",
+          "probability": 0.892578125
+        },
+        {
+          "start": 18.66,
+          "end": 18.96,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 18.96,
+          "end": 18.98,
+          "word": "音",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 18.98,
+          "end": 19.14,
+          "word": "ミ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 19.14,
+          "end": 19.34,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 19.34,
+      "end": 21.12,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 19.34,
+          "end": 19.5,
+          "word": "歌",
+          "probability": 0.91259765625
+        },
+        {
+          "start": 19.5,
+          "end": 20.16,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 20.16,
+          "end": 20.18,
+          "word": "音",
+          "probability": 0.994140625
+        },
+        {
+          "start": 20.18,
+          "end": 21.02,
+          "word": "ミ",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 21.02,
+          "end": 21.12,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 21.12,
+      "end": 21.92,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 21.12,
+          "end": 21.18,
+          "word": "歌",
+          "probability": 0.927734375
+        },
+        {
+          "start": 21.2,
+          "end": 21.72,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 21.72,
+          "end": 21.72,
+          "word": "音",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 21.72,
+          "end": 21.92,
+          "word": "ミ",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 21.92,
+          "end": 21.92,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 21.92,
+      "end": 24.18,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 21.92,
+          "end": 22.22,
+          "word": "歌",
+          "probability": 0.9404296875
+        },
+        {
+          "start": 22.22,
+          "end": 22.34,
+          "word": " 初",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 22.34,
+          "end": 22.92,
+          "word": "音",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 22.92,
+          "end": 23.56,
+          "word": "ミ",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 23.56,
+          "end": 24.18,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 24.18,
+      "end": 27.42,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 24.18,
+          "end": 24.64,
+          "word": "歌",
+          "probability": 0.94775390625
+        },
+        {
+          "start": 24.76,
+          "end": 25.0,
+          "word": " 初",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 25.0,
+          "end": 25.66,
+          "word": "音",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 25.66,
+          "end": 25.88,
+          "word": "ミ",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 25.88,
+          "end": 27.42,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 27.42,
+      "end": 29.98,
+      "text": "歌 初音ミク",
+      "avg_logprob": -0.23187022627764986,
+      "no_speech_prob": 0.25439453125,
+      "compression_ratio": 5.117647058823529,
+      "words": [
+        {
+          "start": 27.42,
+          "end": 27.48,
+          "word": "歌",
+          "probability": 0.9541015625
+        },
+        {
+          "start": 27.48,
+          "end": 27.68,
+          "word": " 初",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 27.68,
+          "end": 28.42,
+          "word": "音",
+          "probability": 0.9921875
+        },
+        {
+          "start": 28.42,
+          "end": 29.8,
+          "word": "ミ",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 29.8,
+          "end": 29.98,
+          "word": "ク",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 29.98,
+      "end": 33.32,
+      "text": "どっちだって届いなさいよ",
+      "avg_logprob": -0.2321671143822048,
+      "no_speech_prob": 0.0926513671875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 29.98,
+          "end": 30.88,
+          "word": "ど",
+          "probability": 0.6923828125
+        },
+        {
+          "start": 30.88,
+          "end": 31.18,
+          "word": "っち",
+          "probability": 0.90966796875
+        },
+        {
+          "start": 31.18,
+          "end": 31.36,
+          "word": "だ",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 31.36,
+          "end": 31.68,
+          "word": "って",
+          "probability": 0.97265625
+        },
+        {
+          "start": 31.68,
+          "end": 32.1,
+          "word": "届",
+          "probability": 0.6260986328125
+        },
+        {
+          "start": 32.1,
+          "end": 32.46,
+          "word": "い",
+          "probability": 0.6220703125
+        },
+        {
+          "start": 32.46,
+          "end": 32.7,
+          "word": "な",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 32.7,
+          "end": 33.14,
+          "word": "さい",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 33.14,
+          "end": 33.32,
+          "word": "よ",
+          "probability": 0.99267578125
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 33.32,
+      "end": 37.46,
+      "text": "君がいなくちゃなんか足りない",
+      "avg_logprob": -0.2321671143822048,
+      "no_speech_prob": 0.0926513671875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 33.32,
+          "end": 33.94,
+          "word": "君",
+          "probability": 0.50732421875
+        },
+        {
+          "start": 33.94,
+          "end": 34.66,
+          "word": "が",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 34.66,
+          "end": 34.92,
+          "word": "い",
+          "probability": 0.77490234375
+        },
+        {
+          "start": 34.92,
+          "end": 35.54,
+          "word": "なく",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 35.54,
+          "end": 35.98,
+          "word": "ちゃ",
+          "probability": 0.9677734375
+        },
+        {
+          "start": 35.98,
+          "end": 36.58,
+          "word": "なんか",
+          "probability": 0.51708984375
+        },
+        {
+          "start": 36.58,
+          "end": 36.92,
+          "word": "足",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 36.92,
+          "end": 37.22,
+          "word": "り",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 37.22,
+          "end": 37.46,
+          "word": "ない",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 37.46,
+      "end": 38.5,
+      "text": "私じゃない",
+      "avg_logprob": -0.2321671143822048,
+      "no_speech_prob": 0.0926513671875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 37.46,
+          "end": 37.96,
+          "word": "私",
+          "probability": 0.437255859375
+        },
+        {
+          "start": 37.96,
+          "end": 38.5,
+          "word": "じゃない",
+          "probability": 0.99609375
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 38.5,
+      "end": 41.68,
+      "text": "ぶつかることでも",
+      "avg_logprob": -0.2321671143822048,
+      "no_speech_prob": 0.0926513671875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 38.5,
+          "end": 39.32,
+          "word": "ぶ",
+          "probability": 0.85986328125
+        },
+        {
+          "start": 39.32,
+          "end": 39.66,
+          "word": "つ",
+          "probability": 0.998046875
+        },
+        {
+          "start": 39.66,
+          "end": 39.98,
+          "word": "か",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 39.98,
+          "end": 40.34,
+          "word": "る",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 40.34,
+          "end": 40.82,
+          "word": "こと",
+          "probability": 0.61767578125
+        },
+        {
+          "start": 40.82,
+          "end": 41.68,
+          "word": "でも",
+          "probability": 0.83056640625
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 41.68,
+      "end": 44.52,
+      "text": "どこよく刻まれると",
+      "avg_logprob": -0.2321671143822048,
+      "no_speech_prob": 0.0926513671875,
+      "compression_ratio": 1.3211009174311927,
+      "words": [
+        {
+          "start": 41.68,
+          "end": 42.2,
+          "word": "ど",
+          "probability": 0.2022705078125
+        },
+        {
+          "start": 42.2,
+          "end": 42.4,
+          "word": "こ",
+          "probability": 0.4501953125
+        },
+        {
+          "start": 42.4,
+          "end": 42.6,
+          "word": "よ",
+          "probability": 0.91357421875
+        },
+        {
+          "start": 42.6,
+          "end": 42.88,
+          "word": "く",
+          "probability": 0.80908203125
+        },
+        {
+          "start": 42.88,
+          "end": 43.36,
+          "word": "刻",
+          "probability": 0.8154296875
+        },
+        {
+          "start": 43.36,
+          "end": 43.62,
+          "word": "ま",
+          "probability": 0.998046875
+        },
+        {
+          "start": 43.62,
+          "end": 43.96,
+          "word": "れる",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 43.96,
+          "end": 44.52,
+          "word": "と",
+          "probability": 0.4521484375
+        }
+      ]
+    }
+  ],
+  "refined": [
+    {
+      "start": 4.16,
+      "end": 4.869999999999999,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 7.62,
+      "end": 10.014999999999999,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 10.135,
+      "end": 11.29,
+      "text": "歌"
+    },
+    {
+      "start": 12.299999999999999,
+      "end": 13.254999999999999,
+      "text": "初音ミク"
+    },
+    {
+      "start": 13.375,
+      "end": 16.47,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 18.86,
+      "end": 19.61,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 21.32,
+      "end": 22.19,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 24.38,
+      "end": 27.69,
+      "text": "歌初音ミク"
+    },
+    {
+      "start": 30.18,
+      "end": 33.495000000000005,
+      "text": "どっちだって届いなさいよ"
+    },
+    {
+      "start": 33.61500000000001,
+      "end": 37.635000000000005,
+      "text": "君がいなくちゃなんか足りない"
+    },
+    {
+      "start": 37.75500000000001,
+      "end": 38.675,
+      "text": "私じゃない"
+    },
+    {
+      "start": 38.795,
+      "end": 41.855000000000004,
+      "text": "ぶつかることでも"
+    },
+    {
+      "start": 41.97500000000001,
+      "end": 44.790000000000006,
+      "text": "どこよく刻まれると"
+    }
+  ]
+}

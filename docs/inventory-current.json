@@ -1,0 +1,2240 @@
+{
+  "python_files": 119,
+  "python_lines": 16667,
+  "sources": [
+    {
+      "path": "app/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/__main__.py",
+      "lines": 5,
+      "classes": [],
+      "functions": [],
+      "imports": [
+        "app.run_app"
+      ]
+    },
+    {
+      "path": "app/ai/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ai/pipeline.py",
+      "lines": 380,
+      "classes": [],
+      "functions": [
+        "fix_nvidia_dlls",
+        "_check_cancel",
+        "_report",
+        "sanitize_filename",
+        "run_ai_pipeline"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.paths",
+        "app.pipeline.aligner",
+        "app.pipeline.extractor",
+        "app.pipeline.jp_normalizer",
+        "app.pipeline.lyric_corrector",
+        "app.pipeline.lyric_formatter",
+        "app.pipeline.utils",
+        "app.subtitle.ass.renderer",
+        "app.subtitle.config",
+        "app.subtitle.converter",
+        "app.subtitle.mode",
+        "app.subtitle.storage",
+        "app.translate.online_logic",
+        "app.translate.pipeline",
+        "difflib",
+        "faster_whisper",
+        "gc",
+        "lyricsgenius",
+        "os",
+        "pathlib",
+        "re",
+        "sys",
+        "time",
+        "torch",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/ai/whisper_engine.py",
+      "lines": 27,
+      "classes": [],
+      "functions": [
+        "run_ai_pipeline"
+      ],
+      "imports": [
+        "time"
+      ]
+    },
+    {
+      "path": "app/bootstrap/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/bootstrap/application.py",
+      "lines": 67,
+      "classes": [],
+      "functions": [
+        "create_main_window",
+        "run_application"
+      ],
+      "imports": [
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.bootstrap.runtime",
+        "app.control.ai_controller",
+        "app.control.app_controller",
+        "app.core.media_library",
+        "app.core.subtitle_manager",
+        "app.paths",
+        "app.pipeline.utils",
+        "app.playback.engine",
+        "app.ui.main_window",
+        "ctypes",
+        "logging",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/bootstrap/runtime.py",
+      "lines": 63,
+      "classes": [],
+      "functions": [
+        "_prepend_env_path",
+        "configure_runtime",
+        "setup_logging",
+        "check_system_dependencies",
+        "global_exception_handler"
+      ],
+      "imports": [
+        "PySide6.QtWidgets",
+        "app.paths",
+        "io",
+        "logging",
+        "multiprocessing",
+        "os",
+        "pathlib",
+        "shutil",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/config.py",
+      "lines": 49,
+      "classes": [
+        "ConfigManager"
+      ],
+      "functions": [],
+      "imports": [
+        "app.infrastructure.json_store",
+        "app.paths",
+        "json",
+        "os",
+        "threading"
+      ]
+    },
+    {
+      "path": "app/control/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/control/ai_controller.py",
+      "lines": 246,
+      "classes": [
+        "AIController"
+      ],
+      "functions": [
+        "_set_resource_cache_state",
+        "_get_resource_cache_state"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "app.download_core.download_source_app",
+        "app.worker",
+        "os"
+      ]
+    },
+    {
+      "path": "app/control/ai_process_manager.py",
+      "lines": 104,
+      "classes": [
+        "AIProcessManager"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "app.worker",
+        "gc",
+        "torch"
+      ]
+    },
+    {
+      "path": "app/control/app_controller.py",
+      "lines": 295,
+      "classes": [
+        "AppController"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtMultimedia",
+        "app.core.subtitle_manager",
+        "app.thumbnail.thumbnail_workers",
+        "gc",
+        "logging",
+        "os"
+      ]
+    },
+    {
+      "path": "app/control/library_controller.py",
+      "lines": 69,
+      "classes": [
+        "LibraryController"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "app.media.scan_worker"
+      ]
+    },
+    {
+      "path": "app/control/subtitle_appearance.py",
+      "lines": 81,
+      "classes": [
+        "SubtitleAppearanceController"
+      ],
+      "functions": [],
+      "imports": [
+        "app.subtitle.mode"
+      ]
+    },
+    {
+      "path": "app/core/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/core/media_control.py",
+      "lines": 58,
+      "classes": [
+        "WindowsMediaManager"
+      ],
+      "functions": [],
+      "imports": [
+        "os",
+        "winsdk.windows.media",
+        "winsdk.windows.storage.streams"
+      ]
+    },
+    {
+      "path": "app/core/media_library.py",
+      "lines": 224,
+      "classes": [
+        "MediaLibrary"
+      ],
+      "functions": [
+        "get_raw_metadata"
+      ],
+      "imports": [
+        "app.infrastructure.json_store",
+        "app.media.identity",
+        "app.media.models",
+        "app.paths",
+        "dataclasses",
+        "json",
+        "logging",
+        "os",
+        "pathlib",
+        "subprocess",
+        "sys",
+        "threading",
+        "time",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/core/subtitle_manager.py",
+      "lines": 369,
+      "classes": [
+        "SubtitleStatus",
+        "SubtitleRequestResult",
+        "SubtitleManager"
+      ],
+      "functions": [],
+      "imports": [
+        "app.core.subtitle_renderer",
+        "app.infrastructure.json_store",
+        "app.media.identity",
+        "app.paths",
+        "app.subtitle.mode",
+        "json",
+        "logging",
+        "pathlib",
+        "re",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/core/subtitle_renderer.py",
+      "lines": 68,
+      "classes": [
+        "ASSRenderer"
+      ],
+      "functions": [],
+      "imports": [
+        "logging",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/download_core/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/download_core/download_source_app.py",
+      "lines": 586,
+      "classes": [
+        "PipDownloadWorker",
+        "ResourceDownloadDialog"
+      ],
+      "functions": [
+        "_set_resource_ready_flag",
+        "_get_resource_ready_flag",
+        "check_resource_status"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "app.control.ai_controller",
+        "app.paths",
+        "huggingface_hub",
+        "os",
+        "random",
+        "shutil",
+        "subprocess",
+        "sys",
+        "traceback"
+      ]
+    },
+    {
+      "path": "app/download_core/download_worker.py",
+      "lines": 295,
+      "classes": [
+        "DownloadWorker"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "os",
+        "subprocess",
+        "sys",
+        "yt_dlp"
+      ]
+    },
+    {
+      "path": "app/download_core/get_title_worker.py",
+      "lines": 98,
+      "classes": [
+        "GetTitleWorker"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "os",
+        "subprocess",
+        "sys",
+        "utils",
+        "yt_dlp"
+      ]
+    },
+    {
+      "path": "app/download_core/utils.py",
+      "lines": 39,
+      "classes": [],
+      "functions": [
+        "sanitize_folder_name"
+      ],
+      "imports": [
+        "re"
+      ]
+    },
+    {
+      "path": "app/download_core/yt_dlp.py",
+      "lines": 52,
+      "classes": [],
+      "functions": [
+        "ensure_ytdlp_exists"
+      ],
+      "imports": [
+        "os",
+        "ssl",
+        "urllib.request"
+      ]
+    },
+    {
+      "path": "app/downloader.py",
+      "lines": 25,
+      "classes": [],
+      "functions": [
+        "download_model_if_needed"
+      ],
+      "imports": [
+        "app.paths",
+        "os",
+        "pathlib",
+        "requests"
+      ]
+    },
+    {
+      "path": "app/infrastructure/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/infrastructure/json_store.py",
+      "lines": 33,
+      "classes": [],
+      "functions": [
+        "write_json_atomic"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "pathlib",
+        "tempfile",
+        "time"
+      ]
+    },
+    {
+      "path": "app/infrastructure/settings_store.py",
+      "lines": 41,
+      "classes": [
+        "SettingsStore"
+      ],
+      "functions": [],
+      "imports": [
+        "app.infrastructure.json_store",
+        "json",
+        "logging",
+        "pathlib",
+        "threading"
+      ]
+    },
+    {
+      "path": "app/job/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/job/job_manager.py",
+      "lines": 285,
+      "classes": [
+        "WorkerSignals",
+        "ThumbnailWorker",
+        "JobManager"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "app.ai.whisper_engine",
+        "app.core.subtitle_manager",
+        "app.core.subtitle_renderer",
+        "app.job.job_state",
+        "app.paths",
+        "logging",
+        "os",
+        "pathlib",
+        "queue",
+        "subprocess",
+        "threading",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/job/job_state.py",
+      "lines": 9,
+      "classes": [
+        "JobState"
+      ],
+      "functions": [],
+      "imports": [
+        "enum"
+      ]
+    },
+    {
+      "path": "app/media/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/media/identity.py",
+      "lines": 12,
+      "classes": [],
+      "functions": [
+        "media_id_for_path"
+      ],
+      "imports": [
+        "hashlib",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/media/models.py",
+      "lines": 12,
+      "classes": [
+        "MediaMetadata"
+      ],
+      "functions": [],
+      "imports": [
+        "dataclasses"
+      ]
+    },
+    {
+      "path": "app/media/scan_worker.py",
+      "lines": 21,
+      "classes": [
+        "LibraryScanWorker"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore"
+      ]
+    },
+    {
+      "path": "app/paths.py",
+      "lines": 93,
+      "classes": [],
+      "functions": [
+        "project_root",
+        "input_dir",
+        "storage_dir",
+        "asset_dir",
+        "get_icon_path",
+        "get_input_path",
+        "init_folders",
+        "resources_dir",
+        "models_dir"
+      ],
+      "imports": [
+        "os",
+        "pathlib",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/pipeline/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/pipeline/aligner.py",
+      "lines": 232,
+      "classes": [],
+      "functions": [
+        "has_japanese_chars",
+        "is_cjk",
+        "is_cjk_or_kr",
+        "visual_len",
+        "smart_join_buffer",
+        "is_duplicate_or_contained",
+        "clean_text_for_comparison",
+        "stabilize_initial_segment",
+        "refine_segments"
+      ],
+      "imports": [
+        "difflib",
+        "re"
+      ]
+    },
+    {
+      "path": "app/pipeline/asr_engine.py",
+      "lines": 34,
+      "classes": [
+        "ASREngine"
+      ],
+      "functions": [],
+      "imports": [
+        "faster_whisper",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/pipeline/extractor.py",
+      "lines": 57,
+      "classes": [],
+      "functions": [
+        "extract_audio"
+      ],
+      "imports": [
+        "os",
+        "pathlib",
+        "subprocess"
+      ]
+    },
+    {
+      "path": "app/pipeline/forced_aligner.py",
+      "lines": 9,
+      "classes": [],
+      "functions": [
+        "align_with_lyrics"
+      ],
+      "imports": []
+    },
+    {
+      "path": "app/pipeline/jp_normalizer.py",
+      "lines": 101,
+      "classes": [],
+      "functions": [
+        "is_cjk",
+        "universal_text_reconstruct",
+        "normalize_japanese"
+      ],
+      "imports": [
+        "re",
+        "unicodedata"
+      ]
+    },
+    {
+      "path": "app/pipeline/lyric_corrector.py",
+      "lines": 132,
+      "classes": [],
+      "functions": [
+        "correct_raw_segments_online"
+      ],
+      "imports": [
+        "google",
+        "google.genai",
+        "json",
+        "re",
+        "requests"
+      ]
+    },
+    {
+      "path": "app/pipeline/lyric_formatter.py",
+      "lines": 42,
+      "classes": [],
+      "functions": [
+        "format_time_srt",
+        "format_time_lrc",
+        "export_srt",
+        "export_lrc"
+      ],
+      "imports": [
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/pipeline/postprocess.py",
+      "lines": 43,
+      "classes": [],
+      "functions": [
+        "load_dictionary",
+        "apply_dictionary",
+        "postprocess_segments"
+      ],
+      "imports": [
+        "json",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/pipeline/utils.py",
+      "lines": 100,
+      "classes": [
+        "TempFileManager"
+      ],
+      "functions": [
+        "is_connected",
+        "clean_song_title"
+      ],
+      "imports": [
+        "app.paths",
+        "pathlib",
+        "re",
+        "shutil",
+        "socket",
+        "uuid"
+      ]
+    },
+    {
+      "path": "app/pipeline/vad.py",
+      "lines": 29,
+      "classes": [
+        "VoiceActivityDetector"
+      ],
+      "functions": [],
+      "imports": [
+        "numpy",
+        "soundfile",
+        "torch"
+      ]
+    },
+    {
+      "path": "app/pipeline/vocal_separator.py",
+      "lines": 53,
+      "classes": [],
+      "functions": [
+        "separate_vocals"
+      ],
+      "imports": [
+        "pathlib",
+        "subprocess"
+      ]
+    },
+    {
+      "path": "app/playback/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/playback/engine.py",
+      "lines": 30,
+      "classes": [
+        "PlaybackEngine"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtMultimedia",
+        "PySide6.QtMultimediaWidgets"
+      ]
+    },
+    {
+      "path": "app/playback/playlist.py",
+      "lines": 23,
+      "classes": [],
+      "functions": [
+        "current_index",
+        "adjacent_item"
+      ],
+      "imports": []
+    },
+    {
+      "path": "app/run_app.py",
+      "lines": 21,
+      "classes": [],
+      "functions": [
+        "main"
+      ],
+      "imports": [
+        "app.bootstrap.application",
+        "app.bootstrap.runtime",
+        "pathlib",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/subtitle/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/subtitle/ass/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/subtitle/ass/ass_parser.py",
+      "lines": 56,
+      "classes": [
+        "ASSParser"
+      ],
+      "functions": [],
+      "imports": [
+        "os",
+        "re"
+      ]
+    },
+    {
+      "path": "app/subtitle/ass/renderer.py",
+      "lines": 96,
+      "classes": [],
+      "functions": [
+        "render_ass",
+        "_write_style"
+      ],
+      "imports": [
+        "app.subtitle.config",
+        "app.subtitle.mode",
+        "os",
+        "utils"
+      ]
+    },
+    {
+      "path": "app/subtitle/ass/style.py",
+      "lines": 28,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/subtitle/ass/utils.py",
+      "lines": 27,
+      "classes": [],
+      "functions": [
+        "sec_to_ass",
+        "_escape"
+      ],
+      "imports": []
+    },
+    {
+      "path": "app/subtitle/config.py",
+      "lines": 45,
+      "classes": [
+        "LineStyle",
+        "SubtitleConfig"
+      ],
+      "functions": [],
+      "imports": [
+        "dataclasses"
+      ]
+    },
+    {
+      "path": "app/subtitle/converter.py",
+      "lines": 51,
+      "classes": [],
+      "functions": [
+        "refined_to_subtitles"
+      ],
+      "imports": [
+        "app.subtitle.model"
+      ]
+    },
+    {
+      "path": "app/subtitle/engine.py",
+      "lines": 13,
+      "classes": [],
+      "functions": [
+        "add_translation",
+        "switch_top_language",
+        "clone_subs"
+      ],
+      "imports": [
+        "app.subtitle.model",
+        "copy"
+      ]
+    },
+    {
+      "path": "app/subtitle/mode.py",
+      "lines": 14,
+      "classes": [
+        "SubtitleMode"
+      ],
+      "functions": [],
+      "imports": [
+        "enum"
+      ]
+    },
+    {
+      "path": "app/subtitle/model.py",
+      "lines": 31,
+      "classes": [
+        "SubtitleStyle",
+        "SubtitleLine",
+        "Subtitle"
+      ],
+      "functions": [],
+      "imports": [
+        "dataclasses",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/subtitle/models.py",
+      "lines": 13,
+      "classes": [
+        "SubtitleLine",
+        "SubtitleSegment"
+      ],
+      "functions": [],
+      "imports": [
+        "dataclasses"
+      ]
+    },
+    {
+      "path": "app/subtitle/profile.py",
+      "lines": 126,
+      "classes": [
+        "SubtitleProfile"
+      ],
+      "functions": [
+        "save_subtitles",
+        "load_subtitles"
+      ],
+      "imports": [
+        "app.paths",
+        "app.subtitle.model",
+        "dataclasses",
+        "json",
+        "logging",
+        "os",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/subtitle/storage.py",
+      "lines": 143,
+      "classes": [
+        "SubtitleProfile"
+      ],
+      "functions": [
+        "save_subtitles",
+        "load_subtitles"
+      ],
+      "imports": [
+        "app.subtitle.model",
+        "dataclasses",
+        "json",
+        "logging",
+        "os",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/test/main.py",
+      "lines": 150,
+      "classes": [],
+      "functions": [
+        "fix_nvidia_dlls",
+        "main"
+      ],
+      "imports": [
+        "app.pipeline.aligner",
+        "app.pipeline.extractor",
+        "app.pipeline.jp_normalizer",
+        "app.pipeline.lyric_formatter",
+        "app.subtitle.ass.renderer",
+        "app.subtitle.config",
+        "app.subtitle.converter",
+        "app.subtitle.mode",
+        "app.subtitle.model",
+        "app.subtitle.storage",
+        "app.translate.pipeline",
+        "app.translate.translator",
+        "faster_whisper",
+        "gc",
+        "glob",
+        "os",
+        "pathlib",
+        "sys",
+        "torch"
+      ]
+    },
+    {
+      "path": "app/test/test.py",
+      "lines": 141,
+      "classes": [
+        "ASSParser",
+        "MediaPlayerWrapper",
+        "MockMediaLibrary",
+        "MockJobManager",
+        "MockSubtitleManager"
+      ],
+      "functions": [
+        "main"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtMultimedia",
+        "PySide6.QtMultimediaWidgets",
+        "PySide6.QtWidgets",
+        "app.paths",
+        "app.subtitle.mode",
+        "app.ui.main_window",
+        "os",
+        "re",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/test/test_ai.py",
+      "lines": 119,
+      "classes": [
+        "MockSubtitleManager"
+      ],
+      "functions": [
+        "fix_nvidia_dlls",
+        "test_run"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.paths",
+        "app.worker",
+        "os",
+        "pathlib",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/test/test_ai_controller.py",
+      "lines": 80,
+      "classes": [],
+      "functions": [
+        "main"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.control.ai_controller",
+        "app.core.subtitle_manager",
+        "os",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/test/test_aligner_optimizations.py",
+      "lines": 17,
+      "classes": [
+        "StabilizeInitialSegmentTests"
+      ],
+      "functions": [],
+      "imports": [
+        "app.pipeline.aligner",
+        "unittest"
+      ]
+    },
+    {
+      "path": "app/test/test_pipeline.py",
+      "lines": 17,
+      "classes": [],
+      "functions": [
+        "main"
+      ],
+      "imports": [
+        "app.ai.pipeline",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/test/test_sub.py",
+      "lines": 142,
+      "classes": [
+        "KaraokeGhostFly"
+      ],
+      "functions": [],
+      "imports": [
+        "random",
+        "time",
+        "tkinter"
+      ]
+    },
+    {
+      "path": "app/test/test_worker.py",
+      "lines": 31,
+      "classes": [],
+      "functions": [
+        "main"
+      ],
+      "imports": [
+        "PySide6.QtWidgets",
+        "app.worker",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/test_build_app.py",
+      "lines": 22,
+      "classes": [],
+      "functions": [],
+      "imports": [
+        "app.run_app",
+        "os",
+        "pathlib",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/thumbnail/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/thumbnail/persistence.py",
+      "lines": 21,
+      "classes": [
+        "ThumbnailPersistenceBatch"
+      ],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/thumbnail/thumbnail_manager.py",
+      "lines": 131,
+      "classes": [
+        "ThumbnailManager"
+      ],
+      "functions": [],
+      "imports": [
+        "app.paths",
+        "os",
+        "pathlib",
+        "subprocess",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/thumbnail/thumbnail_workers.py",
+      "lines": 58,
+      "classes": [
+        "ThumbnailWorker"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "app.thumbnail.persistence",
+        "app.thumbnail.thumbnail_manager",
+        "os"
+      ]
+    },
+    {
+      "path": "app/translate/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/translate/cache.py",
+      "lines": 75,
+      "classes": [
+        "TranslationCache"
+      ],
+      "functions": [],
+      "imports": [
+        "hashlib",
+        "json",
+        "pathlib",
+        "re"
+      ]
+    },
+    {
+      "path": "app/translate/nllb.py",
+      "lines": 31,
+      "classes": [],
+      "functions": [
+        "translate_nllb"
+      ],
+      "imports": [
+        "torch",
+        "transformers"
+      ]
+    },
+    {
+      "path": "app/translate/online_logic.py",
+      "lines": 203,
+      "classes": [],
+      "functions": [
+        "fetch_lyric_genius",
+        "ask_ai_for_clean_title",
+        "translate_online_pipeline"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.subtitle.model",
+        "difflib",
+        "google",
+        "google.genai",
+        "lyricsgenius",
+        "re",
+        "requests"
+      ]
+    },
+    {
+      "path": "app/translate/pipeline.py",
+      "lines": 262,
+      "classes": [
+        "TranslateMode"
+      ],
+      "functions": [
+        "get_translator",
+        "clean_repetitive_text",
+        "run_safe_batch",
+        "translate_pipeline",
+        "clear_translator"
+      ],
+      "imports": [
+        "app.subtitle.model",
+        "app.translate.cache",
+        "app.translate.online_logic",
+        "gc",
+        "re",
+        "sys",
+        "torch",
+        "translator"
+      ]
+    },
+    {
+      "path": "app/translate/translator.py",
+      "lines": 105,
+      "classes": [
+        "NLLBTranslator"
+      ],
+      "functions": [],
+      "imports": [
+        "os",
+        "sys",
+        "torch",
+        "transformers",
+        "transformers.modeling_utils",
+        "transformers.utils.import_utils"
+      ]
+    },
+    {
+      "path": "app/ui/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ui/main_window.py",
+      "lines": 2357,
+      "classes": [
+        "MainWindow"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtMultimedia",
+        "PySide6.QtMultimediaWidgets",
+        "PySide6.QtWidgets",
+        "app.config",
+        "app.control.library_controller",
+        "app.control.subtitle_appearance",
+        "app.core.media_library",
+        "app.infrastructure.settings_store",
+        "app.paths",
+        "app.pipeline.utils",
+        "app.playback.engine",
+        "app.playback.playlist",
+        "app.subtitle.mode",
+        "app.ui.media_card",
+        "app.ui.nav.sidebar",
+        "app.ui.pages.content_manager",
+        "app.ui.pages.download",
+        "app.ui.pages.dynamic_island",
+        "app.ui.pages.for_you",
+        "app.ui.pages.mode_manager",
+        "app.ui.pages.settings",
+        "app.ui.playback_bar",
+        "app.ui.subs_ui.lyric_settings_dialog",
+        "app.ui.subs_ui.sub_panel",
+        "app.ui.subs_ui.subtitle_layer",
+        "app.ui.system_media_manager",
+        "app.ui.vol_panel",
+        "app.updater",
+        "logging",
+        "os",
+        "pathlib",
+        "psutil",
+        "random",
+        "shutil",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/ui/media_card.py",
+      "lines": 299,
+      "classes": [
+        "LoaderSignals",
+        "ImageLoader",
+        "MediaCard"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "datetime",
+        "pathlib"
+      ]
+    },
+    {
+      "path": "app/ui/media_player.py",
+      "lines": 93,
+      "classes": [
+        "MediaPlayer"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtMultimedia",
+        "PySide6.QtMultimediaWidgets",
+        "PySide6.QtWidgets",
+        "app.playback.engine"
+      ]
+    },
+    {
+      "path": "app/ui/nav/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ui/nav/sidebar.py",
+      "lines": 89,
+      "classes": [
+        "Sidebar"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/ui/pages/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ui/pages/content_manager.py",
+      "lines": 120,
+      "classes": [
+        "ContentController"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "random"
+      ]
+    },
+    {
+      "path": "app/ui/pages/download.py",
+      "lines": 616,
+      "classes": [
+        "SmartLinkPasteTextEdit",
+        "DownloadPage"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.config",
+        "app.download_core.download_worker",
+        "app.download_core.get_title_worker",
+        "app.paths",
+        "json",
+        "os",
+        "settings_dialog"
+      ]
+    },
+    {
+      "path": "app/ui/pages/dynamic_island.py",
+      "lines": 274,
+      "classes": [
+        "MiniPlayer"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets"
+      ]
+    },
+    {
+      "path": "app/ui/pages/for_you.py",
+      "lines": 794,
+      "classes": [
+        "LazyThumb",
+        "VideoStage",
+        "ForYouPage"
+      ],
+      "functions": [
+        "load_and_scale_image_rounded"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.ui.media_card",
+        "os",
+        "random"
+      ]
+    },
+    {
+      "path": "app/ui/pages/mode_manager.py",
+      "lines": 29,
+      "classes": [
+        "BaseVideoPage",
+        "HomePage",
+        "LibraryPage"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets"
+      ]
+    },
+    {
+      "path": "app/ui/pages/settings.py",
+      "lines": 290,
+      "classes": [
+        "SettingsPage"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.download_core.download_source_app"
+      ]
+    },
+    {
+      "path": "app/ui/pages/settings_dialog.py",
+      "lines": 156,
+      "classes": [
+        "SettingMenu"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "app.infrastructure.settings_store"
+      ]
+    },
+    {
+      "path": "app/ui/playback_bar.py",
+      "lines": 326,
+      "classes": [
+        "PlaybackBar"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "video_info_popup"
+      ]
+    },
+    {
+      "path": "app/ui/styles.py",
+      "lines": 12,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ui/subs_ui/__init__.py",
+      "lines": 1,
+      "classes": [],
+      "functions": [],
+      "imports": []
+    },
+    {
+      "path": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "lines": 345,
+      "classes": [
+        "SubtitleToolsDialog"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.ui.subs_ui.subtitle_dialog_logic",
+        "app.ui.subs_ui.subtitle_model",
+        "re"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/sub_panel.py",
+      "lines": 360,
+      "classes": [
+        "SettingsPanel"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.subtitle.mode"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_commands.py",
+      "lines": 44,
+      "classes": [
+        "ModelSnapshotCommand",
+        "InsertRowsCommand",
+        "RemoveRowsCommand",
+        "ReplaceSegmentsCommand",
+        "BatchShiftCommand",
+        "SplitRowCommand",
+        "MergeRowsCommand"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtGui"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "lines": 1000,
+      "classes": [
+        "SubtitleToolsDialogLogic"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.ui.subs_ui.subtitle_commands",
+        "app.ui.subs_ui.subtitle_io",
+        "app.ui.subs_ui.subtitle_model",
+        "app.ui.subs_ui.subtitle_utils",
+        "app.ui.subs_ui.subtitle_workers",
+        "json",
+        "os",
+        "re"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_editor.py",
+      "lines": 190,
+      "classes": [
+        "SubtitleEditor"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "app.subtitle.mode"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_io.py",
+      "lines": 159,
+      "classes": [],
+      "functions": [
+        "_parse_srt_time",
+        "_format_srt_time",
+        "_parse_ass_time",
+        "_format_ass_time",
+        "parse_srt_text",
+        "parse_ass_text",
+        "load_subs",
+        "save_subs"
+      ],
+      "imports": [
+        "json",
+        "re",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_layer.py",
+      "lines": 500,
+      "classes": [
+        "DraggableSubtitle",
+        "SubtitleLayer"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "PySide6.QtWidgets",
+        "app.subtitle.mode",
+        "bisect",
+        "re",
+        "textwrap"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_model.py",
+      "lines": 176,
+      "classes": [
+        "SubtitleTableModel",
+        "SnapshotCommand"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtGui",
+        "app.ui.subs_ui.subtitle_utils",
+        "typing"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_utils.py",
+      "lines": 29,
+      "classes": [],
+      "functions": [
+        "_parse_time_str",
+        "_format_time",
+        "_get_app_root"
+      ],
+      "imports": [
+        "os",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_workers.py",
+      "lines": 302,
+      "classes": [
+        "AlignWorker",
+        "TranslationWorker"
+      ],
+      "functions": [
+        "is_connected"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.translate.online_logic",
+        "app.translate.pipeline",
+        "gc",
+        "google",
+        "google.genai",
+        "json",
+        "re",
+        "requests",
+        "socket",
+        "torch",
+        "traceback"
+      ]
+    },
+    {
+      "path": "app/ui/system_media_manager.py",
+      "lines": 446,
+      "classes": [
+        "SystemMediaManager"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "app.paths",
+        "collections",
+        "ctypes",
+        "gc",
+        "numpy",
+        "os",
+        "psutil",
+        "sys",
+        "time",
+        "tracemalloc"
+      ]
+    },
+    {
+      "path": "app/ui/video_info_popup.py",
+      "lines": 342,
+      "classes": [
+        "VideoInfoPopup"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "datetime",
+        "json",
+        "os",
+        "subprocess",
+        "sys"
+      ]
+    },
+    {
+      "path": "app/ui/vol_panel.py",
+      "lines": 100,
+      "classes": [
+        "VolumePopup"
+      ],
+      "functions": [],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets"
+      ]
+    },
+    {
+      "path": "app/updater.py",
+      "lines": 145,
+      "classes": [],
+      "functions": [
+        "download_and_install"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "PySide6.QtWidgets",
+        "app.paths",
+        "json",
+        "os",
+        "packaging.version",
+        "pathlib",
+        "requests",
+        "subprocess",
+        "sys",
+        "zipfile"
+      ]
+    },
+    {
+      "path": "app/worker.py",
+      "lines": 195,
+      "classes": [
+        "SafeStdout",
+        "AIWorker"
+      ],
+      "functions": [
+        "_ai_process_wrapper"
+      ],
+      "imports": [
+        "PySide6.QtCore",
+        "app.ai.pipeline",
+        "logging",
+        "multiprocessing",
+        "os",
+        "pathlib",
+        "queue",
+        "sys",
+        "time",
+        "traceback"
+      ]
+    }
+  ],
+  "tree_files": [
+    {
+      "path": "app/__init__.py",
+      "bytes": 79
+    },
+    {
+      "path": "app/__main__.py",
+      "bytes": 69
+    },
+    {
+      "path": "app/ai/__init__.py",
+      "bytes": 26
+    },
+    {
+      "path": "app/ai/pipeline.py",
+      "bytes": 17400
+    },
+    {
+      "path": "app/ai/whisper_engine.py",
+      "bytes": 1263
+    },
+    {
+      "path": "app/bin/ffmpeg.exe",
+      "bytes": 154096640
+    },
+    {
+      "path": "app/bin/ffplay.exe",
+      "bytes": 155613696
+    },
+    {
+      "path": "app/bin/ffprobe.exe",
+      "bytes": 153902080
+    },
+    {
+      "path": "app/bootstrap/__init__.py",
+      "bytes": 61
+    },
+    {
+      "path": "app/bootstrap/application.py",
+      "bytes": 2537
+    },
+    {
+      "path": "app/bootstrap/runtime.py",
+      "bytes": 2245
+    },
+    {
+      "path": "app/config.py",
+      "bytes": 1641
+    },
+    {
+      "path": "app/control/__init__.py",
+      "bytes": 31
+    },
+    {
+      "path": "app/control/ai_controller.py",
+      "bytes": 10521
+    },
+    {
+      "path": "app/control/ai_process_manager.py",
+      "bytes": 4036
+    },
+    {
+      "path": "app/control/app_controller.py",
+      "bytes": 11228
+    },
+    {
+      "path": "app/control/library_controller.py",
+      "bytes": 2160
+    },
+    {
+      "path": "app/control/subtitle_appearance.py",
+      "bytes": 3038
+    },
+    {
+      "path": "app/core/__init__.py",
+      "bytes": 28
+    },
+    {
+      "path": "app/core/media_control.py",
+      "bytes": 2649
+    },
+    {
+      "path": "app/core/media_library.py",
+      "bytes": 8699
+    },
+    {
+      "path": "app/core/subtitle_manager.py",
+      "bytes": 14495
+    },
+    {
+      "path": "app/core/subtitle_renderer.py",
+      "bytes": 3010
+    },
+    {
+      "path": "app/data/common_lyrics_terms.json",
+      "bytes": 514
+    },
+    {
+      "path": "app/data/common_lyrics_terms_1.json",
+      "bytes": 514
+    },
+    {
+      "path": "app/download_core/__init__.py",
+      "bytes": 37
+    },
+    {
+      "path": "app/download_core/download_source_app.py",
+      "bytes": 27984
+    },
+    {
+      "path": "app/download_core/download_worker.py",
+      "bytes": 13854
+    },
+    {
+      "path": "app/download_core/get_title_worker.py",
+      "bytes": 3833
+    },
+    {
+      "path": "app/download_core/utils.py",
+      "bytes": 1667
+    },
+    {
+      "path": "app/download_core/yt-dlp.exe",
+      "bytes": 18226085
+    },
+    {
+      "path": "app/download_core/yt_dlp.py",
+      "bytes": 2283
+    },
+    {
+      "path": "app/downloader.py",
+      "bytes": 949
+    },
+    {
+      "path": "app/infrastructure/__init__.py",
+      "bytes": 48
+    },
+    {
+      "path": "app/infrastructure/json_store.py",
+      "bytes": 1020
+    },
+    {
+      "path": "app/infrastructure/settings_store.py",
+      "bytes": 1215
+    },
+    {
+      "path": "app/job/__init__.py",
+      "bytes": 27
+    },
+    {
+      "path": "app/job/job_manager.py",
+      "bytes": 9461
+    },
+    {
+      "path": "app/job/job_state.py",
+      "bytes": 183
+    },
+    {
+      "path": "app/media/__init__.py",
+      "bytes": 49
+    },
+    {
+      "path": "app/media/identity.py",
+      "bytes": 384
+    },
+    {
+      "path": "app/media/models.py",
+      "bytes": 232
+    },
+    {
+      "path": "app/media/scan_worker.py",
+      "bytes": 623
+    },
+    {
+      "path": "app/native/AudioEngineNative.dll",
+      "bytes": 37888
+    },
+    {
+      "path": "app/paths.py",
+      "bytes": 3575
+    },
+    {
+      "path": "app/pipeline/__init__.py",
+      "bytes": 32
+    },
+    {
+      "path": "app/pipeline/aligner.py",
+      "bytes": 9794
+    },
+    {
+      "path": "app/pipeline/asr_engine.py",
+      "bytes": 914
+    },
+    {
+      "path": "app/pipeline/extractor.py",
+      "bytes": 2108
+    },
+    {
+      "path": "app/pipeline/forced_aligner.py",
+      "bytes": 228
+    },
+    {
+      "path": "app/pipeline/jp_normalizer.py",
+      "bytes": 3380
+    },
+    {
+      "path": "app/pipeline/lyric_corrector.py",
+      "bytes": 5662
+    },
+    {
+      "path": "app/pipeline/lyric_formatter.py",
+      "bytes": 1523
+    },
+    {
+      "path": "app/pipeline/postprocess.py",
+      "bytes": 1340
+    },
+    {
+      "path": "app/pipeline/utils.py",
+      "bytes": 3969
+    },
+    {
+      "path": "app/pipeline/vad.py",
+      "bytes": 924
+    },
+    {
+      "path": "app/pipeline/vocal_separator.py",
+      "bytes": 1326
+    },
+    {
+      "path": "app/playback/__init__.py",
+      "bytes": 60
+    },
+    {
+      "path": "app/playback/engine.py",
+      "bytes": 962
+    },
+    {
+      "path": "app/playback/playlist.py",
+      "bytes": 708
+    },
+    {
+      "path": "app/run_app.py",
+      "bytes": 558
+    },
+    {
+      "path": "app/subtitle/__init__.py",
+      "bytes": 32
+    },
+    {
+      "path": "app/subtitle/ass/__init__.py",
+      "bytes": 27
+    },
+    {
+      "path": "app/subtitle/ass/ass_parser.py",
+      "bytes": 2257
+    },
+    {
+      "path": "app/subtitle/ass/renderer.py",
+      "bytes": 4379
+    },
+    {
+      "path": "app/subtitle/ass/style.py",
+      "bytes": 893
+    },
+    {
+      "path": "app/subtitle/ass/utils.py",
+      "bytes": 965
+    },
+    {
+      "path": "app/subtitle/config.py",
+      "bytes": 1191
+    },
+    {
+      "path": "app/subtitle/converter.py",
+      "bytes": 1580
+    },
+    {
+      "path": "app/subtitle/engine.py",
+      "bytes": 376
+    },
+    {
+      "path": "app/subtitle/mode.py",
+      "bytes": 360
+    },
+    {
+      "path": "app/subtitle/model.py",
+      "bytes": 766
+    },
+    {
+      "path": "app/subtitle/models.py",
+      "bytes": 273
+    },
+    {
+      "path": "app/subtitle/profile.py",
+      "bytes": 4559
+    },
+    {
+      "path": "app/subtitle/storage.py",
+      "bytes": 5465
+    },
+    {
+      "path": "app/test/main.py",
+      "bytes": 6597
+    },
+    {
+      "path": "app/test/test.py",
+      "bytes": 5647
+    },
+    {
+      "path": "app/test/test_ai.py",
+      "bytes": 4529
+    },
+    {
+      "path": "app/test/test_ai_controller.py",
+      "bytes": 3022
+    },
+    {
+      "path": "app/test/test_aligner_optimizations.py",
+      "bytes": 505
+    },
+    {
+      "path": "app/test/test_pipeline.py",
+      "bytes": 454
+    },
+    {
+      "path": "app/test/test_sub.py",
+      "bytes": 5386
+    },
+    {
+      "path": "app/test/test_worker.py",
+      "bytes": 684
+    },
+    {
+      "path": "app/test_build_app.py",
+      "bytes": 788
+    },
+    {
+      "path": "app/thumbnail/__init__.py",
+      "bytes": 33
+    },
+    {
+      "path": "app/thumbnail/persistence.py",
+      "bytes": 692
+    },
+    {
+      "path": "app/thumbnail/thumbnail_manager.py",
+      "bytes": 5429
+    },
+    {
+      "path": "app/thumbnail/thumbnail_workers.py",
+      "bytes": 2329
+    },
+    {
+      "path": "app/translate/__init__.py",
+      "bytes": 33
+    },
+    {
+      "path": "app/translate/cache.py",
+      "bytes": 2826
+    },
+    {
+      "path": "app/translate/nllb.py",
+      "bytes": 1103
+    },
+    {
+      "path": "app/translate/online_logic.py",
+      "bytes": 8920
+    },
+    {
+      "path": "app/translate/pipeline.py",
+      "bytes": 11866
+    },
+    {
+      "path": "app/translate/translator.py",
+      "bytes": 4491
+    },
+    {
+      "path": "app/ui/__init__.py",
+      "bytes": 26
+    },
+    {
+      "path": "app/ui/main_window.py",
+      "bytes": 106055
+    },
+    {
+      "path": "app/ui/media_card.py",
+      "bytes": 11102
+    },
+    {
+      "path": "app/ui/media_player.py",
+      "bytes": 3888
+    },
+    {
+      "path": "app/ui/nav/__init__.py",
+      "bytes": 27
+    },
+    {
+      "path": "app/ui/nav/sidebar.py",
+      "bytes": 3752
+    },
+    {
+      "path": "app/ui/pages/__init__.py",
+      "bytes": 29
+    },
+    {
+      "path": "app/ui/pages/content_manager.py",
+      "bytes": 4911
+    },
+    {
+      "path": "app/ui/pages/download.py",
+      "bytes": 27973
+    },
+    {
+      "path": "app/ui/pages/dynamic_island.py",
+      "bytes": 11298
+    },
+    {
+      "path": "app/ui/pages/for_you.py",
+      "bytes": 32827
+    },
+    {
+      "path": "app/ui/pages/mode_manager.py",
+      "bytes": 1258
+    },
+    {
+      "path": "app/ui/pages/settings.py",
+      "bytes": 13010
+    },
+    {
+      "path": "app/ui/pages/settings_dialog.py",
+      "bytes": 6843
+    },
+    {
+      "path": "app/ui/playback_bar.py",
+      "bytes": 15983
+    },
+    {
+      "path": "app/ui/styles.py",
+      "bytes": 216
+    },
+    {
+      "path": "app/ui/subs_ui/__init__.py",
+      "bytes": 31
+    },
+    {
+      "path": "app/ui/subs_ui/lyric_settings_dialog.py",
+      "bytes": 14925
+    },
+    {
+      "path": "app/ui/subs_ui/sub_panel.py",
+      "bytes": 15589
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_commands.py",
+      "bytes": 1478
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_dialog_logic.py",
+      "bytes": 43173
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_editor.py",
+      "bytes": 8018
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_io.py",
+      "bytes": 5938
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_layer.py",
+      "bytes": 18085
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_model.py",
+      "bytes": 6409
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_utils.py",
+      "bytes": 965
+    },
+    {
+      "path": "app/ui/subs_ui/subtitle_workers.py",
+      "bytes": 11694
+    },
+    {
+      "path": "app/ui/system_media_manager.py",
+      "bytes": 12161
+    },
+    {
+      "path": "app/ui/video_info_popup.py",
+      "bytes": 14457
+    },
+    {
+      "path": "app/ui/vol_panel.py",
+      "bytes": 4172
+    },
+    {
+      "path": "app/updater.py",
+      "bytes": 6164
+    },
+    {
+      "path": "app/worker.py",
+      "bytes": 7190
+    }
+  ]
+}

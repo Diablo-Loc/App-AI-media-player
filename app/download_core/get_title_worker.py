@@ -6,6 +6,7 @@ from PySide6.QtCore import QThread, Signal
 
 from .utils import sanitize_folder_name
 from .yt_dlp import ensure_ytdlp_exists
+from control.worker_lifecycle import OwnedProcesses
 
 class GetTitleWorker(QThread):
     title_ready_signal = Signal(str)
@@ -16,6 +17,7 @@ class GetTitleWorker(QThread):
 
     def __init__(self, links):
         super().__init__()
+        self._processes = OwnedProcesses()
         self.links = links
         self.is_running = True
         import sys
@@ -27,12 +29,20 @@ class GetTitleWorker(QThread):
             self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
 
     def run(self):
+        try:
+            self._run_titles()
+        finally:
+            self._processes.stop()
+            self._processes.wait()
+
+    def _run_titles(self):
         # 1. Kiểm tra sự tồn tại của file exe (đảm bảo bộ máy sẵn sàng)
         if not ensure_ytdlp_exists(
             self.ytdlp_exe, 
             self.status_signal, 
             self.log_signal, 
-            self.progress_signal
+            self.progress_signal,
+            cancel_cb=lambda: not self.is_running
         ):
             self.status_signal.emit("❌ Không thể khởi tạo bộ máy!")
             self.finished_signal.emit()
@@ -52,13 +62,16 @@ class GetTitleWorker(QThread):
                     creationflags = subprocess.CREATE_NO_WINDOW
                 
                 # Cập nhật nhân EXE chính
-                subprocess.run([self.ytdlp_exe, "-U"], startupinfo=startupinfo, creationflags=creationflags)
+                process = self._processes.track(subprocess.Popen([self.ytdlp_exe, "-U"], startupinfo=startupinfo, creationflags=creationflags))
+                process.wait()
+                self._processes.release(process)
                 self.log_signal.emit("✅ Bộ máy EXE đã được cập nhật.")
             except Exception as e:
                 self.log_signal.emit(f"⚠️ Cập nhật EXE lỗi: {e}")
 
         # 3. Cấu hình ydl_opts (Gom lại 1 lần duy nhất)
         ydl_opts = {
+            'socket_timeout': 10,
             'quiet': True,
             'no_warnings': True,
             'extract_flat': True,
@@ -96,3 +109,5 @@ class GetTitleWorker(QThread):
 
     def stop(self):
         self.is_running = False
+        self.requestInterruption()
+        self._processes.stop()

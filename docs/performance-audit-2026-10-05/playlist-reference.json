@@ -1,0 +1,44 @@
+{
+  "samples": [
+    {
+      "items": 10000,
+      "load_cpu_ms": 0.0,
+      "load_submission_ms": 29.699999999138527,
+      "realized_rows": 11,
+      "rss_delta_mib": 4.921875,
+      "global_pixmap_cache_limit_kib": 204800,
+      "search_completion_ms_after_submission": 424.21720000129426,
+      "search_matches": 11,
+      "playback_queue_items": 10000,
+      "clear_restores_full_list": true,
+      "run": 0
+    },
+    {
+      "items": 10000,
+      "load_cpu_ms": 0.0,
+      "load_submission_ms": 32.96450000198092,
+      "realized_rows": 11,
+      "rss_delta_mib": 4.890625,
+      "global_pixmap_cache_limit_kib": 204800,
+      "search_completion_ms_after_submission": 423.89059999550227,
+      "search_matches": 11,
+      "playback_queue_items": 10000,
+      "clear_restores_full_list": true,
+      "run": 1
+    },
+    {
+      "items": 10000,
+      "load_cpu_ms": 0.0,
+      "load_submission_ms": 29.019900001003407,
+      "realized_rows": 11,
+      "rss_delta_mib": 4.73828125,
+      "global_pixmap_cache_limit_kib": 204800,
+      "search_completion_ms_after_submission": 422.0638999977382,
+      "search_matches": 11,
+      "playback_queue_items": 10000,
+      "clear_restores_full_list": true,
+      "run": 2
+    }
+  ],
+  "limitations": "Offscreen Qt, synthetic metadata, no images/video/audio/FPS measurement."
+}

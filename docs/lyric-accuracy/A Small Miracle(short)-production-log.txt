@@ -1,0 +1,41 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: A Small Miracle(short).mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 02:23.161
+INFO:faster_whisper:Detected language 'jw' with probability 0.11
+📡 Ngôn ngữ phát hiện: jw (11.1%)
+50 🧹 Làm sạch dữ liệu (jw)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 28.1–40.1s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 68.9–80.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 78.9–90.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 109.6–121.6s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 31.2–36.5s
+INFO:faster_whisper:Processing audio with duration 00:05.312
+57 🛠 Kiểm tra lời bị thiếu: 78.0–84.9s
+INFO:faster_whisper:Processing audio with duration 00:06.912
+57 🛠 Kiểm tra lời bị thiếu: 116.3–121.4s
+INFO:faster_whisper:Processing audio with duration 00:05.056
+🛠 Kiểm tra coverage: thêm 2 dòng, 7 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(33.2, 34.512), (79.984, 82.896), (111.64, 116.432), (118.32, 119.376)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 106.7–118.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 106.4–118.4s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 36.4–48.4s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 36.1–48.1s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+🎵 Đối chiếu lyric: 4 lượt, []
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 27 [{'start': 0.0, 'end': 13.17, 'text': "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"}, {'start': 13.17, 'end': 15.11, 'text': "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"}, {'start': 15.11, 'end': 18.01, 'text': "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"}]
+QUALITY: {"attempts": [{"start": 106.69, "end": 118.69, "reason": "uncertain_tail"}, {"start": 106.39, "end": 118.39, "reason": "uncertain_tail"}, {"start": 36.37, "end": 48.37, "reason": "uncertain_tail"}, {"start": 36.07, "end": 48.07, "reason": "uncertain_tail"}], "changes": [], "duration": 143.1611875, "budget_exhausted": false, "decoded_audio_seconds": 48.0, "seconds": 2.125}
+80-90: [(84.77, 89.51, 'You build a world of miracles'), (89.51, 91.95, 'Some wanting the precious')]

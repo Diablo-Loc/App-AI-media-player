@@ -1,0 +1,48 @@
+{
+  "app/download_core/download_worker.py": {
+    "before_sha256": "4c96587fdaca32fbe4524ebe06f2482d5c1c3ccb9457e3565aae76e783106f78",
+    "after_sha256": "c56130604c62cfd40247755a271d4ba5e66ba7720afbd9d5698022b3c36f124c",
+    "changed_functions": [
+      "DownloadWorker.__init__",
+      "DownloadWorker._run_download",
+      "DownloadWorker.cleanup_temp_files"
+    ],
+    "added_functions": []
+  },
+  "app/ui/pages/download.py": {
+    "before_sha256": "611bc8848bc46cfd755d939abadea6133ccb4844da5beda58b7e1cd17a83abfb",
+    "after_sha256": "5bd12ab6ba2c463a6232ba0c3720129a8e6174434cb33e571d4a428e5427ac98",
+    "changed_functions": [
+      "DownloadPage.load_full_config"
+    ],
+    "added_functions": []
+  },
+  "app/ui/pages/settings_dialog.py": {
+    "before_sha256": "23351a035130b41119c29e815544fb951aebe2e9cd2ce33b8b26b279e97fa221",
+    "after_sha256": "4580225fae4f95f78175613acefee39c2bc5e4b4c36876849711479a054de6b2",
+    "changed_functions": [
+      "SettingMenu.__init__",
+      "SettingMenu.init_ui",
+      "SettingMenu.on_format_changed"
+    ],
+    "added_functions": [
+      "SettingMenu.update_quality_note"
+    ]
+  },
+  "tests/test_ui_layout_polish.py": {
+    "before_sha256": "c06ed4e26659e58ece56e96b24fd363468336ace741849ee00aedf67209ebb41",
+    "after_sha256": "55bb45c36aa8c5594f1c7283a04f32a9edbe9981460ee6466a6aed971eb8ef26",
+    "changed_functions": [
+      "UiLayoutPolishTests.test_download_options_and_saved_schema_stay_original"
+    ],
+    "added_functions": []
+  },
+  "tests/volume_build_contracts.py": {
+    "before_sha256": "19c3e9c934df2157c41f4941f3543cca7f24380d0a7d554e6d18a741232fb205",
+    "after_sha256": "99732084fcedb2f217f774252e083017cc968fea7527b3b2cd0ee911c0e752ad",
+    "changed_functions": [
+      "before_volume_changes"
+    ],
+    "added_functions": []
+  }
+}

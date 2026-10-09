@@ -1,0 +1,34 @@
+{
+  "app/core/audio_profile.py": {
+    "before_sha256": "9a2d20050d713cbc2f0471183de4509105d0705e26c6369079896c5c5fbb1316",
+    "after_sha256": "f6dd1f987daf657fc2a3d6c22cfd7286ff40fa3cdff346d4e60de922522b0c7c",
+    "changed_functions": [
+      "tone_filter"
+    ],
+    "added_functions": []
+  },
+  "app/ui/audio_effects_panel.py": {
+    "before_sha256": "e55f98a11b272e6dc3c763d4a03d6e7976e1cda430e784fc02b62c90b3835a39",
+    "after_sha256": "6e055a790490bc85dd04ab7c717869d2f1e433d60f05320518fd12622d3f0aa5",
+    "changed_functions": [
+      "AudioEffectsPanel.__init__"
+    ],
+    "added_functions": []
+  },
+  "tests/test_audio_effects.py": {
+    "before_sha256": "fd217a8bc138ecb2b5e8bc861f759c3292cfc9e77783df8b014f6d13069db8ed",
+    "after_sha256": "d5409315e3fc188bf3011505809f9b6cc330425f2f48cf7dea14c84b579eb292",
+    "changed_functions": [
+      "SourceScopeTests.test_exact_reviewed_audio_adapters_and_unchanged_all_other_sources"
+    ],
+    "added_functions": []
+  },
+  "tests/test_audio_listening.py": {
+    "before_sha256": "ed386c6f1d7fffce5030fbff87caaf8928bc87b4eb25dd42282d1f6ef4137588",
+    "after_sha256": "144af88988c04927a4aa076714d0654f63c7afaa15026722b3c06f711510d167",
+    "changed_functions": [
+      "ListeningPolicyTests.test_new_presets_are_optional_bounded_and_do_not_replace_defaults_or_old_keys"
+    ],
+    "added_functions": []
+  }
+}

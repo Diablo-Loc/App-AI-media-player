@@ -1,0 +1,502 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "mode": "read-only real media; no listening ground truth",
+  "files": [
+    {
+      "name": "A Small Miracle(short).mp4",
+      "tone": "warm",
+      "prepare_seconds": 3.6074078000019654,
+      "prepare_child_peak_rss_mib": 68.125,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          143.161179138322
+        ],
+        [
+          0.0,
+          143.16115873015875
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.56,
+        "input_lufs": -13.96,
+        "input_peak_db": 0.86,
+        "peak_limited": true
+      },
+      "actual_lufs": -16.52,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 12.248800001543714
+    },
+    {
+      "name": "A Small Miracle(short).mp4",
+      "tone": "headphones",
+      "prepare_seconds": 5.223581000002014,
+      "prepare_child_peak_rss_mib": 74.953125,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          143.161179138322
+        ],
+        [
+          0.0,
+          143.16115873015875
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.33,
+        "input_lufs": -14.1,
+        "input_peak_db": 0.63,
+        "peak_limited": true
+      },
+      "actual_lufs": -16.43,
+      "actual_true_peak_dbtp": -1.69,
+      "cache_hit": true,
+      "cache_hit_ms": 11.309100002108607
+    },
+    {
+      "name": "Brand New Sky.mp4",
+      "tone": "warm",
+      "prepare_seconds": 7.33338250000088,
+      "prepare_child_peak_rss_mib": 68.27734375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          217.0702947845805
+        ],
+        [
+          0.0,
+          217.06998866213152
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.96,
+        "input_lufs": -7.8,
+        "input_peak_db": 1.26,
+        "peak_limited": true
+      },
+      "actual_lufs": -10.77,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 12.445300002582371
+    },
+    {
+      "name": "Brand New Sky.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 8.05024720000074,
+      "prepare_child_peak_rss_mib": 75.46484375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          217.0702947845805
+        ],
+        [
+          0.0,
+          217.06998866213152
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.98,
+        "input_lufs": -8.07,
+        "input_peak_db": 1.28,
+        "peak_limited": true
+      },
+      "actual_lufs": -11.05,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 11.690299998008413
+    },
+    {
+      "name": "Empty old City - Looma.mp4",
+      "tone": "warm",
+      "prepare_seconds": 7.615582800000993,
+      "prepare_child_peak_rss_mib": 70.109375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          202.4780045351474
+        ],
+        [
+          0.0,
+          202.47826984126982
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.52,
+        "input_lufs": -11.49,
+        "input_peak_db": 0.82,
+        "peak_limited": true
+      },
+      "actual_lufs": -14.01,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 10.102200001711026
+    },
+    {
+      "name": "Empty old City - Looma.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 7.454452899997705,
+      "prepare_child_peak_rss_mib": 76.9765625,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          202.4780045351474
+        ],
+        [
+          0.0,
+          202.47826984126982
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.26,
+        "input_lufs": -11.65,
+        "input_peak_db": 0.56,
+        "peak_limited": true
+      },
+      "actual_lufs": -13.91,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 10.93600000240258
+    },
+    {
+      "name": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "tone": "warm",
+      "prepare_seconds": 8.658295199998975,
+      "prepare_child_peak_rss_mib": 70.44140625,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.5000000000165983,
+      "audio_bounds": [
+        [
+          0.0,
+          236.54167800453516
+        ],
+        [
+          0.0,
+          236.54126984126984
+        ]
+      ],
+      "gain": {
+        "gain_db": -3.55,
+        "input_lufs": -6.68,
+        "input_peak_db": 1.85,
+        "peak_limited": true
+      },
+      "actual_lufs": -10.23,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 22.177899998496287
+    },
+    {
+      "name": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 10.170878499997343,
+      "prepare_child_peak_rss_mib": 77.41796875,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.5000000000165983,
+      "audio_bounds": [
+        [
+          0.0,
+          236.54167800453516
+        ],
+        [
+          0.0,
+          236.54126984126984
+        ]
+      ],
+      "gain": {
+        "gain_db": -3.14,
+        "input_lufs": -6.79,
+        "input_peak_db": 1.44,
+        "peak_limited": true
+      },
+      "actual_lufs": -9.93,
+      "actual_true_peak_dbtp": -1.69,
+      "cache_hit": true,
+      "cache_hit_ms": 12.203199999930803
+    },
+    {
+      "name": "Unwavering Startorch.mp4",
+      "tone": "warm",
+      "prepare_seconds": 8.512118199996621,
+      "prepare_child_peak_rss_mib": 68.33984375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          232.98902494331068
+        ],
+        [
+          0.0,
+          232.98926984126982
+        ]
+      ],
+      "gain": {
+        "gain_db": -1.79,
+        "input_lufs": -10.56,
+        "input_peak_db": 0.09,
+        "peak_limited": true
+      },
+      "actual_lufs": -12.34,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 12.957799997820985
+    },
+    {
+      "name": "Unwavering Startorch.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 10.150772199998755,
+      "prepare_child_peak_rss_mib": 75.2734375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          232.98902494331068
+        ],
+        [
+          0.0,
+          232.98926984126982
+        ]
+      ],
+      "gain": {
+        "gain_db": -1.48,
+        "input_lufs": -10.9,
+        "input_peak_db": -0.22,
+        "peak_limited": true
+      },
+      "actual_lufs": -12.38,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 15.18690000011702
+    },
+    {
+      "name": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "tone": "warm",
+      "prepare_seconds": 10.097522899999603,
+      "prepare_child_peak_rss_mib": 69.76171875,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.33333333334439885,
+      "audio_bounds": [
+        [
+          0.0,
+          255.23374149659864
+        ],
+        [
+          0.0,
+          255.23365986394558
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.96,
+        "input_lufs": -6.98,
+        "input_peak_db": 1.26,
+        "peak_limited": true
+      },
+      "actual_lufs": -9.94,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 14.737700003024656
+    },
+    {
+      "name": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 11.575416299998324,
+      "prepare_child_peak_rss_mib": 76.51171875,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.33333333334439885,
+      "audio_bounds": [
+        [
+          0.0,
+          255.23374149659864
+        ],
+        [
+          0.0,
+          255.23365986394558
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.84,
+        "input_lufs": -7.09,
+        "input_peak_db": 1.14,
+        "peak_limited": true
+      },
+      "actual_lufs": -9.93,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 14.72980000107782
+    },
+    {
+      "name": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "tone": "warm",
+      "prepare_seconds": 8.084234199999628,
+      "prepare_child_peak_rss_mib": 67.17578125,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.33333333334439885,
+      "audio_bounds": [
+        [
+          0.0,
+          221.4254875283447
+        ],
+        [
+          0.0,
+          221.42560997732426
+        ]
+      ],
+      "gain": {
+        "gain_db": -3.4,
+        "input_lufs": -8.52,
+        "input_peak_db": 1.7,
+        "peak_limited": true
+      },
+      "actual_lufs": -11.92,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 12.68530000015744
+    },
+    {
+      "name": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 7.662900200000877,
+      "prepare_child_peak_rss_mib": 74.30859375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.33333333334439885,
+      "audio_bounds": [
+        [
+          0.0,
+          221.4254875283447
+        ],
+        [
+          0.0,
+          221.42560997732426
+        ]
+      ],
+      "gain": {
+        "gain_db": -3.3,
+        "input_lufs": -8.74,
+        "input_peak_db": 1.6,
+        "peak_limited": true
+      },
+      "actual_lufs": -12.04,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 12.181800000689691
+    },
+    {
+      "name": "人生エンドロール.mp4",
+      "tone": "warm",
+      "prepare_seconds": 6.891709999999875,
+      "prepare_child_peak_rss_mib": 68.0625,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          203.48662131519276
+        ],
+        [
+          0.0,
+          203.48698866213152
+        ]
+      ],
+      "gain": {
+        "gain_db": -2.07,
+        "input_lufs": -8.76,
+        "input_peak_db": 0.37,
+        "peak_limited": true
+      },
+      "actual_lufs": -10.83,
+      "actual_true_peak_dbtp": -1.7,
+      "cache_hit": true,
+      "cache_hit_ms": 11.934599999221973
+    },
+    {
+      "name": "人生エンドロール.mp4",
+      "tone": "headphones",
+      "prepare_seconds": 8.067494499999157,
+      "prepare_child_peak_rss_mib": 77.15234375,
+      "max_owned_processes": 1,
+      "source_unchanged": true,
+      "video_packets_identical": true,
+      "video_packet_count_equal": true,
+      "max_video_pts_delta_ms": 0.0,
+      "audio_bounds": [
+        [
+          0.0,
+          203.48662131519276
+        ],
+        [
+          0.0,
+          203.48698866213152
+        ]
+      ],
+      "gain": {
+        "gain_db": -1.8,
+        "input_lufs": -8.91,
+        "input_peak_db": 0.1,
+        "peak_limited": true
+      },
+      "actual_lufs": -10.7,
+      "actual_true_peak_dbtp": -1.68,
+      "cache_hit": true,
+      "cache_hit_ms": 11.49940000323113
+    }
+  ]
+}

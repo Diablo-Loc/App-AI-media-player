@@ -1,0 +1,37 @@
+test_all_prior_app_sources_unchanged_outside_three_ui_adapters (tests.test_subtitle_effects.EffectScopeTests.test_all_prior_app_sources_unchanged_outside_three_ui_adapters) ... ok
+test_only_painter_and_settings_adapters_change_old_production (tests.test_subtitle_effects.EffectScopeTests.test_only_painter_and_settings_adapters_change_old_production) ... ok
+test_all_modes_render_unicode_and_stable_geometry (tests.test_subtitle_effects.EffectTests.test_all_modes_render_unicode_and_stable_geometry) ... ok
+test_complete_animation_is_finite_and_reset_restores_original_pixels (tests.test_subtitle_effects.EffectTests.test_complete_animation_is_finite_and_reset_restores_original_pixels) ... ok
+test_hidden_off_empty_and_load_cancel_animation (tests.test_subtitle_effects.EffectTests.test_hidden_off_empty_and_load_cancel_animation) ... ok
+test_off_pixels_and_cues_equal_captured_renderer (tests.test_subtitle_effects.EffectTests.test_off_pixels_and_cues_equal_captured_renderer) ... ok
+test_options_off_by_default_and_validate_corrupt_input (tests.test_subtitle_effects.EffectTests.test_options_off_by_default_and_validate_corrupt_input) ... ok
+test_player_pause_resume_stop_and_rate (tests.test_subtitle_effects.EffectTests.test_player_pause_resume_stop_and_rate) ... ok
+test_same_cue_does_not_restart_and_identical_next_cue_does (tests.test_subtitle_effects.EffectTests.test_same_cue_does_not_restart_and_identical_next_cue_does) ... ok
+test_seek_midcue_is_complete_and_seek_back_uses_media_offset (tests.test_subtitle_effects.EffectTests.test_seek_midcue_is_complete_and_seek_back_uses_media_offset) ... ok
+test_short_cues_never_extend_timing_or_consume_whole_cue (tests.test_subtitle_effects.EffectTests.test_short_cues_never_extend_timing_or_consume_whole_cue) ... ok
+test_static_gradient_has_no_animation_and_path_reused (tests.test_subtitle_effects.EffectTests.test_static_gradient_has_no_animation_and_path_reused) ... ok
+test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay (tests.test_subtitle_effects.PanelTests.test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay) ... ok
+test_popup_scroll_all_controls_reachable_and_inside_screen (tests.test_subtitle_effects.PanelTests.test_popup_scroll_all_controls_reachable_and_inside_screen) ... ok
+test_preview_uses_production_painter_and_stops_on_hide (tests.test_subtitle_effects.PanelTests.test_preview_uses_production_painter_and_stops_on_hide) ... ok
+test_saved_effects_loaded_at_startup_without_rewriting_preferences (tests.test_subtitle_effects.PanelTests.test_saved_effects_loaded_at_startup_without_rewriting_preferences) ... Windows fatal exception: access violation
+
+Current thread 0x00005ebc (most recent call first):
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\app\ui\main_window.py", line 196 in __init__
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\tools\ui_preview.py", line 79 in isolated_window
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 137 in __enter__
+  File "D:\HocTap\11_MusicApp\App-AI-media-player\tests\test_subtitle_effects.py", line 271 in test_saved_effects_loaded_at_startup_without_rewriting_preferences
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py", line 579 in _callTestMethod
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py", line 623 in run
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py", line 678 in __call__
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 122 in run
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 84 in __call__
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 122 in run
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 84 in __call__
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 122 in run
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\suite.py", line 84 in __call__
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\runner.py", line 217 in run
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\main.py", line 274 in runTests
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\main.py", line 102 in __init__
+  File "C:\Users\DIABLO\AppData\Local\Programs\Python\Python311\Lib\unittest\__main__.py", line 18 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main

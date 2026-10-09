@@ -1,0 +1,191 @@
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000027CB017D4C0] stream 0, timescale not set
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'D:/HocTap/11_MusicApp/App-AI-media-player/video/夏空メドレー-Tell Your World × ただ風を追いかけて - 初音ミク＆ロビン【崩壊-スターレイル】.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    title           : 夏空メドレー：Tell Your World × ただ風を追いかけて / 初音ミク＆ロビン【崩壊：スターレイル】
+    artist          : Hatsune Miku
+    genre           : Music
+    date            : 20260905
+    encoder         : Lavf62.1.103
+    comment         : https://www.youtube.com/watch?v=cOr-TUxo8Kw
+    description     : 初音ミク＆ロビンが届く
+                    : 夏空に響くスペシャルメドレー
+                    : 
+                    : Vocal：初音ミク＆ロビン（歌：Chevy）
+                    : Rearrange：inosoo
+                    : 
+                    : 『Tell Your World』
+                    : 作詞・作曲・編曲：kz
+                    : 
+                    : 『ただ風を追いかけて』
+                    : 作曲：Eli.W (HOYO-MiX)
+                    : 作詞：黑金雨/windflowerLia
+                    : 編曲：Eli.W (HOYO-MiX)/TSAR (HOYO-MiX)
+                    : 
+                    : ▼『崩壊：スターレイル』公式サイト
+                    : https://hoyo.link/BRyfjMf9y
+                    : 
+                    : © Crypton Future Media, INC. www.piapro.net
+                    : ©︎COGNOSPHERE
+                    : 
+                    : ˙.+。˙.+。˙.+。˙.+。˙.+。˙.+。˙.+
+                    : 
+                    : 【ミク＆ロビン】
+                    : 君に伝えたい言葉
+                    : 
+                    : 【ロビン】
+                    : Who can surely know
+                    : How the wind blows,
+                    : Where the balloon's taking me to roam?
+                    : When showers of notes
+                    : Fall like sparkles
+                    : I let them form
+                    : Random new songs
+                    : 
+                    : Find your own pace, own path
+                    : (Lento, presto, andante larghetto)
+                    : Play for this race, let's start
+                    : As a discord~
+                    : 
+                    : Wing it now! Cast aside the unchanging score
+                    : Swing now! We aren't bolted parts anymore
+                    : Win it now! Be the sharp no one can ignore
+                    : Ready to surprise them all
+                    : Freely, aloud
+                    : 
+                    : 【ミク】
+                    : 君に伝えたい言葉
+                    : 君に届けたい音が
+                    : いくつもの線は円になって
+                    : 全て繋げてく どこにだって
+                    : 
+                    : 【ロビン】
+                    : Woah! Keep on movin', groovin'
+                    : Woah! Jump high and fly
+                    : Woah! Speed up, move it, prove it
+                    : Woah! Jump high and fly
+                    : 
+                    : 【ミク】
+                    : 真っ白に澄んだ光は君のよう
+                    : かざした手の隙間を伝う声が
+                    : ふと動いた指先刻むリズムに
+                    : ありったけの言葉乗せ空に解き放つの
+                    : 
+                    : 【ミク＆ロビン】
+                    : Wing it now! Cast aside the unchanging score
+                    : Swing now! We aren't bolted parts anymore
+                    : Win it now! Be the sharp no one can ignore
+                    : Join us, let me hear you shout
+                    : (Strike out your chord, yeah!)
+                    : 
+                    : 君が伝えたい言葉
+                    : 君が届けたい音は
+                    : いくつもの線は円になって
+                    : 全て繋げてく どこにだって
+                    : 
+                    : (Strike out your chord, yeah!)
+                    : 
+                    : 【ロビン】
+                    : Woah! Keep on movin', groovin'
+                    : Woah! Jump high and fly
+                    : Woah! Speed up, move it, prove it
+                    : Woah! Jump high and fly
+                    : 
+                    : #崩壊スターレイル #ロビン夏空の歌 #初音ミク
+    synopsis        : 初音ミク＆ロビンが届く
+                    : 夏空に響くスペシャルメドレー
+                    : 
+                    : Vocal：初音ミク＆ロビン（歌：Chevy）
+                    : Rearrange：inosoo
+                    : 
+                    : 『Tell Your World』
+                    : 作詞・作曲・編曲：kz
+                    : 
+                    : 『ただ風を追いかけて』
+                    : 作曲：Eli.W (HOYO-MiX)
+                    : 作詞：黑金雨/windflowerLia
+                    : 編曲：Eli.W (HOYO-MiX)/TSAR (HOYO-MiX)
+                    : 
+                    : ▼『崩壊：スターレイル』公式サイト
+                    : https://hoyo.link/BRyfjMf9y
+                    : 
+                    : © Crypton Future Media, INC. www.piapro.net
+                    : ©︎COGNOSPHERE
+                    : 
+                    : ˙.+。˙.+。˙.+。˙.+。˙.+。˙.+。˙.+
+                    : 
+                    : 【ミク＆ロビン】
+                    : 君に伝えたい言葉
+                    : 
+                    : 【ロビン】
+                    : Who can surely know
+                    : How the wind blows,
+                    : Where the balloon's taking me to roam?
+                    : When showers of notes
+                    : Fall like sparkles
+                    : I let them form
+                    : Random new songs
+                    : 
+                    : Find your own pace, own path
+                    : (Lento, presto, andante larghetto)
+                    : Play for this race, let's start
+                    : As a discord~
+                    : 
+                    : Wing it now! Cast aside the unchanging score
+                    : Swing now! We aren't bolted parts anymore
+                    : Win it now! Be the sharp no one can ignore
+                    : Ready to surprise them all
+                    : Freely, aloud
+                    : 
+                    : 【ミク】
+                    : 君に伝えたい言葉
+                    : 君に届けたい音が
+                    : いくつもの線は円になって
+                    : 全て繋げてく どこにだって
+                    : 
+                    : 【ロビン】
+                    : Woah! Keep on movin', groovin'
+                    : Woah! Jump high and fly
+                    : Woah! Speed up, move it, prove it
+                    : Woah! Jump high and fly
+                    : 
+                    : 【ミク】
+                    : 真っ白に澄んだ光は君のよう
+                    : かざした手の隙間を伝う声が
+                    : ふと動いた指先刻むリズムに
+                    : ありったけの言葉乗せ空に解き放つの
+                    : 
+                    : 【ミク＆ロビン】
+                    : Wing it now! Cast aside the unchanging score
+                    : Swing now! We aren't bolted parts anymore
+                    : Win it now! Be the sharp no one can ignore
+                    : Join us, let me hear you shout
+                    : (Strike out your chord, yeah!)
+                    : 
+                    : 君が伝えたい言葉
+                    : 君が届けたい音は
+                    : いくつもの線は円になって
+                    : 全て繋げてく どこにだって
+                    : 
+                    : (Strike out your chord, yeah!)
+                    : 
+                    : 【ロビン】
+                    : Woah! Keep on movin', groovin'
+                    : Woah! Jump high and fly
+                    : Woah! Speed up, move it, prove it
+                    : Woah! Jump high and fly
+                    : 
+                    : #崩壊スターレイル #ロビン夏空の歌 #初音ミク
+  Duration: 00:02:54.52, start: 0.000000, bitrate: 3213 kb/s
+  Stream #0:0[0x1](und): Video: vp9 (Profile 0) (vp09 / 0x39307076), yuv420p(tv, bt709), 1920x1080, 3023 kb/s, 24 fps, 24 tbr, 16k tbn (default)
+      Metadata:
+        handler_name    : ISO Media file produced by Google Inc. Created on: 10/04/2026.
+        vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](eng): Audio: opus (Opus / 0x7375704F), 48000 Hz, stereo, fltp, 131 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+  Stream #0:2[0x0]: Video: png, rgb24(pc, gbr/unknown/unknown), 1280x720, 90k tbr, 90k tbn (attached pic)
+{'source': '夏空メドレー-Tell Your World × ただ風を追いかけて - 初音ミク＆ロビン【崩壊-スターレイル】.mp4', 'source_hash_unchanged': True, 'decoded_frames': 73, 'paused_frozen': True, 'reverse_seek': True, 'resumed_at_rate_2': True, 'stopped_cleanly': True, 'limitation': 'Actual QMediaPlayer/QVideoSink in offscreen process, no screen/native audio/GPU/EXE parity claim.'}

@@ -1,0 +1,26 @@
+{
+  "app/download_core/download_source_app.py": {
+    "before_sha256": "3f14c6011e049138108101b452cd506673e689aacaf3fc38678f3a6b982d1ae1",
+    "after_sha256": "49f11f4486250f7e0681f5f150c7d9c0840fde90c8114d3a49e2df73e1d783ed"
+  },
+  "app/download_core/download_worker.py": {
+    "before_sha256": "c56130604c62cfd40247755a271d4ba5e66ba7720afbd9d5698022b3c36f124c",
+    "after_sha256": "5884e82e661838ca0459b9fc1254e6b3d1840a4829a56011ee771281f21f6d52"
+  },
+  "app/downloader.py": {
+    "before_sha256": "75fbdb3db6774727e5777deea30cceb7b3dbdb93e2bf4caa5f642b1f595d7b00",
+    "after_sha256": "2829f6b60879837d7bc8dbc149bb2d35d886aad160f9a6554b57572800a11428"
+  },
+  "app/ui/pages/settings_dialog.py": {
+    "before_sha256": "4580225fae4f95f78175613acefee39c2bc5e4b4c36876849711479a054de6b2",
+    "after_sha256": "978a6932bd096edc7149c0cc6eaaea9671eb9735be292b66eb1815601cb77ed6"
+  },
+  "tests/download_quality_contracts.py": {
+    "before_sha256": "c5ac9253b8227369fbf502926fbd9da8602e9a258882a8642baecaff55be450f",
+    "after_sha256": "32a7fd25be512fe6c6a77dc7dfd1434e8b53baf935f7613cdd89edca4f11be8d"
+  },
+  "tests/test_download_quality.py": {
+    "before_sha256": "3933a6ad589316f611683d42b7087453a211b96c879ba2e17facc25f5000c1be",
+    "after_sha256": "a49554387fe44ce8026bca2e885f28bbaf37a6b8bd4803ab976a29b765e2d5ae"
+  }
+}

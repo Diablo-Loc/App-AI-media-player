@@ -1,0 +1,448 @@
+{
+  "report": {
+    "video": "Brand New Sky",
+    "duration": 217.0703125,
+    "language": "en",
+    "original_cues": 49,
+    "new_cues": 37,
+    "original_refined_overlaps": 0,
+    "original_saved_overlaps": 38,
+    "new_overlaps": 0,
+    "recognized_characters_preserved": true,
+    "source_reference": "captured raw ASR, not human lyric/timing ground truth"
+  },
+  "original": [
+    {
+      "start": 14.400000000000002,
+      "end": 20.080000000000002,
+      "text": "I was standing in the quiet watching shadows softly breathe"
+    },
+    {
+      "start": 20.2,
+      "end": 26.14,
+      "text": "Those unspoken wishes like a mystery"
+    },
+    {
+      "start": 26.540000000000003,
+      "end": 31.6,
+      "text": "Every step feels bigger than but a crowd is all to me"
+    },
+    {
+      "start": 32.480000000000004,
+      "end": 37.980000000000004,
+      "text": "I don't know who is waiting there but I'll let it be"
+    },
+    {
+      "start": 38.74,
+      "end": 41.46,
+      "text": "If I fall, I die before"
+    },
+    {
+      "start": 41.7,
+      "end": 44.76,
+      "text": "If I break, let there be light"
+    },
+    {
+      "start": 44.94,
+      "end": 47.39999999999999,
+      "text": "There's a world behind the fear"
+    },
+    {
+      "start": 47.519999999999996,
+      "end": 50.56,
+      "text": "So it can make me feel alive"
+    },
+    {
+      "start": 50.68000000000001,
+      "end": 53.78,
+      "text": "Seeing a storm start to avoid"
+    },
+    {
+      "start": 53.900000000000006,
+      "end": 56.599999999999994,
+      "text": "Showing the miracle we made"
+    },
+    {
+      "start": 56.72,
+      "end": 59.56,
+      "text": "This time we're about to fly"
+    },
+    {
+      "start": 59.68000000000001,
+      "end": 62.879999999999995,
+      "text": "No more fending, drifting by"
+    },
+    {
+      "start": 63.0,
+      "end": 65.53999999999999,
+      "text": "We keep moving"
+    },
+    {
+      "start": 65.86,
+      "end": 69.02,
+      "text": "We keep it when I'm standing still"
+    },
+    {
+      "start": 69.14,
+      "end": 72.05999999999999,
+      "text": "I'm not losing"
+    },
+    {
+      "start": 72.17999999999999,
+      "end": 75.22,
+      "text": "You and your song we're writing still"
+    },
+    {
+      "start": 75.34,
+      "end": 78.14,
+      "text": "Knowing the ending"
+    },
+    {
+      "start": 78.26,
+      "end": 81.28,
+      "text": "I know I don't need to see the proof"
+    },
+    {
+      "start": 81.4,
+      "end": 83.78,
+      "text": "The sign is lightening up"
+    },
+    {
+      "start": 85.3,
+      "end": 89.33999999999999,
+      "text": "Like he's calling me to you"
+    },
+    {
+      "start": 105.76,
+      "end": 109.75999999999999,
+      "text": "I remember all the versions"
+    },
+    {
+      "start": 109.88,
+      "end": 112.82,
+      "text": "Some are lonely, some are ill or still"
+    },
+    {
+      "start": 113.55999999999999,
+      "end": 115.88,
+      "text": "No more running away"
+    },
+    {
+      "start": 116.0,
+      "end": 118.53999999999999,
+      "text": "Just hearing echoes afar"
+    },
+    {
+      "start": 118.66,
+      "end": 121.5,
+      "text": "If the future is a puzzle"
+    },
+    {
+      "start": 121.62,
+      "end": 124.47999999999999,
+      "text": "I am brave enough to solve it"
+    },
+    {
+      "start": 124.6,
+      "end": 127.32,
+      "text": "If the end is just a journey"
+    },
+    {
+      "start": 127.44,
+      "end": 130.45,
+      "text": "I'll be ready for the call"
+    },
+    {
+      "start": 130.57,
+      "end": 133.3,
+      "text": "If I fall, I can be far"
+    },
+    {
+      "start": 133.42000000000002,
+      "end": 136.18,
+      "text": "If I break, let there be light"
+    },
+    {
+      "start": 136.3,
+      "end": 139.12,
+      "text": "There's a world behind the fear"
+    },
+    {
+      "start": 139.24,
+      "end": 142.36,
+      "text": "So it can make me feel alive"
+    },
+    {
+      "start": 142.48000000000002,
+      "end": 145.41,
+      "text": "We keep moving"
+    },
+    {
+      "start": 145.53,
+      "end": 148.62,
+      "text": "We keep it when I'm standing still"
+    },
+    {
+      "start": 148.74,
+      "end": 151.51999999999998,
+      "text": "I'm not losing"
+    },
+    {
+      "start": 151.64,
+      "end": 154.44,
+      "text": "You left me somewhere right still"
+    },
+    {
+      "start": 154.56,
+      "end": 157.51999999999998,
+      "text": "Knowing the ending"
+    },
+    {
+      "start": 157.64,
+      "end": 160.7,
+      "text": "I know I don't need to see it through"
+    },
+    {
+      "start": 160.82,
+      "end": 162.76,
+      "text": "I'm silent right now"
+    },
+    {
+      "start": 162.88,
+      "end": 165.14,
+      "text": "He's calling me to you"
+    },
+    {
+      "start": 165.26,
+      "end": 168.06,
+      "text": "I can feel it pushing on me"
+    },
+    {
+      "start": 168.18,
+      "end": 171.21999999999997,
+      "text": "Up when the sky, he falls on top of me"
+    },
+    {
+      "start": 171.33999999999997,
+      "end": 177.34,
+      "text": "I don't look back, I only take the ugly for a new one now"
+    },
+    {
+      "start": 187.76,
+      "end": 190.88,
+      "text": "We keep moving"
+    },
+    {
+      "start": 191.34,
+      "end": 194.38,
+      "text": "We keep it wet and I'm standing still"
+    },
+    {
+      "start": 194.5,
+      "end": 200.36,
+      "text": "I'm not losing you, I'm somewhere right still"
+    },
+    {
+      "start": 200.48000000000002,
+      "end": 206.57999999999998,
+      "text": "Knowing the ending, I know I don't need to see it through"
+    },
+    {
+      "start": 206.7,
+      "end": 211.76,
+      "text": "I'm signing this line up, signing this line up"
+    },
+    {
+      "start": 211.88,
+      "end": 214.54,
+      "text": "He's calling me to you"
+    }
+  ],
+  "refined": [
+    {
+      "start": 14.35,
+      "end": 19.79,
+      "text": "I was standing in the quiet watching shadows softly breathe"
+    },
+    {
+      "start": 19.79,
+      "end": 25.62,
+      "text": "Those unspoken wishes like a mystery"
+    },
+    {
+      "start": 26.49,
+      "end": 31.08,
+      "text": "Every step feels bigger than but a crowd is all to me"
+    },
+    {
+      "start": 32.43,
+      "end": 37.46,
+      "text": "I don't know who is waiting there but I'll let it be"
+    },
+    {
+      "start": 38.69,
+      "end": 40.94,
+      "text": "If I fall, I die before"
+    },
+    {
+      "start": 41.65,
+      "end": 44.24,
+      "text": "If I break, let there be light"
+    },
+    {
+      "start": 44.89,
+      "end": 50.27,
+      "text": "There's a world behind the fear So it can make me feel alive"
+    },
+    {
+      "start": 50.27,
+      "end": 53.49,
+      "text": "Seeing a storm start to avoid"
+    },
+    {
+      "start": 53.49,
+      "end": 59.27,
+      "text": "Showing the miracle we made This time we're about to fly"
+    },
+    {
+      "start": 59.27,
+      "end": 62.59,
+      "text": "No more fending, drifting by"
+    },
+    {
+      "start": 62.59,
+      "end": 65.02,
+      "text": "We keep moving"
+    },
+    {
+      "start": 65.81,
+      "end": 71.77,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 71.77,
+      "end": 74.93,
+      "text": "You and your song we're writing still"
+    },
+    {
+      "start": 74.93,
+      "end": 80.99,
+      "text": "Knowing the ending I know I don't need to see the proof"
+    },
+    {
+      "start": 80.99,
+      "end": 83.26,
+      "text": "The sign is lightening up"
+    },
+    {
+      "start": 85.25,
+      "end": 88.82,
+      "text": "Like he's calling me to you"
+    },
+    {
+      "start": 105.71,
+      "end": 109.47,
+      "text": "I remember all the versions"
+    },
+    {
+      "start": 109.47,
+      "end": 112.3,
+      "text": "Some are lonely, some are ill or still"
+    },
+    {
+      "start": 113.51,
+      "end": 118.25,
+      "text": "No more running away Just hearing echoes afar"
+    },
+    {
+      "start": 118.25,
+      "end": 121.08,
+      "text": "If the future is a puzzle"
+    },
+    {
+      "start": 121.47,
+      "end": 127.03,
+      "text": "I am brave enough to solve it If the end is just a journey"
+    },
+    {
+      "start": 127.03,
+      "end": 129.98,
+      "text": "I'll be ready for the call"
+    },
+    {
+      "start": 130.47,
+      "end": 132.86,
+      "text": "If I fall, I can be far"
+    },
+    {
+      "start": 133.29,
+      "end": 138.83,
+      "text": "If I break, let there be light There's a world behind the fear"
+    },
+    {
+      "start": 138.83,
+      "end": 142.07,
+      "text": "So it can make me feel alive"
+    },
+    {
+      "start": 142.07,
+      "end": 144.94,
+      "text": "We keep moving"
+    },
+    {
+      "start": 145.43,
+      "end": 151.23,
+      "text": "We keep it when I'm standing still I'm not losing"
+    },
+    {
+      "start": 151.23,
+      "end": 157.23,
+      "text": "You left me somewhere right still Knowing the ending"
+    },
+    {
+      "start": 157.23,
+      "end": 160.41,
+      "text": "I know I don't need to see it through"
+    },
+    {
+      "start": 160.41,
+      "end": 164.85,
+      "text": "I'm silent right now He's calling me to you"
+    },
+    {
+      "start": 164.85,
+      "end": 170.93,
+      "text": "I can feel it pushing on me Up when the sky, he falls on top of me"
+    },
+    {
+      "start": 170.93,
+      "end": 176.82,
+      "text": "I don't look back, I only take the ugly for a new one now"
+    },
+    {
+      "start": 187.71,
+      "end": 190.36,
+      "text": "We keep moving"
+    },
+    {
+      "start": 191.29,
+      "end": 199.03,
+      "text": "We keep it wet and I'm standing still I'm not losing you, I'm somewhere"
+    },
+    {
+      "start": 199.03,
+      "end": 203.36,
+      "text": "right still Knowing the ending,"
+    },
+    {
+      "start": 203.57,
+      "end": 211.47,
+      "text": "I know I don't need to see it through I'm signing this line up, signing this line up"
+    },
+    {
+      "start": 211.47,
+      "end": 214.02,
+      "text": "He's calling me to you"
+    }
+  ]
+}

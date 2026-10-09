@@ -1,0 +1,2030 @@
+{
+  "revision": "4148c138c1e38f4959574caf925f1c86dbcca339",
+  "scope": "Original UI source contracts; identical fingerprints mean identical AST, not full runtime parity.",
+  "files": {
+    "app/ui/main_window.py": {
+      "methods": {
+        "InternalMediaPlayer.__init__": {
+          "body": "712389e344db66febf4a994313f3d2ac7db3a6b84a306e18d12cb53628394bec",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "InternalMediaPlayer.play": {
+          "body": "90ff4f68ad1d2002691abe365f14c73fcb4d4f8a7481b8fa0d31b678ecb83aff",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "InternalMediaPlayer.pause": {
+          "body": "828f000c1b40dd96ca7ac5159058057ec0980c4641d0ae33ca63dd5212e09823",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "InternalMediaPlayer.stop": {
+          "body": "1d8187a5c74cb837584707305812400dbcc141792512a83a4c4a8de0f8b61a22",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "InternalMediaPlayer.refresh_audio_output": {
+          "body": "f9410f668d25b7e99423c80e059729a89025cc0d55197a4c573f4fab21f42e2b",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.__init__": {
+          "body": "91cb33ee641526c9a8f8458363e032bb043a30df1af2ef93bfcea789d2500423",
+          "args": "5a9f90628bb47c1242be2fa70e98c86ab3c6e8174cf8504d73228f830cd3ba2d"
+        },
+        "MainWindow._hardware_play": {
+          "body": "452ec14d63c94bc9f9ba47d2a7b26aeebe21284ee41ee0341ed73e37ce5fd7ff",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._hardware_pause": {
+          "body": "8180cf55a01b7f62349569f116df3c079c075f602d1964b9671263aae5f3a4d0",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._save_font_size": {
+          "body": "30f209ff073005c403a55bcaa7c18cbe5f68c5f9cc0ad44ce61fe9a77462fb86",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow._save_font_color": {
+          "body": "e510f5c1e947a5c98fccca5a0b591f030e7ca6dd55caa4860d5d28664ac933a0",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow._save_bg_color": {
+          "body": "ca8019a91937fa7ab07dc2d2ea19e0197133a6f454f56118b9f513771645e94b",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow._save_bg_opacity": {
+          "body": "9099fab62dfdd3e57b44e47d80b5e4846c009ed40c4531f030d94c2db7b62d5f",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow._save_lock_position": {
+          "body": "82fae23586b6e66dac2dcdaf6e8422e19c1abc5c7046b25690615a69901db184",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow._escape_shortcut": {
+          "body": "82f1143baa7d0c4b494c2044534c232fdc9b866f02bb738b9d01f3c43a780c6d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.changeEvent": {
+          "body": "d585bf38afb9c8c689e0c209855e0a47eaae9768a9a8f52c95f414efb11a55ec",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MainWindow.closeEvent": {
+          "body": "7f6983c8a74aed2f34a0ad23e09022944620a5a1cae149a55bf542949690bca7",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MainWindow.moveEvent": {
+          "body": "9d7dfe92d8dc19475acd678106a8ba3a442c5ef3a9863277ca33d7316a441323",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MainWindow.resizeEvent": {
+          "body": "c292ebc1f32100b18879a21a81813dfc034432c724a0185a0be77b6fa5e45364",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MainWindow.update_song_display": {
+          "body": "46620d871f3e55befb6ce51543883dc905d0de661236340534124d93922d7636",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.init_ui": {
+          "body": "456ad32206724c55aef43016076e01bb54b1c9462f6f52f3577631de3f8c794d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.init_grid_page": {
+          "body": "65ccdb93220ab353d8e20b76ce9070ab0b06897582f8b228e78fcf81135b21d4",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._connect_signals": {
+          "body": "c6f6ffc69c1e1119ac3fc5465daac408544b446b7429cd31ba1af16fbb07cd84",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.handle_media_status": {
+          "body": "2ca2891c60d2f4b165a56e93c30f246719718930a05ec9ee410d644f1c788f80",
+          "args": "cc92aa6fcfbd1064a8bc463168d65525691da2bc953e371e56d49afd6bf882b0"
+        },
+        "MainWindow.toggle_play_pause": {
+          "body": "cec55b8728749a87a4d40d3ad41777777baddd336a36edb5d4f165389dcf6cfa",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.on_mini_player_focus_changed": {
+          "body": "8a2f447f31cb3b10dd6c7c0f6eb53868e0dca6e7172e70945849131bc353d43a",
+          "args": "15d61f0ad422848d4f165fcaff4c2938efe87dd15fbff91d947dda7e13bcde92"
+        },
+        "MainWindow.update_ui_state": {
+          "body": "52b904e0d3843732cd660213404ef20b222203dc6c6ed03b70c82127e167f2b9",
+          "args": "78a1f5065a89b3d9ba8b9d4cdad29293d02c0acd8fd9d2f78d19e7be53639576"
+        },
+        "MainWindow.on_position_changed": {
+          "body": "db0abfbda0d3fb33d9f74d32b52ea610b95852482f9ad87c10f39a29748a8b20",
+          "args": "aa03dced0ba0530984e7be5b176f3f491db485bdd96a07ea7c77dfdc3eef1232"
+        },
+        "MainWindow.update_slider_range": {
+          "body": "b950617d5210512f6181cd1e7dc7dbe050b339387c46a86bd453a105776ff7a5",
+          "args": "2cddfa6d9ae54a6302f8337d5ea311c2822166adc727e8696c3570b88eb5617a"
+        },
+        "MainWindow.show_volume_popup": {
+          "body": "7bed90ffc0339dfb3083b038ccd580feecb096fb0fd57b2b652013f74f643d45",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.update_volume_from_popup": {
+          "body": "4de273d7137d6a73f04169743037d1608b4ac0b18918c8eb0fcdb468152ff927",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MainWindow.adjust_volume": {
+          "body": "a3ef9735937b5f48edd436945ac3b8843a4337ee06cda6e630d7206a105c5b11",
+          "args": "1f6eeafd5115e38cda0bec8172686c5c678e885f4919de5ef56acf1b4bdefc30"
+        },
+        "MainWindow.seek_relative": {
+          "body": "ee8185bbf96d3927b970209ea6cfac083468cf12129ffcf80b8daedfd788bdcd",
+          "args": "4b556e4a455557675f0ba393fb9075d796c14f42590d1d1940c95b8ccfdec5f0"
+        },
+        "MainWindow.handle_sidebar_change": {
+          "body": "c5a049a43e599cae84c19cb7f345630e118621b025830deef12a99d7ef29596a",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "MainWindow.format_time": {
+          "body": "07744bf9e8fdef9dac62e47a4ed547098172025b7fc17533e4cc7e4044679978",
+          "args": "4b556e4a455557675f0ba393fb9075d796c14f42590d1d1940c95b8ccfdec5f0"
+        },
+        "MainWindow.setup_shortcuts": {
+          "body": "fb234247194a5c3933b1c1f4afe07f5a1f41e4e0379d05e9fbc6519889b696d8",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.choose_folder": {
+          "body": "6a2cb5baaf598a2e22049fb449a119b928c06bfe51ae428751929e9e6318c904",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.load_next_batch": {
+          "body": "9eacebd1c29e07d4f6c4e9f0902eabab67f4f78493e9ca620642184aabc199d5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.refresh_grid": {
+          "body": "515dc3c7e389350ce575e86ebe8d3665e6f16c863ed3a6f0503cf39b7cf63f01",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.load_library": {
+          "body": "1e7e1a681aafcf8a452c371d5fffe0189bf6227118549503242c7ec455e13116",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.apply_global_styles": {
+          "body": "d321476b1231f39780a81d9a3bdb66d09caaec40e282e58a295ace8e33c5b2e2",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.play_next": {
+          "body": "4782dd75c362917c759801f948d0204cb02731cbb78d2647524fe909cbfc780e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.play_previous": {
+          "body": "71a34532deabb17f70adc2b38ddae40775446ae7bf8de263df30f74931468ab9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._navigate_active_playlist": {
+          "body": "6789c60b1c0dc6fac6ee00143cc82fb67d282b8688b8c15810bd6c0122c2bdec",
+          "args": "ea4f888495ef1284dff96e1543df891e218cd0b4eb600b0b8f0147ead827084a"
+        },
+        "MainWindow.switch_to_player_page": {
+          "body": "cc8ece52e879b2255a1864dc093c8cef29c7308bb41b5943f6e88d06e552545c",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.handle_panel_click": {
+          "body": "79f566a8f4d9dcf0289d172bfc92a52d1fc3721982adf6d100fa337b88b6f2b7",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.eventFilter": {
+          "body": "3602decebf94f317b87e98d61e4eeab0544281d5de732e54f79d7e53738ad505",
+          "args": "cc2bcf77684caec3050465d3e2a92078e4b4ed891393bf3759f6228933933ad9"
+        },
+        "MainWindow.on_media_clicked": {
+          "body": "572eae4de6f5653a10f61bc011eaaeb6def83780e3bb446e183228f8e978972e",
+          "args": "a401ba75444986678450227c7d89ba78ea153a79b4567f0568d2b9c9221a530a"
+        },
+        "MainWindow._on_video_metadata_ready": {
+          "body": "0061e05ccd152508e8e351be7c2752a76e5143ac6e2fa64564ca10cb2ddb49ef",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.force_reload_subtitle": {
+          "body": "2e6dbe3a68713f2fe11a9643789205f45b108c355213139c9074ce43ce064928",
+          "args": "6e4fd1397de45789cbe898d9963d8fc2e87126f413e402cd6020ffab243e6a20"
+        },
+        "MainWindow.action_reload_current_video": {
+          "body": "fad051880472f945007a486dcc92c3a86c73c735fa0663e3e70088db778dfa13",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._show_status": {
+          "body": "b9d5657fe33143a17a0b7244067afcdb34b8e1ddfd1f331cf3e3d84b88148f97",
+          "args": "1a9e5cc0dd5272bebb979b4a7354f6173e5c04e214c53067b8a6d4658941ce4c"
+        },
+        "MainWindow.toggle_fullscreen": {
+          "body": "8e7565e37970b4235f8972abae1c44b105f2318652bb5803c5ea6212e3b0e548",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.show_controls": {
+          "body": "6b4d2da3b22a2035badfacb61acdc2c6f9d939b9f54093725ca24ed183e1dcc8",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.hide_controls": {
+          "body": "7f091b029d4a79ae3ae62f23474f2d38f0afd2147fc2384b7041b4cccfaa0aea",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.sync_subtitle_margin": {
+          "body": "4fb4753469db3485a86a907549a94b4220bfd121beac75ef54c8bcb90e9f15ee",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.on_seek_move": {
+          "body": "38afdd7a6e89d8199b22c9583d20b4b6aba056bd7cd9a1a45305a69f3896114d",
+          "args": "aa03dced0ba0530984e7be5b176f3f491db485bdd96a07ea7c77dfdc3eef1232"
+        },
+        "MainWindow.on_seek_release": {
+          "body": "567db61c725ccc0a1cc6466df878b22535cab99607b5025970cf60918f15868e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.change_playback_speed": {
+          "body": "4a9c7276e18ec23fdffce2370db646913eb7d101958be4b6d1bbfed507225c2b",
+          "args": "94c4432ec266c2f95b9a16caffa1c90876ed30ae6c64ce81e4f90eade4310d61"
+        },
+        "MainWindow.update_card_thumbnail": {
+          "body": "894ae18ceb7f25a8e50a0aacb523c6dc80ac6ea9061998d4b025c150a739ebb4",
+          "args": "4285265e82c2a612d366f59386854b7078570cb1fdd43c991aafa541763de4dd"
+        },
+        "MainWindow.toggle_subsettings_panel": {
+          "body": "8698490f22a92134ff604de5bed619022fea75ca1b8cc7238c803606a324b0e2",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.set_app_controller": {
+          "body": "345256f438715cd2a1307b502ddea21c67489a46fd9361aeea8da62b61bd3803",
+          "args": "79cf97db0080194af75422c14fd70add166d7247810469ef39619cbc5c00906d"
+        },
+        "MainWindow._update_mode": {
+          "body": "405abc353c2411e7b395eaa13a8f884c82b94ff9310025afcfd5b30bd2d01831",
+          "args": "3af7851d48262f785d7cb412f3a4a4b664821790791c6fd33f8f149b6cc50bf3"
+        },
+        "MainWindow._on_outline_changed": {
+          "body": "2071e0714a4165ade26fa299df76919dd9f6c842c9c403a239588b3c4512c41b",
+          "args": "a02ea3890e224dbf63ca9477124c5077109b0e8727b99f7d0369367ab1c99f6a"
+        },
+        "MainWindow._on_shadow_changed": {
+          "body": "ec1b04a59f29402aea78dfdf2021d06b65fe8a10a91850cc621f9cea792581c9",
+          "args": "7744bd3dc0df806525db22a0c27fbc3989f6686ab0813ffe4a6870c90a90189d"
+        },
+        "MainWindow._save_setting": {
+          "body": "2093085d22259a9c60a14b04035b2c9b6c0ed890b0fb1b99b4d637344b4886fc",
+          "args": "ccc203320b2cd9415ed065ac1f7b4fa63231718e51a748f6bc190177802b73f1"
+        },
+        "MainWindow.set_fade_enabled": {
+          "body": "127bdc231a9adc5014614181de32a2145ca866aead274b0bf9494cfa466dffd1",
+          "args": "e04f67ee23e40a1cd7fc2b5342d324af4c0996de3c0bfee59a149d52ddbc75e2"
+        },
+        "MainWindow._reset_defaults": {
+          "body": "aa34a3606e72a7be0fbf9627c82110d1a34414d4740e60fd9d00878ab24fecc2",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.load_config": {
+          "body": "cac70a0288a6c07bb4f06af68d3f2a5c0d658432aff0232de909ff3d43ef389c",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.load_full_config": {
+          "body": "da8a4a45a15e0aaf6f3f4f5ca8f39b2ff253a5b6c762887ad5cb404eec6f3abf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.save_config": {
+          "body": "fac430f483868a882bf1a37e1e68e78b39654e2a98451d41b36ebc5ec3733935",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.update_media_grid": {
+          "body": "d99e42e621955e0534e50c7def33bf931b1a0ce58dcc433c8fe100b4b49a4fcb",
+          "args": "633cb22a5d12b75fdbfb534e89305009fdee641290cd200bfce68b64c4b54d36"
+        },
+        "MainWindow.clear_grid": {
+          "body": "d886c58493f02053d3cc0853fbfe6177ead5964faeb56ca834a419f77d72e831",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.add_card_to_grid": {
+          "body": "2179b0946fc88eb14ff2de6a06b7a9f3c8954a366b3f57a3f075767f9302bf26",
+          "args": "fe7bbe9f2e5887887e189da4f27ea7abc42ff24661c349670710483662e10630"
+        },
+        "MainWindow.load_folder_content": {
+          "body": "c3ff7297e9bbbefa3d603cdddc9717af110ccd08d9455259be917d60d9ca9288",
+          "args": "562e2d47d27492a12c720bf47754815c1b925b0b444ac5e05f9a7115dfe604af"
+        },
+        "MainWindow.on_folder_changed": {
+          "body": "d8d4b9dd03b7f5b2da878ceebb301bb2ce648f717f9d5c6f79c37a9ee65121c5",
+          "args": "20e6f1f6250895c9273418c1ba1bf5689d28c3ddff502e538277b376337ad1b4"
+        },
+        "MainWindow.filter_grid": {
+          "body": "6b15e9c49f3c77019815f128274601e19905060707b057a961e0cdc9ea7afaa2",
+          "args": "d2ac402efdf3da866c27127d84cc9e8a8f560b1d74140104a2d8feb09c9f942d"
+        },
+        "MainWindow.update_video_location": {
+          "body": "a98faeb2f83b6a0f0b5cf5408b29f4bed8dbc2312269c6564a2147c5cfec9b1b",
+          "args": "20622a35f4380c070c6868f449b209fb5a8c60535ff6c54941cec92f26e1ceed"
+        },
+        "MainWindow.manage_video_state": {
+          "body": "43fa1de9edc05d0f53394df81ac19fd221374255c717d9da2a91e8693b2d17c7",
+          "args": "2b1a39e2b3ab483a1ad95d04749a5a67de822035edb1d75c824c15615cefa627"
+        },
+        "MainWindow.pause_refresh": {
+          "body": "f64687370cdce8b2e064661f8b9f2d9c346a2cd95905d7ca2fbc5f4115c6bbf8",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.resume_refresh": {
+          "body": "d4c3db34621e3cdd92a4ff970f98aaeca01695e0374b42e4b0bfcd5188d914a1",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.handle_sidebar_click": {
+          "body": "07508122172935e1e1986356013f46950ea962545cdd5aeb147f55d195274986",
+          "args": "ef00cd5197238eef096abb59656993e93393251ce31884332a0e2cfe3917143c"
+        },
+        "MainWindow.sync_to_foryou": {
+          "body": "be8e99999e68796be4e9643be774f11b6d79b67936e8a9f93ef9ecf66d3d95a0",
+          "args": "6e4fd1397de45789cbe898d9963d8fc2e87126f413e402cd6020ffab243e6a20"
+        },
+        "MainWindow.refresh_home": {
+          "body": "c91453f8f6a4763035a120fb90bd805d5a277453c501c3038eeb0df4416748f4",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.refresh_library": {
+          "body": "cb0707b4f7d366fe6f90d9545534ffedee79cbf6b0ff6d8d3d84da757ae8d026",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.on_playlist_item_clicked": {
+          "body": "1a181665282b57cb1bfa1efe5c9d6d486f999cb2380cf5e2b4dc2a7744b15955",
+          "args": "6e4fd1397de45789cbe898d9963d8fc2e87126f413e402cd6020ffab243e6a20"
+        },
+        "MainWindow.toggle_global_shuffle": {
+          "body": "be2e0755bc7eeb079a1a3e90d3aaad298875caf8f087150d9223861b3429d0e2",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.sync_playlist_to_backend": {
+          "body": "881db920add3ec6d15f2391e592e27c93f26f858d1806f7dfb1b86b919554e21",
+          "args": "d5e8501dbc4bb787059635ef3476676675ccc4ba4aaa4512f0231589a1ad896f"
+        },
+        "MainWindow.toggle_nav_animation": {
+          "body": "801632087368449cec8dbdc9d458f8d5962b5b219f8cfe92d273696b55ebfb95",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.sync_mini_player_state": {
+          "body": "649200c44af93bb17989492c6187151726c720abcab65bd3888d84fdcc695154",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.handle_media_status_wrapper": {
+          "body": "baf517cf76d9ee0c267882935cbbd66ab105a7b9a81c940dcba0aa651b7b94ae",
+          "args": "cc92aa6fcfbd1064a8bc463168d65525691da2bc953e371e56d49afd6bf882b0"
+        },
+        "MainWindow.switch_to_mini_mode": {
+          "body": "8adf1a74e73080775c58c5c80d490458f789a8777b37590753140a0a90349bfd",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.switch_to_normal_mode": {
+          "body": "7d8f0067489178d05cc234080418a1050bec315f9808724edf7bc81e137874de",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow._show_sub_safe": {
+          "body": "00dbae1dc388adc4f8fada4b5d81c7f2fbb6a2744e7f14cc55ca50299911b803",
+          "args": "41a180428dfb5e22f13f0918feb5825b6a93a1a0b1e354535d20bb155db75803"
+        },
+        "MainWindow.process_realtime_audio": {
+          "body": "80c4964ca729fa9c7ff6ae6fe209d0e97097aa1c2d26cecde96e565be27b1f80",
+          "args": "531679a33708148242118e7c255f8d72e4299b7c83ccab7260d939944e765496"
+        },
+        "MainWindow.on_audio_outputs_changed": {
+          "body": "94b3f656c1763f20218d4f42bc6251951ba184ab8046205216d4592971f15cfe",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MainWindow.open_subtitle_tools_dialog": {
+          "body": "5a78902e3239535713c2be7da5a73fec5fa78286c1677e50890e6713da9b9070",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "0151a2778bc8c41ad3bb9c2f31345955ac4dd204274791474e899a311557e6ca",
+        "019f81f19aa6f8de1e09e2e8f84cddf05fa921643533a1144194435835cf0f88",
+        "081f9e91653bdea7e48a5e99f29a41d99a9c6130ba497779b3d40c72595dd1e4",
+        "0df8cebf43297559389b1c12438014739ebcf3e4ab9d701450e40741f28a5f37",
+        "0df8cebf43297559389b1c12438014739ebcf3e4ab9d701450e40741f28a5f37",
+        "137d06248b68fdd1c001b9a36364a95f868aa305026098a6249021306d88a8f0",
+        "18460f324c05481a3bf5cd47ab2b2454e87e1884c8723e3fabbfeb0c80c0330c",
+        "274a5503c3a2d7cf8f50ce4cd35cea208e47017603d2873ffa8d08e2e2f0b591",
+        "32eeb47fd5f64f8964a413c74edd012e32092f87752b5d3243a03e39f2ea016c",
+        "34243a7fe5746525685d9eb123f136662e76cfea463cc33ced613126afff8a33",
+        "3916dd91b39525becbcff23d266478ea18f6ef030973987cbc2d83bc8cb4ed3e",
+        "3c45f355eb0f90b08eaba25db6970d136255077ca10c72c16005ce68f7cdb91f",
+        "3e2e347bb1d56ae52a1b6f2946937128d9df09052ef208e39b3839b92fd01a06",
+        "41194383902b3bf63347c53fc39c31ef9164eb73db6c811239738212f045cda0",
+        "42343ae91b662f8dae4dfef5ff34a57434498e6a198b3d6942690fe12edd1ecc",
+        "473793b202f397917e617ee082c7a8eaf231ecbd314c79e9528d6d1d39250ed7",
+        "47d46f35d431f048f7680f7ec6d4e3918d69d07fdf9f93e93ab9043fc177700a",
+        "4ad8f2ab2af49bc94bfe439b9a456328b6f76939aabb2940fe2c22701f158d19",
+        "520683df6d93f8c548a9946e78acd8049dc928c240c057a13ce82bdd477d5cf8",
+        "520683df6d93f8c548a9946e78acd8049dc928c240c057a13ce82bdd477d5cf8",
+        "563a482b01fe753bb3f49a5b840cc2310ede4ff4942fba721e05ea9a1fd06391",
+        "578910341e4cd9b500b586bc23aca98ea4328aa410dcf52be325c91c6fc12517",
+        "59282b19859d6f8d9d13017c942f9249c7401bc5c8c96ea43a3289a41e5c4432",
+        "5994031fd515d9d3e842d8eccaa85f913f57839182d677ae1a39eaf01dafa2a2",
+        "5d2766584905d77827738942ee16270cab7b4c541857d2dbc47cc5ec18cc1d47",
+        "6abe1bc69d1d18daab4909460260268cde6fcd4704f9e1602d84a1f6757ec286",
+        "738f95f1f0f0a347eaae307e9b7bc1dda75048180c5a085d686aadde4de4a607",
+        "7d457470aec0e2b1e646323c58734cb0c2a23d8ebe6eeacb4147b102430a3bed",
+        "7eee6bcae127eff33ba2b03b2122cc7a7f3c2dec7194d08c732d94835cd9f9c1",
+        "806c8ae64e97d76c1dd6dfefdef1764b338f60345b510c48e844d93eb23a502b",
+        "8203e12311e5f0a595055e7cfbed952f4e56d219779f5cac13999be058256bc9",
+        "84cde9dce2cb33dd934568d9061a0a6511826e2798f508bf78b77107a0a3d77a",
+        "85ae6e305414b953e5e02601cf65e796559886d5dcc558e54df1539a819690f8",
+        "87a0fc4b57ee8c38d9f59c1de073c874c9f34e03f7c825d2f0e7a42e2123299e",
+        "8853f642572151f8315b1bf57dfca1d41f6185cf402a61b9d48518ffaf78fd8b",
+        "88c0b1337d680babbdfbb17072ec1a8fe10b924cd87a63a9f415d2e91bf89886",
+        "8962658216eabab7b94ff841fbabeacba9ead19e425b7e0f5308e98690065bab",
+        "96d730c99e69d5a6de93ac1468a503cc3f3ed7bfce4469128a98eacdebe2bafd",
+        "97bf0df59bf29c0786e7f21803fe6e412ca8824e59f4eb504205db733745b2b6",
+        "9cd3986d66342fa88706272ea6af19f29fc561e0084086b48f6b35036d7e96a4",
+        "9dbbe4f5914d9f52deee1b524bae2031c696c3f19536cdd2dbab5a24b20b8558",
+        "a0fccd9df73407717d3000a5ff28e862d67c327cd8a68fd62f4a193e340f61c1",
+        "a37f3decb50a4d24d1c6a45bf540441a637af7d1a64bedd6e7e3531d14c2dc38",
+        "a5204c700e05c4aa344ddc88c36c589ddf80ff36dad846e65796eb5b46ceab8a",
+        "a52fc8ea9c55f26c762ec9f50032b9c64b225e0c02605a0f0a26e3a04679977f",
+        "aaa7e62ee4a514aab7f68192ed697eeb75a36bf33d0cf6e44ce42cf3ee332efd",
+        "aafaa361a7af4ca6c33160e7741fa730feac8d2f04764aabf98021415b53abe8",
+        "acbe8b6740f4a9f7dfcfb9e5a9449ec8d1e0c9b3cf6ddfa0dc55ff3f92bf84ad",
+        "add67ba164335307bc74b274f3d7c7921f6430c3ae9be7ff049374d548f08db5",
+        "b3237c3b8146cc9e894fbab7c1663f44829d0c0997a0b09e1e244be8beb45017",
+        "b9d4ccaff8359b9b6143faedc2f679e13be744b3d98131b0680ef8cf3fc936ab",
+        "b9e47c63a3c3a5d3df165e192dde1c9b1d52a97d6ebe2b7fb1beb0854bd0b0e6",
+        "bc379b4a6ba476851a86c05fd395a3212cc05116ff753c1c8a71e8c33b7e8900",
+        "bccc84c4e61711d171fe38600ec892eebe0aa2c4a9453db0c6e5a419511078c4",
+        "bdc391cef66433eb733e4c4dd9c1bc3350f6e5fb86bdf5a0178e87a3490c8f4e",
+        "be75624477908b5050bc04e0417ba2b5ee0401f1577835318755e5ceb6031570",
+        "beba0cbbef0aea2fc47678fa0d38b5db71783d38fb8dfb5ead9004d8498cd37b",
+        "bf812d5107a0a93565d00f2f023547dc0d070b7b78e4c927edd817d377c2ffd4",
+        "c6206e051eee2fc86b12f1726347dfe54c75a020ab0d4695c1b34cfc4cf600b7",
+        "cd95b410d4f9d0b4d5ecb51dc11a9b99d3d0821127de7a29817fb37a39ace745",
+        "cdb8a0f293e8385c1107989124a036b9e0b4ce4e49bbb5cd2488add0845fc010",
+        "ce1152f405c9d757b886000fb4154e97b8f005b06da4d18dbeb89c3622545e48",
+        "d09d386efda7eaf74764c8f354d4554c3bd89e604a43841ac299e9350853675a",
+        "d38ec26b7e9d4659dbd4cdd8d9497ff726ac92709f938eafeb616baa0b786906",
+        "dc22e93f6a05d1df0d834416b96633fa6fca43516bf21ab1d6438389da1f68be",
+        "e37a63ce9b60d82157008f27ec1b9593bbaa6acbe8140e901cf0439fc5d5e5d2",
+        "e4072db658de81bf373df528f7811db0e23b1a1ac7e1c292005744996a2d498b",
+        "e9587ebfe896142da708ab56967c7f97a3b1d7d31706a9551984028759669516",
+        "ed1ec913ab896893ff392ae916624fe63762a18560f3f1f4190dce49c105db0f",
+        "f28cad1ef899e9e6a2ef2cc5faa655520cb35d557a060a87cc64dd12515fec57",
+        "f3836438baaefc022f65fd4aa53d823cf51a8920164c0b29dc0a6496985e1193",
+        "f3836438baaefc022f65fd4aa53d823cf51a8920164c0b29dc0a6496985e1193",
+        "ffc8cd98f825f814bc40a010efe001cf0be2aa46c016e4be461c313b58e0c72d"
+      ]
+    },
+    "app/ui/media_card.py": {
+      "methods": {
+        "ImageLoader.__init__": {
+          "body": "3a433b57c0c38e46969d4bc7eb46566adabf8975fe676e4fa574157f3c87f591",
+          "args": "896c14987c680f6c83452623f0ee2c08feafa4952471e9a8d0852f6e2915ba86"
+        },
+        "ImageLoader.cancel": {
+          "body": "dc22cd58565cb7ae52289afd5d5c598382e49b608b37ddfba6b1f7be82b15ad5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ImageLoader.run": {
+          "body": "bee5be9f4536ceb080ce0e058892406d0655c0afa87a762f48918fad0b6f5c42",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard.__init__": {
+          "body": "24f7354c158d1594c523d6f0b96ea3c678cf54e0c31aa62695bf6acb084a38f2",
+          "args": "547715174d09ff781ec235970ac7acb5b815312bd6f196877d61ece15508d1f0"
+        },
+        "MediaCard._update_cache_key": {
+          "body": "1f570b24702ec606bc6e51df3ded943fb983a6c10e1fae9bdd6e6e7373e18f03",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard._setup_ui": {
+          "body": "af125047ba7148f37b0e61671c33cbcb8742243b7e25cbc3f2929ba063fea88d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard.paintEvent": {
+          "body": "a5a857e770ee9f9730846718f197353bffe909c1fd680fa4b2824929a8ce9514",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MediaCard.update_thumbnail": {
+          "body": "91714c0c35b7fd11833d7667de8bc748d4dfa93a790c79b3afab77886f235356",
+          "args": "20e6f1f6250895c9273418c1ba1bf5689d28c3ddff502e538277b376337ad1b4"
+        },
+        "MediaCard._start_async_loading": {
+          "body": "bc7ee97e3bd381e132b71a16bdc719ef8c80d0b04767a1d571737566bbf7037a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard._on_thumbnail_loaded": {
+          "body": "d54cad946a8a2aeafa4d34bea798fbf47a2768acfa3a744facfbab5134c067fb",
+          "args": "f1bbf9ff965de38cf94bf9866ebd22995b74d6625ddb8103cfbcf7ecc137fe6a"
+        },
+        "MediaCard.show_default_icon": {
+          "body": "c2be131e63bbebea75f100ce6a3eef74a513d67fb5f1b022e7afc0556888b9d5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard.set_active": {
+          "body": "f31f3fd1ea551b84f26738d5d83356e14b158c40a9bd2826585b2814c327c332",
+          "args": "0bb42e0f0ec4c9dfa360d10d44b8cb001d2b5d7d8c35a89219d1570cc90ada89"
+        },
+        "MediaCard.refresh_style": {
+          "body": "00471f00934e25bf682fd7dfa8be54f6abc745696e812c2db856a8077a66c64b",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaCard.mouseReleaseEvent": {
+          "body": "4b1da97739ca53946b3a78951a74e1d1046150a1d74bedbbfe7cab2d3a703d10",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        }
+      },
+      "signals": {
+        "LoaderSignals.finished": "cb4d08969552486dc470b4e56096c5a746c9b62cb2fbd4698e6163b3e0ee9e5f",
+        "MediaCard.clicked": "54b867bf0edddd15aa05ba77ddd1ba51124ab2e1f2b64ce8fab0fb56ff3e88b5"
+      },
+      "connections": [
+        "07590fbd9c259a6070848e1fc3e87d10dfd00a9c5a4673ac9b0bb81adfb71a73"
+      ]
+    },
+    "app/ui/media_player.py": {
+      "methods": {
+        "MediaPlayer.__init__": {
+          "body": "f7cecd4c42f8a7169f24b46dc990f211229c25753d7ad72601a51640572158dc",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "MediaPlayer.play": {
+          "body": "8aa337acc55166c9d2729d105cae54e146f10657f6e03d9158ecd93c059c942f",
+          "args": "64f39eced2a3efb3c02c006284681e6e83491ac8937f850794da14bfa6462148"
+        },
+        "MediaPlayer.pause": {
+          "body": "bf058f910b5d809f22f92ee21e7343e42ad4b65a67a306b56aa9bcc24b428a7c",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaPlayer.stop": {
+          "body": "14201c677520c886041505077fa082b65866fedfe82e8a5639f50a1bea44036a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaPlayer.toggle_play": {
+          "body": "f4e2d16f2aef8c95cbdc31c2738b1885dc0e9fdc57ff0d2a4d5bc5489b8c4acf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaPlayer.set_position": {
+          "body": "fa23b2cc170aa577ef133cdeef379e15ea12f2538e50d0891056fb29456db031",
+          "args": "4b556e4a455557675f0ba393fb9075d796c14f42590d1d1940c95b8ccfdec5f0"
+        },
+        "MediaPlayer.set_volume": {
+          "body": "6ec8e2a607960b9b171d8bf0c48ff49868f2f5917279c6a342c6add200c80cb3",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "MediaPlayer.get_state": {
+          "body": "d054ba39b1afbc72cf1b6d46478b22d59ba2350706592f30bc2cba5915c65587",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaPlayer.is_playing": {
+          "body": "42a3f12f1c9aa4ee1ba69a33e9eb333b488da37a1fdea33f6ebbbec1126cc23d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MediaPlayer.eventFilter": {
+          "body": "eb71eac10e8cf51463ff636289d6991088047055c6d27899e37eadcb6d345b4b",
+          "args": "cc2bcf77684caec3050465d3e2a92078e4b4ed891393bf3759f6228933933ad9"
+        }
+      },
+      "signals": {
+        "MediaPlayer.positionChanged": "efcfed9ddace6249cc26f70b45bcb2e909e23209f43dc989a4f026d5ed09494b",
+        "MediaPlayer.durationChanged": "cf2088eccf3863e6b8252db7ee2a3b7c1190d577b099d1a7f11e6dde6154c863",
+        "MediaPlayer.fullscreenRequested": "f157916a0866a37268efec46409b5a1aad4eb18e89c6fb62b4d3eb1ab6228a6a",
+        "MediaPlayer.playbackStateChanged": "4a08f8c980d6ce656afa9691d6657c1e6c19d86a9ece7cedece332f64abbd1e6"
+      },
+      "connections": [
+        "39490e53024ba930c61ee91d1cb6663cadc79d8bff2d4bbede49ee92449bb677",
+        "5ab3a72790d4d5010393c8d2470b4fb9fba2542786345fa31b9597b670fca6a8",
+        "91d67e1d2bbb844fd053a967d791cf076e5a852f0ea4f9169994846903f8b30f"
+      ]
+    },
+    "app/ui/nav/sidebar.py": {
+      "methods": {
+        "Sidebar.__init__": {
+          "body": "446b8d98f7c8758fd44538171ebf457671a89bc17bec6cb4d3ad6b52cbc99644",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "Sidebar.add_menu_items": {
+          "body": "f0958a5db9b2d64f1e99d0f4f12e529c8da361ff88fefe7e22f56cbf814709f9",
+          "args": "3fb387b42862c4de05398a1f80b757d9322058d4e52cbbc2e8965286b3411fd6"
+        },
+        "Sidebar.set_mini_mode": {
+          "body": "5236a069b6b0d5062ef7cd906074368df65604fe77fc35b59481261ac112869d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "Sidebar.set_full_mode": {
+          "body": "b926f8de9afba0f977427a50944b35d0075d3eeec7d9e5e33a8331c41fba47fc",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/pages/content_manager.py": {
+      "methods": {
+        "ContentController.__init__": {
+          "body": "6fd02af6cc21b765b78785c61a9487f274902eea0f6b3175942760f15aed9bfe",
+          "args": "19dc8a113ece00964dfb085d08dcb56efa75c672ae8958c1d907308605a05f60"
+        },
+        "ContentController._has_data": {
+          "body": "d5432e5f18b22e81dd99b832fa2f6fd1ae3fefdf3acff026b754daa4c09c2164",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ContentController._set_video_mode": {
+          "body": "4e700131d0b445ab6b4abdfe645c8dab36ce50ac4f13d2610c64a30d051400ef",
+          "args": "3af7851d48262f785d7cb412f3a4a4b664821790791c6fd33f8f149b6cc50bf3"
+        },
+        "ContentController.set_new_data": {
+          "body": "9b8d72240d78077c323aef939fd6c1c5bd8da510eab88932e150cb401230bbfb",
+          "args": "633cb22a5d12b75fdbfb534e89305009fdee641290cd200bfce68b64c4b54d36"
+        },
+        "ContentController.switch_to_home": {
+          "body": "2f767d3a7c3a87fce6476ea47a71a61e7316b9cf39e6bd032ce69fd8fc19debe",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ContentController.switch_to_library": {
+          "body": "7448b3a472acd22d5e9f9307b9a05aca200755a04b48ebce8ea6bfd9192abbf4",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ContentController.switch_to_foryou": {
+          "body": "a45c625b28ca4dbc3c6671751dc513aea6ea0fe7d443f7e058717990a3f6c7b1",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ContentController.switch_to_download": {
+          "body": "7667aa991bd07e2a0324724426eca7375ab87ebada5325680e48c89ac0daebf1",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ContentController.switch_to_settings": {
+          "body": "7356bfa580187a4cc3942deaedde3aeac5c2948872ba64f671562d757732686e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/pages/download.py": {
+      "methods": {
+        "SmartLinkPasteTextEdit.__init__": {
+          "body": "8f6915873fe8fe7cd1c970313163b6dcbe5f6ecbeb684825f2d23815a327578a",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "SmartLinkPasteTextEdit.insertFromMimeData": {
+          "body": "eed7f4e663676f24142f7ba5bec0cb3dca1c975447b31b0555979f98ae42a590",
+          "args": "0c305612029e00e6e280fd271df7758b8f431922eca3aae33344f45268cf4817"
+        },
+        "DownloadPage.__init__": {
+          "body": "d0c82f5e27234f0451cc9cf272b8802eeb2318665ff43ef0e55836aa99e3a530",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.init_ui": {
+          "body": "277d563d72428f48709c9fd716404e020f06b64f6695fb3d9d92273cf93ccc30",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.highlight_completed_row": {
+          "body": "925c955c809580cd3699ddcebf0fcb11c96b6989e5bed617b71ac945e3b8487b",
+          "args": "b121e161db407f83a73c664fced65158dbf8c6de3d1895152f34d8a2474c7d26"
+        },
+        "DownloadPage.update_link_count": {
+          "body": "e4f38c793b761f98652ae40bef7449aadc01572a544f8b60ac101ace927b9570",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.browse_folder": {
+          "body": "2de5a22e551c5ea22bfe695043b1bbb09287886acd44c4b980de6a62b763186a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.on_toggle_path": {
+          "body": "61a6c9d615ebc9b9e55cdbb80994df6967be7d5a80a4ab1d20dc76436092e04b",
+          "args": "ce3aca4f0d995cc4259709ef9ba92eab710852aae63d2c790316e1a0a7892a64"
+        },
+        "DownloadPage.clear_inputs": {
+          "body": "4680b38cfef211ce5f93a4de027188bfaf314c5fb617c2abb6e45d7490cf7778",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.start_download": {
+          "body": "1d7b3a1e4013111b4b7d214a92aca62199f69a377256a70147cd1983e5c8ead5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.update_progress": {
+          "body": "f4db8eda8e576b8ca7acc22119c6d528e67a8c10be1d5e2792a45f7363dded95",
+          "args": "d4933351b852b2f493f03f8496cde09e7f897fb0217b0abbb64e21a25142d644"
+        },
+        "DownloadPage.update_fail_progress": {
+          "body": "fb20d09d4df0b648483e8384a6ffa822376b75d7474314f2431b240cb5d7a986",
+          "args": "86a1ce248a176792d0a5eb51624d89a5a123d79eba933664b32d83e2af34637b"
+        },
+        "DownloadPage.update_status": {
+          "body": "bcdb87e2df6ba9d73ef1496a2a1d2802746b8de07f25a35adcfcb6ec2ec0dc07",
+          "args": "d2ac402efdf3da866c27127d84cc9e8a8f560b1d74140104a2d8feb09c9f942d"
+        },
+        "DownloadPage.download_finished": {
+          "body": "062ad604b197e1b7805c129218a4872b504cb7cec4e3cc02b1d3590a94337e10",
+          "args": "277f7bd1e8589bedea546b5a3d7e0d08f393e9e0a59ed616690d7195c963a15b"
+        },
+        "DownloadPage.stop_download": {
+          "body": "6696683ab3f898a605cae55d1f5603c2a8a52e0f52a78fe0968cb73dc6d865ec",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.parse_live_log": {
+          "body": "c2797b34a2b45f0ca6991d47d9ca675490d7e95035ff2f1080b14f074acdafca",
+          "args": "d2ac402efdf3da866c27127d84cc9e8a8f560b1d74140104a2d8feb09c9f942d"
+        },
+        "DownloadPage.load_full_config": {
+          "body": "da8a4a45a15e0aaf6f3f4f5ca8f39b2ff253a5b6c762887ad5cb404eec6f3abf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.update_status_label": {
+          "body": "f62a3785d5df64482ce8a7f82d12c653ffa7fac470a7f0bdc1f0e55cb719cd33",
+          "args": "1a9e5cc0dd5272bebb979b4a7354f6173e5c04e214c53067b8a6d4658941ce4c"
+        },
+        "DownloadPage.trigger_manual_refresh": {
+          "body": "21ac1d6e7b3b5b230c25bfd1ae7260cd6755fa3cc10a3796ed3b4854f923f3e5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.get_video_names": {
+          "body": "ac671f9758673921d5eeeaa34ca133c374181ff46b0fc4adb8848f404ea450d9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.append_title_to_ui": {
+          "body": "1c921d575304511e8d0d603a97298b4f782f37d64739a1f13b5d2fe08af06e14",
+          "args": "ad0645a5076be5564693187394e8fde6034bf5e4af35bc71e5242984ca12eae9"
+        },
+        "DownloadPage.get_names_finished": {
+          "body": "f7f407bfa66e94e048b90b85a88b1fb74d101abf0319a9298eaee737fe682510",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DownloadPage.open_settings_dialog": {
+          "body": "797625def5b27a9bdd98742087ca6111fb8a17b3e83a8aecaad2de97d3c7eb8a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "DownloadPage.download_started_signal": "9cf41be0edb0df983f5319d2c0f398d1e8aa33b89b9ca51141ad5bfae74b5641",
+        "DownloadPage.manual_refresh_signal": "5cfd2d039f4b3a58dad3eb7b0c2215b2dfd225f9b73f5e1b5fa3d536483d10eb"
+      },
+      "connections": [
+        "0c7b2b667f7bbf276ab74b3960545edf72d04d99fcd673090e81faf8516674cc",
+        "0feb42150f1efa5a8cf7fd4307a01d7a4bde3fc54f0afe1c739c8b083659b431",
+        "208c37565f7d05a1304d24c308ceae8bb1468e79c32673d7332c1ae21656d622",
+        "3818167b5e95b1d8cbd505a2948c0885fa06335e2937e57cefd9ef78e8795c60",
+        "38866690ef03c4cc24b2d99a46895c2f0aa8ef8307c76c37f5e07ec76813c4d6",
+        "451d58a2376461a60fbe170e6a3ed8cc4c99ab6556635f2ed807d312d132b55a",
+        "4bb49aad0f9c832e3b8646b23789477b66a65f1f4fa4a97d43b1d732d89eb1a5",
+        "5002a1d95fa18fdde92168b3762f295954c2bb5afc1ac68f62233706da286496",
+        "53be0f0c9b58096bce5cc94beb62c6a618e800bd9bddb472aea9a65107b5ceea",
+        "7209870bd60e938ebc984f9035d9ac2feb7ce024bb9fa77dddaebbca4eef7bc1",
+        "83d3ad7d4b2c239ffbf06bfabae8acdae733f1850490a0facf50ab8fc66c3404",
+        "91a36bc83ecf3768e14bdee90b0716834672b2055228be6e872a3c31d48d8faf",
+        "b9119ce456f4c65f28e734b73d0116576687ca9e2ffb8c3c6f8befd98e3c40e1",
+        "bb271888954c6f080564592bda0d0670ba1eb09ce85bb002716b64f0ee51842c",
+        "d5957300d06b89c9a8686611f1204f5b677b5bf722c6222c5606a875b2354a8c",
+        "eab7208f2dfa6636a8c8838ccdc4f1d3677a3201d30ba969c48fdf0d9194b51c",
+        "ebca6e2e15f5436977eb7e3add4279896d77d0b77bb2bc8518567ec80d5e8da3",
+        "f641fc9f670ae86803c733ca41500d21b78467fd2da24fab24b2be95c94f71b9",
+        "fd38ec2db54ab64720877b51974fd587a1d8664ad313cf3f014988cc52f26871"
+      ]
+    },
+    "app/ui/pages/dynamic_island.py": {
+      "methods": {
+        "MiniPlayer.__init__": {
+          "body": "c63635af46cfbbacf7d5e31abc733d16ccaa7c7442a667737c7359e21db594a0",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "MiniPlayer.update_info": {
+          "body": "5dae33e3f008c6384dc8e92365183f3a91dea1dd33b2ddb426306e1c4c807fb3",
+          "args": "2d6d742d6424ce071ff8cf82708487755b4b3f878e7a8aab6f3c69614f1562d9"
+        },
+        "MiniPlayer.set_rounded_pixmap": {
+          "body": "2a0a94921342cda837743f392eacc41060000ffcaaf5c4df310d2d4ee45c6f41",
+          "args": "0949beccf3c9c63faea67808e0cb3f36814d52ae7eba3bfbe4692117e2c4ba09"
+        },
+        "MiniPlayer.mousePressEvent": {
+          "body": "f737cedb5aa237c26387819c73c63ad10b1c5c8d24f3988a2fed31833f417789",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MiniPlayer.mouseMoveEvent": {
+          "body": "4be7a556202b07597d6b6cb641b1fe8544a3b4da1a06a23f3965f79307d0d8fc",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MiniPlayer.mouseReleaseEvent": {
+          "body": "a648363527418c8f2c9d99aec76cf61f06ddb77cb53c1706900cb77241a9cd4b",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MiniPlayer.handle_click_logic": {
+          "body": "22c67fc11902afdbcdaa700a4c9af8e9f85f4b68bb8b812ac4d811be24e843e8",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MiniPlayer.reset_position": {
+          "body": "00a5036c8ae87ed9d3fa9d719b548764813e0e43edc7e5edd579e08ae5538b3a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "MiniPlayer.keyPressEvent": {
+          "body": "dd61e5d53b750a4b22c563c4d9b92ab07090fbfe6b40b8269068adeb1fac2494",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MiniPlayer.focusInEvent": {
+          "body": "889b0e039c566ccca9380faa01469e44267dc903fddb8b21811929707e52d337",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "MiniPlayer.focusOutEvent": {
+          "body": "0d57167b305ad8b4f2ad4d5e4f213b9a41a9dfc1a7a85d707999447b49dbf5fc",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        }
+      },
+      "signals": {
+        "MiniPlayer.play_req": "34a8e6c629f9f2b02496d958a642336208d6ed2e1f4f8c673cb358e7d54d7fc8",
+        "MiniPlayer.next_req": "63355f0addc084d8f50f626223966d92ebcf58861cc91cc0c9f222022a9e5fba",
+        "MiniPlayer.prev_req": "b3632e0347583644825ec2eff66c8f2a79af0c698cdf91eeeeb52e1a9e903050",
+        "MiniPlayer.restore_req": "bee72183d8315ea93e7d7559f031c7768003bd2ff0fde8d70125508f381c556d",
+        "MiniPlayer.focus_changed": "daba01e8257a6de4e6f9e26eb3d85bab0a6f2ea416c6527045df10ec3432c8a0"
+      },
+      "connections": [
+        "0ab5f37cf4e16f138cf9a48da76973a112b1908a5a68025fb91518507b9d93c1",
+        "7e8c2c18d7b3b3fcffad743313575b29d90b60ea9f004061f0381667bb4cb8a5",
+        "8a2e220a3c9c11387ee9cd2da4bca59592d34df14073008b0afa1eafc5221430",
+        "a042901f56a6ca08c293e619bc6a9c0fd8b47a7b470215c1971f6c679065a537"
+      ]
+    },
+    "app/ui/pages/for_you.py": {
+      "methods": {
+        "LazyThumb.__init__": {
+          "body": "4e0e08658a2bcb0ae4df5957a4f53a76a533829eccc1da518e59a484a859a9eb",
+          "args": "efa40c58567f75acfd37365ff8b3aeade26ac3a0190c97c9ef94a31830505bae"
+        },
+        "LazyThumb._build_cache_key": {
+          "body": "c129baee6b6e3a48ec5a17652132394cd32629545852503fe39ee7722f64c048",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "LazyThumb.showEvent": {
+          "body": "df47966af126d5cfb34009dcdf5d581e9e0a656708ffae42f0327ddc7715073f",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "LazyThumb._start_async_loading": {
+          "body": "5f41f5f4fdf6d968f0f5b8e4bf0065f8505b7780a8954f15e8ffd06d4605d501",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "LazyThumb._on_loaded": {
+          "body": "713f5d0b892151e0867497200d843121c2ee3eab0c6344321df6feeab6b541af",
+          "args": "f1bbf9ff965de38cf94bf9866ebd22995b74d6625ddb8103cfbcf7ecc137fe6a"
+        },
+        "LazyThumb._apply_image": {
+          "body": "4c762d100fa673d704827c381e5fa6313d7f4db01e382b0ab5f792f818f0bd4e",
+          "args": "b3d1c8267a5ddb3e36bb3a304ae7404a9fcaf9ff6c010a102349166100ccf298"
+        },
+        "load_and_scale_image_rounded": {
+          "body": "c71b18911e3329102792764dbc9420085948e190b3b53e8c2c9e3ac3ec4c390b",
+          "args": "c30c4a60c38f1718b7882151100fe12a0ddcf1f75e4ba36546ebca23cb81a569"
+        },
+        "VideoStage.__init__": {
+          "body": "54120801d121a81eb5e61fd1a6c28c7333edfcbd60786fc20ce1840b449b2d90",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "VideoStage.set_components": {
+          "body": "1dc16da9687e82200a3dc153b867c6eb459cca90b2e169a008e60003f66a40fe",
+          "args": "a06e86075f6276866290702352b76df0674fd744e20624c1bd0f06d201c86211"
+        },
+        "VideoStage.update_layout": {
+          "body": "359790c6cec67409ea522bd54cb4c38653d61c5842f17c5689ae334b4cd35179",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoStage.update_layout_execution": {
+          "body": "569c7b2382581e12cabf7c5449d4c5053dcbaeb6a2a542a2b340a7b332051485",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoStage.resizeEvent": {
+          "body": "bef46a7406d6c6add97cf3b974d0f37d91795bcd8ad6e45c996dee580eda8826",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "VideoStage.moveEvent": {
+          "body": "d44483c189302afc5518c41e528122406903f0f300204dc5b15d15a903900878",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "ForYouPage.__init__": {
+          "body": "3ed5e3ec2863b570be345ebce43b8d36a8b2876bb920b970302f48ed7fdeb1ca",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.init_ui": {
+          "body": "8ee058a30a5bbbbd618bb99e8a231b2412a38b14eafe279c71e742d5cdcae27e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.refresh_playlist_ui": {
+          "body": "85384ad8cfb6f17a5705ca8fa29f3581b8d3c71c4b18aef0c6fe2f27b4b927e9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.on_scroll_changed": {
+          "body": "edb5e637a2caebd694c6ab1404d4d6ca79b8ce6760189b790805e68a244bce92",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "ForYouPage.create_playlist_card": {
+          "body": "79e5f34c3ea583d0840607aa55a2def91335abd5829d892e86657c11f84f8b3f",
+          "args": "c8d6ddb6a9804f709d10811fe04eb4fbf28e3492c40df162e5689e88e3cb833e"
+        },
+        "ForYouPage.setup_content": {
+          "body": "fab0f93a6bc87ebfb199fbae8aabfae4aabfbf5e2d349105a470898956f1e9f1",
+          "args": "a06e86075f6276866290702352b76df0674fd744e20624c1bd0f06d201c86211"
+        },
+        "ForYouPage.update_art": {
+          "body": "5b2bd3033d280049cd9f0a952b19c528db91e7d4df3e2729b632de13a618e795",
+          "args": "6e4fd1397de45789cbe898d9963d8fc2e87126f413e402cd6020ffab243e6a20"
+        },
+        "ForYouPage.update_playing_status": {
+          "body": "72f5d44e8991b6b6c8304dce90d3d6334acb92137ec89f43d8b525842af91cba",
+          "args": "8c1ce18caa31ae015f9fa653fb5abe29a10bfbdd5e0f9a6a3e9b0bf148a2d39f"
+        },
+        "ForYouPage.toggle_shuffle": {
+          "body": "347a49134deaeb0ba35bfcb1e41121f437ce920e1149ed799753425417973e35",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.set_shuffle_visual": {
+          "body": "849afc785c8c445b1e9a9a24926911f34976563ff2b37f6286aa96af535f2057",
+          "args": "71a96d2e9574175acf9a809db4fa43e4a7187736f2ec4b9c69c937dbf543ac13"
+        },
+        "ForYouPage.get_shuffled_list": {
+          "body": "46a7b96132a1d3b1f235cbccce6f5221f51230655a301eef65cd9b9d86bada0c",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.toggle_repeat": {
+          "body": "44b2f42f1a9254fc975cedca5b28f5f0df13fc1b80f8f06ee6985cbb6ba7afc3",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.load_playlist": {
+          "body": "086fd583ffda814313cab2e2d162ff0ceb1caaf4c9aff3e16df380dba92d6b5d",
+          "args": "23314804f7b59724d70b306fa5dd22c370ab6550856c98eb6e8d6c52b337594d"
+        },
+        "ForYouPage.load_next_batch": {
+          "body": "46c47d7a52741b01b4f969f19aa13be927a611dc5577489cfd72ef8261572f32",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.on_search_text_changed": {
+          "body": "d0960401148ac995066e0e805347776ea904e9f344024957bdcabcc126c69bae",
+          "args": "d2ac402efdf3da866c27127d84cc9e8a8f560b1d74140104a2d8feb09c9f942d"
+        },
+        "ForYouPage.execute_filter": {
+          "body": "4b73d0911d3d8e9ba8d8b0500cb6b649a0e1d1b22a735556d116edf492c64591",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ForYouPage.set_card_active_style": {
+          "body": "20234b8e7e18c1890d64cd74593d2cfa576e6c2d012f64a58722b17ef198ba2d",
+          "args": "1cd9932666d71e99a275917613dc97b587866d61e584ec96c94f04185e89126e"
+        },
+        "ForYouPage.set_card_normal_style": {
+          "body": "63561f56fe8494e6a84b5500f843e6be6818cbc40ab84c0efa759da02f024db2",
+          "args": "1cd9932666d71e99a275917613dc97b587866d61e584ec96c94f04185e89126e"
+        },
+        "ForYouPage.mark_playing_item": {
+          "body": "01a51770533607633d59de64f2cab4aec9dd03bd61945227866d96b9709e2943",
+          "args": "fb84eb35819db370e62a8502b2bda990a543b8b99ffcbf5f1456742ab3c23e2f"
+        },
+        "ForYouPage.showEvent": {
+          "body": "e5d4c5d1c1949b510af4e4d8bffab9e4d620183ace8c2e1b4ac7156ecc7c4838",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "ForYouPage.hideEvent": {
+          "body": "f097a3dc5172d1805a0875fe26f81dae34185d26f9af7b8defaf76654d5d9549",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        }
+      },
+      "signals": {
+        "ForYouPage.playlist_item_clicked": "377eb9d6f117d44c61febfe990d889d03fce5fd910c5197e723f0714a3d57c29",
+        "ForYouPage.shuffle_req_signal": "e3143e105f6c1f0342624ece48aef4e307a85ee77c42c936af0e50beb6f3fcc1",
+        "ForYouPage.shuffle_toggled": "3944ecfa4ca50320c5885c558d98d36b49a397d801c8022f4fe346bf24e3be41",
+        "ForYouPage.repeat_toggled": "a4be8fe793af99e0e2e68d23d07dd2381be0b3bc622b4956b3bab03910615f55"
+      },
+      "connections": [
+        "5003d7e31e47f9a96d3bdbc5d28792a78adb58bdbf3b402f1adcbd49c5651666",
+        "66cf974f75bbcb57e96b4dfdaf3569651dc1f52b73bf2e2eb1b73421c84470fb",
+        "68a1b18c655cbea2dc35fec11b9a8da2388d863d4c601c250a0171168268cb04",
+        "88c4f8bbcbf6998c60d938bcf7923144ba9bf4637d30746a41568e74dc62f60a",
+        "c54a9e2063980d424944b6a4d5507cf039df2f4d6e811fa46ea52577abdcfd51",
+        "d31c77b48a0f5a83157c360713adef7d92ebf3d2e91437cbf66ca05dc92dd809",
+        "e159a237cfce922a40d85c744ea22f8367762c75aca04a8920866ae0e1d02ebc",
+        "fd25bd1234d1abd157685b0c16712730bd142c967bf7981c38664ad0067d8221"
+      ]
+    },
+    "app/ui/pages/mode_manager.py": {
+      "methods": {
+        "BaseVideoPage.__init__": {
+          "body": "b684c46bd0c6c4086fb866b894115ea487f685ff59531343347a570abecdf5e7",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/pages/settings.py": {
+      "methods": {
+        "SettingsPage.__init__": {
+          "body": "902b58b4dac2b9d78c25777909ff218ce5e00fcb2ec8e0135a07bcdcff8239fa",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.init_ui": {
+          "body": "6429cf005b58f8321588e0cbd2c9e8cefbc5cfa7a2afc85b8180c9a5cfb55468",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.add_section_title": {
+          "body": "46bd5e8e18fe5ea0b256bb944e5dc72a0c57db919cc340e44637bdde6fcd49be",
+          "args": "ad0645a5076be5564693187394e8fde6034bf5e4af35bc71e5242984ca12eae9"
+        },
+        "SettingsPage.add_setting_row": {
+          "body": "8624794d0e78de84400bfaa731b63e46d18b1b6ec5b16eb39299237d8872d8ef",
+          "args": "c3fc0b20302efcd3001b7be752d8e1bf7226d1e128b8692d316ea2301fad6d85"
+        },
+        "SettingsPage.open_download_manager": {
+          "body": "f89585d02fe548f2d117dd50ea78efaad063004dc497fb6273eb5c582bdb05bf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.save_settings": {
+          "body": "912c91f7cd90bcb4b9d2ee1c455e4fd5295381f18ba8c0eac6060acd148480d3",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.load_settings": {
+          "body": "f19d2b7fa8399d3ec32334dc2c811c5a79d0c033764c9af9720adf0f59f55090",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.reset_to_defaults": {
+          "body": "0526b80b10954c4c8be8dbff975c97eb54a57c2f1f5d1e0a1163d28f57f645df",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.save_settings_silent": {
+          "body": "91b21134e313a0a071534cd2a165a8f72d01ecf5375fca80a9f468c714505f9f",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.get_qss": {
+          "body": "bca331c27dde65edb57c6f678a5b0b84f470d786d6c6fa317bc5dc66f12bc17f",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPage.refresh_model_list": {
+          "body": "8d0b0bfd9860dcc692cf35427d5e6f82d6ebdaeed56ff0fc23e455343050a478",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "SettingsPage.settings_changed": "7cbf3a9b8c0dc752719b9c68152a5f420bf60707a1a57e3206f14e191c9c79bb"
+      },
+      "connections": [
+        "14d6c5232ba4a55ab2c1a8f75d110672351e6208d5ee2e1e7a016b2bcf694df0",
+        "630ea00002382208faf6da04f23bc05649350f51db7bc1bddb1ee0f8811c36e8",
+        "a92b2ffeb2c337f9c97010cbf016a35be2b8f10d776710851787dc43a33f47c7"
+      ]
+    },
+    "app/ui/pages/settings_dialog.py": {
+      "methods": {
+        "SettingMenu.__init__": {
+          "body": "ffda4f7966f3425b083efce659c562bcfde4ce783779aeefef65e878975aee36",
+          "args": "9d9ec9392b8e785f944b896e9e15e338f6298e181ba49b303f11a6d378b2a339"
+        },
+        "SettingMenu.init_ui": {
+          "body": "92f78dcd982f4faa0dcc948c231554e0bbd7d08d9a69006346a7ce86a2d3506e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingMenu.on_format_changed": {
+          "body": "bd5088dca7f0aeb9329a08aaa988645854b762f73c5f6d065d65da3f50d4f8d2",
+          "args": "3322ca1645cfd3c3fdb3bc123886ccc7b482140b93c78c0567e43814fc121507"
+        },
+        "SettingMenu.save_settings": {
+          "body": "84cb6e350eba98165085852eb2eb601fd1fce39d5bd71bf957c29fe3942976c5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "SettingMenu.settings_saved": "39bb5dcbd48f8c0fedfcd179579a954c85340753156a70a8cf9674a9ac3d089b"
+      },
+      "connections": [
+        "457d796d6a5d6f5ebf67ee072361477f72681ebbd87e68a535ec7f2355539402",
+        "b97a1c1eced6fa59c794535e32dbf2a48e036acb8cf065d1720cbd1f89a86307",
+        "f20e7845f902ef3033c2ce4b532ba5c54281ace8eb5daa31a511f05c06e5eb4b"
+      ]
+    },
+    "app/ui/playback_bar.py": {
+      "methods": {
+        "PlaybackBar.__init__": {
+          "body": "079642dbe2fbc13c1dda2110e0fe012a623296091349d81afb999edc117b68d3",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "PlaybackBar.init_ui": {
+          "body": "cb91b30a501944dc5b24c0fb55ec6dae849d3b659340b586e078bfedbb5c27bf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "PlaybackBar.set_shuffle_visual": {
+          "body": "80a17faa9a81c5211ba1071d4e2bc96f54efadf8321e54bcff4e509b6824bbd2",
+          "args": "71a96d2e9574175acf9a809db4fa43e4a7187736f2ec4b9c69c937dbf543ac13"
+        },
+        "PlaybackBar.eventFilter": {
+          "body": "61f741079d36f97a02c8e15133c1b59905e85a79409d305e3e6192f5dc56b84c",
+          "args": "cc2bcf77684caec3050465d3e2a92078e4b4ed891393bf3759f6228933933ad9"
+        },
+        "PlaybackBar.format_time": {
+          "body": "a4ac4e62ecc00009a042c405da1d7bd376f773d781abafbd4203eda5f2f7d974",
+          "args": "4b556e4a455557675f0ba393fb9075d796c14f42590d1d1940c95b8ccfdec5f0"
+        },
+        "PlaybackBar._on_slider_moved": {
+          "body": "f70534eb475f90d864e2e8ff606fe87ace2a521a4d1b6438a48cc88ec9956f69",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "PlaybackBar.update_play_state": {
+          "body": "3071d49f417818736ae926c869cb22936060795a49619caf92ff8ceaf10294bf",
+          "args": "9c172046d973c344eb09a120c153913e6872b62c66f19d2581152c31bc549a54"
+        },
+        "PlaybackBar.update_position": {
+          "body": "230eac733e4a3d82d146a5cac32ea35da9f912f7c82bf08db5448cf51ac02fa6",
+          "args": "49e3f6bb3d51589afade4c6ea0f219d0653add6cafc6075c87f135a9994c9b52"
+        },
+        "PlaybackBar.update_duration": {
+          "body": "81d8ab785692550e03654d53803a36b0eda78f8eb4aba1cb4f6a12559f2e439f",
+          "args": "49e3f6bb3d51589afade4c6ea0f219d0653add6cafc6075c87f135a9994c9b52"
+        },
+        "PlaybackBar.set_media_info": {
+          "body": "b7d44df01c18376193dfb37315c790c49096c2322ab2e91ed44dc2869823bee7",
+          "args": "b8f3ea66ca74fbc60b2adeec383e25fbbba8a65e6e7c29d9548b23b2570bce49"
+        },
+        "PlaybackBar.set_mini_video_visible": {
+          "body": "c7f5b0924618bd8cee0f66d3eba2b2c400afc7079d50db84d98063dd420d02b6",
+          "args": "c8e47e7859dda85a582f07ef06615897368cb5680f2b0c7b2ea823d997bea6b6"
+        },
+        "PlaybackBar.show_video_info_popup": {
+          "body": "d18087237180c34b926e958466b8942b6e7d9599b57c8f6ebb187e3770e39c3d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "PlaybackBar.play_toggled": "101d41f6bf4d99700216c7f043ab3d61e07e115cb2265240bcddf57435199acb",
+        "PlaybackBar.seek_requested": "41e314e70f0b1e88b123e89b7850b339a82bb4124e6e1d348b2eb46bacffc28b",
+        "PlaybackBar.next_requested": "c0747a50f3a84d40534283ae224b94eb488903281ce1d424100f7fcd0c904d98",
+        "PlaybackBar.prev_requested": "79c4078a104f07a6464c9fdba6dc5eaefc0b65604d5a0e8dea685b310a0f44da",
+        "PlaybackBar.shuffle_clicked": "c404b6a0d771b3b88091bcbdeff50157542873c23d9b944106c73ad45bf62067",
+        "PlaybackBar.repeat_toggled": "a4be8fe793af99e0e2e68d23d07dd2381be0b3bc622b4956b3bab03910615f55",
+        "PlaybackBar.video_clicked": "1d7b92bdb615cb3912bdc169c20dbbf32ca10bef5588078a08756f164fe3cd14",
+        "PlaybackBar.volume_btn_clicked": "36b6a0300c9567e7d86d4cd38d86c79e37ae623af7b5e5b1a776de865c421b27",
+        "PlaybackBar.reload_clicked": "41b887ae406c31375ba9d197ca0abd13c4f03d5d920a0a33d9385b6772981eff",
+        "PlaybackBar.dynamic_island_clicked": "31bed12a44c656785a6eed74ed495071feeb1373617f1e7d032fc4c48bf22bbb",
+        "PlaybackBar.subtitle_tools_clicked": "b0297931213cdb3d30184863374ec7014ef630f7905ffb7003f9c3e7a8d2bb6e"
+      },
+      "connections": [
+        "3edb2ebbc98ce92ca71a671c4361c5074d8c9dcec91082b67c838d37458784aa",
+        "57d2c6284ac88901da3059bf65821fc998542d5e76cf59f61013a6f311c3d7ae",
+        "7b6e354e945540bb2759a6e1e9c7e6e91d45890af1c0f6edcb5942d5498045d7",
+        "87d21d2cd275ca4c327c3a07228d4960e18722656df0174a8d8008415b7cc044",
+        "911cbbfaeaaa1a7b95aa8d138b3cdd00deb6482c8183901c9850cbd88d6e97bc",
+        "99c767a83b7c5f8c3bd7ffd99fa08277b78608e2ee60972a5dbfab14698dfdf7",
+        "c141b6bdb7210919f5fe2c69d33b3bf09cac3babb380245ff910598cbdf078aa",
+        "c6bed946e6e86e6bae47150d0b663a85d10d835820363ce748c5c9d043b04ed3",
+        "e104e1378342a9cb9ed15ec17be94ada14c4de99429b1f80c372a4dfa2cbc60f",
+        "e84579d2c6d491396b1cdff65970a756f007c5ca1f083f4bc25c0d5be6941b99"
+      ]
+    },
+    "app/ui/styles.py": {
+      "methods": {},
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/subs_ui/lyric_settings_dialog.py": {
+      "methods": {
+        "SubtitleToolsDialog.__init__": {
+          "body": "61723ecc13ed435a5ecd57d3c4673e91ef6fcfeab59b0345267fe4fa94d5bb91",
+          "args": "38fb683993392b182b3cb295b525cd612d3d1ad39938d702e153adadf8af3b68"
+        },
+        "SubtitleToolsDialog.init_shortcuts": {
+          "body": "f0019208835b2df1121f1fe905bfe2f76d1282464fd5485adb3ed237253748fb",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialog.init_ui": {
+          "body": "8cf0eaa97c67b6bfdb7122118c72b8bb856df5474c5dda0c40be286c09af7ea6",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialog._update_undo_redo_tooltips": {
+          "body": "3799f498cee8c2e2f3df9994c0701054bb56ea8bbc49a3f2ac252541419ec6cd",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialog._on_lang_changed": {
+          "body": "939057d5fc08bb7cf97a67d298b6b5fe545ca3c2ac15919b15ba8efd0072b49f",
+          "args": "5b47e100c2165de8c74b995065e0da2be626061d6b632371752e2f70efb07d6b"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "0b9699bf6b39fa4682aa2b91e70ac992d80227c95cea706579258c24dc732e96",
+        "0bb847f42382620c59b42efb81161bd7208291cf74259b92dac42d90d5c185e3",
+        "156d867c4a7c870f2321b5351fe7d6d2ecc34db1aa703aeb133fd513530e7c93",
+        "25acc5772b9cc15daab5b53b36b1e096d63d0b1abc2277aa2cdbb058929d0738",
+        "2b2b5e7485a1c19693a51a8746c916f51e293f38555892640d9a384855e00d95",
+        "321988ffda81b17fdb4f46e4845a3ddf9d01e52f9e2ee059dcca0dcad1c2e809",
+        "3ad0d1b865889fa06cf83f8a89d46d43f813ea6684a0512a2ab272eb0aad650e",
+        "45c3501470337a1d986ffbbf640810b90c2e229e858f00a64e0b6a543a787409",
+        "56ab03f35126e7c765ec057123d887c6afbd6b96c105a0e7d351babff9ea1fdd",
+        "574d4ee0a1bfbbfffbb0854a208ead94454f71be027e23d5dedde004ffd67258",
+        "8bb5ae09515c7fcb38b70c0429917e26000d2ec7fded74b9ea42c6ea679b41bd",
+        "90c3a55c9ddf4d15c91c3a77d76f37283fae73732e37ee787126f523a3f38001",
+        "9e6b1b86e0f082be463ce891a58d1d76b2ae962387075be33a53fbdefad87d16",
+        "ae244affdb07d91242092a7678c8c5ea97d1d8830e181c3f775a5c6011065174",
+        "b1be52e38eb890d6f3742ca995f6100dff62892f2344fb4014921d643a486390",
+        "b39818b4d54718d1b35b3726d39c59ce6a250d732ad1d6da22b0d85f8a8b490a",
+        "c178e287239c95cc51e908194a7e76d0ef2e227e95f4be4b33df54dcd97c0fde",
+        "ca04940280435dfa3c84f963fa983b6a68c68f525458b9509fae9e6cb8aefb1e",
+        "d2e9c70e6ef9d0ee0d0cad4c2faf39ab43dc67a5e551b8f03203887f0a254f1d",
+        "e37028551f9468bde0932ebbefe30503d1ab64feb1618d1836708cb779b4a7ba",
+        "e4543752259b65b26e98a83ff249e56d1ba74dffac900ad1a8cd334e45cba6fa",
+        "e514eaf8e62a1212d8b244c983aee6a8eb550040c96ec775d51ab19ea0901d31",
+        "e7a3a0c8736f4bbad6dbb13848b819d61f55618c681d3b918101ac9d06cea555",
+        "e9bb17bde21f51211d1a71dbe6cc72f743c490b7d4443088cd52af1b9601939a",
+        "f2879e6a36e056861dad81e74044d352b028897f49478e10d35b23e5412c3b5f",
+        "f986c7f8627e421d2bb9089dcbcc4d81ebef34874f83de0e544b5373ada53544"
+      ]
+    },
+    "app/ui/subs_ui/sub_panel.py": {
+      "methods": {
+        "SettingsPanel.__init__": {
+          "body": "0d62fcc7cd9ab96ba199cdb32c8079e3fbbc46a0ec6dea4119b7a6b53f88390a",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "SettingsPanel._sep": {
+          "body": "50ee5124e23c1b0d6bdbd37a6292bd0ab41dc361b1005633c51205c0ed95d8f6",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPanel._set_btn_color": {
+          "body": "ae49c95ffa7d6c86dc73171f622b0395c9d7653b5e4ca354ee790b858dc3c8a1",
+          "args": "0bbfd94ac8151b65ee3818dd3a6d8a049e8b776e8d071b253a7c9b52196b9b60"
+        },
+        "SettingsPanel._on_mode_changed": {
+          "body": "6fcf03dce8ab1ecc4e887c102e0119d2d8a5924ed429e286277857d7c4411e69",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SettingsPanel._on_opacity_changed": {
+          "body": "4e829d5c303774b549b92ca162fdacb589f49aac7a507f7d83671b51fa6e80e8",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SettingsPanel._open_color_dialog": {
+          "body": "b651bf7433f2c8c72556d38b9e1e91bdfc1da5d7317c0c9496f14446c93b73ef",
+          "args": "4b4778320eccedb7d4765fa26430da81140af7202c9e2123f9d735b423590cde"
+        },
+        "SettingsPanel._emit_style_update": {
+          "body": "5b4084172ce628c8e520bbdd6edd3256cac9e94bf3b9474949ddcbb7e9151dae",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPanel._on_speed_click": {
+          "body": "393483b5e5c465e1f4e64fbe9fbffb7120526a5631298961b6582f9e1cb799e3",
+          "args": "611db473a0eab78dd1f2011258e04755736bb0113300cb8b81d5664c07b6891f"
+        },
+        "SettingsPanel._on_reset_clicked": {
+          "body": "4333e40395b266c20bb7c8ebc1e8da2a909d3b6a76220a7bff1eebf89458c7dd",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPanel.sync_ui": {
+          "body": "faa9377977267f3b0c6a3569537e10202b57b2effab93d61f0bb3df20b122c45",
+          "args": "fb06f73b8d92c9d70f18cfb48e9ca589a2665196014275afd8403c88a405d2c5"
+        },
+        "SettingsPanel.get_current_mode": {
+          "body": "347980f1f0f0097624bab59b4410a86a3c80dfc4c6412b6eac97a8e622f420b5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SettingsPanel.set_mode_visual": {
+          "body": "ef3522f83cce71afd46d24b57d4cd339323136e9cf93a3b3c27d959521534aeb",
+          "args": "994ce898347e2e7d01e3a7fa17f7c0f3ebd793e6d983830adb9a1a9dcc95f7c5"
+        }
+      },
+      "signals": {
+        "SettingsPanel.font_size_changed": "c483ed94f22d39f2b8b1100b7166ba10fa7d9a4c9776bd47d8a933e365952ca3",
+        "SettingsPanel.font_color_changed": "6d8c1e087009307ebf5949859a1442dcf34168f84a8cb2a81a6146ed5f9794cc",
+        "SettingsPanel.outline_changed": "5d768c6249d1f040b0c118ef3e3e19543a38ec030f4f7336d1a71f3a06b8d70f",
+        "SettingsPanel.shadow_changed": "79c343025ed5e0184a211607a4c1503eeb8160ebfd5b5d2fda111bbf3c7f0921",
+        "SettingsPanel.bg_color_changed": "4f4fab7e32e54c86af0aef83e4a35b50c82b28674ead7132e862e99e353f0085",
+        "SettingsPanel.bg_opacity_changed": "2c14797fdc63ba50f72fb7735f2f01b7bc902c09a2852fca2a8fd8181e4e1e72",
+        "SettingsPanel.playback_speed_changed": "683e96ee0edc8efe030421dae504d96a7c577998dfdd89dbfb867d3c8add819b",
+        "SettingsPanel.subtitle_mode_changed": "e80c1f70ee329f21b83ff1779cf357143adfc3638b3a590d216c4c31a8ec43b0",
+        "SettingsPanel.lock_position_changed": "2713f775e3ac7682706b52404e8b096c1613390d1943164801185effb90b79fa",
+        "SettingsPanel.fade_effect_changed": "a106e784cb0927d8abe96cd3da5fdd1fe1c35b67c3dea9db3d5dbb89c900c19a",
+        "SettingsPanel.reset_requested": "8ed63a43d241049c0ac1b67679ae04a69fd7b0b2e9a940d937e1386119e0645a"
+      },
+      "connections": [
+        "09491ab4688ce86ddeae22cf50199b0a561033f159edfa9bba001a3b01f00e04",
+        "289cce6ee793fd13ae6c296df1f390ba4f36cfa12046197f35a6daedc30b578f",
+        "45835f64067bb368a757768e2082492cf5d97c48a1dc592422ac67e4ad86d7e2",
+        "4995c6a35f6d2f2a9147f6e074e73262fdb467111ac824ceee581834e05a67d6",
+        "4ec13fc953950ab0871467b0de63a28e4f971ce6bf3ab281d8c161d40ed80be9",
+        "545dafed8f3638a5849e56e749d32294973ab5e64a3d973d2a876c3bc0613db5",
+        "558414b235292b5299da96b969edb4e0bde84d05bba22ec5ec2374f57c52563f",
+        "872671becbafbc8af01b0f9080c783b57508b5c8a4887f1b04267771ea7e25f7",
+        "8b580331df8902115704eee4ebddfd15207367def089cca48ed1e2bf2251353a",
+        "a05f38eb74ffed326c897452b910da8b9dbd24c4ed24e67b71dfba48410513c2",
+        "da6cd64c3bcd47ab0836e4a9cb822b8513846e712e85ad1e138249fb313ad3e3",
+        "e445609838beaf6722c088ff0de484160b3445093e9e1fd89a6f94c8eddca78f",
+        "edf055cfe9bb18140098c97d3db8bedc4c5e8acf8812e3845a17134367da1a79",
+        "fc1bb46f10e4a990692f1aebddfad18c0645c0da9fac0b9a0c086ceb99f5c684"
+      ]
+    },
+    "app/ui/subs_ui/subtitle_commands.py": {
+      "methods": {
+        "ModelSnapshotCommand.__init__": {
+          "body": "f5166282419880ce1be068ce7ae45e243308ef3f2c1064f2b2ccde3fac06f7bd",
+          "args": "07823086a5ae6f56ddcd88830be0bfa2daa95f8cc3839d59ff471a8d63b7a038"
+        },
+        "ModelSnapshotCommand.undo": {
+          "body": "bd145c1108c0231e06802b4c446a46cd9ea964c57c5dfee927b59f1cb650d5b7",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "ModelSnapshotCommand.redo": {
+          "body": "6d4dec7f817aea67be86c39b6ae3c6ddc4530e03d922de59f72583a3ae01dea9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "InsertRowsCommand.__init__": {
+          "body": "2ebb842e4a3a111863a9c4e89190fdd56ecf566d29bce28e3b49ab47894fc9e1",
+          "args": "17423ef5030cc670319bb6a67cee0824af8d1a48737968b203c6c5adaa44b848"
+        },
+        "RemoveRowsCommand.__init__": {
+          "body": "fdbf381f6966b3e3f64e14c95df80c594f1bf0bb83d4344901bdfaed44b9d117",
+          "args": "2564d711c29ec7cbda42f806de3f0166d21223b4eadd371e29fd0bbe1f829ce3"
+        },
+        "ReplaceSegmentsCommand.__init__": {
+          "body": "2b0db8c1d3e4d4e6ab31a51581d71d28d2c2723cee0f4fef37faf17e776dbf91",
+          "args": "d03a948e618490bcdeef37728b3bb0c3ce07adf3829e8e5935a0119251a2e86b"
+        },
+        "BatchShiftCommand.__init__": {
+          "body": "5f96c764d2e84664334e31b091b3ea8229e7cf36ab3fdc7661f28ff1b65b6828",
+          "args": "824c04e5f0e54a6d0cd315a36aa571727dd774ca466a46c0c7de2c69e6f5fd1f"
+        },
+        "SplitRowCommand.__init__": {
+          "body": "672a8ff61fae073c6a42acb8321433500c4a7b8bafcb30ea408fc3996671da7e",
+          "args": "85d9bc280b2ceefea4d46893b3c78f283589d15818a329f959b6c9a9ea378921"
+        },
+        "MergeRowsCommand.__init__": {
+          "body": "8a2c5c32d2301e8db4797fc012e1b1dd4378755151fd5e028bf5d1b7542b128e",
+          "args": "2b9df8dd8ae20697577cd966d361cd20dd3ae37892a17b3d8804eaf40317e011"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/subs_ui/subtitle_dialog_logic.py": {
+      "methods": {
+        "SubtitleToolsDialogLogic._resolve_subtitle_path": {
+          "body": "fe34d4be2528423d20f09eb4abf35eaa143a9df1f9c4b1be4960f0964091ec06",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic.sync_context_from_parent": {
+          "body": "d2bcd9a8a04af0cb51232c0bc508c3fd13056bd94ff0031a67e6010194b68c58",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._disconnect_player_signals": {
+          "body": "fddf1593721906b07e31b55e1298c474da501b85674e54a520ea7b71f48420a1",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._on_tab_changed": {
+          "body": "544eb4ce72e86c7c909e653ed2e41d8dfb85fa9cbc0bf8a88cf9604f4f7ae12b",
+          "args": "d357cf2e6169334d6963d04514bbf39d08780bdba994e089fc66c2f05f2408d4"
+        },
+        "SubtitleToolsDialogLogic.closeEvent": {
+          "body": "ac96592b9ec9c2428e642e135f94aaf809aff057713ab929ca0f02884cecbfbc",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "SubtitleToolsDialogLogic._on_playback_state_changed": {
+          "body": "f00c75b5ca954ed2d648b19e2d7fea755cfe884f3b102d9f7593f184aafccdb7",
+          "args": "78a1f5065a89b3d9ba8b9d4cdad29293d02c0acd8fd9d2f78d19e7be53639576"
+        },
+        "SubtitleToolsDialogLogic.load_from_media_file": {
+          "body": "d64e726898810aca36930fbeb57da1787809076a3f573167b312ede8bc8ab468",
+          "args": "643c84a5a7d11eebc8ddce44f921de321ca42fffdce8c00edeacd637cd6803a7"
+        },
+        "SubtitleToolsDialogLogic.on_reload_clicked": {
+          "body": "632632c4a57ff76ececc3a75508a040149991c7b8e4597891bfee5b28cfb5d4a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._update_combined_table_ui": {
+          "body": "62b3abb982a2bb6c7a5e2f17ee57f678b4c234e849dc278406fea0db61226cb5",
+          "args": "8d772cef4c4ab43dc1904d70346105e8fe23116c39520160073abc9cc77a9ea4"
+        },
+        "SubtitleToolsDialogLogic._on_model_data_changed": {
+          "body": "47637b877e4bad9fe452033086361d97556889cd3c7a6842882f502e7685f2a7",
+          "args": "2d98dd7d9c9e1db060a0198cae0cfe68214004718dc4012ef3aab2d6efa1fdbe"
+        },
+        "SubtitleToolsDialogLogic._sync_active_sub_highlight": {
+          "body": "b84fa942f1af1373bfa641e8f22b876ef64f5d516735a3f84d961c40b55e5f2a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._sync_active_sub_for_time": {
+          "body": "128d68e6b23e5cb5c67588f9be32ab8084ff1020cb8bfee81acbd1aee9a7376d",
+          "args": "8bf334b5f1ebf0e6acd8e2fd20579ffbce6f438434271753b7fa8c4e33097e1f"
+        },
+        "SubtitleToolsDialogLogic._on_player_position_changed": {
+          "body": "ee4211dfbcd09a8f220621ef6b1b6757704522433ef3cda6d11feaf108ca210d",
+          "args": "94516cd22b931c522354766ee76d4279aef8a64ab194a29f7ac82f2624f64b71"
+        },
+        "SubtitleToolsDialogLogic._highlight_active_row": {
+          "body": "50c22af90023ea6bfb0873bf0ffc2cf72a102bce2da07c63582ce56c664ed5e3",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleToolsDialogLogic._on_table_data_changed": {
+          "body": "0caff00a224ee22288c50dd83264a9df50ca94b23f3c586651c29abe9ffc51c6",
+          "args": "2d98dd7d9c9e1db060a0198cae0cfe68214004718dc4012ef3aab2d6efa1fdbe"
+        },
+        "SubtitleToolsDialogLogic._snap_times": {
+          "body": "60ffa87b26adee8a42aa36698c4a243cfc833320d78b09ca069e22b5ed0f957d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._push_undo": {
+          "body": "e9e17dc9df432c67ef70e3bf9f155b085d42c23f2d3e95dc776fa819921ceb2d",
+          "args": "32dbdf2a4dd5c88b1402dbf1f7f26fcff08007588132d5438f62289986d1db0d"
+        },
+        "SubtitleToolsDialogLogic._on_row_double_clicked": {
+          "body": "576af0d164c0d620fcdfa803013bf753630f9795d36ee4def5da9a349f0e0d37",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SubtitleToolsDialogLogic._seek_to_row": {
+          "body": "ace4a0554f0bd174a72940d395a088e35330bd465c23dce05b1047e00fe51c48",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleToolsDialogLogic._on_row_clicked": {
+          "body": "40bf1658edb61395f20be7ed58c767ed216a6fe5dfb73ebacab9d37a3106276b",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SubtitleToolsDialogLogic._hide_and_return": {
+          "body": "fb9729e1fd8436a0f58679c055feb416d00cdee50a887c574a753123472aa954",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._on_table_context_menu": {
+          "body": "98157dd42a5fff13e8baa460e49f14e7b93c3c8c6131bb4647cd02c73c9e86dc",
+          "args": "a734b91f3101940a3493f5790a17bd9d34fbfc5ecfaf7c25789b60e255e1d433"
+        },
+        "SubtitleToolsDialogLogic._action_split": {
+          "body": "5bb4b46b717336209963ece2290b4fd9895589daa6fb6c7f9c3fc6edcc283304",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleToolsDialogLogic._action_merge": {
+          "body": "06c9723f1d4be868d0a4b39d5994d692c38dbdc9c4298791274985ce93d501fe",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleToolsDialogLogic._action_shift_selected": {
+          "body": "126b15db389e9ab89dd68fabbf223a211bc199d954dc32b417442ccc7c802978",
+          "args": "4c3b260df227fa17a1af214306b2892afa86f0c4a1744100151488cbd4f713a1"
+        },
+        "SubtitleToolsDialogLogic._action_batch_shift": {
+          "body": "c1f7a33e82565c287492ffda8a7e173cc7f47f3d0d2f065dd709c3bee83ce98e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._shortcut_split_current": {
+          "body": "f70334715867d969914648f7fe809984c03d2e151945df76b44ee56afa3a33f5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._shortcut_merge_current": {
+          "body": "d9b8c7b2484e75e1834a77cb972c79072b21fac9cba2420e2da6a8e8883eb73f",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._shortcut_shift_current": {
+          "body": "3d1487856d83c6a9a9106804a5e5975d1041145407ddf64e8e7028c2170bfb31",
+          "args": "a1e4475d3c0a556f942a28265b16bc019ab119c53add22f12a35836049d529c6"
+        },
+        "SubtitleToolsDialogLogic._reset_row_style": {
+          "body": "96f8851ee8b6e64016d4049e5a896637423f100b1533d946129024e5852c1d0a",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleToolsDialogLogic._add_table_row": {
+          "body": "f8b635563d0ba72dc2fea2b19f3e9c3055a295da71f46f562e17c4756490459e",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._delete_table_row": {
+          "body": "762c39cda818e1ac92a9a1b4c7ff7b2063ae06da4663e157b835ff7b9897cf53",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._handle_paste_shortcut": {
+          "body": "b5f4d9a858c3622e5ad2b4b1336958cc859237f3122be67035a6187b991a8fd9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic.paste_to_table": {
+          "body": "da17c9a0a7278f61c79b2fe9b6da9b809fb4d644af6e8443c25e8dd8b878fea9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._import_subs": {
+          "body": "00776b5e7062ee7438dd06be03bc0c547edce0a29a23fe7f7757d46d4142e5f0",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._export_subs": {
+          "body": "9a0c10948ea6238c1a63019cef15e48c2a520851a582df545852e4dcd6e308c5",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._parse_text_to_segments": {
+          "body": "3e68f05f161fe94ffeff4f4bac86173e7e2f099049167953699a33723e2827b8",
+          "args": "e676d8462a1a946ef18e1cccf5774092cd444f11f18376b36f1b6d4afd27e1ca"
+        },
+        "SubtitleToolsDialogLogic.load_subtitle_content": {
+          "body": "85bc0168950e1dfb71be3c02d5a91a0858d9e5b3bf0d37d1b676285a38e35d31",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic.start_auto_translation": {
+          "body": "7ef897d4695c9268c12acb72d9dc379d68f1ddde0825ec26cf0b288d237b1a72",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._on_translation_finished": {
+          "body": "a1cf6f4a76687ac841ce4781750e14a51d00b939483871e0ed5ebbb644b1cdd8",
+          "args": "c5c288c3f62ca328150f38004290031c780d5a08bbddd59fd04d7785a635172f"
+        },
+        "SubtitleToolsDialogLogic._on_translation_error": {
+          "body": "b6f0f54a48079fc035d825de6330d0d9673b61aee2d2fc2a3f2a492612d96cfb",
+          "args": "ae34e18f25611a5a5bcbc2e1908443f2b1cd5260346df84c9375630977931519"
+        },
+        "SubtitleToolsDialogLogic.copy_text": {
+          "body": "4d3af2ac5b94e92a594727155e5cb42f49d0bc779defdec7d1d6004178ae03c4",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._parse_tab_orig": {
+          "body": "a9ab482242db3ced4d163b946d7fcac9961eda9c125eef5ee89f4c1bc139883a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._parse_table_combined": {
+          "body": "699779945773f7d2d0d754035384cb368fe55b3688da5dc04ced66e373e04d68",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic.save_subtitle_content": {
+          "body": "b16819818ddccdb4e80f5872a9afc0eb490128cf8f2904f68db53e117c93ca7c",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic.show_above_widget": {
+          "body": "533b4e1c62468578f02cd661e9937636c5111909904b9edea5ede56c8879135a",
+          "args": "01c791fb3b598667724bd95dac9bacc0fb88efe21d78c35793af26bc44891000"
+        },
+        "SubtitleToolsDialogLogic.align_whisper_with_reference": {
+          "body": "038fdf632d309a15ef736f8e70322a8d00d2951b6e06fbe383452b48e238bba4",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleToolsDialogLogic._on_align_finished": {
+          "body": "04e685470f9d1f98dfd40c42a35fc9a82f21ecb9dbab440a890f2813202408da",
+          "args": "34ffecbcd10f6ebd814a35d970a00f3a52a56e9a8ecedd56732b9009fc1a8319"
+        },
+        "SubtitleToolsDialogLogic._on_align_error": {
+          "body": "2872d537517aced40d004df23633c3326910dd1139564d4d107fdb7779a18bf7",
+          "args": "ae34e18f25611a5a5bcbc2e1908443f2b1cd5260346df84c9375630977931519"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "06c8508e9b1eb2977ea10f288334af8135208fd4922d2f1ee56f8a1081477d1c",
+        "11cd819d69cd498da40d2dfbd9d33bd4d00b7a1a2a0d526aa77a5b8e9521d469",
+        "20c67bd908549572b003de4b57c26a28d11870b1b712c8aa44f61e4198e0af8d",
+        "412be69401d7f8eb5df1631ba847b0fa3fc594be656efb55e03ce54f8f7144a2",
+        "57f764d2b5fb7ce485357d5f25ee39d161fc87504dac88ea732430266afc56a8",
+        "601463e3c43b44349f5b98b1c4989166827f3f75872461863fad2a55a4945a48",
+        "7e139f786785beb022325d464a8a934fa5a2cb06e3413540171deea52103b097",
+        "8962734d74bdd1e332684de527e4998340c7e5fbf2f35af523256aac12bf2ae5",
+        "b0149aa3ce5551a2d0e1e34238c8cadb42b13566b6f13dba43b571d87ce710f6",
+        "c1fb4a6afdf4d8540bcd6b8e7bbaa1d670689f3d811b148cb5db3e999e979202",
+        "de0706c55b0a8626a144c1cb6396154d56bb7441c85d19568c815cbf755047ae",
+        "ec841064b7c6c5b7a92a95b5027e7857051a766f5e72a3d5e4fa5ba753346ff7",
+        "fb94cfddbcd18298f4478ea1d7cea5a5710197853751d0460a6b0613f103f518"
+      ]
+    },
+    "app/ui/subs_ui/subtitle_editor.py": {
+      "methods": {
+        "SubtitleEditor.__init__": {
+          "body": "0cb38b0e6d7663fd3f720fe1d78f9c19ccc2c3558636faed7215f2014a264c25",
+          "args": "a66174121efd65b3fe1ae589f32c1615d61bfaf32e314a3144ca3c3bfa3a92ec"
+        },
+        "SubtitleEditor.init_ui": {
+          "body": "6a709d779a706d43f3ae37345fab232dd55af2311fd83aed52f7ee4f23787fd6",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleEditor._update_button_style": {
+          "body": "95814802eea760696bc6a0fae7fc65b89d85fc09b551362ed3b2bf48c4b423ee",
+          "args": "26a4056603370bec9778bfccfa75f28aa39480aa54cfc6afacbbe2bd0c1f93ea"
+        },
+        "SubtitleEditor._on_mode_changed": {
+          "body": "f1af8fb70f6d65907726364a53248161770632dbfcd0869f894b18f706f612fc",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SubtitleEditor._pick_color": {
+          "body": "1162a82594d139e1645041d24a1a5eb5c6fdfd39513b6efe61ce64dc6a2af82b",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleEditor._pick_main_color": {
+          "body": "0b29257c1cc30f03581c1f210db8e03dc9cb4e379e9c15c5971d77a966beb61f",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleEditor._pick_outline_color": {
+          "body": "90427b1e5689dda6ee6d1563ad0c69619dc2887e8154e35f29ffb0ab24ce7b64",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleEditor._update_style": {
+          "body": "6bf77eecf9433ac4a5783edf5b2698f07e7c61d69bb8da05e44fba446318fbbf",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleEditor.sync_ui": {
+          "body": "36a65e54f399bd7d1e8d0e8a2d9a77edb3814d876250ca95eddbb50272e52f20",
+          "args": "24345be904249f0c04c1b80b24d5610a09298d808f570f8cca67f2c1d439226d"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "40d130c7997ca5a71ec8ddaef76a3fb30cea7f34c1ef16ebb7a258a80c513a79",
+        "43ae8c006c9cbdfefbd193dc9e30c348766abc79c9c54894aee76f22da0ecb24",
+        "56194596b4f0a1720e9dab1da692e60a255b8ea4c1494817e27feb55829a8018",
+        "63706093e236ff15d26c4b9ec7fb2ed697ccc606859bb23ff94ec88bb250fc71",
+        "63f398fec97307d5dc773864b0d336facbb23fa1daa73656541e63bd114f795c",
+        "8b6c811aa0ab2db925518f746b9558f26c41738d680005038344d0cd5c4fc001",
+        "dab99d351fb171dee656ec60daae492ae66f558487aef64e963b4af71c4227c2",
+        "e4b8701ddf31672a67d14b09a5d6fbeb2e3ceeaa41837c52d568403bc4d807e8"
+      ]
+    },
+    "app/ui/subs_ui/subtitle_io.py": {
+      "methods": {
+        "_parse_srt_time": {
+          "body": "e9329a763a0768b5df4668aef90550f949237ca17518672e9640f0012f4713b2",
+          "args": "b708c54ba267c42ebde29283afd789246a58a969f9cc5a715f51d2d9c39c5dd9"
+        },
+        "_format_srt_time": {
+          "body": "48a996bbb0981bf8c672fc3510840062862be07dd93617925a741c17a4c09d08",
+          "args": "76111258a411a1ad136e533e703dc174fd067cc72bdadb9f1bb22857f20b94f6"
+        },
+        "_parse_ass_time": {
+          "body": "b21cb8b77c246c4d4de785180b9e7c5169f7ad21663bf4938ae74349e9c35954",
+          "args": "b708c54ba267c42ebde29283afd789246a58a969f9cc5a715f51d2d9c39c5dd9"
+        },
+        "_format_ass_time": {
+          "body": "4ab84ccf6590385240898580c36a68d8e8fe167a364a26edd13c3e7770cdb466",
+          "args": "76111258a411a1ad136e533e703dc174fd067cc72bdadb9f1bb22857f20b94f6"
+        },
+        "parse_srt_text": {
+          "body": "a5e226b6f9f53e143f036dc8e254342b8e1fc35de039c4274e3839cead36d4c0",
+          "args": "c78e2d363cbf56bd16a27d664f6fd12342d621d43a5cd099507accd3adf935b1"
+        },
+        "parse_ass_text": {
+          "body": "d2b47e92adb213dbe1d4e5f116cb6ccfe15fbcf1b7d680f68f953f09de214972",
+          "args": "c78e2d363cbf56bd16a27d664f6fd12342d621d43a5cd099507accd3adf935b1"
+        },
+        "load_subs": {
+          "body": "065a2f01b31a037e869f99fd0ca57ec1e09471d39b653242324ee7712a91501b",
+          "args": "762bee00ac6657ce4ab360bd457893eef3bec4768be5e8ee93ea7968e8bd1df5"
+        },
+        "save_subs": {
+          "body": "4dd25c53b92b4596a4c183a4f7960a83addfa23e40def9287b99302664bdbd0f",
+          "args": "38ef614cb9bef2df1b6a38920b35fad11605235c2548d46f8d294a9d91fad5a2"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/subs_ui/subtitle_layer.py": {
+      "methods": {
+        "DraggableSubtitle.__init__": {
+          "body": "cc69d9790ffe8b04d1bc8985e995477da6e9a8bf8321a710e4d2bddf20ce8ca9",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "DraggableSubtitle.get_opacity": {
+          "body": "07a9ba7ad04b34eba227d4a4b9f26a302581daad0eab3866e4f3e8475c45d196",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.set_opacity": {
+          "body": "f941751e0d546c319896e165c6a9ea7c48f8cd7290cd6c1aa20628c6f07ad6e1",
+          "args": "7fc57906e023a20ad97e13a375ccbe3d29db5d904ad4c8b7e297ac7ec53ec339"
+        },
+        "DraggableSubtitle.set_locked": {
+          "body": "6c72f32c75be5ec734283be16300f1c04dc96e5d12e908e6069820acc8be6e04",
+          "args": "681404104bdf8d71a0596d92a560f7de54c54baae7f181f8edbada67759a7527"
+        },
+        "DraggableSubtitle._anchor_geometry": {
+          "body": "b330beef53be5b0440e6ae24f9fd4f7964650ba8b5b7d09f757e6e03a6806511",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.reset_anchor_state": {
+          "body": "9ad1df9330b190a31f3fdcd3674a54a75375d65e4f45d0907aa49418b3f56d94",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.set_anchor_rect": {
+          "body": "dac2c755f099abc3d0ea3036b3834f97718bb23b83b07de41301074d306ce365",
+          "args": "83fcc0397c555187b822159196cc5fcc86cd69244bfda47a75c23da254bc6e56"
+        },
+        "DraggableSubtitle.recalc_position": {
+          "body": "52ac53e7e3e8273692d625f2ecafc05b7224417ea054fa87a5831a9f2b9677d9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.update_style": {
+          "body": "34273c8394fcf4638a82d72963658123e12a84ae07c0853ee91313715997a7b1",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.paintEvent": {
+          "body": "b7dcec56baeba2967c9c38573c73847d93c8a14b29608f73684e8c89af0abdc4",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "DraggableSubtitle.center_at_bottom": {
+          "body": "0e6c68198f81fa24d8ffca0c1b3cfaa7c30d3ff90a0e417f211954dfd3ae5899",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "DraggableSubtitle.mousePressEvent": {
+          "body": "4491b37fdb3ea59b027dd060411737c136874b0b21999ba6d3e5c2504c5f89fa",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "DraggableSubtitle.mouseMoveEvent": {
+          "body": "8ea3f69649f84179d4f4ed0edd2479282010145b8c32f40360176a1c917c43de",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "DraggableSubtitle.mouseReleaseEvent": {
+          "body": "99a6ec6d8cd68ee0ca55da171e0656569306bcabdb2f53622e3390c2562a6850",
+          "args": "e0edabda5c1bc014d9a4d402b05a655e971b793c394e14a66428a2206e18ce2d"
+        },
+        "DraggableSubtitle.reset_to_default": {
+          "body": "3c42e7b9689af5e33fbc8d0a6b676439c572a6bfbce69c471708844ab7d7d6bd",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleLayer.__init__": {
+          "body": "21556d46cdc1a2d51d33e44e54a9cbf7f2451a65da67344a3d2b6ccab25732f8",
+          "args": "66004364dac502ab1edabc69426833ca4c5e924991b64914daaa6214795e430a"
+        },
+        "SubtitleLayer.set_fade_enabled": {
+          "body": "042ea121549d157a799e4b9d6897b8567eb1ec9fb136d091f53cc9b0d60a04b2",
+          "args": "e04f67ee23e40a1cd7fc2b5342d324af4c0996de3c0bfee59a149d52ddbc75e2"
+        },
+        "SubtitleLayer.load_subtitles": {
+          "body": "f54472dc9217d3808b0604b89fe9ece4bd8a7b4781ccbd3d284b43381d6b1d4b",
+          "args": "cb8dd8aeada0acb71527ae2772ef82b49210bae49bb344376d92b0af48034525"
+        },
+        "SubtitleLayer.clean_ass_tags": {
+          "body": "8aa4636c59d9ab9875d06ddca123f9c09b696e7820d85262ccd32a4bf76c4839",
+          "args": "d2ac402efdf3da866c27127d84cc9e8a8f560b1d74140104a2d8feb09c9f942d"
+        },
+        "SubtitleLayer.set_mode": {
+          "body": "e1ee2b87ed67e5727bbb17ae68a07427cf63c2dc2453ef2f9e82d88cda38f2e2",
+          "args": "3af7851d48262f785d7cb412f3a4a4b664821790791c6fd33f8f149b6cc50bf3"
+        },
+        "SubtitleLayer.build_text": {
+          "body": "435673791b34bf2572c66fd4219d519b2cfa4d51a63f5900dd2479f6579488ae",
+          "args": "78f66c082ed1f0c154cbb2c5f5a730e5e3888d6755be6c5a049232845b25a701"
+        },
+        "SubtitleLayer.update_position": {
+          "body": "f1309e1f4cea80a36e061789a68cc8a998a1a8c042618895eed5492fb357349a",
+          "args": "7e340ad8438894f435c1180d947796209680f03c098717f938954a682c51d06b"
+        },
+        "SubtitleLayer._smart_show": {
+          "body": "f0e099881ab14339f5d8227adb0adcfcffda632b548d16c13e3cd397297ec956",
+          "args": "f06701775fdf97c2d59ecf01cb3b394a91c01738f7c40f148a4ec29f1230084f"
+        },
+        "SubtitleLayer._smart_hide": {
+          "body": "80236799b633b274f07facb9b23fdc9c8238a4608fe08fd7fca43b93cebbc1e0",
+          "args": "f06701775fdf97c2d59ecf01cb3b394a91c01738f7c40f148a4ec29f1230084f"
+        },
+        "SubtitleLayer.update_after_resize": {
+          "body": "8b0213ca8f8bfd1ff682638affd49d846f3c24669424708bfdef87957636c9b0",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleLayer.apply_style": {
+          "body": "aa545183731d319db7ec88098d2b1aac71af9387583718e32f23585fd6b2d11d",
+          "args": "c16455657e89d34cd689e7652bdac9f2c0337888c092c907b0886b4a79a9c0c9"
+        },
+        "SubtitleLayer.set_bottom_margin": {
+          "body": "532eabadfa95f5a8cd183fdd2efac45467cd8ae7234d01035f3b328f95f6f32c",
+          "args": "86eb7dbf883f8db6fca2340b29ffa86c39985db6f734487df0052a9608a2d8fb"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "99e472867940ab9e21d66767b79839ea6d921ce9f2485e1491a1208ea5cc1b46"
+      ]
+    },
+    "app/ui/subs_ui/subtitle_model.py": {
+      "methods": {
+        "SubtitleTableModel.__init__": {
+          "body": "b94bcb9780fc391cfe053885ac67c9c0693b2ebcb1a0796e43242342caf2e556",
+          "args": "3accf85a0a3fc95b46dcbc48947e904562b634291f6cb9e840093a37d522a4c2"
+        },
+        "SubtitleTableModel.rowCount": {
+          "body": "c28341c5034b8e9b3bc6acd68a310a722c11dd2f813f5d1542c81dc210029576",
+          "args": "10f3eb3a94de16bce3fab5ba752083728e0c965bba920706ee732d2cee62a38d"
+        },
+        "SubtitleTableModel.columnCount": {
+          "body": "d17b5df0557551ffaeae98251ad6b5531c1c9e73bffb108b86090538c8d24e51",
+          "args": "10f3eb3a94de16bce3fab5ba752083728e0c965bba920706ee732d2cee62a38d"
+        },
+        "SubtitleTableModel.data": {
+          "body": "47cc63cde37b38a8143c8f171b906349025b7ee7954de66ca9a34bceb29685a9",
+          "args": "933d228e5ea44703794a06527d33cfb6d2ce7aa4cabedeb28278b5cba402ce7e"
+        },
+        "SubtitleTableModel.headerData": {
+          "body": "34f6992990c598cac07fcbf71e3df0eb997aad28c4d3c6202f949c4bf2fb5ecb",
+          "args": "5bde3fdef657044e3c5b73e0f7816d4fb35677410dcc6059dd0066551d919db4"
+        },
+        "SubtitleTableModel.flags": {
+          "body": "4ea1eed2106a71475d6703e6da1a1426b7e4b64fcf8ce912a1ac2fd789751c9e",
+          "args": "fc939c0e9804ca217090b5d8cf52e56b5cdf96e55f6b65828cae092b9463ce87"
+        },
+        "SubtitleTableModel.setData": {
+          "body": "117eb479ed5be59574bde8a8cc937bf371f5c14bbef98032ffd1cd7e63e45357",
+          "args": "aec243c7e0c733846b1eb33c0f7ba44fe5324f8e60f0c1843553b9e1988b9774"
+        },
+        "SubtitleTableModel.insertRows": {
+          "body": "521aa1ca71f209f5aa56ede73c225149f69e92ecac1830f878fc5d2d2363f080",
+          "args": "1a33b19789bdb678e4333483543552e69b82451f26d94095a43f642770169299"
+        },
+        "SubtitleTableModel.removeRows": {
+          "body": "fe627bd96d2286bd3d76c57e90b5cab5cc882aaff0908a7ea8a0d6e2aeabb03b",
+          "args": "1a33b19789bdb678e4333483543552e69b82451f26d94095a43f642770169299"
+        },
+        "SubtitleTableModel.get_segments": {
+          "body": "f98e41e6fb97646df4f2b4a6254bea11198356cbf100dbc7ce9b014cdd814b74",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SubtitleTableModel.set_segments": {
+          "body": "e562c47fc42d73564435a22be7b6ee4882837d88c484f9bacfe16ae3d70b4f99",
+          "args": "3666cd0556d3e1384a407569aafb834169082a0aa85bfe5ccf0773de174c3001"
+        },
+        "SubtitleTableModel.set_active_row": {
+          "body": "48df34cb10927cfb43a7ec0a6de1669beef75cc4f9f0ce9501e15f3b53ac60b6",
+          "args": "017a4bbf4eaa68bff1bded355549994ba582219fe564b26e56034bcfed6e7d5e"
+        },
+        "SubtitleTableModel.snapshot": {
+          "body": "ffaaf38a509914c01973261001d5a24955b9b6030a6b13bbf2044b517d44427b",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SnapshotCommand.__init__": {
+          "body": "29173ba0f5666abbf57c01c8635c0496c56c74d6fa1e1d5b9a22a30a9c7b9354",
+          "args": "411a77a55faa069b8c2e9bc5bad6c2d62faa1be6cf9404d7bf8c5799d4f4fbdc"
+        },
+        "SnapshotCommand.undo": {
+          "body": "bd145c1108c0231e06802b4c446a46cd9ea964c57c5dfee927b59f1cb650d5b7",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SnapshotCommand.redo": {
+          "body": "6d4dec7f817aea67be86c39b6ae3c6ddc4530e03d922de59f72583a3ae01dea9",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/subs_ui/subtitle_utils.py": {
+      "methods": {
+        "_parse_time_str": {
+          "body": "fdf01f9019e2b5c9c4c24d7c75f2bcf3e2294dffa9b679c37db087f6b14fde02",
+          "args": "a48558761106d1d86b4b9ec3433094c7fc1a8bdff76072d651b62119d2ccbf4c"
+        },
+        "_format_time": {
+          "body": "73d2f602a93e0f7406452e014387bd4aa44b886e6689df11fdf5647ee5079961",
+          "args": "76111258a411a1ad136e533e703dc174fd067cc72bdadb9f1bb22857f20b94f6"
+        },
+        "_get_app_root": {
+          "body": "fb05f7af2da8ca110f435798db74cd86ba453fd7e2bd69ae0821f22240919d86",
+          "args": "e58cb0263c904c808370db9f49df89b186c074aa66956616c77e0f141fcfe8fd"
+        }
+      },
+      "signals": {},
+      "connections": []
+    },
+    "app/ui/subs_ui/subtitle_workers.py": {
+      "methods": {
+        "is_connected": {
+          "body": "071788f9ec39527437772db51d90a5dcd356cde8fb1c242ab79342367b40fab8",
+          "args": "e58cb0263c904c808370db9f49df89b186c074aa66956616c77e0f141fcfe8fd"
+        },
+        "AlignWorker.__init__": {
+          "body": "309e42a70c9c484ce18fcc30e6af6053e21306ecb17c49de16d0221fe88f2fd3",
+          "args": "ebe482c97ec12a20ef0d2720a3beb6d93a399f515ed83ae3d761050d72fb7629"
+        },
+        "AlignWorker.run": {
+          "body": "2dbae6f22cd142d8d2a3d84f109fb53662fc08f09859950194cf9c39bd15614b",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "TranslationWorker.__init__": {
+          "body": "e14c79199966d9af438260b2406d59b090c799f6e636ca3a930cfa8a5efcfa99",
+          "args": "0e80333e653a0e2263ab11d710d36e9bbf212c23b142cf7a34baa94bbd09d32a"
+        },
+        "TranslationWorker.run": {
+          "body": "15b494722cb52330ffd6c52dc256e99dd09fd60175e6090481f8d0d1fced310a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "AlignWorker.finished_signal": "0ddf06da0fe948759fdb848c0f57949d9b185464c2226e3cba3432c58cc1128d",
+        "AlignWorker.error_signal": "07093845c0687db9faa90bef026cc6bb40db32656af4985b68137fb959b480a5",
+        "TranslationWorker.finished_signal": "684c799a4c35841121ea95f53f7a11c6af5247acf11d0bf8fc9bb9be8f2da879",
+        "TranslationWorker.error_signal": "07093845c0687db9faa90bef026cc6bb40db32656af4985b68137fb959b480a5"
+      },
+      "connections": []
+    },
+    "app/ui/system_media_manager.py": {
+      "methods": {
+        "SystemMediaManager.__init__": {
+          "body": "28a5e334978c479b8e67cfb7279e7d710a871faa7a47f81bf1e7cbe407bdb742",
+          "args": "29de8d6f879fca39891ede581c30112ddd311e1de71cf898476c05dd9a99509a"
+        },
+        "SystemMediaManager._schedule_pending_events": {
+          "body": "d787eed742fcc735f1cd4c26750848f3a182d92d7e818d00cd16961b99035bc6",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SystemMediaManager._flush_pending_events": {
+          "body": "f5482869c2ce8df757dc93812f3c191df2a0bedb2b1041c4e527292cf6c16516",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SystemMediaManager._native_audio_callback": {
+          "body": "f608c65718ce98a1f0328218853333e4a28ed94cd562c0264154e2c3a260f284",
+          "args": "ee7a9766a9a82f3c18653ec694264d5273e8282c9838d4b1ef37d8e1556a8763"
+        },
+        "SystemMediaManager._emit_audio": {
+          "body": "8d851c4cf012393e4862f450222cda7751a2986673ff6381217e866c9d970090",
+          "args": "76a86012511313680d78c36ed87714e6ee1d80092e2fcffd4a5f13711cb0a77a"
+        },
+        "SystemMediaManager._native_log_callback": {
+          "body": "ecd2eb7b48232a4aa4b5a3f3993c02cfdbbed27df6bf5947271674e649a1ed7c",
+          "args": "797a63e2d22d753da7e44469809f3c7d81bcb84fc7c2825e508cc3d0eba4ff1c"
+        },
+        "SystemMediaManager._native_media_callback": {
+          "body": "0ee081d0dc79e7ce760a2cdd19c38a35a67033743dde28f4833cbe5dc3db76a1",
+          "args": "d4a909ae29b0bf51ec026d3153bf9a716260e3766c84e08f92eb8f4314af2137"
+        },
+        "SystemMediaManager.update_metadata": {
+          "body": "d57454bcd667f7eeabf8c91e419110dd24a07fa5dd94a457115f347acb889394",
+          "args": "16f5666d840119c413e1b9c20b770e404d1272beb0a0a145c2a2101abfebf463"
+        },
+        "SystemMediaManager.update_meta": {
+          "body": "3441f9d4a546076b5ccdea449076c5842f8f8578a0ccc42e776cbfc52fde0422",
+          "args": "16f5666d840119c413e1b9c20b770e404d1272beb0a0a145c2a2101abfebf463"
+        },
+        "SystemMediaManager.set_playing": {
+          "body": "239190e080dc954cd975927f6a6335571622c90a9661a4f6c58b5aebffbd150c",
+          "args": "4e4bb1d784400e3027b7dbda2f1c48e633cf3eb7fe9bcd7840c17a3bdabd1015"
+        },
+        "SystemMediaManager.set_status": {
+          "body": "40a1c36a6176da89442ec278af4e222ec5a0b239f35c5d020b44da8dca98aa8f",
+          "args": "4e4bb1d784400e3027b7dbda2f1c48e633cf3eb7fe9bcd7840c17a3bdabd1015"
+        },
+        "SystemMediaManager.stop": {
+          "body": "503de24342863374e88783d3f13888ca36096c558dd46053f574f642667f1349",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SystemMediaManager.restart": {
+          "body": "994ae1a78e4fb56779046cfe08f2ee849064af85970caacfa756b064176d02cb",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SystemMediaManager.close": {
+          "body": "d2702e39573d673cd36d7aa864b592693a2f2e82dc432c39cb192630f0f1d17d",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "SystemMediaManager.__del__": {
+          "body": "9af257cb625bb9e41fb812e654ccc5d49eae70fe55ee3e9c62f763a762cd6257",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        }
+      },
+      "signals": {
+        "SystemMediaManager.audio_received": "9a6383f95061d6aa0fd400cae31224926ae7f4aece13cdf614d459b5b3392a70",
+        "SystemMediaManager.media_play": "dfd80867172166f3a16b120a8fa003f30f18a1b35c567b4392b08fa9cf66c36a",
+        "SystemMediaManager.media_pause": "6c706bdbb0cbcb0c902d8a30a8a2960817d2258a62be5a783d86c9ff6acba449",
+        "SystemMediaManager.media_next": "7542dc691eb2e3e26d95498b1d9cc2c427a40b201adef0f144cfebf315f51d96",
+        "SystemMediaManager.media_prev": "5f2db308aa43e7c61e64b10477cc90c8dc749ab93c003f1345853d61a45d7969",
+        "SystemMediaManager.log_message": "9f87c7e55a914d6206052804e2b5029fbed0eed6e528b0577490d6eb5450c2cc",
+        "SystemMediaManager.engine_started": "028f38ac0241a237ba33abf1fa77ee08ee3667a4a093c0ee9566578462d92c12",
+        "SystemMediaManager.engine_stopped": "67c04c1b502e2822ec3bfb0b12d1873d6b9777ac3ffc997930ef0f3d9686f550",
+        "SystemMediaManager._flush_signal": "1ae1097ecc822804dd1e5c87e7efb316e2e7bae0f1750f3bf82e6d659b8bebf7"
+      },
+      "connections": [
+        "7fb636397ead4e6f59bc41634950c9caa5f55027de4d1fda031daf4765eedccb"
+      ]
+    },
+    "app/ui/video_info_popup.py": {
+      "methods": {
+        "VideoInfoPopup.__init__": {
+          "body": "220c13b979acfe87b8d09765b9be00e9eb770e279287fc3e8e8c9beb45ca50c2",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "VideoInfoPopup.init_ui": {
+          "body": "a0ec9411de7aea8a2009d547ffde2ba7fded1f7e35acbb00f972de46794b0832",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoInfoPopup.init_general_tab": {
+          "body": "1b1f48e91b77dce30ade791ebdb099df2cf4a71891ba3305387d7f9bb7bca88a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoInfoPopup.init_stream_tab": {
+          "body": "ee15aeace2385f466b5d727114e8a8c9a356b73fedbb5f07343df7be6abc1d4a",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoInfoPopup.init_meta_tab": {
+          "body": "6e286086724cadaeeb8d102789d2dc195dfb767ad0682d8af85994e9558c7c7f",
+          "args": "6ca322e58c7dc4f08b1036d1522fdc353b8b3df3afd17f37293986175aad331e"
+        },
+        "VideoInfoPopup.update_info": {
+          "body": "40cc690155e0235b545fca4adc2a88c3bc1acfe2576e557fdd547343733c6e82",
+          "args": "7a9b37661f89e4436f12edb7ec2ecef97837b996612663049ae8d210abc69d5e"
+        },
+        "VideoInfoPopup.get_description_for_item": {
+          "body": "8c021d7d8a381432690362a93d6cfcb3e147f66870952da8f18b5427fe587f81",
+          "args": "ef00cd5197238eef096abb59656993e93393251ce31884332a0e2cfe3917143c"
+        },
+        "VideoInfoPopup.show_above_widget": {
+          "body": "1d9502e4b73c13e8183fcac547810b249b608916e17974de852523627a57c48a",
+          "args": "01c791fb3b598667724bd95dac9bacc0fb88efe21d78c35793af26bc44891000"
+        }
+      },
+      "signals": {},
+      "connections": [
+        "0c0d91b5c640f46e3b7e73be04747384e4d5153f33ca4f36b9ec7c61982f2872"
+      ]
+    },
+    "app/ui/vol_panel.py": {
+      "methods": {
+        "VolumePopup.__init__": {
+          "body": "14439bb319577f4f972869f01ba4b6205050a9677592bc2afd75074152ecc60b",
+          "args": "7e00ac9e0dae8c9a5ceeef79b9a5405bf671685bc8fd2b0270471f12ce853347"
+        },
+        "VolumePopup.on_slider_changed": {
+          "body": "417ff09e6d432d028c22122ad8b6befdcdd4a7168291e38d335f3258d99e31b0",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "VolumePopup.set_volume": {
+          "body": "6ae8ae0951985418dc136af73b18d0f71cdc9d345e3286bb5f662f9bbd2a2ab1",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        },
+        "VolumePopup.set_value": {
+          "body": "c13f7c9ab4523e18f2ed09b06584f69e6efda27cf9c21c66b687ae130081fbaa",
+          "args": "acc25c267b16d98b8b49e26bcd44290ee191cb31e054d774ab4e16bb1c5266f7"
+        }
+      },
+      "signals": {
+        "VolumePopup.volumeChanged": "3aa30b480202e0f4a2a579449e506ba617430cf58ae1c1cd8bb554836385e08b"
+      },
+      "connections": [
+        "d44dcaf4f7ae79a56ae20eddc0251e65ab98ccc912b3a694abb42097c4239962"
+      ]
+    }
+  }
+}

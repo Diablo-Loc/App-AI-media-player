@@ -1,0 +1,56 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: 【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 04:15.234
+INFO:faster_whisper:Detected language 'ja' with probability 0.99
+📡 Ngôn ngữ phát hiện: ja (99.4%)
+50 🧹 Làm sạch dữ liệu (ja)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 78.2–90.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 88.2–100.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 149.2–161.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 159.2–171.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 216.7–228.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 226.7–238.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 236.7–248.7s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 0.0–7.3s
+INFO:faster_whisper:Processing audio with duration 00:07.328
+57 🛠 Kiểm tra lời bị thiếu: 5.2–10.5s
+INFO:faster_whisper:Processing audio with duration 00:05.376
+INFO:faster_whisper:Processing audio with duration 00:12.000
+🛠 Kiểm tra coverage: thêm 1 dòng, 10 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(0.752, 5.328), (7.152, 7.99), (80.2, 86.416), (94.704, 96.65), (151.2, 159.15), (218.66, 227.45), (228.7, 239.12)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 182.7–194.7s
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 182.4–194.4s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 35.3–47.3s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 35.0–47.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 74.5–86.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 74.2–86.2s
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 146.5–158.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 146.2–158.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+🎵 Đối chiếu lyric: 8 lượt, []
+⚠️ Đối chiếu lyric chưa hoàn tất: {'attempts': [{'start': 182.67, 'end': 194.67, 'reason': 'short_gap'}, {'start': 182.36999999999998, 'end': 194.36999999999998, 'reason': 'short_gap'}, {'start': 35.31, 'end': 47.31, 'reason': 'short_gap'}, {'start': 35.010000000000005, 'end': 47.010000000000005, 'reason': 'short_gap'}, {'start': 74.49, 'end': 86.49, 'reason': 'uncertain_tail'}, {'start': 74.19, 'end': 86.19, 'reason': 'uncertain_tail'}, {'start': 146.49, 'end': 158.49, 'reason': 'uncertain_tail'}, {'start': 146.19, 'end': 158.19, 'reason': 'uncertain_tail'}], 'changes': [], 'duration': 255.23375, 'budget_exhausted': True, 'decoded_audio_seconds': 96.0, 'seconds': 4.953000000001339}
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 48 [{'start': 7.99, 'end': 19.03, 'text': '🐯 Sound Hod ori 사 운드 호돌 이 サウンド'}, {'start': 19.03, 'end': 20.23, 'text': 'ゥホドリ Inst agram & Twitter ホドリ'}, {'start': 20.23, 'end': 21.96, 'text': 'Inst agram & Twitter ホドリ'}]
+QUALITY: {"attempts": [{"start": 182.67, "end": 194.67, "reason": "short_gap"}, {"start": 182.36999999999998, "end": 194.36999999999998, "reason": "short_gap"}, {"start": 35.31, "end": 47.31, "reason": "short_gap"}, {"start": 35.010000000000005, "end": 47.010000000000005, "reason": "short_gap"}, {"start": 74.49, "end": 86.49, "reason": "uncertain_tail"}, {"start": 74.19, "end": 86.19, "reason": "uncertain_tail"}, {"start": 146.49, "end": 158.49, "reason": "uncertain_tail"}, {"start": 146.19, "end": 158.19, "reason": "uncertain_tail"}], "changes": [], "duration": 255.23375, "budget_exhausted": true, "decoded_audio_seconds": 96.0, "seconds": 4.953000000001339}
+80-90: []

@@ -1,0 +1,16 @@
+test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump (tests.test_subtitle_presentation.ShellIntegrationTests.test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.814s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

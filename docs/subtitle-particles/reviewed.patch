@@ -1,0 +1,385 @@
+--- before/app/ui/subtitle_effects.py
++++ after/app/ui/subtitle_effects.py
+@@ -1,14 +1,18 @@
+ """Optional painter-only lyric effects; cue data and window geometry stay owned."""
+ import math
+ 
+-from PySide6.QtCore import QObject, QEvent, QVariantAnimation, QEasingCurve, QAbstractAnimation, Qt, QPointF
+-from PySide6.QtGui import QColor, QLinearGradient, QPen, QTransform, QImage, QPainter
++from PySide6.QtCore import (QObject, QEvent, QVariantAnimation, QEasingCurve,
++                           QAbstractAnimation, Qt, QPointF, QTimer, QElapsedTimer)
++from PySide6.QtGui import QColor, QLinearGradient, QPen, QTransform, QImage, QPainter, QRegion
++from ui.subtitle_particles import ParticlePainter, TRAILS, INTENSITIES
+ 
+ ENTRANCES = (
+     ('none', 'Không chuyển động'), ('drop', 'Chữ rơi nhẹ'),
+     ('rise', 'Trượt lên'), ('left', 'Trượt từ trái'),
+     ('right', 'Trượt từ phải'), ('zoom', 'Thu phóng nhẹ'),
+     ('bounce', 'Nảy nhẹ'), ('reveal', 'Mở từ giữa'),
++    ('burst', 'Bừng sao khi vào câu'), ('swing', 'Lắc nhẹ rồi ổn định'),
++    ('flutter', 'Lượn nhẹ khi vào câu'),
+ )
+ COLORS = (
+     ('original', 'Màu chữ gốc'), ('shift', 'Chuyển sang ngọc lam'),
+@@ -16,7 +20,21 @@
+     ('ocean', 'Gradient đại dương'), ('pastel', 'Cầu vồng pastel'),
+ )
+ DEFAULTS = dict(enabled=False, entrance='drop', color='original',
+-                soft_fade=True, glow=False, shimmer=False, duration=320)
++                soft_fade=True, glow=False, shimmer=False, duration=320,
++                trail='none', intensity='gentle')
++
++PRESETS = (
++    ('custom', 'Tùy chỉnh', {}),
++    ('ninja', 'Phi tiêu ánh bạc', dict(entrance='burst', color='ocean', trail='shuriken', intensity='normal')),
++    ('stars', 'Bầu trời sao', dict(entrance='burst', color='mint', trail='sparkles', intensity='normal')),
++    ('comet', 'Sao băng xanh', dict(entrance='rise', color='ocean', trail='comet', intensity='normal')),
++    ('garden', 'Vườn đom đóm', dict(entrance='flutter', color='mint', trail='fireflies', intensity='gentle')),
++    ('sakura', 'Cánh hoa hoàng hôn', dict(entrance='flutter', color='sunset', trail='petals', intensity='normal')),
++    ('winter', 'Tuyết pha lê', dict(entrance='drop', color='ocean', trail='snow', intensity='gentle')),
++    ('bubble', 'Bong bóng mơ màng', dict(entrance='zoom', color='pastel', trail='bubbles', intensity='gentle')),
++    ('crystal', 'Tinh thể tím', dict(entrance='swing', color='pastel', trail='diamonds', intensity='normal')),
++    ('aurora', 'Cực quang', dict(entrance='rise', color='mint', trail='ribbon', intensity='normal')),
++)
+ 
+ 
+ def normalize_options(value):
+@@ -26,7 +44,8 @@
+     for key in ('enabled', 'soft_fade', 'glow', 'shimmer'):
+         if isinstance(value.get(key), bool):
+             result[key] = value[key]
+-    for key, choices in (('entrance', ENTRANCES), ('color', COLORS)):
++    for key, choices in (('entrance', ENTRANCES), ('color', COLORS),
++                         ('trail', TRAILS), ('intensity', INTENSITIES)):
+         if isinstance(value.get(key), str) and value[key] in {choice[0] for choice in choices}:
+             result[key] = value[key]
+     duration = value.get('duration')
+@@ -48,6 +67,14 @@
+         self._sprite_key = None
+         self._sprite = None
+         self._sprite_origin = QPointF()
++        self.particles = ParticlePainter(label)
++        self.scan_progress = 1.0
++        self._scan_ms = None
++        self._native_raw = None
++        self._scan_clock = QElapsedTimer()
++        self._particle_timer = QTimer(self)
++        self._particle_timer.setInterval(33)
++        self._particle_timer.timeout.connect(self._tick_particles)
+         self.animation = QVariantAnimation(self)
+         self.animation.setEasingCurve(QEasingCurve.Type.Linear)
+         self.animation.setStartValue(0.0)
+@@ -59,7 +86,7 @@
+         self.options = normalize_options(value)
+         self._sprite_key = None
+         self._sprite = None
+-        self.settle()
++        self.clear()
+         self.cue = None
+         self.last_ms = None
+         self.label.update()
+@@ -78,27 +105,51 @@
+ 
+     def clear(self):
+         self.settle()
++        self._particle_timer.stop()
++        self.particles.clear()
++        self.scan_progress = 1.0
++        self._scan_ms = None
++        self._native_raw = None
+         self.cue = None
+         self.last_ms = None
+ 
+     def eventFilter(self, watched, event):
+         if event.type() in (QEvent.Type.Hide, QEvent.Type.Close):
+             self.settle()
++            self._particle_timer.stop()
++        elif event.type() == QEvent.Type.Show:
++            self._arm_particles()
+         return False
+ 
+     def bind_player(self, player):
+         self.player = player
+         player.playbackStateChanged.connect(self._state_changed)
+         player.playbackRateChanged.connect(self._rate_changed)
++        player.mediaStatusChanged.connect(self._media_status_changed)
++        player.sourceChanged.connect(self._source_changed)
++
++    def _source_changed(self, source):
++        self.clear()
++
++    def _media_status_changed(self, status):
++        from PySide6.QtMultimedia import QMediaPlayer
++        if status in (QMediaPlayer.MediaStatus.StalledMedia, QMediaPlayer.MediaStatus.LoadingMedia,
++                      QMediaPlayer.MediaStatus.NoMedia, QMediaPlayer.MediaStatus.InvalidMedia,
++                      QMediaPlayer.MediaStatus.EndOfMedia):
++            self._particle_timer.stop()
++        elif self.cue is not None:
++            self._arm_particles()
+ 
+     def _state_changed(self, state):
+         from PySide6.QtMultimedia import QMediaPlayer
+         if state == QMediaPlayer.PlaybackState.PlayingState:
+             if self.label.isVisible() and self.animation.state() == QAbstractAnimation.State.Paused:
+                 self.animation.resume()
++            self._arm_particles()
+         elif state == QMediaPlayer.PlaybackState.PausedState:
+             if self.animation.state() == QAbstractAnimation.State.Running:
+                 self.animation.pause()
++            self._particle_timer.stop()
+         else:
+             self.clear()
+ 
+@@ -113,6 +164,7 @@
+         changed = cue != self.cue
+         seek = self.last_ms is not None and (pts_ms < self.last_ms or pts_ms - self.last_ms > 500)
+         self.cue, self.last_ms = cue, pts_ms
++        self._sync_particles(pts_ms)
+         # Static gradients/glow need no timer. Never animate across a short cue.
+         duration = max(1, min(self.options['duration'], int((cue[2] - cue[1]) / 2)))
+         elapsed = max(0, pts_ms - cue[1])
+@@ -130,6 +182,62 @@
+                 from PySide6.QtMultimedia import QMediaPlayer
+                 if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+                     self.animation.pause()
++
++    def _sync_particles(self, pts_ms):
++        self._scan_ms = pts_ms
++        self._native_raw = pts_ms
++        self._scan_clock.restart()
++        self.scan_progress = min(1.0, max(0.0, (pts_ms-self.cue[1]) / max(1, self.cue[2]-self.cue[1])))
++        self._arm_particles()
++
++    def _arm_particles(self):
++        if (not self.options['enabled'] or self.options['trail'] == 'none'
++                or self.cue is None or not self.label.isVisible()
++                or self.cue[2]-self.cue[1] < 160 or self.scan_progress >= 1.0):
++            self._particle_timer.stop()
++            return
++        if self.player:
++            from PySide6.QtMultimedia import QMediaPlayer
++            if (self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState
++                    or self.player.mediaStatus() in (QMediaPlayer.MediaStatus.StalledMedia,
++                        QMediaPlayer.MediaStatus.LoadingMedia, QMediaPlayer.MediaStatus.NoMedia,
++                        QMediaPlayer.MediaStatus.InvalidMedia, QMediaPlayer.MediaStatus.EndOfMedia)):
++                self._particle_timer.stop()
++                return
++        if not self._particle_timer.isActive():
++            self._scan_clock.restart()
++            self._particle_timer.start()
++
++    def _tick_particles(self):
++        if not self.label.isVisible() or self.cue is None:
++            self._particle_timer.stop()
++            return
++        if self.player:
++            from PySide6.QtMultimedia import QMediaPlayer
++            if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
++                self._particle_timer.stop()
++                return
++            native_ms = self.player.position()
++            if native_ms != self._native_raw:
++                self._native_raw = native_ms
++                self._scan_clock.restart()
++            # Smooth coarse position reports, but hold after 100ms without
++            # fresh media time. Stalled/paused/hidden status stops the timer.
++            pts_ms = native_ms + min(100, self._scan_clock.elapsed()) * max(.1, self.player.playbackRate())
++        else:
++            # Only the embedded sample preview has no player; bounded by cue end.
++            pts_ms = (self._scan_ms or 0) + self._scan_clock.elapsed()
++        if pts_ms < self.cue[1] or pts_ms > self.cue[2]:
++            self.scan_progress = 1.0
++            self._particle_timer.stop()
++            self.label.update()
++            return
++        progress = min(1.0, max(0.0, (pts_ms-self.cue[1]) / max(1, self.cue[2]-self.cue[1])))
++        if progress != self.scan_progress:
++            self.scan_progress = progress
++            self.label.update()
++        if progress >= 1.0:
++            self._particle_timer.stop()
+ 
+     def _brush(self, bounds, original):
+         mode = self.options['color']
+@@ -223,6 +331,13 @@
+         elif mode == 'bounce':
+             dy = -travel * remaining * math.cos(p * math.pi * 2)
+             scale = .96 + .04 * eased
++        elif mode == 'burst':
++            scale = .94 + .06 * eased
++        elif mode == 'swing':
++            dx = travel * remaining * math.sin(p*math.pi*3)
++        elif mode == 'flutter':
++            dx = travel * remaining * math.sin(p*math.pi*2)
++            dy = -travel * remaining * .5
+         transform = QTransform()
+         center = bounds.center()
+         transform.translate(center.x() + dx, center.y() + dy)
+@@ -238,12 +353,38 @@
+         painter.setTransform(transform, True)
+         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+         sprite = self._static_sprite(path, bounds)
+-        if sprite is not None:
+-            painter.drawImage(self._sprite_origin, sprite)
++        trail = self.options['trail']
++        decorative = ((trail != 'none' or mode == 'burst') and self.cue is not None
++                      and self.cue[2]-self.cue[1] >= 160)
++        if decorative and self.cue is not None:
++            self.particles.prepare(max(0, self.cue[2]-self.cue[1]))
++        regions = self.particles.morph_regions(self.scan_progress, trail,
++            self.options['intensity']) if decorative else []
++
++        def draw_letters():
++            if sprite is not None:
++                painter.drawImage(self._sprite_origin, sprite)
++            else:
++                self._draw_static(painter, path, bounds)
++            if self.options['color'] == 'shift':
++                painter.fillPath(path, self._brush(bounds, QColor(self.label.current_color)))
++
++        if regions:
++            painter.save()
++            visible = QRegion(self.label.rect())
++            for rect, alpha in regions:
++                visible = visible.subtracted(QRegion(rect.toAlignedRect()))
++            painter.setClipRegion(visible, Qt.ClipOperation.IntersectClip)
++            draw_letters()
++            painter.restore()
++            for rect, alpha in regions:
++                painter.save()
++                painter.setClipRect(rect.toAlignedRect(), Qt.ClipOperation.IntersectClip)
++                painter.setOpacity(painter.opacity()*alpha)
++                draw_letters()
++                painter.restore()
+         else:
+-            self._draw_static(painter, path, bounds)
+-        if self.options['color'] == 'shift':
+-            painter.fillPath(path, self._brush(bounds, QColor(self.label.current_color)))
++            draw_letters()
+         if self.options['shimmer'] and p < 1.0:
+             x = bounds.left() + (bounds.width() + 60) * p - 30
+             gradient = QLinearGradient(x-24, 0, x+24, 0)
+@@ -251,6 +392,9 @@
+             gradient.setColorAt(.5, QColor(255, 255, 255, 125))
+             gradient.setColorAt(1, QColor(255, 255, 255, 0))
+             painter.fillPath(path, gradient)
++        if decorative:
++            self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
++                                 p, burst=mode == 'burst')
+         painter.restore()
+         return True
+ 
+--- before/app/ui/subtitle_effects_panel.py
++++ after/app/ui/subtitle_effects_panel.py
+@@ -3,7 +3,8 @@
+ from PySide6.QtWidgets import (QGroupBox, QVBoxLayout, QHBoxLayout, QLabel,
+                               QComboBox, QCheckBox, QPushButton)
+ 
+-from ui.subtitle_effects import SubtitleEffects, ENTRANCES, COLORS, normalize_options
++from ui.subtitle_effects import SubtitleEffects, ENTRANCES, COLORS, PRESETS, normalize_options
++from ui.subtitle_particles import TRAILS, INTENSITIES
+ 
+ 
+ class SubtitleEffectsPanel(QGroupBox):
+@@ -26,9 +27,22 @@
+         description.setWordWrap(True)
+         description.setStyleSheet('border: none; font-size: 11px; font-weight: normal; color: #A8B8CA;')
+         layout.addWidget(description)
++        preset_row = QHBoxLayout()
++        preset_row.addWidget(QLabel('Bộ mẫu'))
++        self.presets = QComboBox()
++        for value, title, options in PRESETS:
++            self.presets.addItem(title, value)
++        preset_row.addWidget(self.presets, 1)
++        layout.addLayout(preset_row)
++        self.presets.currentIndexChanged.connect(self._preset_changed)
+         self.entrance = self._choice(layout, 'Chuyển động', ENTRANCES)
+         self.entrance.setToolTip('Chuyển động cả câu, giữ nguyên nét chữ và dấu của mọi ngôn ngữ.')
+         self.color = self._choice(layout, 'Màu chữ', COLORS)
++        self.trail = self._choice(layout, 'Dọc câu', TRAILS)
++        self.trail.setToolTip('Quét theo thời lượng câu, không phải timing lời hát từng từ.\n'
++                             'Câu dày tự gom vùng; dấu, emoji và chữ gốc vẫn giữ nguyên.')
++        self.intensity = self._choice(layout, 'Mật độ', INTENSITIES)
++        self.intensity.setToolTip('Nhẹ 8 / Vừa 16 / Rực rỡ 24 hạt tối đa, không tăng theo độ dài câu.')
+         self.soft_fade = QCheckBox('Mờ dần khi vào câu')
+         self.soft_fade.setToolTip('Mờ nhẹ phần chữ khi vào câu; Fade gốc vẫn điều khiển hiện/ẩn khung.')
+         self.glow = QCheckBox('Ánh sáng viền nhẹ')
+@@ -74,15 +88,17 @@
+         return normalize_options(dict(enabled=self.isChecked(), entrance=self.entrance.currentData(),
+             color=self.color.currentData(), soft_fade=self.soft_fade.isChecked(),
+             glow=self.glow.isChecked(), shimmer=self.shimmer.isChecked(),
+-            duration=self.duration.currentData()))
++            duration=self.duration.currentData(), trail=self.trail.currentData(),
++            intensity=self.intensity.currentData()))
+ 
+     def sync_options(self, value):
+         options = normalize_options(value)
+-        widgets = (self, self.entrance, self.color, self.duration,
++        widgets = (self, self.presets, self.entrance, self.color, self.duration, self.trail, self.intensity,
+                    self.soft_fade, self.glow, self.shimmer)
+         blockers = [QSignalBlocker(widget) for widget in widgets]
+         self.setChecked(options['enabled'])
+-        for combo, key in ((self.entrance, 'entrance'), (self.color, 'color')):
++        for combo, key in ((self.entrance, 'entrance'), (self.color, 'color'),
++                           (self.trail, 'trail'), (self.intensity, 'intensity')):
+             combo.setCurrentIndex(combo.findData(options[key]))
+         index = self.duration.findData(options['duration'])
+         if index < 0:
+@@ -92,11 +108,33 @@
+         for widget, key in ((self.soft_fade, 'soft_fade'), (self.glow, 'glow'), (self.shimmer, 'shimmer')):
+             widget.setChecked(options[key])
+         del blockers
++        self._sync_preset()
+         self.preview._subtitle_effects.configure(options)
+ 
+     def _edited(self, *args):
++        self._sync_preset()
+         self.preview._subtitle_effects.configure(self.options())
+         self.changed.emit(self.options())
++
++    def _sync_preset(self):
++        options = self.options()
++        selected = 0
++        for index, (name, title, settings) in enumerate(PRESETS):
++            if settings and all(options[key] == value for key, value in settings.items()):
++                selected = index
++                break
++        blocker = QSignalBlocker(self.presets)
++        self.presets.setCurrentIndex(selected)
++
++    def _preset_changed(self, index):
++        if index == 0:
++            return
++        options = self.options()
++        options.update(PRESETS[index][2])
++        options.update(soft_fade=True, shimmer=False, glow=False)
++        self.sync_options(options)
++        self.changed.emit(self.options())
++        self.play_preview()
+ 
+     def play_preview(self):
+         effect = self.preview._subtitle_effects
+--- before/tests/subtitle_effects_contracts.py
++++ after/tests/subtitle_effects_contracts.py
+@@ -7,7 +7,8 @@
+ 
+ 
+ def before_effect_changes(relative, raw=False):
+-    current = (ROOT / relative).read_bytes()
++    from tests.subtitle_particles_contracts import before_particle_changes
++    current = before_particle_changes(relative, raw=True)
+     manifest = json.loads((ROOT / 'docs/subtitle-effects/reviewed-sources.json').read_text(encoding='utf-8'))
+     if relative in manifest:
+         entry = manifest[relative]
+--- before/tests/test_subtitle_effects.py
++++ after/tests/test_subtitle_effects.py
+@@ -361,7 +361,8 @@
+             self.assertEqual(hashlib.sha256(current.replace(b'\r\n', b'\n')).hexdigest(), digest, relative)
+         helpers = json.loads((ROOT/'docs/subtitle-effects/helper-hash.json').read_text())
+         for relative, digest in helpers.items():
+-            self.assertEqual(hashlib.sha256((ROOT/relative).read_bytes()).hexdigest(), digest, relative)
++            from tests.subtitle_particles_contracts import before_particle_changes
++            self.assertEqual(hashlib.sha256(before_particle_changes(relative, raw=True)).hexdigest(), digest, relative)
+ 
+ 
+ if __name__ == '__main__':

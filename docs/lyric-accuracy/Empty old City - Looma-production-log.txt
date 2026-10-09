@@ -1,0 +1,58 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: Empty old City - Looma.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:22.478
+INFO:faster_whisper:Detected language 'en' with probability 0.72
+📡 Ngôn ngữ phát hiện: en (72.5%)
+50 🧹 Làm sạch dữ liệu (en)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 23.5–35.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 29.5–41.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 49.2–61.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 61.6–73.6s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 90.1–102.1s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 136.2–148.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 146.2–158.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 152.8–164.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 195.8–202.5s
+INFO:faster_whisper:Processing audio with duration 00:06.698
+57 🛠 Kiểm tra lời bị thiếu: 51.0–56.9s
+INFO:faster_whisper:Processing audio with duration 00:05.952
+57 🛠 Kiểm tra lời bị thiếu: 63.8–70.0s
+INFO:faster_whisper:Processing audio with duration 00:06.144
+🛠 Kiểm tra coverage: thêm 2 dòng, 11 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(31.48, 34.256), (52.976, 54.928), (65.84, 67.85), (138.16, 144.848), (148.24, 153.31), (154.84, 159.89), (197.78, 199.76)]
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 74.2–86.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 73.9–85.9s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 17.5–29.5s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 17.2–29.2s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 53.1–64.3s
+INFO:faster_whisper:Processing audio with duration 00:11.250
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 52.4–64.0s
+INFO:faster_whisper:Processing audio with duration 00:11.650
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 110.8–122.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+INFO:faster_whisper:Processing audio with duration 00:12.000
+63 🎵 Đối chiếu câu lặp/đuôi ngân: 110.5–122.5s
+🎵 Đối chiếu lyric: 8 lượt, []
+⚠️ Đối chiếu lyric chưa hoàn tất: {'attempts': [{'start': 74.24, 'end': 86.24, 'reason': 'short_gap'}, {'start': 73.94, 'end': 85.94, 'reason': 'short_gap'}, {'start': 17.47, 'end': 29.47, 'reason': 'short_gap'}, {'start': 17.169999999999998, 'end': 29.169999999999998, 'reason': 'short_gap'}, {'start': 53.07, 'end': 64.32, 'reason': 'short_gap'}, {'start': 52.37, 'end': 64.02, 'reason': 'short_gap'}, {'start': 110.85, 'end': 122.85, 'reason': 'short_gap'}, {'start': 110.55, 'end': 122.55, 'reason': 'short_gap'}], 'changes': [], 'duration': 202.478, 'budget_exhausted': True, 'decoded_audio_seconds': 94.89999999999999, 'seconds': 7.328000000001339}
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 30 [{'start': 0.67, 'end': 5.1, 'text': 'Muse over the antique memories'}, {'start': 6.31, 'end': 12.56, 'text': 'Realize again every fragment shown to know why'}, {'start': 13.39, 'end': 18.94, 'text': 'On my ugly dress in the millions of laughs occurs'}]
+QUALITY: {"attempts": [{"start": 74.24, "end": 86.24, "reason": "short_gap"}, {"start": 73.94, "end": 85.94, "reason": "short_gap"}, {"start": 17.47, "end": 29.47, "reason": "short_gap"}, {"start": 17.169999999999998, "end": 29.169999999999998, "reason": "short_gap"}, {"start": 53.07, "end": 64.32, "reason": "short_gap"}, {"start": 52.37, "end": 64.02, "reason": "short_gap"}, {"start": 110.85, "end": 122.85, "reason": "short_gap"}, {"start": 110.55, "end": 122.55, "reason": "short_gap"}], "changes": [], "duration": 202.478, "budget_exhausted": true, "decoded_audio_seconds": 94.89999999999999, "seconds": 7.328000000001339}
+80-90: [(83.15, 86.08, '壊れたと想像するほど生命線が座ってばかりで'), (89.19, 92.12, '花びらが柔らかい毒薬の味が')]

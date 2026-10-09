@@ -1,0 +1,62 @@
+{
+  "options": {
+    "language": "ja",
+    "word_timestamps": false,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": null,
+    "no_speech_threshold": null,
+    "clip_timestamps": [
+      0,
+      30
+    ]
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 29.98,
+      "text": "作詞・作曲・編曲 初音ミク",
+      "avg_logprob": -0.14381167606303566,
+      "no_speech_prob": 0.0190887451171875,
+      "compression_ratio": 0.8222222222222222,
+      "words": []
+    },
+    {
+      "id": 2,
+      "start": 29.98,
+      "end": 33.980000000000004,
+      "text": "息を吸って解けた靴紐を結んだ",
+      "avg_logprob": -0.19840801549407672,
+      "no_speech_prob": 0.01146697998046875,
+      "compression_ratio": 1.134453781512605,
+      "words": []
+    },
+    {
+      "id": 3,
+      "start": 33.980000000000004,
+      "end": 38.980000000000004,
+      "text": "陸心な言葉あたりでも足を止めないよ",
+      "avg_logprob": -0.19840801549407672,
+      "no_speech_prob": 0.01146697998046875,
+      "compression_ratio": 1.134453781512605,
+      "words": []
+    },
+    {
+      "id": 4,
+      "start": 38.980000000000004,
+      "end": 44.980000000000004,
+      "text": "つるぼけた地図を頼りにいこう",
+      "avg_logprob": -0.19840801549407672,
+      "no_speech_prob": 0.01146697998046875,
+      "compression_ratio": 1.134453781512605,
+      "words": []
+    }
+  ],
+  "seconds": 1.5469999999986612
+}

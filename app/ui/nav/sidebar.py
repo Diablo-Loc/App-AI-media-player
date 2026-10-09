@@ -1,10 +1,36 @@
 import sys
-from PySide6.QtWidgets import QListWidget, QListWidgetItem, QApplication
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QListWidget, QListWidgetItem, QApplication, QStyledItemDelegate, QStyleOptionViewItem, QStyle
+from PySide6.QtCore import Qt, QSize, QRect
+from PySide6.QtGui import QIcon
+from ..icons import icon
+from ..design_system import SIDEBAR_STYLE
+
+
+class NavigationDelegate(QStyledItemDelegate):
+    def paint(self, painter, option, index):
+        if not self.parent()._compact:
+            return super().paint(painter, option, index)
+        styled = QStyleOptionViewItem(option)
+        self.initStyleOption(styled, index)
+        # PySide exposes this property by reference. Clearing it also clears a
+        # borrowed wrapper; take a value copy before painting the background.
+        decoration = QIcon(styled.icon)
+        styled.icon = QIcon()
+        styled.text = ""
+        widget = styled.widget
+        style = widget.style() if widget else QApplication.style()
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, styled, painter, widget)
+        side = 20
+        rect = QRect(option.rect.center().x() - side // 2, option.rect.center().y() - side // 2, side, side)
+        mode = QIcon.Mode.Selected if option.state & QStyle.StateFlag.State_Selected else QIcon.Mode.Normal
+        decoration.paint(painter, rect, Qt.AlignmentFlag.AlignCenter, mode)
 
 class Sidebar(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._compact = False
+        self.setIconSize(QSize(20, 20))
+        self.setItemDelegate(NavigationDelegate(self))
         
         # --- CẤU HÌNH GIAO DIỆN ---
         # Không set FixedWidth ở đây để MainWindow tự co giãn
@@ -14,29 +40,7 @@ class Sidebar(QListWidget):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         # Style Dark Mode (Giống YouTube)
-        self.setStyleSheet("""
-            QListWidget {
-                background-color: #0f0f0f;
-                outline: none;
-            }
-            QListWidget::item {
-                color: #f1f1f1;
-                height: 48px;              /* Chiều cao chuẩn nút bấm */
-                border-radius: 10px;       /* Bo tròn góc */
-                margin: 4px 8px;           /* Cách lề: trên-dưới 4px, trái-phải 8px */
-                padding-left: 10px;        /* Khoảng cách chữ với lề trái */
-                font-size: 14px;
-                font-family: "Segoe UI", sans-serif;
-            }
-            QListWidget::item:hover {
-                background-color: #272727; /* Màu nền khi di chuột */
-            }
-            QListWidget::item:selected {
-                background-color: #272727; /* Màu nền khi đang chọn */
-                font-weight: bold;         /* Chữ đậm lên */
-                color: white;
-            }
-        """)
+        self.setStyleSheet(SIDEBAR_STYLE)
 
     def add_menu_items(self, items_list):
         """
@@ -64,26 +68,35 @@ class Sidebar(QListWidget):
             item.setData(Qt.UserRole + 1, icon_text) 
             # UserRole + 2: Lưu Full Text (Icon + Chữ)
             item.setData(Qt.UserRole + 2, full_text) 
+            # Preserve the legacy role values; use a separate visual label.
+            names = {"🏠": "house", "🎶": "music", "📚": "library", "💾": "download", "⚙️": "settings"}
+            visual_label = label_text if icon_text in names else full_text
+            item.setData(Qt.UserRole + 3, visual_label)
+            item.setIcon(icon(names.get(icon_text, "music")))
+            item.setText("" if self._compact else visual_label)
+            item.setToolTip(visual_label)
             
             self.addItem(item)
 
     def set_mini_mode(self):
         """Chế độ thu nhỏ: Chỉ hiện Icon, Căn giữa"""
+        self._compact = True
         for i in range(self.count()):
             item = self.item(i)
             # Lấy icon đã lưu ra hiển thị
             icon_only = item.data(Qt.UserRole + 1)
-            item.setText(icon_only)
+            item.setText("")
             # Căn giữa icon trong ô
             item.setTextAlignment(Qt.AlignCenter)
 
     def set_full_mode(self):
         """Chế độ mở rộng: Hiện đầy đủ, Căn trái"""
+        self._compact = False
         for i in range(self.count()):
             item = self.item(i)
             # Lấy full text đã lưu ra hiển thị
             full_text = item.data(Qt.UserRole + 2)
-            item.setText(full_text)
+            item.setText(item.data(Qt.UserRole + 3))
             # Căn lề trái + Căn giữa theo chiều dọc
             item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 

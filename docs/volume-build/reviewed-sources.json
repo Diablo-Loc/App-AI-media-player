@@ -1,0 +1,40 @@
+{
+  "app/ui/main_window.py": {
+    "before_sha256": "2968c0061622d44157b6230c9c3a244ca22abfdf1a89e8078a1fe33ce73db340",
+    "after_sha256": "1a589cec2dc1fc80b7adb9a67682f4233663a1eaeef9ee56435df890dda9c2f9",
+    "changed_functions": [
+      "MainWindow.__init__",
+      "MainWindow.closeEvent",
+      "MainWindow.show_volume_popup",
+      "MainWindow.adjust_volume"
+    ],
+    "added_functions": []
+  },
+  "app/ui/pages/settings.py": {
+    "before_sha256": "8baa6ee2a769a95bbd226f6fb49c8f27295db175d6b3f92a9bb2da3e1a2c6588",
+    "after_sha256": "183dfe6ad658d899b23a2192d49c1ef9ac18a66387a1c12de6dc07779ad30242",
+    "changed_functions": [
+      "SettingsPage.reset_to_defaults"
+    ],
+    "added_functions": []
+  },
+  "build_app.py": {
+    "before_sha256": "23c6d4491d7c6cd39698c4d17972733f3c1ec20fc0f3d92e513bf9e82955a600",
+    "after_sha256": "c475e55d7f6d3bde26e9c016a01dae4b0df504abecc9037d7007fa487ed0058a",
+    "changed_functions": [],
+    "added_functions": [
+      "build_plan",
+      "validate_sources",
+      "copy_portable_resources",
+      "main"
+    ]
+  },
+  "tests/test_media_info.py": {
+    "before_sha256": "a3a74aa76e183bf507ad74ab24056946d86d499df7b7105d28dcc15638e65ad2",
+    "after_sha256": "34ac933a7af95fbec3eef00b64b745a27388287f907101746f7825f1f3bbd4c1",
+    "changed_functions": [
+      "MetadataScopeTests.test_exact_three_source_adapters_and_no_other_ast_changes"
+    ],
+    "added_functions": []
+  }
+}

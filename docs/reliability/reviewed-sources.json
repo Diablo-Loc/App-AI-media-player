@@ -1,0 +1,183 @@
+{
+  "app/control/ai_controller.py": {
+    "before_sha256": "14b6b04291035e3fe25426cb3060b32521c9a23b596e1a3e7dc5ed60a4966916",
+    "after_sha256": "1b712f580d0416caef9cf62359aed324760e681a155625f6db0810bdb67c07be",
+    "changed_functions": [
+      "AIController.__init__",
+      "AIController.start",
+      "AIController.cancel",
+      "AIController.abort_all_jobs",
+      "AIController._on_started",
+      "AIController._on_progress",
+      "AIController._on_data_ready",
+      "AIController._on_thread_stopped",
+      "AIController._on_failed"
+    ],
+    "added_functions": [
+      "AIController._accept_worker",
+      "AIController._start_pending"
+    ]
+  },
+  "app/control/app_controller.py": {
+    "before_sha256": "e69e35e6ae512bbcda903d6cb03d353d650b76899cd4a3551aad7062ecd8c9ef",
+    "after_sha256": "da9619c39eda338b9375fb2e200448eccfd08ea3e9813fbdb72057cd8084e528",
+    "changed_functions": [
+      "AppController.__init__",
+      "AppController.start_thumbnail_scan",
+      "AppController.stop_thumbnail_scan"
+    ],
+    "added_functions": [
+      "AppController._thumbnail_scan_finished"
+    ]
+  },
+  "app/core/media_library.py": {
+    "before_sha256": "73d90afbcdcafc207d097b5ec144002ccf1a5adc4cfc261358532eefb850d4dc",
+    "after_sha256": "f683bdace89c9ac76332237d56739b5f26bb974b1c22f6574264a071e3241320",
+    "changed_functions": [
+      "MediaLibrary.__init__",
+      "MediaLibrary.scan_folder",
+      "MediaLibrary.update_thumbnail_in_db",
+      "MediaLibrary.save"
+    ],
+    "added_functions": []
+  },
+  "app/core/subtitle_manager.py": {
+    "before_sha256": "4f94a98e1c147ee0100eac851aacd06f4379bcebc832d97d0a800d4d27d80b95",
+    "after_sha256": "68631deef5d2dfb7544752fb812bdc128c86b8b0864707a5921c6ed8fb00824b",
+    "changed_functions": [
+      "SubtitleManager.__init__",
+      "SubtitleManager._update_index",
+      "SubtitleManager.save_segments",
+      "SubtitleManager._save_json_file",
+      "SubtitleManager.get_raw_data",
+      "SubtitleManager._render_ass_internal",
+      "SubtitleManager.request_subtitle",
+      "SubtitleManager.save_raw_data"
+    ],
+    "added_functions": [
+      "SubtitleManager._recover_pending",
+      "SubtitleManager._save_bundle"
+    ]
+  },
+  "app/download_core/download_worker.py": {
+    "before_sha256": "420c431905801884bfef96be835bd65358e2207e8dc59488c421a6c47d2568ac",
+    "after_sha256": "4c96587fdaca32fbe4524ebe06f2482d5c1c3ccb9457e3565aae76e783106f78",
+    "changed_functions": [
+      "DownloadWorker.__init__",
+      "DownloadWorker.run",
+      "DownloadWorker.stop"
+    ],
+    "added_functions": [
+      "DownloadWorker._run_download"
+    ]
+  },
+  "app/download_core/get_title_worker.py": {
+    "before_sha256": "d4f949fa1fae49b53f59ffd7d4a144dff795a1cfe7979966b932057454279625",
+    "after_sha256": "a36db0c74ea20e31981c601818f4b818b5b2141c546d05f4d1bf707076ccb960",
+    "changed_functions": [
+      "GetTitleWorker.__init__",
+      "GetTitleWorker.run",
+      "GetTitleWorker.stop"
+    ],
+    "added_functions": [
+      "GetTitleWorker._run_titles"
+    ]
+  },
+  "app/download_core/yt_dlp.py": {
+    "before_sha256": "1d29cfa28d241433f8903db580e2fb56a80f0f803b7a01b0002d86aa1cd0819c",
+    "after_sha256": "6ac3d3c40d014c779164da2d14796e2d9d4b86139b02fd84c8ac883233507c93",
+    "changed_functions": [
+      "ensure_ytdlp_exists"
+    ],
+    "added_functions": []
+  },
+  "app/thumbnail/thumbnail_workers.py": {
+    "before_sha256": "67887dba4acb88087637e4767c41fa7aa481360453be999e508cb5848a30b44b",
+    "after_sha256": "a9266712e1ca496c33d4bde68aa82275ecb6648059e228dbaa3d1f18c539b4f8",
+    "changed_functions": [],
+    "added_functions": [
+      "ThumbnailWorker.cancel"
+    ]
+  },
+  "app/translate/cache.py": {
+    "before_sha256": "26f545e33f3fe266d2b2709d2fb9ed85b45de88136cb1bf2f7e5869988c3b642",
+    "after_sha256": "652a67a23425ab8ba5321b7c2364fb2d6e6fedf44ab80d520f623f5a79dc0f75",
+    "changed_functions": [
+      "TranslationCache.__init__",
+      "TranslationCache._is_spam",
+      "TranslationCache.get",
+      "TranslationCache.set",
+      "TranslationCache.save"
+    ],
+    "added_functions": []
+  },
+  "app/translate/online_logic.py": {
+    "before_sha256": "df54a70d8814fd0be1c0827392f293eb30f8a4556f99751f567db162fb0d9022",
+    "after_sha256": "157dbf8963503dd89a9094855f8096deff4af55cebb0bc067755b952fcbdf880",
+    "changed_functions": [
+      "translate_online_pipeline"
+    ],
+    "added_functions": []
+  },
+  "app/translate/pipeline.py": {
+    "before_sha256": "6801b3db1f082bdcb34f339e84aca7ac35f5300008ba338dd7b0f5d0a35a1e32",
+    "after_sha256": "d32080a91051a57478f42b977a8ac7799f4e8f9398ab19f7767ba975c6aa82a1",
+    "changed_functions": [
+      "clean_repetitive_text",
+      "run_safe_batch",
+      "translate_pipeline"
+    ],
+    "added_functions": []
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "89b6a2fe45e9ed825e84e815799e4dea4ecf42ca9e085c4db054bd3e599f0d6b",
+    "after_sha256": "bf626d15d5412371943f700273ab4150d620feac9f66e9d19e50bf45626de24d",
+    "changed_functions": [
+      "MainWindow.closeEvent",
+      "MainWindow.load_folder_content"
+    ],
+    "added_functions": [
+      "MainWindow._folder_scan_failed",
+      "MainWindow._folder_scan_completed"
+    ]
+  },
+  "app/ui/pages/download.py": {
+    "before_sha256": "81662da8dfd1814aba16585bf6251e53a6edba135828628a2d28d7a0c445cb16",
+    "after_sha256": "611bc8848bc46cfd755d939abadea6133ccb4844da5beda58b7e1cd17a83abfb",
+    "changed_functions": [
+      "DownloadPage.init_ui",
+      "DownloadPage.start_download",
+      "DownloadPage.get_video_names"
+    ],
+    "added_functions": [
+      "DownloadPage.shutdown_workers"
+    ]
+  },
+  "app/ui/subs_ui/subtitle_dialog_logic.py": {
+    "before_sha256": "103561b8e59ab30ecfd407bd35239973257c410b348102d050c41b51fb634467",
+    "after_sha256": "a675f9a99d1c75f4faaffd1ecc71069d33d37ed12f4ef73253524b5013d0d690",
+    "changed_functions": [
+      "SubtitleToolsDialogLogic.closeEvent",
+      "SubtitleToolsDialogLogic.start_auto_translation",
+      "SubtitleToolsDialogLogic._on_translation_finished",
+      "SubtitleToolsDialogLogic._on_translation_error",
+      "SubtitleToolsDialogLogic.save_subtitle_content",
+      "SubtitleToolsDialogLogic.align_whisper_with_reference",
+      "SubtitleToolsDialogLogic._on_align_finished",
+      "SubtitleToolsDialogLogic._on_align_error"
+    ],
+    "added_functions": [
+      "SubtitleToolsDialogLogic._own_editor_worker",
+      "SubtitleToolsDialogLogic._cancel_editor_workers"
+    ]
+  },
+  "app/ui/subs_ui/subtitle_workers.py": {
+    "before_sha256": "1fa8831f0a4dbf0b1c318dff698fa1d0ff6f7b49af3d0918ec0d51320edc7747",
+    "after_sha256": "b3dfb749926f6315dd036b4e313a91047298fcd45ed10a37c11250443d0c9f6f",
+    "changed_functions": [
+      "AlignWorker.run",
+      "TranslationWorker.run"
+    ],
+    "added_functions": []
+  }
+}

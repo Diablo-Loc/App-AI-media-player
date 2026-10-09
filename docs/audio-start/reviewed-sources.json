@@ -1,0 +1,51 @@
+{
+  "app/control/audio_effects.py": {
+    "before_sha256": "535fe5b10d9ba0b5df5dd14806c73b9493a6372a85132e158b4879e1b600ede0",
+    "after_sha256": "ffd8aa47d0d535fea4eaa797b909f3e3ed19739e40eed10eef7a1419f26196c4",
+    "changed_functions": [
+      "AudioEffectsController.__init__",
+      "AudioEffectsController.switching",
+      "AudioEffectsController.set_profile",
+      "AudioEffectsController._source_changed",
+      "AudioEffectsController._prepared",
+      "AudioEffectsController._switch",
+      "AudioEffectsController._media_status",
+      "AudioEffectsController._seek_requested",
+      "AudioEffectsController._player_error",
+      "AudioEffectsController._transition_failed",
+      "AudioEffectsController.shutdown"
+    ],
+    "added_functions": [
+      "AudioEffectsController.play_source",
+      "AudioEffectsController.toggle_pending_start",
+      "AudioEffectsController.pending_playback",
+      "AudioEffectsController.set_pending_playback",
+      "AudioEffectsController._sync_start_controls",
+      "AudioEffectsController._clear_start",
+      "AudioEffectsController._finish_start",
+      "AudioEffectsController._start_failed",
+      "AudioEffectsController._defer_start_fallback",
+      "AudioEffectsController._finish_start_fallback"
+    ]
+  },
+  "app/ui/audio_effects_panel.py": {
+    "before_sha256": "7ed0149ab5e5db410240bf09c5b17030a8cca9a5d9fec0612b24b01008535ce3",
+    "after_sha256": "3165c97917c23c40a12b200c3abb9dd90b0d8ca42d47ea8d575a783d98335c3c",
+    "changed_functions": [
+      "AudioEffectsPanel.__init__"
+    ],
+    "added_functions": []
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "81ed806947f33c94f444d1122ed63c4a8c25bc1d664bceeca5015139e5cf3395",
+    "after_sha256": "f72d201d3cffba57bf81c997efca303b6e8580115869a50c2646d0a2c389aa0f",
+    "changed_functions": [
+      "MainWindow._hardware_play",
+      "MainWindow._hardware_pause",
+      "MainWindow.toggle_play_pause",
+      "MainWindow.on_media_clicked",
+      "MainWindow.sync_mini_player_state"
+    ],
+    "added_functions": []
+  }
+}

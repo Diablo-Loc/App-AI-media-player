@@ -1,24 +1,20 @@
 import re
-import json
 import gc
-import socket
 import requests
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import QSettings, QThread, Signal
+
+from pipeline.utils import is_connected
+from translate.translation_models import (
+    extract_openai_responses_text,
+    openai_uses_responses_api,
+    resolve_translation_model,
+)
 
 try:
     from google import genai
     from google.genai import types
 except ImportError:
     genai = None
-
-
-def is_connected() -> bool:
-    try:
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        return True
-    except OSError:
-        return False
-
 
 class AlignWorker(QThread):
     finished_signal = Signal(list, int)
@@ -32,6 +28,15 @@ class AlignWorker(QThread):
         self.api_key = api_key
 
     def run(self):
+        settings = QSettings("MyStudio", "AI_Music_Player")
+        translation_model = resolve_translation_model(
+            self.provider,
+            settings.value("translation_model", ""),
+        )
+        if not translation_model:
+            self.error_signal.emit("Hãy chọn một dịch vụ AI Online trong Cài đặt trước khi Khớp Lời.")
+            return
+
         machine_payload = "\n".join(
             f"{i}==={seg['text']}" for i, seg in enumerate(self.whisper_lines)
         )
@@ -92,22 +97,23 @@ No explanation.
         try:
             corrected_raw = ""
 
-            if "Gemini" in self.provider:
+            if self.provider == "Google Gemini":
                 if not genai:
                     raise Exception("google-genai chưa được cài đặt!")
 
                 client = genai.Client(api_key=self.api_key)
                 response = client.models.generate_content(
-                    model="gemini-3-flash-preview",
+                    model=translation_model,
                     contents=user_content,
                     config=types.GenerateContentConfig(
                         system_instruction=system_prompt,
-                        temperature=0.1
+                        temperature=0.1,
+                        max_output_tokens=16384,
                     )
                 )
                 corrected_raw = response.text or ""
 
-            elif "Claude" in self.provider:
+            elif self.provider == "Claude 3.5":
                 r = requests.post(
                     "https://api.anthropic.com/v1/messages",
                     headers={
@@ -116,8 +122,8 @@ No explanation.
                         "content-type": "application/json"
                     },
                     json={
-                        "model": "claude-3-5-sonnet-20240620",
-                        "max_tokens": 4096,
+                        "model": translation_model,
+                        "max_tokens": 8192,
                         "system": system_prompt,
                         "messages": [{"role": "user", "content": user_content}]
                     },
@@ -128,27 +134,45 @@ No explanation.
                 if data.get("content"):
                     corrected_raw = data["content"][0]["text"]
 
+            elif self.provider == "OpenAI (GPT-4o)":
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                }
+                if openai_uses_responses_api(translation_model):
+                    r = requests.post(
+                        "https://api.openai.com/v1/responses",
+                        headers=headers,
+                        json={
+                            "model": translation_model,
+                            "instructions": system_prompt,
+                            "input": user_content,
+                            "store": False,
+                        },
+                        timeout=60
+                    )
+                    r.raise_for_status()
+                    corrected_raw = extract_openai_responses_text(r.json())
+                else:
+                    r = requests.post(
+                        "https://api.openai.com/v1/chat/completions",
+                        headers=headers,
+                        json={
+                            "model": translation_model,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_content}
+                            ],
+                            "temperature": 0.1
+                        },
+                        timeout=60
+                    )
+                    r.raise_for_status()
+                    data = r.json()
+                    if data.get("choices"):
+                        corrected_raw = data["choices"][0]["message"]["content"]
             else:
-                r = requests.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_content}
-                        ],
-                        "temperature": 0.1
-                    },
-                    timeout=60
-                )
-                r.raise_for_status()
-                data = r.json()
-                if data.get("choices"):
-                    corrected_raw = data["choices"][0]["message"]["content"]
+                raise Exception("Dịch vụ AI Online không hợp lệ.")
 
             if not corrected_raw.strip():
                 raise Exception("API trả về kết quả rỗng.")
@@ -167,10 +191,12 @@ No explanation.
                 text = ai_results.get(i, seg["text"])
                 output.append(f"[{seg['start']:.2f} --> {seg['end']:.2f}] {text}")
 
-            self.finished_signal.emit(output, len(ai_results))
+            if not self.isInterruptionRequested():
+                self.finished_signal.emit(output, len(ai_results))
 
         except Exception as e:
-            self.error_signal.emit(str(e))
+            if not self.isInterruptionRequested():
+                self.error_signal.emit(str(e))
 
 
 class TranslationWorker(QThread):
@@ -184,6 +210,8 @@ class TranslationWorker(QThread):
 
     def run(self):
         try:
+            if self.isInterruptionRequested():
+                return
             import torch
             from translate.pipeline import translate_pipeline, clear_translator
             from translate.online_logic import translate_online_pipeline
@@ -214,7 +242,7 @@ class TranslationWorker(QThread):
             detected_lang = detected_lang.lower().strip()
 
             use_online = self.settings.get("use_online_translation", False)
-            online_provider = self.settings.get("online_provider", "Gemini") if use_online else "Local Default"
+            online_provider = self.settings.get("online_provider", "Local Default") if use_online else "Local Default"
             api_key = self.settings.get("api_key", "")
             song_title_raw = self.settings.get("song_title_raw", "")
             translate_mode = self.settings.get("translate_mode", "default")
@@ -294,9 +322,11 @@ class TranslationWorker(QThread):
 
                 updated_segments.append(new_seg)
 
-            self.finished_signal.emit(updated_segments)
+            if not self.isInterruptionRequested():
+                self.finished_signal.emit(updated_segments)
 
         except Exception as e:
             import traceback
             traceback.print_exc()
-            self.error_signal.emit(str(e))
+            if not self.isInterruptionRequested():
+                self.error_signal.emit(str(e))

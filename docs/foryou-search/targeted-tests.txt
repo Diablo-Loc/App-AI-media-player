@@ -1,0 +1,39 @@
+test_search_play_clear_next_previous_use_full_playlist_without_reloading_master (tests.test_foryou_search.MainWindowSearchTests.test_search_play_clear_next_previous_use_full_playlist_without_reloading_master) ... ok
+test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle (tests.test_foryou_search.MainWindowSearchTests.test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle) ... ok
+test_decoder_quality_body_is_exactly_pre_phase (tests.test_foryou_search.ThumbnailBudgetTests.test_decoder_quality_body_is_exactly_pre_phase) ... ok
+test_failed_cancelled_decode_always_completes_without_fake_image (tests.test_foryou_search.ThumbnailBudgetTests.test_failed_cancelled_decode_always_completes_without_fake_image) ... ok
+test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel (tests.test_foryou_search.ThumbnailBudgetTests.test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel) ... ok
+test_debounce_latest_query_and_empty_reload_have_no_stale_rows (tests.test_foryou_search.VirtualPlaylistTests.test_debounce_latest_query_and_empty_reload_have_no_stale_rows) ... ok
+test_far_active_item_scroll_and_filter_keep_widget_count_bounded (tests.test_foryou_search.VirtualPlaylistTests.test_far_active_item_scroll_and_filter_keep_widget_count_bounded) ... ok
+test_recycled_card_click_emits_current_exact_object_and_active_style (tests.test_foryou_search.VirtualPlaylistTests.test_recycled_card_click_emits_current_exact_object_and_active_style) ... ok
+test_search_clear_other_query_preserves_full_queue_identity_and_order (tests.test_foryou_search.VirtualPlaylistTests.test_search_clear_other_query_preserves_full_queue_identity_and_order) ... ok
+test_actual_screen_load_keeps_physical_resolution_in_widget (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_actual_screen_load_keeps_physical_resolution_in_widget) ... ok
+test_cache_reuses_correct_dpr_and_reloads_old_monitor_resolution (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_cache_reuses_correct_dpr_and_reloads_old_monitor_resolution) ... ok
+test_decode_uses_background_qimage_and_delivers_on_gui_thread (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_decode_uses_background_qimage_and_delivers_on_gui_thread) ... ok
+test_fractional_dpr_keeps_full_pixel_canvas_and_center_crop (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_fractional_dpr_keeps_full_pixel_canvas_and_center_crop) ... ok
+test_late_wrong_key_or_dpr_cannot_replace_visible_image (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_late_wrong_key_or_dpr_cannot_replace_visible_image) ... ok
+test_monitor_change_requests_refresh (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_monitor_change_requests_refresh) ... ok
+test_real_jpeg_downsampling_is_closer_to_full_source_reference (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_real_jpeg_downsampling_is_closer_to_full_source_reference) ... ok
+test_small_source_is_not_upscaled_before_filter_and_cancel_is_silent (tests.test_playlist_thumbnail_quality.PlaylistThumbnailQualityTests.test_small_source_is_not_upscaled_before_filter_and_cancel_is_silent) ... ok
+
+----------------------------------------------------------------------
+Ran 17 tests in 4.914s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Midnight in Tokyo - Luna (Force: False)
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+▶️ Bắt đầu phát: City lights - Luna (Force: False)
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+⚠️ Không tìm thấy Grid Layout!
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn

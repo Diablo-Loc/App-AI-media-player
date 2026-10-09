@@ -1,0 +1,34 @@
+{
+  "environment": "Windows / Python 3.11 / Qt offscreen / logical DPR 1",
+  "logical_size": [
+    533,
+    44
+  ],
+  "results": [
+    {
+      "preset": "off",
+      "frames": 500,
+      "median_ms": 7.1486,
+      "p95_ms": 8.7898,
+      "unique_cached_paths": 1,
+      "animation_loop_count": 1
+    },
+    {
+      "preset": "drop_mint",
+      "frames": 500,
+      "median_ms": 0.0399,
+      "p95_ms": 0.0561,
+      "unique_cached_paths": 1,
+      "animation_loop_count": 1
+    },
+    {
+      "preset": "all_optional",
+      "frames": 500,
+      "median_ms": 1.0916,
+      "p95_ms": 1.4867,
+      "unique_cached_paths": 1,
+      "animation_loop_count": 1
+    }
+  ],
+  "limitation": "Isolated raster render call only; not playback/GPU/native FPS or total CPU."
+}

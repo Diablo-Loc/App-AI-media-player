@@ -2,10 +2,12 @@ import hashlib
 import json
 import logging
 import re
+import tempfile
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from subtitle.mode import SubtitleMode
+from core.subtitle_persistence import atomic_bytes, publish, recover
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,7 @@ class SubtitleManager:
         
         # 🟢 1. KHỞI TẠO INDEX (QUAN TRỌNG)
         self.index_file = self.base_dir / "media_index.json"
+        self._recover_pending()
         self.index_cache = self._load_index()
 
     # ==================================================
@@ -69,12 +72,48 @@ class SubtitleManager:
 
     def _update_index(self, media_id: str, filename: str):
         """Lưu lại: ID này ứng với tên file nào?"""
-        self.index_cache[media_id] = filename
+        updated = dict(self.index_cache, **{media_id: filename})
         try:
-            with open(self.index_file, 'w', encoding='utf-8') as f:
-                json.dump(self.index_cache, f, ensure_ascii=False, indent=2)
+            atomic_bytes(self.index_file, json.dumps(updated, ensure_ascii=False, indent=2).encode('utf-8'))
+            self.index_cache = updated
+            return True
         except Exception as e:
             logger.error(f"❌ Không lưu được index: {e}")
+            return False
+
+    def _recover_pending(self):
+        try:
+            if recover(self.base_dir) and hasattr(self, 'index_cache'):
+                self.index_cache = self._load_index()
+            return True
+        except Exception as error:
+            logger.error(f"Subtitle save recovery failed: {error}")
+            return False
+
+    def _save_bundle(self, media_id, data, filename=None):
+        from core.subtitle_renderer import ASSRenderer
+        if not self._recover_pending():
+            return False
+        try:
+            encoded = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
+            p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
+            with tempfile.TemporaryDirectory(prefix='subtitle-save-', dir=self.dirs['temp']) as temporary:
+                rendered = Path(temporary) / 'render.ass'
+                if not ASSRenderer.generate(data['segments'], rendered, p_lang, s_lang):
+                    logger.error('Subtitle ASS preparation failed; existing files kept')
+                    return False
+                payloads = {self.get_path(media_id, 'json'): encoded,
+                            self.get_path(media_id, 'ass'): rendered.read_bytes()}
+                updated = dict(self.index_cache)
+                if filename is not None:
+                    updated[media_id] = filename
+                    payloads[self.index_file] = json.dumps(updated, ensure_ascii=False, indent=2).encode('utf-8')
+                publish(self.base_dir, payloads)
+                self.index_cache = updated
+            return True
+        except Exception as error:
+            logger.error(f"Subtitle save failed: {error}")
+            return False
 
     def _get_filename_by_id(self, media_id: str) -> Optional[str]:
         return self.index_cache.get(media_id)
@@ -137,9 +176,11 @@ class SubtitleManager:
             start_sec = float(getattr(seg, "start", 0.0))
             end_sec = float(getattr(seg, "end", 0.0))
 
-            # padding nhẹ
-            start_sec = max(0.0, start_sec - 0.1)
-            end_sec = end_sec + 0.1
+            # Newly aligned AI objects already carry their final display timing.
+            # Unmarked legacy callers retain the exact original padding contract.
+            if not getattr(seg, "_botube_final_timing", False):
+                start_sec = max(0.0, start_sec - 0.1)
+                end_sec = end_sec + 0.1
 
             def extract_text(obj):
                 if not obj: return ""
@@ -170,15 +211,14 @@ class SubtitleManager:
     # ==================================================
     # 🟢 CẬP NHẬT: Thêm tham số source_path để lấy tên gốc
     def save_segments(self, media_id: str, segments: list, source_path: str = None) -> Optional[str]:
-        if not segments:
-            logger.warning("⚠️ AI trả về 0 segment")
+        if segments is None:
+            logger.warning("⚠️ AI không trả về dữ liệu subtitle")
             return None
 
         # 1. Cập nhật Index (Sổ địa chỉ) nếu có source_path
         clean_filename = media_id
         if source_path:
             clean_filename = Path(source_path).stem
-            self._update_index(media_id, clean_filename)
         else:
             # Nếu không truyền source, thử tra ngược lại xem có tên cũ không
             saved = self._get_filename_by_id(media_id)
@@ -195,23 +235,8 @@ class SubtitleManager:
             }
             
             # Lưu file JSON (Hàm get_path giờ đã tự biết lưu vào thư mục source/json theo tên gốc)
-            json_path = self.get_path(media_id, "json")
-            self._save_json_file(json_path, final_json)
-
-            # 3. RENDER ASS THEO MODE
-            from core.subtitle_renderer import ASSRenderer
-
-            ass_path = self.get_path(media_id, "ass")
-            p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
-
-            success = ASSRenderer.generate(
-                segments=clean_segments,
-                output_path=ass_path,
-                primary_lang=p_lang,
-                secondary_lang=s_lang,
-            )
-
-            return str(ass_path) if success else None
+            success = self._save_bundle(media_id, final_json, clean_filename if source_path else None)
+            return str(self.get_path(media_id, 'ass')) if success else None
 
         except Exception as e:
             logger.error(f"❌ save_segments error: {e}")
@@ -224,13 +249,15 @@ class SubtitleManager:
     # ==================================================
     def _save_json_file(self, path: Path, data: dict):
         try:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
+            atomic_bytes(path, json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8'))
+            return True
         except Exception as e:
             logger.error(f"❌ Save JSON failed: {e}")
+            return False
 
     def get_raw_data(self, media_id: str) -> Optional[dict]:
+        if not self._recover_pending():
+            return None
         path = self.get_path(media_id, "json")
         if not path.exists():
             return None
@@ -246,11 +273,11 @@ class SubtitleManager:
     def render_ass_from_json(self, media_id: str) -> bool:
         """Đọc JSON và tạo lại ASS (Dùng khi đổi mode hiển thị)"""
         data = self.get_raw_data(media_id)
-        if not data:
+        if not isinstance(data, dict) or not data:
             return False
 
-        segments = data.get("segments", [])
-        if not segments:
+        segments = data.get("segments")
+        if not isinstance(segments, list):
             return False
 
         return self._render_ass_internal(media_id, segments) is not None
@@ -263,12 +290,11 @@ class SubtitleManager:
             ass_path = self.get_path(media_id, "ass")
             p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
 
-            success = ASSRenderer.generate(
-                segments=segments,
-                output_path=ass_path,
-                primary_lang=p_lang,
-                secondary_lang=s_lang,
-            )
+            with tempfile.TemporaryDirectory(prefix='subtitle-render-', dir=self.dirs['temp']) as temporary:
+                rendered = Path(temporary) / 'render.ass'
+                success = ASSRenderer.generate(segments, rendered, p_lang, s_lang)
+                if success:
+                    atomic_bytes(ass_path, rendered.read_bytes())
             
             if success:
                 logger.info(f"✨ Rendered ASS: {ass_path.name}")
@@ -282,6 +308,8 @@ class SubtitleManager:
     # REQUEST ENTRY
     # ==================================================
     def request_subtitle(self, media_item) -> SubtitleRequestResult:
+        if not self._recover_pending():
+            return SubtitleRequestResult(SubtitleStatus.MISSING)
         media_id = self.get_reliable_id(media_item)
         if not media_id:
             return SubtitleRequestResult(SubtitleStatus.MISSING)
@@ -315,7 +343,14 @@ class SubtitleManager:
     def _is_valid_ass(self, path: Path) -> bool:
         try:
             text = path.read_text(encoding="utf-8")
-            return "[Events]" in text and "Dialogue:" in text
+            if "[Events]" in text and "Dialogue:" in text:
+                return True
+            # A header-only ASS is valid only with an explicit saved empty list.
+            # Do not turn missing, malformed or truncated subtitle data into a
+            # cached 'no lyrics' result merely because ASS has no Dialogue rows.
+            data = self.get_raw_data(path.stem)
+            return (all(header in text for header in ("[Script Info]", "[V4+ Styles]", "[Events]"))
+                    and isinstance(data, dict) and data.get("segments") == [])
         except Exception:
             return False
 
@@ -364,5 +399,7 @@ class SubtitleManager:
                 data["segments"] = [self._clean_segment(s) for s in raw_segments]
 
         # Trường hợp 3: data đã sạch, lưu thẳng xuống file
+        if isinstance(data, dict) and isinstance(data.get('segments'), list):
+            return self._save_bundle(media_id, data)
         path = self.get_path(media_id, "json")
-        self._save_json_file(path, data)
+        return self._save_json_file(path, data)

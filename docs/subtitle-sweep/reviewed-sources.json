@@ -1,0 +1,22 @@
+{
+  "app/ui/subtitle_effects.py": {
+    "before_sha256": "398d8357b4619f100e79240cb30e1ac1ddf7fb73ee821d5dbb4890b457a9bee6",
+    "after_sha256": "77475a78e40e3cd9b913140a5d10fb0943f24c2c568ae368245ce8b2c2ee0437"
+  },
+  "app/ui/subtitle_effects_panel.py": {
+    "before_sha256": "7d17f0fbaace863efb097ab36169b91abcae4db42be76af601bae4d4528a73da",
+    "after_sha256": "5a468f61e8037875210e0c29e0b88d6a4a1bad6e16b30b2bc61fdb165f48423c"
+  },
+  "app/ui/subtitle_particles.py": {
+    "before_sha256": "9bacdfc619e1480e60d91243b58996f59c04a8643ca374bccdc83b0e2d8d284b",
+    "after_sha256": "7f33ce862fd9107ed785ed01c8f4c947c76d3db45ad030e60779803ee6060ad1"
+  },
+  "tests/subtitle_particles_contracts.py": {
+    "before_sha256": "c42bcc78dc9433a7c69a118c586f3a66bb93cfe5cd118f241e5c2cdd375c6f18",
+    "after_sha256": "3d3de42131cf8d00e0afd437fc96c086ba23e13a5facd4b13c77c7df77b3ff74"
+  },
+  "tests/test_subtitle_particles.py": {
+    "before_sha256": "e4bed9564754e005342bfa41aa0d7d66df8ef94b205e555fd529d3057ee4ab90",
+    "after_sha256": "8c75606cc5739aabbe90048ed7e57aa356542ecc03f8fc66be48c64fcce31fa2"
+  }
+}

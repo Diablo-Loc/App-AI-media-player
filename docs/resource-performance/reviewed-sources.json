@@ -1,0 +1,26 @@
+{
+  "app/core/media_library.py": {
+    "before_sha256": "f683bdace89c9ac76332237d56739b5f26bb974b1c22f6574264a071e3241320",
+    "after_sha256": "47d4dd025661c92cad8e60519cd2928be5afe90f239e21927a1c5886524707a9"
+  },
+  "app/thumbnail/thumbnail_workers.py": {
+    "before_sha256": "a9266712e1ca496c33d4bde68aa82275ecb6648059e228dbaa3d1f18c539b4f8",
+    "after_sha256": "c05b7490da4fb87afbaec15c59123e5d71984b4443b70d2c7728bd63ab9a0513"
+  },
+  "app/ui/media_card.py": {
+    "before_sha256": "fcc14be0df7fd0aa8d06d44502e6cc74873efac2adc9f651e0940f02d3cb1ba3",
+    "after_sha256": "d219200dfd54d79c0d8a9cc9d43b0665cda7a93f4cf3c7c572847efd78db57a9"
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "d56bcbc95bde385a03ef89ed325b0d31900dd817d730411cfb3b7d9df3679010",
+    "after_sha256": "f4ddb6bfe5294a4a898d617911c354f0faab3a280a42fbc8adaba4d1b4581e46"
+  },
+  "tests/lyric_accuracy_contracts.py": {
+    "before_sha256": "25cd40fb43e170d75f46d39fb9586b448962b60aa975e755f520d34d30cc2017",
+    "after_sha256": "ab3f178d99ff137b8575e828cdf44008c2fb9a547732e104883e2fd1feda2b47"
+  },
+  "tests/test_subtitle_effects.py": {
+    "before_sha256": "2afc25295fb2069c46a92394e4a02a9153e1e27a87e90ce10ef302a667e61976",
+    "after_sha256": "976ec3fabd1a50b1e12d1b721e35991993f62744d820a3773927fc9398fea187"
+  }
+}

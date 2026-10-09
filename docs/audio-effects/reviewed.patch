@@ -1,0 +1,146 @@
+--- before/app/ui/assets/icons/manifest.json
++++ after/app/ui/assets/icons/manifest.json
+@@ -42,6 +42,7 @@
+     "eye-off": "774bcd975c5de781a4ee778c76e5591bcdeb409955f7054847e7e6003da0a520",
+     "x": "4a9cdab38fbb96162e7dace28e33f4ca0e49d8963a6162abc3d4691b7d675117",
+     "languages": "ae9048feb2c7b19855da9a8f5414f68125573039777a89b9c253cceed5dc5075",
+-    "sparkles": "f5499f33f09d7158151e9bd2ec0faf79ff8fb57292f84fdd7286d96d0f0424d8"
++    "sparkles": "f5499f33f09d7158151e9bd2ec0faf79ff8fb57292f84fdd7286d96d0f0424d8",
++    "sliders-horizontal": "e43a00e5eb684e6cbb61083bed2528d7a3fa5f265693eb2b5f314cd432aa65f4"
+   }
+ }
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -17,7 +17,8 @@
+ from ui.playback_bar import PlaybackBar
+ from ui.icons import button_icon, icon
+ from ui.design_system import apply_shell, ICON_BUTTON_STYLE
+-from ui.overlay_input_guard import OverlayInputGuard
++from ui.overlay_input_guard import OverlayInputGuard
++from control.audio_effects import install_audio_effects
+ from ui.media_card import MediaCard
+ from ui.subs_ui.subtitle_layer import SubtitleLayer
+ from ui.subs_ui.sub_panel import SettingsPanel
+@@ -283,7 +284,8 @@
+         # Auto-update check disabled - user can manually check via menu if needed
+         # QTimer.singleShot(2000, lambda: download_and_install(self))
+         self.media_manager = SystemMediaManager(self)
+-        self.audio_devices = QMediaDevices()
++        self.audio_devices = QMediaDevices()
++        self.audio_effects = install_audio_effects(self)
+ 
+         self._system_media_connected = False
+         self.audio_devices.audioOutputsChanged.connect(
+@@ -420,6 +422,8 @@
+ 
+             if hasattr(self, '_folder_scan_queue'):
+                 self._folder_scan_queue.shutdown()
++            if hasattr(self, 'audio_effects'):
++                self.audio_effects.shutdown()
+             if hasattr(self, 'download_page'):
+                 self.download_page.shutdown_workers()
+             subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
+@@ -1346,9 +1350,9 @@
+         """Ẩn thanh điều khiển và chuột"""
+         if self.playback_bar.underMouse():
+             return
+-        if any(popup.isVisible() for popup in (
+-            self.vol_popup, self.subsettings_panel, self.playback_bar.info_popup,
+-        )) or self.playback_bar.time_slider.isSliderDown():
++        if any(popup.isVisible() for popup in (
++            self.vol_popup, self.subsettings_panel, self.playback_bar.info_popup,
++        )) or (hasattr(self, 'audio_effects') and self.audio_effects.panel.isVisible()) or self.playback_bar.time_slider.isSliderDown():
+             return
+         if any(button.isDown() for button in self.playback_bar.findChildren(QPushButton)):
+             return
+--- before/app/ui/playback_bar.py
++++ after/app/ui/playback_bar.py
+@@ -51,7 +51,8 @@
+             (self.btn_subseting, "settings", "Cài đặt phụ đề"),
+             (self.btn_sub, "captions", "Công cụ phụ đề"),
+             (self.btn_reload, "refresh-cw", "Tạo lại phụ đề"),
+-            (self.btn_vol, "volume-2", "Âm lượng"),
++            (self.btn_vol, "volume-2", "Âm lượng"),
++            (self.btn_audio, "sliders-horizontal", "Âm thanh"),
+             (self.btn_dynamic_island, "picture-in-picture-2", "Mini player"),
+             (self.btn_fs, "maximize", "Toàn màn hình"),
+         )
+@@ -166,7 +167,7 @@
+         extra_layout = QHBoxLayout(extra_area)
+         extra_layout.setContentsMargins(0, 0, 0, 0)
+         extra_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+-        extra_area.setFixedWidth(7 * 36 + 6 * 4)
++        extra_area.setFixedWidth(8 * 36 + 7 * 4)
+         
+         #0. Nút Mở Popup Info
+         self.btn_info = QPushButton()
+@@ -196,7 +197,10 @@
+         # 3. Nút Loa
+         self.btn_vol = QPushButton()
+         self.btn_vol.setFixedSize(32, 32)
+-        self.btn_vol.setCursor(Qt.CursorShape.PointingHandCursor)
++        self.btn_vol.setCursor(Qt.CursorShape.PointingHandCursor)
++
++        self.btn_audio = QPushButton()
++        self.btn_audio.setCursor(Qt.CursorShape.PointingHandCursor)
+         
+         # 3.5. Nút mở chế độ dynamic island
+         self.btn_dynamic_island = QPushButton()
+@@ -211,7 +215,8 @@
+         extra_layout.addWidget(self.btn_subseting)
+         extra_layout.addWidget(self.btn_sub)
+         extra_layout.addWidget(self.btn_reload)
+-        extra_layout.addWidget(self.btn_vol)
++        extra_layout.addWidget(self.btn_vol)
++        extra_layout.addWidget(self.btn_audio)
+         extra_layout.addWidget(self.btn_dynamic_island)
+         extra_layout.addWidget(self.btn_fs)
+         extra_layout.setSpacing(4)
+@@ -243,9 +248,16 @@
+         if hasattr(self, "_compact_layout"):
+             self._arrange_controls(event.size().width())
+ 
+-    def _arrange_controls(self, width):
++    def _arrange_controls(self, width):
+         """Reflow the same controls; keep the video surface and footer height."""
+-        compact = width < 1000
++        compact = width < 1000
++        # Keep the original 760 px minimum with the added audio button.
++        control_side = 32 if compact else 36
++        for button in (self.btn_info, self.btn_subseting, self.btn_sub, self.btn_reload,
++                       self.btn_vol, self.btn_audio, self.btn_dynamic_island, self.btn_fs):
++            if button.width() != control_side:
++                button.setFixedSize(control_side, control_side)
++        self.extra_area.setFixedWidth(8 * control_side + 7 * 4)
+         info_width = max(210, min(260 if compact else 320, int(width * 0.29)))
+         if self.info_area.preferred_width != info_width:
+             self.info_area.preferred_width = info_width
+--- before/app/ui/subtitle_presentation.py
++++ after/app/ui/subtitle_presentation.py
+@@ -1,7 +1,7 @@
+ """Gate the floating lyric window without changing video/window ownership."""
+ from bisect import bisect_right
+ 
+-from PySide6.QtCore import QObject, QEvent, QTimer
++from PySide6.QtCore import QObject, QEvent, QTimer, Qt
+ from PySide6.QtWidgets import QApplication, QDialog, QWidget
+ 
+ from subtitle.mode import SubtitleMode
+@@ -28,6 +28,9 @@
+ 
+     def context_allows(self):
+         owner, overlay = self.owner, self.overlay
++        effects = getattr(owner, 'audio_effects', None)
++        if effects is not None and effects.switching:
++            return False
+         video = getattr(owner, 'video_display', None)
+         if (self._closed or not owner.isVisible() or owner.isMinimized()
+                 or getattr(owner, 'is_mini_mode', False)
+@@ -66,6 +69,7 @@
+         video = getattr(self.owner, 'video_display', None)
+         relevant = (watched is self.owner or watched is self.application
+                     or isinstance(watched, QDialog)
++                    or (isinstance(watched, QWidget) and watched.windowType() == Qt.WindowType.Popup)
+                     or watched is video
+                     or (isinstance(watched, QWidget) and video is not None
+                         and watched is not self.overlay and watched.isAncestorOf(video)))

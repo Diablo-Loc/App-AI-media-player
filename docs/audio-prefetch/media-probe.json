@@ -1,0 +1,161 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "qt": "6.10.1",
+  "mode": "offscreen decoder, audio muted",
+  "files": [
+    {
+      "name": "Brand New Sky.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Brand New Sky.mp4",
+        "seconds": 7.278701900002488,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.9296875,
+        "child_cpu_seconds": 0.203125,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/6a46dd5363821a44f0bbf1dd896e6335cc267c54fffc99ac80fabadb246124de.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 9.290773999997327,
+      "next_wait_to_position_50ms_seconds": 0.24836549999963609,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 25.078642532911363,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 29.054400001768954
+    },
+    {
+      "name": "Empty old City - Looma.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Empty old City - Looma.mp4",
+        "seconds": 7.145079699999769,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.8125,
+        "child_cpu_seconds": 1.09375,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/6f9fd42a6d0da998cac186a7d447dc15db0444cfd453818c8437ca379f4a625e.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 9.058844799998042,
+      "next_wait_to_position_50ms_seconds": 0.2835739000001922,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 25.058382720062614,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 34.20409999671392
+    },
+    {
+      "name": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+        "seconds": 8.84063199999946,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.92578125,
+        "child_cpu_seconds": 0.296875,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/c245353b9a85d74d4ced7bb286662bc5eb836f8b6ca098c78bd23103980af122.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 10.730486000000383,
+      "next_wait_to_position_50ms_seconds": 0.29876420000073267,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 24.136837790943556,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 30.869799997162772
+    },
+    {
+      "name": "Unwavering Startorch.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unwavering Startorch.mp4",
+        "seconds": 8.0535936999986,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.85546875,
+        "child_cpu_seconds": 1.28125,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/798defd1da2606f2729592e2c6e0bf5bb2df04fc4a2b0df05b14e9a9378f57e7.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 9.966875099999015,
+      "next_wait_to_position_50ms_seconds": 0.24931759999890346,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 29.999372621819003,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 25.313599999208236
+    },
+    {
+      "name": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+        "seconds": 8.651663399999961,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.01171875,
+        "child_cpu_seconds": 1.625,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/c29dc1711cc4a423c29840503b4ca53640630b9c060a3da14b171dff1c9af1a1.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 10.561088200000086,
+      "next_wait_to_position_50ms_seconds": 0.23595679999925778,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 25.092111246641974,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 35.07330000138609
+    },
+    {
+      "name": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+        "seconds": 7.273219400001835,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.05859375,
+        "child_cpu_seconds": 1.46875,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/755ad0fef1db0930258161307dd218fbff213274c5d713bc066e3cd253175da5.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 9.153287999997701,
+      "next_wait_to_position_50ms_seconds": 0.22004540000125417,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 24.03507897927556,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 38.918400001421105
+    },
+    {
+      "name": "人生エンドロール.mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\人生エンドロール.mp4",
+        "seconds": 7.3940688999973645,
+        "cache_hit": false,
+        "max_child_rss_mib": 67.6875,
+        "child_cpu_seconds": 0.3125,
+        "max_owned_processes": 1,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/b5bf406104a4296982216fa5e6ac9bdb31695364e3824a0bffd55d9c8333be32.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 9.310387300000002,
+      "next_wait_to_position_50ms_seconds": 0.2660390999990341,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 24.16655642241649,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 36.844999998720596
+    },
+    {
+      "name": "A Small Miracle(short).mp4",
+      "prefetch": {
+        "source": "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\A Small Miracle(short).mp4",
+        "seconds": 0.0008941999985836446,
+        "cache_hit": true,
+        "max_child_rss_mib": 0.0,
+        "child_cpu_seconds": 0,
+        "max_owned_processes": 0,
+        "protected": [
+          "C:/Users/DIABLO/AppData/Local/Temp/botube-ui-m3hml1yu/storage/audio-playback-cache/ed239e7724a75a6084ba7cb792947a93e6b51e3fc221f90048b958eda54061b7.mkv"
+        ]
+      },
+      "prefetch_observation_seconds_including_settle": 1.9054115999970236,
+      "next_wait_to_position_50ms_seconds": 0.21806670000296435,
+      "current_source_state_volume_unchanged": true,
+      "decoded_frame_signals_per_second_during_prefetch": 25.191407462867854,
+      "max_gui_heartbeat_gap_ms_during_prefetch": 28.711099999782164
+    }
+  ],
+  "max_active_audio_jobs": 1,
+  "all_source_hashes_unchanged": true
+}

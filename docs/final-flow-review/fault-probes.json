@@ -1,0 +1,58 @@
+{
+  "early_exception": {
+    "secondary_error": {
+      "type": "NameError",
+      "message": "name 'QApplication' is not defined"
+    },
+    "default_hook_reached": false,
+    "same_function_as_original": true
+  },
+  "media_info": {
+    "source": "A Small Miracle(short).mp4",
+    "source_unchanged": true,
+    "actual_ffprobe": {
+      "v_codec": "av1",
+      "resolution": [
+        1080,
+        1080
+      ],
+      "fps": 25.0,
+      "a_codec": "aac",
+      "sample_rate": "44100",
+      "channels": 2,
+      "audio_bitrate": "128000"
+    },
+    "displayed": {
+      "v_codec": "H.264 / AVC (Advanced Video Coding)",
+      "resolution": "1920 x 1080 (Full HD)",
+      "fps": "60.00 FPS (Mượt mà)",
+      "aspect": "16:9 (Widescreen)",
+      "a_codec": "AAC (Advanced Audio Coding)",
+      "sample_rate": "48000 Hz",
+      "channels": "2 Channels (Stereo)",
+      "bitrate": "~ 320 kbps (High Quality)"
+    },
+    "resolution_matches": false,
+    "fps_matches": false,
+    "sample_rate_matches": false,
+    "same_function_as_original": true
+  },
+  "description_gui": {
+    "fixture": "synthetic 250ms ffprobe, no network or real slow-disk claim",
+    "update_info_ms": 251.30029999854742,
+    "gui_ticks_during_call": 0,
+    "ffprobe_calls": [
+      {
+        "timeout": 1
+      }
+    ],
+    "same_function_as_original": true
+  },
+  "thumbnail_saves": {
+    "items": 100,
+    "full_library_save_calls": 100,
+    "entries_that_would_be_serialized": 10000,
+    "fixture": "operation counts; save/FFmpeg/sleep mocked, no disk/CPU benchmark",
+    "same_function_as_original": false
+  }
+}

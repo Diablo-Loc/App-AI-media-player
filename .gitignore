@@ -40,6 +40,7 @@ dist/
 installer/
 scripts/
 test/
+video/
 
 # Local user config (nếu cần share, tạo config.example.json)
 setting.json

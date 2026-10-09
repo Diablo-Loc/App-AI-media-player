@@ -1,0 +1,1374 @@
+--- before/app/control/ai_controller.py
++++ after/app/control/ai_controller.py
+@@ -1,5 +1,5 @@
+ import os
+-from PySide6.QtCore import QObject, Signal, Slot
++from PySide6.QtCore import QObject, Signal, Slot, QTimer
+ from PySide6.QtWidgets import QDialog, QMessageBox
+ # Không cần import gc hay torch ở đây nữa vì Worker xử lý ở Process riêng
+ # from worker import AIWorker # <--- Đảm bảo import đúng đường dẫn worker của bạn
+@@ -41,16 +41,23 @@
+         self._worker: AIWorker | None = None
+         self._current_media_id: str | None = None
+         self._resource_checked = _RESOURCE_CHECK_CACHE["checked"]
+-        self._resource_ready = _RESOURCE_CHECK_CACHE["ready"]
++        self._resource_ready = _RESOURCE_CHECK_CACHE["ready"]
++        self._pending_start = None
++        self._closing = False
++        self._restart_timer = QTimer(self)
++        self._restart_timer.setSingleShot(True)
++        self._restart_timer.timeout.connect(self._start_pending)
+ 
+     # =========================
+     # PUBLIC API
+     # =========================
+-    def start(self, media_id: str, input_path: str):
++    def start(self, media_id: str, input_path: str):
+         """
+         Bắt đầu job mới. Cửa ngõ trung tâm kiểm soát an toàn hệ thống.
+         """
+-        # 🌟 Luồng check nhẹ theo cờ + cache đúng 1 lần cho mỗi phiên chạy.
++        if self._closing:
++            return
++        # 🌟 Luồng check nhẹ theo cờ + cache đúng 1 lần cho mỗi phiên chạy.
+         from download_core.download_source_app import check_resource_status, _set_resource_ready_flag, _get_resource_ready_flag
+ 
+         self._resource_checked = _RESOURCE_CHECK_CACHE["checked"]
+@@ -101,10 +108,13 @@
+             try:
+                 if self._worker.isRunning():
+                     self.status_changed.emit(
+-                        self._current_media_id,
++                        self._current_media_id or self._worker.media_id,
+                         "⚠️ Đang dừng tác vụ cũ..."
+                     )
+-                    self._worker.stop()
++                    self._pending_start = (media_id, input_path)
++                    self._current_media_id = None
++                    self._worker.cancel()
++                    return
+             except RuntimeError:
+                 pass
+ 
+@@ -119,8 +129,10 @@
+                 pass
+             self._worker = None
+ 
+-        # 2. Thiết lập trạng thái mới
+-        self._current_media_id = media_id
++        # 2. Thiết lập trạng thái mới
++        self._pending_start = None
++        self._restart_timer.stop()
++        self._current_media_id = media_id
+ 
+         # 3. Khởi tạo Worker mới
+         # (Lưu ý: Truyền đúng tham số như bạn đã định nghĩa bên Worker)
+@@ -136,21 +148,24 @@
+             self._worker.progress.connect(self._on_progress)
+             self._worker.data_ready.connect(self._on_data_ready)
+             self._worker.failed.connect(self._on_failed)
+-            self._worker.finished.connect(self._worker.deleteLater)
+-            self._worker.finished.connect(self._on_thread_stopped)
++            self._worker.finished.connect(self._on_thread_stopped)
++            self._worker.finished.connect(self._worker.deleteLater)
+         except RuntimeError:
+             pass
+         # 5. Chạy
+         self._worker.start()
+ 
+-    def cancel(self):
++    def cancel(self):
+         """Huỷ job hiện tại (dùng nút Cancel trên UI)"""
+-        if self._worker and self._worker.isRunning():
++        self._pending_start = None
++        self._restart_timer.stop()
++        if self._worker and self._worker.isRunning():
+             self.status_changed.emit(
+-                self._current_media_id,
++                self._current_media_id or self._worker.media_id,
+                 "⛔ Đang huỷ xử lý AI..."
+             )
+-            self._worker.cancel() # Đánh dấu hủy
++            self._worker.cancel() # Đánh dấu hủy
++            self._current_media_id = None
+             # Không cần gọi stop() ở đây để UI không bị đơ, 
+             # worker sẽ tự emit failed/finished sau khi cleanup.
+ 
+@@ -165,9 +180,12 @@
+     def is_running(self) -> bool:
+         return self._worker is not None and self._worker.isRunning()
+ 
+-    def abort_all_jobs(self):
++    def abort_all_jobs(self):
+         """Hàm này được gọi khi tắt App để dừng worker AI một cách an toàn."""
+-        if self._worker and self._worker.isRunning():
++        self._closing = True
++        self._pending_start = None
++        self._restart_timer.stop()
++        if self._worker and self._worker.isRunning():
+             print("🛑 Controller: Đang yêu cầu dừng Worker Thread...")
+             self._worker.cancel()
+             self._worker.stop()
+@@ -181,40 +199,48 @@
+     # WORKER CALLBACKS
+     # =========================
+     @Slot(str)
+-    def _on_started(self, media_id: str):
++    def _on_started(self, media_id: str):
++        if not self._accept_worker(): return
+         if media_id != self._current_media_id: return
+         self.status_changed.emit(media_id, "🤖 AI đang khởi động...")
+ 
+     @Slot(int, str)
+-    def _on_progress(self, percent: int, message: str):
++    def _on_progress(self, percent: int, message: str):
++        if not self._accept_worker(): return
+         if media_id := self._current_media_id: # Python 3.8+ walrus operator
+             self.progress_updated.emit(percent)
+             self.status_changed.emit(media_id, message)
+ 
+     @Slot(str, list)
+-    def _on_data_ready(self, media_id: str, segments: list):
++    def _on_data_ready(self, media_id: str, segments: list):
++        if not self._accept_worker(): return
+         if media_id != self._current_media_id: return
+         self.job_finished.emit(media_id, segments)
+         #self._cleanup_ref()
+ 
+     @Slot()
+-    def _on_thread_stopped(self):
++    def _on_thread_stopped(self):
+         """Hàm này được gọi khi Worker đã thực sự tắt hẳn"""
+-        if self._worker and not self._worker.isRunning():
+-            self._worker = None
+-            self._current_media_id = None
++        if self.sender() is not None and self.sender() is not self._worker:
++            return
++        if self._worker and not self._worker.isRunning():
++            self._worker = None
++            self._current_media_id = None
++            if self._pending_start and not self._closing:
++                self._restart_timer.start(0)
+             # print("✅ Worker đã được dọn dẹp an toàn.")
+             
+     @Slot(str, str)
+-    def _on_failed(self, media_id: str, error_msg: str):
++    def _on_failed(self, media_id: str, error_msg: str):
++        if not self._accept_worker(): return
+         if media_id != self._current_media_id: return
+         self.job_failed.emit(media_id, error_msg)
+         #self._cleanup_ref()
+ 
+     # =========================
+-    # INTERNAL CLEANUP
+-    # =========================
+-    def _cleanup_ref(self):
++    # INTERNAL CLEANUP
++    # =========================
++    def _cleanup_ref(self):
+         """Chỉ xóa tham chiếu, không cần logic Torch phức tạp nữa"""
+         if self._worker:
+             self._worker.deleteLater()
+@@ -223,4 +249,15 @@
+         self._current_media_id = None
+         
+         # Vì dùng Multiprocessing, Process con chết là VRAM tự sạch.
+-        # Main process không load torch nên không cần empty_cache().+        # Main process không load torch nên không cần empty_cache().
++
++    def _accept_worker(self):
++        sender = self.sender()
++        return (not self._closing and self._pending_start is None
++                and (sender is None or sender is self._worker)
++                and not getattr(self._worker, '_cancelled', False))
++
++    def _start_pending(self):
++        pending = self._pending_start
++        if pending and not self._closing:
++            self.start(*pending)
+--- before/app/control/app_controller.py
++++ after/app/control/app_controller.py
+@@ -1,5 +1,5 @@
+ # app/control/app_controller.py
+-from PySide6.QtCore import QObject, Slot, Signal, QUrl, QSettings, QFileInfo, QStandardPaths, QUrl
++from PySide6.QtCore import QObject, Slot, Signal, QUrl, QSettings, QFileInfo, QStandardPaths, QUrl, QTimer
+ from PySide6.QtMultimedia import QMediaPlayer
+ import logging
+ import gc
+@@ -44,7 +44,11 @@
+         self.current_media_item = None 
+ 
+         # THUMBNAIL WORKER
+-        self.thumb_worker = None
++        self.thumb_worker = None
++        self._thumb_pending = False
++        self._thumb_timer = QTimer(self)
++        self._thumb_timer.setSingleShot(True)
++        self._thumb_timer.timeout.connect(self.start_thumbnail_scan)
+         
+         # ==============================
+         # AI SIGNALS
+@@ -64,9 +68,12 @@
+         Hàm này nên được gọi từ MainWindow sau khi refresh_grid().
+         """
+         # Nếu đang chạy thì dừng cái cũ
+-        if self.thumb_worker and self.thumb_worker.isRunning():
+-            self.thumb_worker.stop()
+-            self.thumb_worker.wait()
++        if self.thumb_worker and self.thumb_worker.isRunning():
++            self._thumb_pending = True
++            self.thumb_worker.cancel()
++            return
++
++        self._thumb_pending = False
+ 
+         if not self.media_lib.items:
+             return
+@@ -78,14 +85,27 @@
+         
+         # Nối dây tín hiệu: Worker tìm thấy -> Báo cho Controller -> Controller báo cho UI
+         # (Cách này giúp UI không cần biết Worker là ai, chỉ cần nghe Controller)
+-        self.thumb_worker.thumbnail_ready.connect(self.thumbnail_ready.emit)
++        self.thumb_worker.thumbnail_ready.connect(self.thumbnail_ready.emit)
++        self.thumb_worker.finished.connect(self._thumbnail_scan_finished)
++        self.thumb_worker.finished.connect(self.thumb_worker.deleteLater)
+         
+         self.thumb_worker.start()
+ 
+-    def stop_thumbnail_scan(self):
++    def stop_thumbnail_scan(self):
++        self._thumb_pending = False
++        self._thumb_timer.stop()
+         if self.thumb_worker:
+             self.thumb_worker.stop()
+-            self.thumb_worker.wait()
++            self.thumb_worker.wait()
++            self.thumb_worker = None
++
++    @Slot()
++    def _thumbnail_scan_finished(self):
++        if self.sender() is not self.thumb_worker:
++            return
++        self.thumb_worker = None
++        if self._thumb_pending:
++            self._thumb_timer.start(0)
+     
+     # =========================================================
+     # UI → CONTROLLER
+--- before/app/core/media_library.py
++++ after/app/core/media_library.py
+@@ -6,7 +6,7 @@
+ import threading
+ import subprocess
+ from pathlib import Path
+-from dataclasses import dataclass, asdict
++from dataclasses import dataclass, asdict, replace
+ from typing import Optional, List, Dict, Tuple
+ 
+ # Giả sử class SubtitleManager của bạn nằm ở đây
+@@ -97,7 +97,8 @@
+         self.db_path = Path(db_path)
+         self.items: Dict[str, MediaMetadata] = {}
+         self.subtitle_mgr = SubtitleManager()
+-        self.lock = threading.Lock()
++        self.lock = threading.RLock()
++        self._save_lock = threading.Lock()
+         self.load()
+         logger.info("✅ MediaLibrary initialized")
+ 
+@@ -113,7 +114,9 @@
+         count_cache = 0
+         count_scan = 0
+         
+-        for file in folder.rglob('*'):
++        for file in folder.rglob('*'):
++            if getattr(self, '_cancel_scan', lambda: False)():
++                break
+             if not file.is_file(): continue
+             if file.suffix.lower() in {'.part', '.ytdl', '.tmp', '.temp'}:
+                 continue
+@@ -168,14 +171,14 @@
+         print(f"-"*30)
+         return new_items_in_scan
+ 
+-    def update_thumbnail_in_db(self, media_id, thumb_path):
+-        """Worker gọi hàm này khi tạo xong ảnh để lưu vào JSON"""
+-        if media_id in self.items:
+-            # 1. Update Memory
+-            self.items[media_id].thumbnail = thumb_path
+-            # 2. Update Disk
+-            self.save()
+-            logger.info(f"💾 Đã lưu path thumbnail cho {media_id}")
++    def update_thumbnail_in_db(self, media_id, thumb_path):
++        """Worker gọi hàm này khi tạo xong ảnh để lưu vào JSON"""
++        with self.lock:
++            if media_id not in self.items:
++                return
++            self.items[media_id].thumbnail = thumb_path
++        self.save()
++        logger.info(f"💾 Đã lưu path thumbnail cho {media_id}")
+ 
+     def cleanup(self):
+         """
+@@ -202,12 +205,14 @@
+         Lưu file JSON với cơ chế chống lỗi WinError 5 (Access Denied)
+         """
+         # 1. Dùng Lock để đảm bảo chỉ 1 luồng được ghi file tại 1 thời điểm
+-        with self.lock:
++        with self._save_lock:
+             try:
+                 self.db_path.parent.mkdir(parents=True, exist_ok=True)
+                 
+                 # Convert data sang dict
+-                data = {mid: asdict(meta) for mid, meta in self.items.items()}
++                with self.lock:
++                    snapshot = [(mid, replace(meta)) for mid, meta in self.items.items()]
++                data = {mid: asdict(meta) for mid, meta in snapshot}
+                 
+                 temp_path = self.db_path.with_suffix(".tmp")
+                 
+@@ -252,4 +257,4 @@
+                 if 'artist' not in info: info['artist'] = "Unknown Artist"
+                 self.items[mid] = MediaMetadata(**info)
+         except Exception as e:
+-            logger.error(f"❌ Load library failed: {e}")+            logger.error(f"❌ Load library failed: {e}")
+--- before/app/core/subtitle_manager.py
++++ after/app/core/subtitle_manager.py
+@@ -1,11 +1,13 @@
+ import hashlib
+ import json
+ import logging
+-import re
++import re
++import tempfile
+ from pathlib import Path
+ from typing import Optional, List, Dict, Any
+ 
+-from subtitle.mode import SubtitleMode
++from subtitle.mode import SubtitleMode
++from core.subtitle_persistence import atomic_bytes, publish, recover
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -53,7 +55,8 @@
+         
+         # 🟢 1. KHỞI TẠO INDEX (QUAN TRỌNG)
+         self.index_file = self.base_dir / "media_index.json"
+-        self.index_cache = self._load_index()
++        self._recover_pending()
++        self.index_cache = self._load_index()
+ 
+     # ==================================================
+     # QUẢN LÝ INDEX (Sổ địa chỉ) - CÁC HÀM BỊ THIẾU
+@@ -67,14 +70,50 @@
+                 return {}
+         return {}
+ 
+-    def _update_index(self, media_id: str, filename: str):
++    def _update_index(self, media_id: str, filename: str):
+         """Lưu lại: ID này ứng với tên file nào?"""
+-        self.index_cache[media_id] = filename
+-        try:
+-            with open(self.index_file, 'w', encoding='utf-8') as f:
+-                json.dump(self.index_cache, f, ensure_ascii=False, indent=2)
+-        except Exception as e:
+-            logger.error(f"❌ Không lưu được index: {e}")
++        updated = dict(self.index_cache, **{media_id: filename})
++        try:
++            atomic_bytes(self.index_file, json.dumps(updated, ensure_ascii=False, indent=2).encode('utf-8'))
++            self.index_cache = updated
++            return True
++        except Exception as e:
++            logger.error(f"❌ Không lưu được index: {e}")
++            return False
++
++    def _recover_pending(self):
++        try:
++            if recover(self.base_dir) and hasattr(self, 'index_cache'):
++                self.index_cache = self._load_index()
++            return True
++        except Exception as error:
++            logger.error(f"Subtitle save recovery failed: {error}")
++            return False
++
++    def _save_bundle(self, media_id, data, filename=None):
++        from core.subtitle_renderer import ASSRenderer
++        if not self._recover_pending():
++            return False
++        try:
++            encoded = json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8')
++            p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
++            with tempfile.TemporaryDirectory(prefix='subtitle-save-', dir=self.dirs['temp']) as temporary:
++                rendered = Path(temporary) / 'render.ass'
++                if not ASSRenderer.generate(data['segments'], rendered, p_lang, s_lang):
++                    logger.error('Subtitle ASS preparation failed; existing files kept')
++                    return False
++                payloads = {self.get_path(media_id, 'json'): encoded,
++                            self.get_path(media_id, 'ass'): rendered.read_bytes()}
++                updated = dict(self.index_cache)
++                if filename is not None:
++                    updated[media_id] = filename
++                    payloads[self.index_file] = json.dumps(updated, ensure_ascii=False, indent=2).encode('utf-8')
++                publish(self.base_dir, payloads)
++                self.index_cache = updated
++            return True
++        except Exception as error:
++            logger.error(f"Subtitle save failed: {error}")
++            return False
+ 
+     def _get_filename_by_id(self, media_id: str) -> Optional[str]:
+         return self.index_cache.get(media_id)
+@@ -178,9 +217,8 @@
+ 
+         # 1. Cập nhật Index (Sổ địa chỉ) nếu có source_path
+         clean_filename = media_id
+-        if source_path:
+-            clean_filename = Path(source_path).stem
+-            self._update_index(media_id, clean_filename)
++        if source_path:
++            clean_filename = Path(source_path).stem
+         else:
+             # Nếu không truyền source, thử tra ngược lại xem có tên cũ không
+             saved = self._get_filename_by_id(media_id)
+@@ -197,24 +235,8 @@
+             }
+             
+             # Lưu file JSON (Hàm get_path giờ đã tự biết lưu vào thư mục source/json theo tên gốc)
+-            json_path = self.get_path(media_id, "json")
+-            if self._save_json_file(json_path, final_json) is False:
+-                return None
+-
+-            # 3. RENDER ASS THEO MODE
+-            from core.subtitle_renderer import ASSRenderer
+-
+-            ass_path = self.get_path(media_id, "ass")
+-            p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
+-
+-            success = ASSRenderer.generate(
+-                segments=clean_segments,
+-                output_path=ass_path,
+-                primary_lang=p_lang,
+-                secondary_lang=s_lang,
+-            )
+-
+-            return str(ass_path) if success else None
++            success = self._save_bundle(media_id, final_json, clean_filename if source_path else None)
++            return str(self.get_path(media_id, 'ass')) if success else None
+ 
+         except Exception as e:
+             logger.error(f"❌ save_segments error: {e}")
+@@ -227,15 +249,15 @@
+     # ==================================================
+     def _save_json_file(self, path: Path, data: dict):
+         try:
+-            path.parent.mkdir(parents=True, exist_ok=True)
+-            with open(path, "w", encoding="utf-8") as f:
+-                json.dump(data, f, ensure_ascii=False, indent=2)
++            atomic_bytes(path, json.dumps(data, ensure_ascii=False, indent=2).encode('utf-8'))
+             return True
+         except Exception as e:
+             logger.error(f"❌ Save JSON failed: {e}")
+             return False
+ 
+-    def get_raw_data(self, media_id: str) -> Optional[dict]:
++    def get_raw_data(self, media_id: str) -> Optional[dict]:
++        if not self._recover_pending():
++            return None
+         path = self.get_path(media_id, "json")
+         if not path.exists():
+             return None
+@@ -268,12 +290,11 @@
+             ass_path = self.get_path(media_id, "ass")
+             p_lang, s_lang = self._get_langs_from_mode(self.current_mode)
+ 
+-            success = ASSRenderer.generate(
+-                segments=segments,
+-                output_path=ass_path,
+-                primary_lang=p_lang,
+-                secondary_lang=s_lang,
+-            )
++            with tempfile.TemporaryDirectory(prefix='subtitle-render-', dir=self.dirs['temp']) as temporary:
++                rendered = Path(temporary) / 'render.ass'
++                success = ASSRenderer.generate(segments, rendered, p_lang, s_lang)
++                if success:
++                    atomic_bytes(ass_path, rendered.read_bytes())
+             
+             if success:
+                 logger.info(f"✨ Rendered ASS: {ass_path.name}")
+@@ -286,7 +307,9 @@
+     # ==================================================
+     # REQUEST ENTRY
+     # ==================================================
+-    def request_subtitle(self, media_item) -> SubtitleRequestResult:
++    def request_subtitle(self, media_item) -> SubtitleRequestResult:
++        if not self._recover_pending():
++            return SubtitleRequestResult(SubtitleStatus.MISSING)
+         media_id = self.get_reliable_id(media_item)
+         if not media_id:
+             return SubtitleRequestResult(SubtitleStatus.MISSING)
+@@ -376,5 +399,7 @@
+                 data["segments"] = [self._clean_segment(s) for s in raw_segments]
+ 
+         # Trường hợp 3: data đã sạch, lưu thẳng xuống file
+-        path = self.get_path(media_id, "json")
+-        self._save_json_file(path, data)
++        if isinstance(data, dict) and isinstance(data.get('segments'), list):
++            return self._save_bundle(media_id, data)
++        path = self.get_path(media_id, "json")
++        return self._save_json_file(path, data)
+--- before/app/download_core/download_worker.py
++++ after/app/download_core/download_worker.py
+@@ -1,7 +1,8 @@
+ import os
+ import subprocess
+ from PySide6.QtCore import QThread, Signal
+-from .yt_dlp import ensure_ytdlp_exists
++from .yt_dlp import ensure_ytdlp_exists
++from control.worker_lifecycle import OwnedProcesses
+ 
+ class DownloadWorker(QThread):
+     progress_signal = Signal(int, int)   # Báo cáo số lượng thành công
+@@ -11,7 +12,8 @@
+     log_signal = Signal(str)             # [MỚI] Bắn log của yt-dlp lên Console UI
+ 
+     def __init__(self, links, names, save_path, options=None):
+-        super().__init__()
++        super().__init__()
++        self._processes = OwnedProcesses()
+         self.links = links
+         self.names = names
+         self.save_path = save_path
+@@ -31,12 +33,20 @@
+         else:
+             self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
+             
+-    def run(self):
++    def run(self):
++        try:
++            self._run_download()
++        finally:
++            self._processes.stop()
++            self._processes.wait()
++
++    def _run_download(self):
+         if not ensure_ytdlp_exists(
+             self.ytdlp_exe, 
+             self.status_signal, 
+             self.log_signal, 
+-            self.progress_signal # Tận dụng luôn progress_signal bác đã có
++            self.progress_signal, # Tận dụng luôn progress_signal bác đã có
++            cancel_cb=lambda: not self.is_running
+         ):
+             self.status_signal.emit("❌ Không thể tải bộ máy yt-dlp!")
+             self.finished_signal.emit(0)
+@@ -51,19 +61,20 @@
+         self.log_signal.emit("🔄 [HỆ THỐNG] Đang kiểm tra cập nhật yt-dlp...")
+         
+         try:
+-            update_proc = subprocess.Popen(
++            update_proc = self._processes.track(subprocess.Popen(
+                 [self.ytdlp_exe, "-U"],
+                 stdout=subprocess.PIPE, 
+                 stderr=subprocess.STDOUT, 
+                 text=True,
+                 creationflags=subprocess.CREATE_NO_WINDOW # Ẩn cửa sổ đen của Windows
+-            )
++            ))
+             # Đọc log update theo thời gian thực
+             for line in iter(update_proc.stdout.readline, ''):
+                 if line:
+                     self.log_signal.emit(line.strip())
+             update_proc.stdout.close()
+-            update_proc.wait()
++            update_proc.wait()
++            self._processes.release(update_proc)
+         except Exception as e:
+             self.log_signal.emit(f"⚠️ [LỖI CẬP NHẬT] {e}")
+ 
+@@ -225,7 +236,7 @@
+             cmd += ["-o", os.path.join(self.save_path, f"{name}.%(ext)s"), link]
+             
+             try:
+-                process = subprocess.Popen(
++                process = self._processes.track(subprocess.Popen(
+                     cmd,
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.STDOUT,
+@@ -233,7 +244,7 @@
+                     encoding='utf-8',
+                     errors='replace',
+                     creationflags=subprocess.CREATE_NO_WINDOW
+-                )
++                ))
+ 
+                 # Đọc log yt-dlp (tiến trình %, MB, Tốc độ) đẩy lên UI
+                 for line in iter(process.stdout.readline, ''):
+@@ -246,7 +257,8 @@
+                         self.log_signal.emit(line.strip())
+ 
+                 process.stdout.close()
+-                return_code = process.wait()
++                return_code = process.wait()
++                self._processes.release(process)
+ 
+                 # Kiểm tra kết quả
+                 if return_code == 0 and self.is_running:
+@@ -266,8 +278,10 @@
+         self.cleanup_temp_files()
+         self.finished_signal.emit(success_count)
+ 
+-    def stop(self):
+-        self.is_running = False
++    def stop(self):
++        self.is_running = False
++        self.requestInterruption()
++        self._processes.stop()
+         try:
+             # Nếu đang có tiến trình chạy, ép nó dừng luôn để dọn dẹp cho nhanh
+             if hasattr(self, 'process') and self.process.poll() is None:
+@@ -289,7 +303,5 @@
+                     except Exception as e:
+                         # File có thể đang bị tiến trình khác chiếm dụng, bỏ qua
+                         continue
+-        except Exception as e:
+-            self.log_signal.emit(f"⚠️ Lỗi khi dọn dẹp: {e}")
+-    
+-    +        except Exception as e:
++            self.log_signal.emit(f"⚠️ Lỗi khi dọn dẹp: {e}")
+--- before/app/download_core/get_title_worker.py
++++ after/app/download_core/get_title_worker.py
+@@ -5,7 +5,8 @@
+ from PySide6.QtCore import QThread, Signal
+ 
+ from .utils import sanitize_folder_name
+-from .yt_dlp import ensure_ytdlp_exists
++from .yt_dlp import ensure_ytdlp_exists
++from control.worker_lifecycle import OwnedProcesses
+ 
+ class GetTitleWorker(QThread):
+     title_ready_signal = Signal(str)
+@@ -15,7 +16,8 @@
+     progress_signal = Signal(int, int)
+ 
+     def __init__(self, links):
+-        super().__init__()
++        super().__init__()
++        self._processes = OwnedProcesses()
+         self.links = links
+         self.is_running = True
+         import sys
+@@ -26,13 +28,21 @@
+         else:
+             self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
+ 
+-    def run(self):
++    def run(self):
++        try:
++            self._run_titles()
++        finally:
++            self._processes.stop()
++            self._processes.wait()
++
++    def _run_titles(self):
+         # 1. Kiểm tra sự tồn tại của file exe (đảm bảo bộ máy sẵn sàng)
+         if not ensure_ytdlp_exists(
+             self.ytdlp_exe, 
+             self.status_signal, 
+             self.log_signal, 
+-            self.progress_signal
++            self.progress_signal,
++            cancel_cb=lambda: not self.is_running
+         ):
+             self.status_signal.emit("❌ Không thể khởi tạo bộ máy!")
+             self.finished_signal.emit()
+@@ -52,13 +62,16 @@
+                     creationflags = subprocess.CREATE_NO_WINDOW
+                 
+                 # Cập nhật nhân EXE chính
+-                subprocess.run([self.ytdlp_exe, "-U"], startupinfo=startupinfo, creationflags=creationflags)
++                process = self._processes.track(subprocess.Popen([self.ytdlp_exe, "-U"], startupinfo=startupinfo, creationflags=creationflags))
++                process.wait()
++                self._processes.release(process)
+                 self.log_signal.emit("✅ Bộ máy EXE đã được cập nhật.")
+             except Exception as e:
+                 self.log_signal.emit(f"⚠️ Cập nhật EXE lỗi: {e}")
+ 
+         # 3. Cấu hình ydl_opts (Gom lại 1 lần duy nhất)
+-        ydl_opts = {
++        ydl_opts = {
++            'socket_timeout': 10,
+             'quiet': True,
+             'no_warnings': True,
+             'extract_flat': True,
+@@ -94,5 +107,7 @@
+         self.status_signal.emit("✅ Đã lấy xong danh sách tên.")
+         self.finished_signal.emit()
+ 
+-    def stop(self):
+-        self.is_running = False+    def stop(self):
++        self.is_running = False
++        self.requestInterruption()
++        self._processes.stop()
+--- before/app/download_core/yt_dlp.py
++++ after/app/download_core/yt_dlp.py
+@@ -2,7 +2,9 @@
+ import urllib.request
+ import ssl
+ 
+-def ensure_ytdlp_exists(exe_path, status_signal=None, log_signal=None, progress_signal=None):
++def ensure_ytdlp_exists(exe_path, status_signal=None, log_signal=None, progress_signal=None, cancel_cb=None):
++    if cancel_cb and cancel_cb():
++        return False
+     if os.path.exists(exe_path):
+         # Kiểm tra thêm: nếu file quá nhỏ (ví dụ < 1MB) thì coi như lỗi, tải lại
+         if os.path.getsize(exe_path) > 1024 * 1024:
+@@ -17,7 +19,10 @@
+         context = ssl._create_unverified_context()
+         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+ 
+-        with urllib.request.urlopen(req, context=context) as response:
++        open_options = {'context': context}
++        if cancel_cb is not None:
++            open_options['timeout'] = 10
++        with urllib.request.urlopen(req, **open_options) as response:
+             total_size = int(response.getheader('Content-Length', 0))
+             downloaded = 0
+             block_size = 8192 
+@@ -25,7 +30,9 @@
+             if log_signal: log_signal.emit(f"📦 Dung lượng: {total_size / (1024*1024):.2f} MB")
+ 
+             with open(tmp_path, 'wb') as out_file:
+-                while True:
++                while True:
++                    if cancel_cb and cancel_cb():
++                        raise InterruptedError('yt-dlp download cancelled')
+                     buffer = response.read(block_size)
+                     if not buffer: break
+                     
+@@ -40,13 +47,13 @@
+                         status_signal.emit(f"📥 Đang tải bộ máy: {percent}%")
+ 
+         # TẢI XONG MỚI ĐỔI TÊN: Đảm bảo file không bị lỗi nửa chừng
+-        if os.path.exists(exe_path):
+-            os.remove(exe_path)
+-        os.rename(tmp_path, exe_path)
++        if cancel_cb and cancel_cb():
++            raise InterruptedError('yt-dlp download cancelled')
++        os.replace(tmp_path, exe_path)
+ 
+         if log_signal: log_signal.emit("✅ Tải hoàn tất!")
+         return True
+     except Exception as e:
+         if os.path.exists(tmp_path): os.remove(tmp_path)
+         if log_signal: log_signal.emit(f"❌ Lỗi tải: {e}")
+-        return False+        return False
+--- before/app/thumbnail/thumbnail_workers.py
++++ after/app/thumbnail/thumbnail_workers.py
+@@ -39,10 +39,13 @@
+             # Nghỉ xíu để CPU không bị overload (20ms là đẹp)
+             self.msleep(20)
+ 
+-    def stop(self):
++    def stop(self):
+         self.is_running = False
+         try:
+             self.wait(1000)
+         except Exception:
+             pass
+-        self.queue = []+        self.queue = []
++
++    def cancel(self):
++        self.is_running = False
+--- before/app/translate/cache.py
++++ after/app/translate/cache.py
+@@ -1,16 +1,19 @@
+ import hashlib
+ import json
+ import re
+-from pathlib import Path
++from pathlib import Path
++from core.subtitle_persistence import atomic_bytes
+ 
+ class TranslationCache:
+     def __init__(self, path="output/translation_cache.json"):
+         self.path = Path(path)
+-        self.data = {}
++        self.data = {}
++        self._dirty = False
+ 
+         if self.path.exists():
+             try:
+-                self.data = json.loads(self.path.read_text(encoding="utf-8"))
++                loaded = json.loads(self.path.read_text(encoding="utf-8"))
++                self.data = loaded if isinstance(loaded, dict) else {}
+             except:
+                 self.data = {}
+ 
+@@ -23,28 +26,27 @@
+         Kiểm tra xem text trong cache có phải là spam/lỗi không.
+         Nếu là spam -> Trả về True (để hủy cache này).
+         """
+-        if not text: return False
++        if not isinstance(text, str): return True
++        if not text: return False
+         
+         # 1. Kiểm tra lặp từ đơn điệu (ví dụ: "No, no, no, no...")
+         # Tách từ, bỏ dấu câu
+         words = re.findall(r'\w+', text.lower())
+         total = len(words)
+         
+-        # Nếu câu dài > 10 từ mà tỷ lệ từ vựng < 20% -> CHẮC CHẮN LÀ RÁC
+-        if total > 10:
+-            unique = set(words)
+-            if len(unique) / total < 0.2:
++        # Short refrains and normal long translations remain valid cache hits.
++        if total >= 80:
++            unique = set(words)
++            if len(unique) / total < 0.1:
+                 return True
+                 
+-        # 2. Kiểm tra độ dài bất thường (Subtitle không bao giờ quá 200 ký tự)
+-        if len(text) > 200:
+-            return True
+-            
+-        return False
++        return False
+ 
+     def get(self, text: str):
+         key = self._key(text)
+-        cached_item = self.data.get(key)
++        cached_item = self.data.get(key)
++        if not isinstance(cached_item, dict):
++            return None
+         
+         if cached_item:
+             # --- LOGIC MỚI: KIỂM TRA CHẤT LƯỢNG CACHE ---
+@@ -53,23 +55,23 @@
+             en_text = cached_item.get("en", "")
+             
+             # Nếu phát hiện tiếng Việt hoặc tiếng Anh lưu trong cache là RÁC
+-            if self._is_spam(vi_text) or self._is_spam(en_text):
+-                print(f"🧹 Phát hiện Cache lỗi cho: '{text[:20]}...' -> XÓA và DỊCH LẠI.")
+-                # Xóa ngay khỏi bộ nhớ để lần sau không gặp nữa
+-                del self.data[key] 
+-                return None # Trả về None để ép hệ thống dịch lại
++            if not isinstance(vi_text, str) or not vi_text.strip() or self._is_spam(vi_text) or self._is_spam(en_text):
++                print(f"🧹 Bỏ qua Cache lỗi cho: '{text[:20]}...' để dịch lại khi được yêu cầu.")
++                # Reading old cache never rewrites or migrates saved artifacts.
++                return None # Trả về None để ép hệ thống dịch lại
+                 
+         return cached_item
+ 
+     def set(self, text: str, value: dict):
+         # Trước khi lưu, cũng kiểm tra nhẹ một cái cho chắc
+         vi_val = value.get("vi", "")
+-        if not self._is_spam(vi_val):
+-            self.data[self._key(text)] = value
++        if isinstance(vi_val, str) and vi_val.strip() and not self._is_spam(vi_val):
++            self.data[self._key(text)] = value
++            self._dirty = True
+ 
+-    def save(self):
+-        self.path.parent.mkdir(parents=True, exist_ok=True)
+-        self.path.write_text(
+-            json.dumps(self.data, ensure_ascii=False, indent=2),
+-            encoding="utf-8"
+-        )+    def save(self):
++        if not self._dirty:
++            return
++        self.path.parent.mkdir(parents=True, exist_ok=True)
++        atomic_bytes(self.path, json.dumps(self.data, ensure_ascii=False, indent=2).encode('utf-8'))
++        self._dirty = False
+--- before/app/translate/online_logic.py
++++ after/app/translate/online_logic.py
+@@ -160,7 +160,7 @@
+             print("⚠️ API trả về text rỗng")
+             return None
+         
+-        matched_count = 0
++        accepted = {}
+         for line in translated_text.strip().split("\n"):
+             if "===" not in line: continue
+             
+@@ -172,32 +172,35 @@
+                     print(f"⚠️ Dòng không đủ phần: {line}")
+                     continue
+                     
+-                idx_match = re.search(r'\d+', parts[0])
++                idx_match = re.fullmatch(r'\s*(?:ID\s*[:#]?\s*)?(\d+)\s*', parts[0], re.IGNORECASE)
+                 if not idx_match:
+                     continue
+                     
+-                idx = int(idx_match.group())
+-                if idx >= len(subs):
+-                    continue
++                idx = int(idx_match.group(1))
++                if idx >= len(subs) or idx in accepted:
++                    return None
+                     
+                 en_text = parts[1].strip()
+                 vi_text = parts[2].strip()
+                 
+                 # Gán dòng giữa (Tiếng Anh)
+-                subs[idx].middle = SubtitleLine(text=en_text, lang="en", style="EN") if en_text else None
+-                
+-                # Gán dòng dưới (Tiếng Việt)
+-                subs[idx].bottom = SubtitleLine(text=vi_text, lang="vi", style="VI") if vi_text else None
+-                
+-                matched_count += 1
++                if en_text and vi_text:
++                    accepted[idx] = (en_text, vi_text)
+                 
+             except Exception as e:
+                 print(f"⚠️ Lỗi parse dòng: {line[:50]}... -> {e}")
+                 continue
+         
+-        print(f"✅ Dịch xong {matched_count}/{len(subs)} dòng")
++        required = {i for i, s in enumerate(subs) if s.top and s.top.text.strip()}
++        if not required.issubset(accepted):
++            print(f"⚠️ Dịch thiếu {len(required - accepted.keys())} dòng; chuyển sang fallback hiện có.")
++            return None
++        for idx, (en_text, vi_text) in accepted.items():
++            subs[idx].middle = SubtitleLine(text=en_text, lang="en", style="EN")
++            subs[idx].bottom = SubtitleLine(text=vi_text, lang="vi", style="VI")
++        print(f"✅ Dịch xong {len(accepted)}/{len(subs)} dòng")
+         return subs
+ 
+     except Exception as e:
+         print(f"❌ Lỗi API {provider}: {e}")
+-        return None+        return None
+--- before/app/translate/pipeline.py
++++ after/app/translate/pipeline.py
+@@ -32,7 +32,7 @@
+ # ==============================================================================
+ # 1. HÀM LỌC NỘI DUNG (CLEANER) - ĐÃ NÂNG CẤP
+ # ==============================================================================
+-def clean_repetitive_text(text):
++def clean_repetitive_text(text):
+     if not text: return ""
+     text = text.strip()
+ 
+@@ -41,7 +41,7 @@
+     total_len = len(words_raw)
+ 
+     # --- CHỐT CHẶN 0 (SỬA LẠI): DIỆT SPAM "NO NO NO" ---
+-    if total_len >= 3:
++    if total_len >= 12:
+         # Lấy 3 từ đầu chuẩn hóa
+         w1 = words_raw[0].lower().strip(".,!?:")
+         w2 = words_raw[1].lower().strip(".,!?:")
+@@ -57,8 +57,8 @@
+             unique_words = set([w.lower().strip(".,!?:") for w in words_raw])
+             
+             # Nếu cả câu dài ngoằng mà chỉ loanh quanh 1-2 từ -> SPAM CHẮC CHẮN
+-            if len(unique_words) <= 2 and total_len > 5:
+-                return words_raw[0].rstrip(".,!?:") + "..."
++            if len(unique_words) <= 2 and total_len >= 24:
++                return " ".join(words_raw[:3])
+             
+             # Nếu câu ngắn (dưới 5 từ) mà lặp 3 (ví dụ: "Bye bye bye") 
+             # -> Giữ nguyên, đây là lời bài hát.
+@@ -71,12 +71,12 @@
+     total_words = len(words)
+     
+     # Chỉ check entropy nếu câu dài (tránh cắt nhầm câu ngắn)
+-    if total_words > 10: 
++    if total_words >= 80:
+         unique_words = set(words)
+         diversity_ratio = len(unique_words) / total_words
+         
+         # Nếu dài mà nghèo nàn từ vựng (< 35%) -> Cắt
+-        if diversity_ratio < 0.35: 
++        if diversity_ratio < 0.1:
+             limit = min(4, int(total_words / 3) + 1)
+             shortened_text = " ".join(text.split()[:limit])
+             return shortened_text.strip().rstrip(".,!?:") + "..."
+@@ -85,13 +85,10 @@
+     # Chỉ gộp nếu lặp > 3 lần liên tiếp (để giữ lại điệp khúc ngắn)
+     # Ví dụ: "La la la" (3 lần) -> Giữ nguyên
+     # "La la la la la" (5 lần) -> "La la la"
+-    text = re.sub(r'(?i)(\b\w+(?:[,\s]+\w+)*[,\s]*)\1{3,}', r'\1\1\1', text)
++    text = re.sub(r'(?i)(\b\w+(?:[,\s]+\w+){0,5}[,\s]+)\1{11,}', r'\1\1\1', text)
+ 
+     # --- TẦNG 4: HARD LIMIT ---
+-    if len(text) > 150:
+-        text = text[:150].rsplit(' ', 1)[0].rstrip(".,!?:") + "..."
+-        
+-    return text.strip()
++    return text.strip()
+ 
+ # ==============================================================================
+ # 2. HÀM CHẠY BATCH AN TOÀN (CORE LOGIC)
+@@ -108,22 +105,29 @@
+         processed_batch = []
+         for t in batch:
+             # Dọn rác đầu vào để AI không bị loạn
+-            cleaned_t = clean_repetitive_text(t)
+-            
+-            # Cắt ngắn nếu vẫn quá dài (Tránh lỗi OOM bộ nhớ)
+-            if len(cleaned_t) > 1000: 
+-                processed_batch.append(cleaned_t[:1000])
+-            else:
+-                processed_batch.append(cleaned_t)
++            # Accepted source lyrics must not be treated as generated spam.
++            processed_batch.append(t.strip())
+         
+         try:
+             # Gọi model NLLB để dịch
+-            res = translator.translate_batch(processed_batch, src_lang=src_lang, tgt_lang=tgt_lang)
+-            results.extend(res)
++            res = translator.translate_batch(processed_batch, src_lang=src_lang, tgt_lang=tgt_lang)
++            if not isinstance(res, (list, tuple)) or len(res) != len(batch):
++                raise ValueError("Translation response cardinality mismatch")
++            if any(not isinstance(t, str) or not t.strip() for t in res):
++                raise ValueError("Translation response contains missing lines")
++            results.extend(res)
+         except Exception as e:
+             print(f"⚠️ Lỗi dịch batch {i}-{i+batch_size} ({src_lang}->{tgt_lang}): {e}")
+             # Fallback: Trả về chuỗi rỗng nếu lỗi, để không làm lệch index
+-            results.extend([""] * len(batch))
++            # A short response cannot be mapped safely. Retry each original row.
++            for source in processed_batch:
++                try:
++                    item = translator.translate_batch([source], src_lang=src_lang, tgt_lang=tgt_lang)
++                    if not isinstance(item, (list, tuple)) or len(item) != 1 or not isinstance(item[0], str) or not item[0].strip():
++                        raise ValueError("Missing individual translation")
++                    results.append(item[0])
++                except Exception as retry_error:
++                    raise RuntimeError(f"Không dịch được đầy đủ ({src_lang}->{tgt_lang}); chưa lưu kết quả lỗi vào cache.") from retry_error
+             
+         # Giải phóng VRAM sau mỗi batch
+         if torch.cuda.is_available():
+@@ -164,7 +168,9 @@
+             print(f"🌍 [ONLINE] Đang gọi API {provider} (src_lang: {src_lang})...")
+             from translate.online_logic import translate_online_pipeline
+             # 🔥 SỬA LỖI: Đã truyền thêm src_lang sang Online Logic
+-            return translate_online_pipeline(subs, provider, key, song_title, src_lang=src_lang)
++            online = translate_online_pipeline(subs, provider, key, song_title_raw=song_title)
++            if online:
++                return online
+         else:
+             print("⚠️ API Key trống! Tự động chuyển về Local NLLB...")
+ 
+@@ -172,7 +178,6 @@
+     # NHÁNH 2: DỊCH LOCAL NLLB
+     # ==============================================================================
+     cache = TranslationCache()
+-    translator = get_translator() 
+     
+     # --- BƯỚC A: CHUẨN BỊ DỮ LIỆU ---
+     all_texts = [s.top.text if s.top else "" for s in subs]
+@@ -192,7 +197,8 @@
+             mapping.append(i)
+ 
+     # --- BƯỚC B: THỰC HIỆN DỊCH ---
+-    if to_translate:
++    if to_translate:
++        translator = get_translator()
+         BATCH_STEP_1 = 16 
+         BATCH_STEP_2 = 8
+         
+@@ -259,4 +265,4 @@
+         _translator_instance = None
+         gc.collect()
+         if torch.cuda.is_available():
+-            torch.cuda.empty_cache()+            torch.cuda.empty_cache()
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -392,7 +392,7 @@
+         print("🔻 Đang thực hiện quy trình đóng ứng dụng...")
+         
+         try:
+-            # --- BƯỚC 1: DỪNG PLAYER (Giải phóng file đang phát) ---
++            # --- BƯỚC 1: DỪNG PLAYER (Giải phóng file đang phát) ---
+             if hasattr(self, "media_player") and self.media_player:
+                 player = getattr(self.media_player, "player", self.media_player)
+                 if hasattr(player, "stop"):
+@@ -410,8 +410,16 @@
+ 
+             if hasattr(self, "_startup_timer") and self._startup_timer:
+                 self._startup_timer.stop()
+-            if hasattr(self, "_sidebar_timer") and self._sidebar_timer:
+-                self._sidebar_timer.stop()
++            if hasattr(self, "_sidebar_timer") and self._sidebar_timer:
++                self._sidebar_timer.stop()
++
++            if hasattr(self, '_folder_scan_queue'):
++                self._folder_scan_queue.shutdown()
++            if hasattr(self, 'download_page'):
++                self.download_page.shutdown_workers()
++            subtitle_owner = getattr(QApplication.instance(), '_subtitle_worker_owner', None)
++            if subtitle_owner is not None:
++                subtitle_owner.shutdown()
+ 
+             # --- BƯỚC 2: HỦY CÁC LUỒNG AI ĐANG CHẠY ---
+             if hasattr(self, "job_manager") and self.job_manager:
+@@ -1705,19 +1713,24 @@
+         self.current_watched_folder = folder_path
+ 
+         # 2. GỌI MEDIA LIBRARY (Scan file mới)
+-        QApplication.setOverrideCursor(Qt.WaitCursor)
+-        try:
+-            # Scan và lưu vào kho tổng
+-            scanned_items = self.media_library.scan_folder(folder_path)
+-            self.all_media_items = scanned_items # <--- CẬP NHẬT KHO TỔNG
+-            self.media_items = scanned_items     # Đồng bộ luôn vào biến cũ
+-                
+-        except Exception as e:
+-            print(f"Lỗi scan: {e}")
+-            self.all_media_items = []
+-            self.media_items = []
+-        finally:
+-            QApplication.restoreOverrideCursor()
++        if not hasattr(self, '_folder_scan_queue'):
++            from control.library_scan import LibraryScanQueue
++            self._folder_scan_queue = LibraryScanQueue(self.media_library, self)
++            self._folder_scan_queue.completed.connect(self._folder_scan_completed)
++            self._folder_scan_queue.failed.connect(self._folder_scan_failed)
++        self._folder_scan_queue.request(folder_path)
++
++    def _folder_scan_failed(self, message):
++        print(f"Lỗi scan: {message}")
++        self._folder_scan_completed([])
++
++    def _folder_scan_completed(self, scanned_items):
++        if self.refresh_paused:
++            return
++        self.all_media_items = scanned_items
++        self.media_items = scanned_items
++        if not scanned_items and hasattr(self, 'foryou_page'):
++            self.foryou_page.load_playlist([])
+         
+         # 3. SAU KHI SCAN XONG:
+         if self.all_media_items:
+--- before/app/ui/pages/download.py
++++ after/app/ui/pages/download.py
+@@ -318,6 +318,8 @@
+         self.txt_links.textChanged.connect(self.update_link_count)
+         
+         self.download_thread = None
++        from control.worker_lifecycle import WorkerOwner
++        self._worker_owner = WorkerOwner(self)
+         self.on_toggle_path(False)
+         self._compact_layout = None
+         self._arrange_controls(self.width())
+@@ -482,7 +484,8 @@
+         self.progress_bar.setValue(0)
+         self.fail_bar.setValue(0)
+         print(f"[DEBUG] Chuẩn bị khởi chạy Thread với {len(links)} video")
+-        self.download_thread = DownloadWorker(links, names, save_path, self.full_config)
++        self.download_thread = DownloadWorker(links, names, save_path, self.full_config)
++        self._worker_owner.own(self.download_thread)
+ 
+         self.download_thread.progress_signal.connect(self.update_progress)
+         self.download_thread.fail_signal.connect(self.update_fail_progress)
+@@ -566,7 +569,8 @@
+         self.btn_get_name.setText("Đang chạy...") # Đổi tên cho bao quát cả việc update
+         self.txt_names.clear() 
+         
+-        self.title_thread = GetTitleWorker(links)
++        self.title_thread = GetTitleWorker(links)
++        self._worker_owner.own(self.title_thread)
+         
+         # Kết nối các tín hiệu cũ
+         self.title_thread.title_ready_signal.connect(self.append_title_to_ui)
+@@ -577,12 +581,15 @@
+         
+         self.title_thread.start()
+ 
+-    def append_title_to_ui(self, title):
++    def append_title_to_ui(self, title):
+         current_text = self.txt_names.toPlainText()
+         new_text = (current_text + "\n" + title) if current_text else title
+         self.txt_names.setPlainText(new_text)
+         
+-        self.txt_names.verticalScrollBar().setValue(self.txt_names.verticalScrollBar().maximum())
++        self.txt_names.verticalScrollBar().setValue(self.txt_names.verticalScrollBar().maximum())
++
++    def shutdown_workers(self):
++        self._worker_owner.shutdown()
+ 
+     def get_names_finished(self):
+         self.btn_get_name.setEnabled(True)
+--- before/app/ui/subs_ui/subtitle_dialog_logic.py
++++ after/app/ui/subs_ui/subtitle_dialog_logic.py
+@@ -116,7 +116,8 @@
+         except Exception:
+             pass
+ 
+-    def closeEvent(self, event):
++    def closeEvent(self, event):
++        self._cancel_editor_workers()
+         try:
+             self._disconnect_player_signals()
+         except Exception:
+@@ -140,7 +141,26 @@
+                 self.playback_timer.stop()
+         except Exception:
+             pass
+-        return super().closeEvent(event)
++        return super().closeEvent(event)
++
++    def _own_editor_worker(self, worker):
++        from control.worker_lifecycle import editor_worker_owner
++        self._workers_closed = False
++        if not getattr(self, '_worker_close_connected', False):
++            self.finished.connect(self._cancel_editor_workers)
++            self._worker_close_connected = True
++        editor_worker_owner().own(worker)
++
++    def _cancel_editor_workers(self):
++        self._workers_closed = True
++        for name in ('trans_worker', 'align_worker'):
++            worker = getattr(self, name, None)
++            if worker is not None:
++                try:
++                    if worker.isRunning():
++                        worker.requestInterruption()
++                except RuntimeError:
++                    pass
+ 
+     def _on_playback_state_changed(self, state):
+         if self.tabs.currentIndex() != 1:
+@@ -748,12 +768,14 @@
+         self.btn_translate.setText("⏳ Đang Dịch Thuật...")
+         self.progress_bar.show()
+ 
+-        self.trans_worker = TranslationWorker(parsed_orig, app_settings, self)
++        self.trans_worker = TranslationWorker(parsed_orig, app_settings, self)
++        self._own_editor_worker(self.trans_worker)
+         self.trans_worker.finished_signal.connect(self._on_translation_finished)
+         self.trans_worker.error_signal.connect(self._on_translation_error)
+         self.trans_worker.start()
+ 
+-    def _on_translation_finished(self, updated_segments):
++    def _on_translation_finished(self, updated_segments):
++        if getattr(self, '_workers_closed', False): return
+         self.btn_translate.setEnabled(True)
+         self.btn_translate.setText("🤖 Tự Động Dịch (AI)")
+         self.progress_bar.hide()
+@@ -766,7 +788,8 @@
+             "✅ Đã tự động dịch xong!\nKết quả đã được cập nhật lên Bảng Phụ Đề.\n\nHãy nhấn 'Lưu & Cập Nhật' để hoàn tất."
+         )
+ 
+-    def _on_translation_error(self, err_msg):
++    def _on_translation_error(self, err_msg):
++        if getattr(self, '_workers_closed', False): return
+         self.btn_translate.setEnabled(True)
+         self.btn_translate.setText("🤖 Tự Động Dịch (AI)")
+         self.progress_bar.hide()
+@@ -884,12 +907,9 @@
+             raw['segments'] = new_segments
+             raw['language'] = self.detected_lang if self.detected_lang != "auto" else "en"
+             try:
+-                subtitle_mgr.save_raw_data(media_id, raw)
+-                try:
+-                    if hasattr(subtitle_mgr, 'render_ass_from_json'):
+-                        subtitle_mgr.render_ass_from_json(media_id)
+-                except Exception as render_err:
+-                    print(f"⚠️ Warning render ASS: {render_err}")
++                if subtitle_mgr.save_raw_data(media_id, raw) is not True:
++                    QMessageBox.warning(self, "Không lưu được", "Không thể lưu phụ đề. Bản đã lưu trước đó được giữ nguyên; hãy thử lại.")
++                    return
+                 if hasattr(subtitle_mgr, 'cache'):
+                     subtitle_mgr.cache.pop(media_id, None)
+                 if hasattr(subtitle_mgr, 'raw_cache'):
+@@ -905,18 +925,19 @@
+                 QMessageBox.information(self, "Thành công", f"✅ Đã lưu và cập nhật {len(new_segments)} câu phụ đề thành công!")
+                 self.accept()
+                 return
+-            except Exception as e:
+-                print(f"⚠️ Thử ghi file trực tiếp do lỗi Manager: {e}")
++            except Exception as e:
++                QMessageBox.warning(self, "Không lưu được", f"Không thể lưu phụ đề: {e}")
++                return
+         if self.sub_path:
+             try:
+                 os.makedirs(os.path.dirname(os.path.abspath(self.sub_path)), exist_ok=True)
+-                if self.sub_path.endswith('.json'):
+-                    json_data = {"media_id": media_id or "default", "language": self.detected_lang, "segments": parsed_data}
+-                    with open(self.sub_path, "w", encoding="utf-8") as f:
+-                        json.dump(json_data, f, ensure_ascii=False, indent=2)
+-                else:
+-                    with open(self.sub_path, "w", encoding="utf-8") as f:
+-                        f.write(self.editor_orig.toPlainText())
++                if self.sub_path.endswith('.json'):
++                    json_data = {"media_id": media_id or "default", "language": self.detected_lang, "segments": parsed_data}
++                    from core.subtitle_persistence import atomic_bytes
++                    atomic_bytes(self.sub_path, json.dumps(json_data, ensure_ascii=False, indent=2).encode('utf-8'))
++                else:
++                    from core.subtitle_persistence import atomic_bytes
++                    atomic_bytes(self.sub_path, self.editor_orig.toPlainText().encode('utf-8'))
+                 QMessageBox.information(self, "Thành công", "✅ Đã ghi file phụ đề thành công!")
+                 self.accept()
+             except Exception as e:
+@@ -973,12 +994,14 @@
+         self.btn_align.setText("⏳ Đang Khớp Lời...")
+         self.progress_bar.show()
+ 
+-        self.align_worker = AlignWorker(whisper_lines, ref_text, provider, api_key, self)
++        self.align_worker = AlignWorker(whisper_lines, ref_text, provider, api_key, self)
++        self._own_editor_worker(self.align_worker)
+         self.align_worker.finished_signal.connect(self._on_align_finished)
+         self.align_worker.error_signal.connect(self._on_align_error)
+         self.align_worker.start()
+ 
+-    def _on_align_finished(self, lines_output, count_updated):
++    def _on_align_finished(self, lines_output, count_updated):
++        if getattr(self, '_workers_closed', False): return
+         self.btn_align.setEnabled(True)
+         self.btn_align.setText("✨ Khớp & Sửa Lời Chuẩn (Align Lyrics)")
+         self.progress_bar.hide()
+@@ -989,7 +1012,8 @@
+             f"Đã sửa {count_updated}/{len(lines_output)} dòng theo Lời Chuẩn!"
+         )
+ 
+-    def _on_align_error(self, err_msg):
++    def _on_align_error(self, err_msg):
++        if getattr(self, '_workers_closed', False): return
+         self.btn_align.setEnabled(True)
+         self.btn_align.setText("✨ Khớp & Sửa Lời Chuẩn (Align Lyrics)")
+         self.progress_bar.hide()
+--- before/app/ui/subs_ui/subtitle_workers.py
++++ after/app/ui/subs_ui/subtitle_workers.py
+@@ -167,10 +167,12 @@
+                 text = ai_results.get(i, seg["text"])
+                 output.append(f"[{seg['start']:.2f} --> {seg['end']:.2f}] {text}")
+ 
+-            self.finished_signal.emit(output, len(ai_results))
++            if not self.isInterruptionRequested():
++                self.finished_signal.emit(output, len(ai_results))
+ 
+         except Exception as e:
+-            self.error_signal.emit(str(e))
++            if not self.isInterruptionRequested():
++                self.error_signal.emit(str(e))
+ 
+ 
+ class TranslationWorker(QThread):
+@@ -182,8 +184,10 @@
+         self.segments = segments
+         self.settings = settings or {}
+ 
+-    def run(self):
+-        try:
++    def run(self):
++        try:
++            if self.isInterruptionRequested():
++                return
+             import torch
+             from translate.pipeline import translate_pipeline, clear_translator
+             from translate.online_logic import translate_online_pipeline
+@@ -294,9 +298,11 @@
+ 
+                 updated_segments.append(new_seg)
+ 
+-            self.finished_signal.emit(updated_segments)
++            if not self.isInterruptionRequested():
++                self.finished_signal.emit(updated_segments)
+ 
+         except Exception as e:
+             import traceback
+             traceback.print_exc()
+-            self.error_signal.emit(str(e))
++            if not self.isInterruptionRequested():
++                self.error_signal.emit(str(e))

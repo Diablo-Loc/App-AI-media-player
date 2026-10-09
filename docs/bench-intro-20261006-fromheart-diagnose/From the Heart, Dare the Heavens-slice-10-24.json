@@ -1,0 +1,73 @@
+[
+  {
+    "id": 1,
+    "start": 0.0,
+    "end": 13.98,
+    "text": "中文字幕志愿者 李宗盛",
+    "avg_logprob": -0.3975183823529412,
+    "no_speech_prob": 0.15966796875,
+    "compression_ratio": 0.7380952380952381,
+    "words": [
+      {
+        "start": 0.0,
+        "end": 0.24,
+        "word": "中",
+        "probability": 0.00395965576171875
+      },
+      {
+        "start": 0.24,
+        "end": 0.48,
+        "word": "文",
+        "probability": 0.98583984375
+      },
+      {
+        "start": 0.48,
+        "end": 12.62,
+        "word": "字",
+        "probability": 0.98828125
+      },
+      {
+        "start": 12.62,
+        "end": 12.78,
+        "word": "幕",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 12.78,
+        "end": 12.78,
+        "word": "志",
+        "probability": 0.10748291015625
+      },
+      {
+        "start": 12.78,
+        "end": 13.36,
+        "word": "愿",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 13.36,
+        "end": 13.4,
+        "word": "者",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 13.4,
+        "end": 13.98,
+        "word": " 李",
+        "probability": 0.748046875
+      },
+      {
+        "start": 13.98,
+        "end": 13.98,
+        "word": "宗",
+        "probability": 0.947265625
+      },
+      {
+        "start": 13.98,
+        "end": 13.98,
+        "word": "盛",
+        "probability": 0.997802734375
+      }
+    ]
+  }
+]

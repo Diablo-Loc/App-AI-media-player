@@ -1,0 +1,132 @@
+test_elapsed_checkpoint_and_final_flush (tests.test_resource_performance.CacheBatchTests.test_elapsed_checkpoint_and_final_flush) ... ok
+test_fifty_changes_three_saves_and_identical_json (tests.test_resource_performance.CacheBatchTests.test_fifty_changes_three_saves_and_identical_json) ... ok
+test_missing_and_unchanged_ids_do_not_make_cache_dirty (tests.test_resource_performance.CacheBatchTests.test_missing_and_unchanged_ids_do_not_make_cache_dirty) ... ok
+test_old_synchronous_update_still_saves_immediately (tests.test_resource_performance.CacheBatchTests.test_old_synchronous_update_still_saves_immediately) ... ok
+test_parallel_snapshot_save_cannot_drop_staged_records (tests.test_resource_performance.CacheBatchTests.test_parallel_snapshot_save_cannot_drop_staged_records) ... ok
+test_worker_finally_flushes_on_error_and_cancel (tests.test_resource_performance.CacheBatchTests.test_worker_finally_flushes_on_error_and_cancel) ... ok
+test_write_failure_keeps_dirty_then_retry_preserves_old_cache (tests.test_resource_performance.CacheBatchTests.test_write_failure_keeps_dirty_then_retry_preserves_old_cache) ... ❌ Save library failed: fixture disk error
+ok
+test_failed_decode_does_not_retry_on_each_paint_and_update_recovers (tests.test_resource_performance.LibraryDecoderTests.test_failed_decode_does_not_retry_on_each_paint_and_update_recovers) ... ok
+test_only_two_decoders_and_shutdown_reaps_cancelled_jobs (tests.test_resource_performance.LibraryDecoderTests.test_only_two_decoders_and_shutdown_reaps_cancelled_jobs) ... ok
+test_qimage_worker_qpixmap_gui_and_fractional_dpr_context (tests.test_resource_performance.LibraryDecoderTests.test_qimage_worker_qpixmap_gui_and_fractional_dpr_context) ... ok
+test_recycle_rejects_stale_image_and_cancel_is_nonblocking (tests.test_resource_performance.LibraryDecoderTests.test_recycle_rejects_stale_image_and_cancel_is_nonblocking) ... ok
+test_resize_invalidates_old_image_before_queued_result (tests.test_resource_performance.LibraryDecoderTests.test_resize_invalidates_old_image_before_queued_result) ... ok
+test_hidden_resize_reload_clear_do_not_leave_old_cards (tests.test_resource_performance.LibraryGridTests.test_hidden_resize_reload_clear_do_not_leave_old_cards) ... ok
+test_main_window_queue_uses_all_metadata_after_search (tests.test_resource_performance.LibraryGridTests.test_main_window_queue_uses_all_metadata_after_search) ... ok
+test_queue_order_matches_legacy_grid_with_and_without_search (tests.test_resource_performance.LibraryGridTests.test_queue_order_matches_legacy_grid_with_and_without_search) ... ok
+test_scroll_rebinds_click_metadata_and_preserves_queue (tests.test_resource_performance.LibraryGridTests.test_scroll_rebinds_click_metadata_and_preserves_queue) ... ok
+test_search_latest_query_empty_clear_and_full_queue (tests.test_resource_performance.LibraryGridTests.test_search_latest_query_empty_clear_and_full_queue) ... ok
+test_ten_thousand_metadata_only_viewport_widgets (tests.test_resource_performance.LibraryGridTests.test_ten_thousand_metadata_only_viewport_widgets) ... ok
+test_all_non_resource_main_window_and_card_methods_remain_identical (tests.test_resource_performance.ResourceSourceGates.test_all_non_resource_main_window_and_card_methods_remain_identical) ... ok
+test_only_reviewed_resource_modules_change_and_helpers_are_pinned (tests.test_resource_performance.ResourceSourceGates.test_only_reviewed_resource_modules_change_and_helpers_are_pinned) ... ok
+test_removing_only_grid_adapters_restores_entire_main_window_ast (tests.test_resource_performance.ResourceSourceGates.test_removing_only_grid_adapters_restores_entire_main_window_ast) ... ok
+test_all_non_ui_sources_match_restored_hashes (tests.test_ui_refresh.OriginalSourceGates.test_all_non_ui_sources_match_restored_hashes) ... ok
+test_all_python_sources_compile_on_project_python (tests.test_ui_refresh.OriginalSourceGates.test_all_python_sources_compile_on_project_python) ... ok
+test_every_original_ui_api_and_signal_signature_survives (tests.test_ui_refresh.OriginalSourceGates.test_every_original_ui_api_and_signal_signature_survives) ... ok
+test_original_qt_signal_wiring_is_identical (tests.test_ui_refresh.OriginalSourceGates.test_original_qt_signal_wiring_is_identical) ... ok
+test_svg_assets_match_pinned_source_hashes_and_ship_license (tests.test_ui_refresh.OriginalSourceGates.test_svg_assets_match_pinned_source_hashes_and_ship_license) ... ok
+test_ui_methods_outside_presentation_are_identical (tests.test_ui_refresh.OriginalSourceGates.test_ui_methods_outside_presentation_are_identical) ... ok
+test_all_icons_render_and_disabled_states_differ_at_high_dpi (tests.test_ui_refresh.QtUiBehaviorTests.test_all_icons_render_and_disabled_states_differ_at_high_dpi) ... ok
+test_all_pages_remain_reachable_by_existing_handler (tests.test_ui_refresh.QtUiBehaviorTests.test_all_pages_remain_reachable_by_existing_handler) ... ok
+test_download_custom_path_toggle_and_plain_paste_survive (tests.test_ui_refresh.QtUiBehaviorTests.test_download_custom_path_toggle_and_plain_paste_survive) ... ok
+test_for_you_repeat_signal_and_shuffle_preserve_playlist (tests.test_ui_refresh.QtUiBehaviorTests.test_for_you_repeat_signal_and_shuffle_preserve_playlist) ... ok
+test_fullscreen_enters_and_restores_original_video_ownership (tests.test_ui_refresh.QtUiBehaviorTests.test_fullscreen_enters_and_restores_original_video_ownership) ... ok
+test_main_window_mini_mode_round_trip_keeps_video_owner (tests.test_ui_refresh.QtUiBehaviorTests.test_main_window_mini_mode_round_trip_keeps_video_owner) ... ok
+test_mini_player_signals_and_existing_title_truncation (tests.test_ui_refresh.QtUiBehaviorTests.test_mini_player_signals_and_existing_title_truncation) ... ok
+test_navigation_indexes_roles_and_compact_restore (tests.test_ui_refresh.QtUiBehaviorTests.test_navigation_indexes_roles_and_compact_restore) ... ok
+test_play_pause_icons_do_not_parse_stylesheets_per_update (tests.test_ui_refresh.QtUiBehaviorTests.test_play_pause_icons_do_not_parse_stylesheets_per_update) ... ok
+test_playback_buttons_emit_original_signals_once (tests.test_ui_refresh.QtUiBehaviorTests.test_playback_buttons_emit_original_signals_once) ... ok
+test_playlist_card_click_keeps_exact_media_object (tests.test_ui_refresh.QtUiBehaviorTests.test_playlist_card_click_keeps_exact_media_object) ... ok
+test_seek_and_position_keep_slider_drag_contract (tests.test_ui_refresh.QtUiBehaviorTests.test_seek_and_position_keep_slider_drag_contract) ... ok
+test_settings_still_save_original_keys_and_values (tests.test_ui_refresh.QtUiBehaviorTests.test_settings_still_save_original_keys_and_values) ... ok
+test_short_namespace_bundle_path_resolves_packaged_svg_assets (tests.test_ui_refresh.QtUiBehaviorTests.test_short_namespace_bundle_path_resolves_packaged_svg_assets) ... ok
+test_subtitle_appearance_modes_and_existing_shortcuts_survive (tests.test_ui_refresh.QtUiBehaviorTests.test_subtitle_appearance_modes_and_existing_shortcuts_survive) ... ok
+test_volume_pathways_preserve_values_and_threshold_icons (tests.test_ui_refresh.QtUiBehaviorTests.test_volume_pathways_preserve_values_and_threshold_icons) ... ok
+test_search_play_clear_next_previous_use_full_playlist_without_reloading_master (tests.test_foryou_search.MainWindowSearchTests.test_search_play_clear_next_previous_use_full_playlist_without_reloading_master) ... [mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97CC0] Format mov,mp4,m4a,3gp,3g2,mj2 detected only with low score of 1, misdetection possible!
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97CC0] moov atom not found
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97A00] Format mov,mp4,m4a,3gp,3g2,mj2 detected only with low score of 1, misdetection possible!
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97A00] moov atom not found
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97480] Format mov,mp4,m4a,3gp,3g2,mj2 detected only with low score of 1, misdetection possible!
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A97480] moov atom not found
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A94B40] Format mov,mp4,m4a,3gp,3g2,mj2 detected only with low score of 1, misdetection possible!
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0000023355A94B40] moov atom not found
+ok
+test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle (tests.test_foryou_search.MainWindowSearchTests.test_shuffle_while_searching_uses_full_queue_and_clear_does_not_reshuffle) ... ok
+test_decoder_quality_body_is_exactly_pre_phase (tests.test_foryou_search.ThumbnailBudgetTests.test_decoder_quality_body_is_exactly_pre_phase) ... ok
+test_failed_cancelled_decode_always_completes_without_fake_image (tests.test_foryou_search.ThumbnailBudgetTests.test_failed_cancelled_decode_always_completes_without_fake_image) ... ok
+test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel (tests.test_foryou_search.ThumbnailBudgetTests.test_only_visible_thumbnails_decode_two_at_a_time_with_stale_scroll_cancel) ... ok
+test_debounce_latest_query_and_empty_reload_have_no_stale_rows (tests.test_foryou_search.VirtualPlaylistTests.test_debounce_latest_query_and_empty_reload_have_no_stale_rows) ... ok
+test_far_active_item_scroll_and_filter_keep_widget_count_bounded (tests.test_foryou_search.VirtualPlaylistTests.test_far_active_item_scroll_and_filter_keep_widget_count_bounded) ... ok
+test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner (tests.test_foryou_search.VirtualPlaylistTests.test_filter_failure_keeps_old_rows_and_can_retry_without_stuck_spinner) ... ok
+test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick (tests.test_foryou_search.VirtualPlaylistTests.test_loading_waits_for_visible_thumbnail_then_reveals_and_bad_image_does_not_stick) ... ok
+test_recycled_card_click_emits_current_exact_object_and_active_style (tests.test_foryou_search.VirtualPlaylistTests.test_recycled_card_click_emits_current_exact_object_and_active_style) ... ok
+test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable (tests.test_foryou_search.VirtualPlaylistTests.test_reload_then_immediate_far_mark_and_viewport_resize_keep_rows_reachable) ... ok
+test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results (tests.test_foryou_search.VirtualPlaylistTests.test_search_and_clear_show_spinner_before_work_and_swap_only_complete_results) ... ok
+test_search_clear_other_query_preserves_full_queue_identity_and_order (tests.test_foryou_search.VirtualPlaylistTests.test_search_clear_other_query_preserves_full_queue_identity_and_order) ... ok
+test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search (tests.test_foryou_search.VirtualPlaylistTests.test_spinner_resizes_and_stops_while_hidden_and_reload_cancels_search) ... ok
+test_superseded_preparation_and_clear_only_publish_latest_query (tests.test_foryou_search.VirtualPlaylistTests.test_superseded_preparation_and_clear_only_publish_latest_query) ... ok
+
+----------------------------------------------------------------------
+Ran 58 tests in 16.699s
+
+OK
+📋 Playlist Library: Đã chốt 10000 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+📋 Playlist Library: Đã chốt 20 bài.
+❌ File không tồn tại hoặc path lỗi: absent-resource-fixture.mp4
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+
+[DEBUG] >>> ĐÃ BẤM NÚT 'CLEAR'
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Midnight in Tokyo - Luna (Force: False)
+📏 Video Size Detected: <Mock name='mock.videoSink().videoSize().width()' id='2419688901840'>x<Mock name='mock.videoSink().videoSize().height()' id='2419683296656'>
+📋 Playlist ForYou: Đã chốt 12 bài.
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+📏 Video Size Detected: <Mock name='mock.videoSink().videoSize().width()' id='2419688901840'>x<Mock name='mock.videoSink().videoSize().height()' id='2419683296656'>
+▶️ Bắt đầu phát: City lights - Luna (Force: False)
+▶️ Bắt đầu phát: Quiet moments - Haru (Force: False)
+📏 Video Size Detected: <Mock name='mock.videoSink().videoSize().width()' id='2419688901840'>x<Mock name='mock.videoSink().videoSize().height()' id='2419683296656'>
+⚠️ Không tìm thấy Grid Layout!
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn

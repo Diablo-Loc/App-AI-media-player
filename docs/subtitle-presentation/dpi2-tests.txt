@@ -1,0 +1,83 @@
+test_canceled_hide_callback_never_hides_next_fade_in (tests.test_subtitle_presentation.FadeTests.test_canceled_hide_callback_never_hides_next_fade_in) ... ok
+test_fade_in_opacity_is_monotonic_and_geometry_stays_stable (tests.test_subtitle_presentation.FadeTests.test_fade_in_opacity_is_monotonic_and_geometry_stays_stable) ... ok
+test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact (tests.test_subtitle_presentation.FadeTests.test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact) ... ok
+test_old_snapshot_reproduces_restart_and_stale_callback (tests.test_subtitle_presentation.FadeTests.test_old_snapshot_reproduces_restart_and_stale_callback) ... ok
+test_repeated_gap_updates_do_not_restart_fade_out (tests.test_subtitle_presentation.FadeTests.test_repeated_gap_updates_do_not_restart_fade_out) ... ok
+test_seek_back_into_same_cue_reverses_fade_without_opacity_reset (tests.test_subtitle_presentation.FadeTests.test_seek_back_into_same_cue_reverses_fade_without_opacity_reset) ... ok
+test_closing_editor_in_gap_never_resurrects_old_text (tests.test_subtitle_presentation.PresentationTests.test_closing_editor_in_gap_never_resurrects_old_text) ... ok
+test_mini_minimized_inactive_and_mode_off_never_show (tests.test_subtitle_presentation.PresentationTests.test_mini_minimized_inactive_and_mode_off_never_show) ... ok
+test_modal_editor_blocks_ticks_direct_show_and_setvisible (tests.test_subtitle_presentation.PresentationTests.test_modal_editor_blocks_ticks_direct_show_and_setvisible) ... ok
+test_modeless_editor_also_blocks_and_paused_cue_restores (tests.test_subtitle_presentation.PresentationTests.test_modeless_editor_also_blocks_and_paused_cue_restores) ... ok
+test_nested_dialog_hidden_owner_empty_cues_and_shutdown (tests.test_subtitle_presentation.PresentationTests.test_nested_dialog_hidden_owner_empty_cues_and_shutdown) ... ok
+test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant (tests.test_subtitle_presentation.PresentationTests.test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant) ... ok
+test_video_hidden_or_detached_blocks_and_restores_latest_cue (tests.test_subtitle_presentation.PresentationTests.test_video_hidden_or_detached_blocks_and_restores_latest_cue) ... ok
+test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump (tests.test_subtitle_presentation.ShellIntegrationTests.test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump) ... ok
+test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner (tests.test_subtitle_presentation.ShellIntegrationTests.test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner) ... ok
+test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots (tests.test_subtitle_presentation.SourceScopeTests.test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots) ... ok
+test_collapsed_sidebar_paints_every_icon (tests.test_ui_stability.UiStabilityTests.test_collapsed_sidebar_paints_every_icon) ... ok
+test_controls_remain_visible_during_popup_seek_and_button_press (tests.test_ui_stability.UiStabilityTests.test_controls_remain_visible_during_popup_seek_and_button_press) ... ok
+test_download_compact_controls_remain_within_page (tests.test_ui_stability.UiStabilityTests.test_download_compact_controls_remain_within_page) ... ok
+test_floating_subtitle_cannot_swallow_volume_click (tests.test_ui_stability.UiStabilityTests.test_floating_subtitle_cannot_swallow_volume_click) ... ok
+test_guard_does_not_reapply_identical_native_masks (tests.test_ui_stability.UiStabilityTests.test_guard_does_not_reapply_identical_native_masks) ... ok
+test_guard_preserves_subtitle_drag_outside_controls (tests.test_ui_stability.UiStabilityTests.test_guard_preserves_subtitle_drag_outside_controls) ... ok
+test_metadata_elision_retains_original_html_and_full_tooltip (tests.test_ui_stability.UiStabilityTests.test_metadata_elision_retains_original_html_and_full_tooltip) ... ok
+test_rapid_sidebar_reversals_use_one_owned_group (tests.test_ui_stability.UiStabilityTests.test_rapid_sidebar_reversals_use_one_owned_group) ... ok
+test_resizing_preserves_all_control_targets_and_video_parent (tests.test_ui_stability.UiStabilityTests.test_resizing_preserves_all_control_targets_and_video_parent) ... ok
+test_volume_receives_real_mouse_click_in_each_layout (tests.test_ui_stability.UiStabilityTests.test_volume_receives_real_mouse_click_in_each_layout) ... ok
+test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent (tests.test_foryou_spacing.ForYouSpacingTests.test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent) ... ok
+test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes (tests.test_foryou_spacing.ForYouSpacingTests.test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes) ... ok
+test_search_top_bottom_and_horizontal_center_are_balanced (tests.test_foryou_spacing.ForYouSpacingTests.test_search_top_bottom_and_horizontal_center_are_balanced) ... ok
+test_style_observer_never_changes_flags_geometry_or_native_video_owners (tests.test_foryou_spacing.ForYouSpacingTests.test_style_observer_never_changes_flags_geometry_or_native_video_owners) ... ok
+test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized (tests.test_foryou_spacing.FrameColorTests.test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized) ... ok
+test_only_for_you_presentation_and_shell_installs_change_captured_sources (tests.test_foryou_spacing.FrameColorTests.test_only_for_you_presentation_and_shell_installs_change_captured_sources) ... ok
+test_unavailable_or_unsupported_dwm_does_not_break_startup (tests.test_foryou_spacing.FrameColorTests.test_unavailable_or_unsupported_dwm_does_not_break_startup) ... ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 13.555s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

@@ -1,0 +1,29 @@
+{
+  "before": false,
+  "python": "3.11.0",
+  "pyside": "6.10.1",
+  "qt_platform": "offscreen",
+  "media": "Brand New Sky.mp4",
+  "media_bytes": 11431119,
+  "items": 1000,
+  "cover_pixels": [
+    1280,
+    720
+  ],
+  "decoded_frames": 69,
+  "elapsed_s": 2.826838000000862,
+  "max_decoded_frame_delivery_gap_ms": 46.52859999623615,
+  "max_gui_heartbeat_gap_ms": 24.111099999572616,
+  "operation_ms": [
+    14.455399999860674,
+    3.059300004679244,
+    10.643900001014117,
+    0.0427999984822236,
+    0.09380000119563192,
+    0.16929999401327223,
+    13.40179999533575,
+    7.562400001916103
+  ],
+  "live_cards": 11,
+  "player_error": ""
+}

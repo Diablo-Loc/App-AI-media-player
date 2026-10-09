@@ -1,0 +1,78 @@
+--- before/app/core/audio_profile.py
++++ after/app/core/audio_profile.py
+@@ -16,6 +16,13 @@
+             'equalizer=f=3200:t=q:w=0.8:g=-1.5:r=f64,treble=f=8500:g=-0.8:r=f64',
+     'headphones': 'equalizer=f=280:t=q:w=0.7:g=-0.7:r=f64,'
+                   'equalizer=f=3200:t=q:w=0.8:g=-1.5:r=f64,treble=f=8500:g=-0.8:r=f64',
++    # Separate opt-in voicing: small bass shelf and broad, gentle treble cuts.
++    'easy': 'bass=f=100:t=q:w=0.707:g=1.5:r=f64,'
++            'equalizer=f=3500:t=q:w=0.8:g=-1:r=f64,'
++            'equalizer=f=7000:t=q:w=1:g=-1.5:r=f64,treble=f=10000:t=q:w=0.707:g=-1:r=f64',
++    'easy_headphones': 'bass=f=100:t=q:w=0.707:g=1.5:r=f64,'
++                       'equalizer=f=3500:t=q:w=0.8:g=-1:r=f64,'
++                       'equalizer=f=7000:t=q:w=1:g=-1.5:r=f64,treble=f=10000:t=q:w=0.707:g=-1:r=f64',
+ }
+ 
+ 
+@@ -76,6 +83,11 @@
+ def tone_filter(profile, sample_rate=48000, channels=2):
+     ceiling = max(1, float(sample_rate) * 0.45)
+     filters = re.sub(r'(?<=f=)\d+', lambda match: str(int(min(int(match[0]), ceiling))), TONES[profile.tone])
++    if profile.tone in ('easy', 'easy_headphones'):
++        # Preamp precedes both crossfeed and EQ. Full-chain peak measurement
++        # still governs final constant gain; no dynamics processor is added.
++        crossfeed = 'bs2b=profile=jmeier,' if profile.tone == 'easy_headphones' and channels == 2 and sample_rate >= 8000 else ''
++        filters = 'volume=-1.5dB,' + crossfeed + filters
+     if profile.tone == 'headphones' and channels == 2 and sample_rate >= 8000:
+         # No reverse-IIR block delay, resampling, widening or artificial reverb.
+         filters += ',crossfeed=strength=0.08:range=0.25:slope=0.5:level_in=1:level_out=1:block_size=0'
+--- before/app/ui/audio_effects_panel.py
++++ after/app/ui/audio_effects_panel.py
+@@ -49,13 +49,21 @@
+         layout.addWidget(QLabel('Chất âm tùy chọn'))
+         self.tone = QComboBox()
+         for text, key in (('Nguyên bản', 'off'), ('Dịu — giảm chói', 'gentle'), ('Cân bằng nhẹ', 'balanced'),
+-                          ('Ấm — nghe lâu', 'warm'), ('Tai nghe — tự nhiên', 'headphones')):
++                          ('Ấm — nghe lâu', 'warm'), ('Tai nghe — tự nhiên', 'headphones'),
++                          ('Dễ nghe — loa', 'easy'), ('Dễ nghe — tai nghe', 'easy_headphones')):
+             self.tone.addItem(text, key)
+         self.tone.setItemData(self.tone.findData('warm'),
+             'Giảm nhẹ vùng đục và chói, giữ bass và độ động. Không phục hồi chi tiết codec đã mất.', Qt.ItemDataRole.ToolTipRole)
+         self.tone.setItemData(self.tone.findData('headphones'),
+             'EQ ấm và crossfeed nhẹ cho tai nghe stereo: bớt tách cứng hai bên; không thêm vang. '
+             'Nguồn mono/nhiều kênh chỉ dùng EQ, không đổi số kênh.', Qt.ItemDataRole.ToolTipRole)
++        self.tone.setItemData(self.tone.findData('easy'),
++            'Bass +1,5 dB; giảm nhẹ vùng gắt và xì, preamp −1,5 dB. Không nén động. '
++            'Có thể bật Cân bằng và chọn −18 LUFS; không tự đổi cài đặt của bạn.', Qt.ItemDataRole.ToolTipRole)
++        self.tone.setItemData(self.tone.findData('easy_headphones'),
++            'EQ Dễ nghe + crossfeed Meier 650 Hz / 9,5 dB cho tai nghe stereo. '
++            'Mono/nhiều kênh chỉ dùng EQ. Hiệu quả tùy bản thu và tai nghe; không phục hồi chi tiết đã mất.',
++            Qt.ItemDataRole.ToolTipRole)
+         self.tone.setToolTip('Thử Ấm để nghe dịu hơn; Tai nghe thêm crossfeed nhẹ cho stereo. '
+                              'Hiệu quả tùy bản thu và tai nghe; chọn Nguyên bản để bỏ xử lý.')
+         self.tone.setMinimumHeight(36)
+--- before/tests/test_audio_effects.py
++++ after/tests/test_audio_effects.py
+@@ -492,9 +492,10 @@
+             self.assertEqual(set(before), set(after))
+             before_audio_changes(relative)
+         sources = json.loads((ROOT / 'docs/audio-effects/sources-before.json').read_text(encoding='utf-8-sig'))
++        from tests.audio_easy_contracts import before_easy_changes
+         for entry in sources:
+             if entry['Path'] not in expected:
+-                self.assertEqual(hashlib.sha256((ROOT / entry['Path']).read_bytes()).hexdigest().upper(), entry['Hash'])
++                self.assertEqual(hashlib.sha256(before_easy_changes(entry['Path'], raw=True)).hexdigest().upper(), entry['Hash'])
+         helpers = json.loads((ROOT / 'docs/audio-effects/new-source-hashes.json').read_text())
+         for relative, digest in helpers.items():
+             self.assertEqual(hashlib.sha256(before_realtime_changes(relative, raw=True)).hexdigest(), digest)
+--- before/tests/test_audio_listening.py
++++ after/tests/test_audio_listening.py
+@@ -66,7 +66,7 @@
+         self.assertNotIn('crossfeed', tone_filter(AudioProfile(False, 'headphones'), channels=1))
+         self.assertNotIn('crossfeed', tone_filter(AudioProfile(False, 'headphones'), channels=6))
+         self.assertNotIn('crossfeed', tone_filter(AudioProfile(False, 'headphones'), 4000))
+-        self.assertEqual(set(TONES), {'off', 'gentle', 'balanced', 'warm', 'headphones'})
++        self.assertEqual(set(TONES), {'off', 'gentle', 'balanced', 'warm', 'headphones', 'easy', 'easy_headphones'})
+ 
+     def test_warm_is_a_small_linear_cut_not_bass_boost_or_dynamic_compression(self):
+         rate = 48000

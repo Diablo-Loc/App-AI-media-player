@@ -1,0 +1,16 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: nonvocal-chords.wav...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 00:12.000
+INFO:faster_whisper:Detected language 'en' with probability 0.26
+📡 Ngôn ngữ phát hiện: en (25.8%)
+50 🧹 Làm sạch dữ liệu (en)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+🛠 Kiểm tra coverage: thêm 0 dòng, 1 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(0.0, 12.0)]
+100 ℹ️ Hoàn tất: chưa nhận diện được lời (có thể là nhạc không lời).
+Production output: 0 []

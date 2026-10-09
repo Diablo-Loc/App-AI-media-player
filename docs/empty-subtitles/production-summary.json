@@ -1,0 +1,26 @@
+{
+  "reports": [
+    {
+      "fixture": "silence.wav",
+      "duration": 12,
+      "cues": 0,
+      "saved_cues": 0,
+      "header_cache_valid": true,
+      "empty_result": true,
+      "normal_id_cached_ready": true,
+      "reference": "Synthesized silence/nonvocal sine chords, not an annotated user video"
+    },
+    {
+      "fixture": "nonvocal-chords.wav",
+      "duration": 12,
+      "cues": 0,
+      "saved_cues": 0,
+      "header_cache_valid": true,
+      "empty_result": true,
+      "normal_id_cached_ready": true,
+      "reference": "Synthesized silence/nonvocal sine chords, not an annotated user video"
+    }
+  ],
+  "old_subtitle_files": 25,
+  "old_subtitle_bytes_unchanged": true
+}

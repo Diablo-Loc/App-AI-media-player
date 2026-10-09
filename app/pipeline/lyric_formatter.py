@@ -1,17 +1,12 @@
 from pathlib import Path
+from subtitle.timing_format import srt_time, lrc_time
 
 def format_time_srt(seconds: float) -> str:
-    h = int(seconds // 3600)
-    m = int((seconds % 3600) // 60)
-    s = int(seconds % 60)
-    ms = int((seconds - int(seconds)) * 1000)
-    return f"{h:02}:{m:02}:{s:02},{ms:03}"
+    return srt_time(seconds)
 
 
 def format_time_lrc(seconds: float) -> str:
-    m = int(seconds // 60)
-    s = seconds % 60
-    return f"{m:02}:{s:05.2f}"
+    return lrc_time(seconds)
 
 
 def export_srt(segments, output_path):

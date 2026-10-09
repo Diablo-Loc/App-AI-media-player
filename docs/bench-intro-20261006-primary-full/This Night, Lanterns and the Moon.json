@@ -1,0 +1,3469 @@
+{
+  "media": "video\\This Night, Lanterns and the Moon.mp4",
+  "model": "large-v3",
+  "device": "cuda",
+  "faster_whisper": "1.0.2",
+  "options": {
+    "language": null,
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": " .+"
+  },
+  "language": "zh",
+  "language_probability": 0.9912109375,
+  "duration": 233.2135,
+  "asr_seconds": 14.140999999999622,
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 1.72,
+      "text": "詞曲 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 0.0,
+          "end": 0.84,
+          "word": "詞",
+          "probability": 0.49238061904907227
+        },
+        {
+          "start": 0.84,
+          "end": 1.32,
+          "word": "曲",
+          "probability": 0.367919921875
+        },
+        {
+          "start": 1.62,
+          "end": 1.72,
+          "word": " 李",
+          "probability": 0.6943359375
+        },
+        {
+          "start": 1.72,
+          "end": 1.72,
+          "word": "宗",
+          "probability": 0.57098388671875
+        },
+        {
+          "start": 1.72,
+          "end": 1.72,
+          "word": "盛",
+          "probability": 0.99072265625
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 1.72,
+      "end": 1.8,
+      "text": "編曲 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 1.72,
+          "end": 1.72,
+          "word": "編",
+          "probability": 0.5111236572265625
+        },
+        {
+          "start": 1.72,
+          "end": 1.72,
+          "word": "曲",
+          "probability": 0.97119140625
+        },
+        {
+          "start": 1.76,
+          "end": 1.76,
+          "word": " 李",
+          "probability": 0.73193359375
+        },
+        {
+          "start": 1.76,
+          "end": 1.76,
+          "word": "宗",
+          "probability": 0.978515625
+        },
+        {
+          "start": 1.76,
+          "end": 1.8,
+          "word": "盛",
+          "probability": 0.99560546875
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 1.8,
+      "end": 2.82,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 1.8,
+          "end": 1.92,
+          "word": "混",
+          "probability": 0.002536773681640625
+        },
+        {
+          "start": 1.92,
+          "end": 1.92,
+          "word": "音",
+          "probability": 0.966796875
+        },
+        {
+          "start": 2.16,
+          "end": 2.72,
+          "word": " 李",
+          "probability": 0.403564453125
+        },
+        {
+          "start": 2.72,
+          "end": 2.82,
+          "word": "宗",
+          "probability": 0.968994140625
+        },
+        {
+          "start": 2.82,
+          "end": 2.82,
+          "word": "盛",
+          "probability": 0.996337890625
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 2.82,
+      "end": 4.86,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 2.82,
+          "end": 3.24,
+          "word": "混",
+          "probability": 0.054351806640625
+        },
+        {
+          "start": 3.24,
+          "end": 3.24,
+          "word": "音",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 3.24,
+          "end": 3.24,
+          "word": " 李",
+          "probability": 0.86865234375
+        },
+        {
+          "start": 3.24,
+          "end": 4.62,
+          "word": "宗",
+          "probability": 0.996337890625
+        },
+        {
+          "start": 4.62,
+          "end": 4.86,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 4.86,
+      "end": 8.8,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 4.86,
+          "end": 4.86,
+          "word": "混",
+          "probability": 0.12237548828125
+        },
+        {
+          "start": 4.86,
+          "end": 4.88,
+          "word": "音",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 7.82,
+          "end": 7.82,
+          "word": " 李",
+          "probability": 0.9140625
+        },
+        {
+          "start": 7.82,
+          "end": 8.66,
+          "word": "宗",
+          "probability": 0.996826171875
+        },
+        {
+          "start": 8.66,
+          "end": 8.8,
+          "word": "盛",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 8.8,
+      "end": 10.78,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 8.8,
+          "end": 8.8,
+          "word": "混",
+          "probability": 0.25146484375
+        },
+        {
+          "start": 8.8,
+          "end": 8.8,
+          "word": "音",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 9.66,
+          "end": 9.72,
+          "word": " 李",
+          "probability": 0.94189453125
+        },
+        {
+          "start": 9.72,
+          "end": 10.66,
+          "word": "宗",
+          "probability": 0.996826171875
+        },
+        {
+          "start": 10.66,
+          "end": 10.78,
+          "word": "盛",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 10.78,
+      "end": 12.86,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 10.78,
+          "end": 10.78,
+          "word": "混",
+          "probability": 0.415771484375
+        },
+        {
+          "start": 10.78,
+          "end": 10.78,
+          "word": "音",
+          "probability": 0.998046875
+        },
+        {
+          "start": 12.02,
+          "end": 12.02,
+          "word": " 李",
+          "probability": 0.9580078125
+        },
+        {
+          "start": 12.02,
+          "end": 12.66,
+          "word": "宗",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 12.66,
+          "end": 12.86,
+          "word": "盛",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 12.86,
+      "end": 14.96,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 12.86,
+          "end": 12.94,
+          "word": "混",
+          "probability": 0.54443359375
+        },
+        {
+          "start": 12.94,
+          "end": 12.94,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 13.22,
+          "end": 13.22,
+          "word": " 李",
+          "probability": 0.96728515625
+        },
+        {
+          "start": 13.22,
+          "end": 14.82,
+          "word": "宗",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 14.82,
+          "end": 14.96,
+          "word": "盛",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 14.96,
+      "end": 17.98,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 14.96,
+          "end": 14.96,
+          "word": "混",
+          "probability": 0.63037109375
+        },
+        {
+          "start": 14.96,
+          "end": 14.96,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 15.6,
+          "end": 17.16,
+          "word": " 李",
+          "probability": 0.97265625
+        },
+        {
+          "start": 17.16,
+          "end": 17.46,
+          "word": "宗",
+          "probability": 0.99609375
+        },
+        {
+          "start": 17.46,
+          "end": 17.98,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 17.98,
+      "end": 19.7,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 17.98,
+          "end": 18.64,
+          "word": "混",
+          "probability": 0.68701171875
+        },
+        {
+          "start": 18.64,
+          "end": 18.64,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 18.64,
+          "end": 19.0,
+          "word": " 李",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 19.0,
+          "end": 19.32,
+          "word": "宗",
+          "probability": 0.99609375
+        },
+        {
+          "start": 19.32,
+          "end": 19.7,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 19.7,
+      "end": 19.76,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 19.7,
+          "end": 19.7,
+          "word": "混",
+          "probability": 0.7294921875
+        },
+        {
+          "start": 19.7,
+          "end": 19.76,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 19.76,
+          "end": 19.76,
+          "word": " 李",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 19.76,
+          "end": 19.76,
+          "word": "宗",
+          "probability": 0.99609375
+        },
+        {
+          "start": 19.76,
+          "end": 19.76,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 19.76,
+      "end": 20.08,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 19.76,
+          "end": 19.76,
+          "word": "混",
+          "probability": 0.7783203125
+        },
+        {
+          "start": 19.76,
+          "end": 19.8,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 19.82,
+          "end": 19.82,
+          "word": " 李",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 19.82,
+          "end": 20.08,
+          "word": "宗",
+          "probability": 0.995849609375
+        },
+        {
+          "start": 20.08,
+          "end": 20.08,
+          "word": "盛",
+          "probability": 0.99853515625
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 20.08,
+      "end": 20.22,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 20.08,
+          "end": 20.08,
+          "word": "混",
+          "probability": 0.8466796875
+        },
+        {
+          "start": 20.08,
+          "end": 20.08,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 20.08,
+          "end": 20.08,
+          "word": " 李",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 20.08,
+          "end": 20.22,
+          "word": "宗",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 20.22,
+          "end": 20.22,
+          "word": "盛",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 20.22,
+      "end": 21.48,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 20.22,
+          "end": 20.4,
+          "word": "混",
+          "probability": 0.8681640625
+        },
+        {
+          "start": 20.4,
+          "end": 20.5,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 20.5,
+          "end": 20.64,
+          "word": " 李",
+          "probability": 0.98388671875
+        },
+        {
+          "start": 20.64,
+          "end": 20.98,
+          "word": "宗",
+          "probability": 0.995361328125
+        },
+        {
+          "start": 20.98,
+          "end": 21.48,
+          "word": "盛",
+          "probability": 0.997802734375
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 21.48,
+      "end": 22.48,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 21.48,
+          "end": 21.66,
+          "word": "混",
+          "probability": 0.8837890625
+        },
+        {
+          "start": 21.66,
+          "end": 22.24,
+          "word": "音",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 22.38,
+          "end": 22.38,
+          "word": " 李",
+          "probability": 0.98486328125
+        },
+        {
+          "start": 22.38,
+          "end": 22.48,
+          "word": "宗",
+          "probability": 0.995361328125
+        },
+        {
+          "start": 22.48,
+          "end": 22.48,
+          "word": "盛",
+          "probability": 0.997802734375
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 22.48,
+      "end": 25.14,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 22.48,
+          "end": 22.7,
+          "word": "混",
+          "probability": 0.8974609375
+        },
+        {
+          "start": 22.7,
+          "end": 23.46,
+          "word": "音",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 23.46,
+          "end": 24.1,
+          "word": " 李",
+          "probability": 0.9853515625
+        },
+        {
+          "start": 24.1,
+          "end": 24.44,
+          "word": "宗",
+          "probability": 0.995361328125
+        },
+        {
+          "start": 24.44,
+          "end": 25.14,
+          "word": "盛",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 25.14,
+      "end": 26.8,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 25.14,
+          "end": 25.14,
+          "word": "混",
+          "probability": 0.91259765625
+        },
+        {
+          "start": 25.14,
+          "end": 25.48,
+          "word": "音",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 25.94,
+          "end": 26.1,
+          "word": " 李",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 26.1,
+          "end": 26.58,
+          "word": "宗",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 26.58,
+          "end": 26.8,
+          "word": "盛",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 26.8,
+      "end": 29.98,
+      "text": "混音 李宗盛",
+      "avg_logprob": -0.12486111323038737,
+      "no_speech_prob": 0.085205078125,
+      "compression_ratio": 8.658536585365853,
+      "words": [
+        {
+          "start": 26.8,
+          "end": 26.8,
+          "word": "混",
+          "probability": 0.92431640625
+        },
+        {
+          "start": 26.8,
+          "end": 28.04,
+          "word": "音",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 28.04,
+          "end": 28.04,
+          "word": " 李",
+          "probability": 0.98681640625
+        },
+        {
+          "start": 28.04,
+          "end": 28.46,
+          "word": "宗",
+          "probability": 0.9951171875
+        },
+        {
+          "start": 28.46,
+          "end": 29.98,
+          "word": "盛",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 29.98,
+      "end": 30.72,
+      "text": "不寂寥",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 29.98,
+          "end": 29.98,
+          "word": "不",
+          "probability": 0.0831298828125
+        },
+        {
+          "start": 29.98,
+          "end": 30.3,
+          "word": "寂",
+          "probability": 0.554931640625
+        },
+        {
+          "start": 30.3,
+          "end": 30.72,
+          "word": "寥",
+          "probability": 0.977783203125
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 33.18,
+      "end": 34.58,
+      "text": "眼前花枝頭",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 32.769999999999996,
+          "end": 33.22,
+          "word": "眼",
+          "probability": 0.7529296875
+        },
+        {
+          "start": 33.22,
+          "end": 33.56,
+          "word": "前",
+          "probability": 0.1778564453125
+        },
+        {
+          "start": 33.56,
+          "end": 33.8,
+          "word": "花",
+          "probability": 0.2412109375
+        },
+        {
+          "start": 33.8,
+          "end": 34.1,
+          "word": "枝",
+          "probability": 0.982177734375
+        },
+        {
+          "start": 34.1,
+          "end": 34.58,
+          "word": "頭",
+          "probability": 0.39404296875
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "start": 34.58,
+      "end": 36.32,
+      "text": "問心配喜鬧",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 34.58,
+          "end": 35.04,
+          "word": "問",
+          "probability": 0.1497802734375
+        },
+        {
+          "start": 35.04,
+          "end": 35.28,
+          "word": "心",
+          "probability": 0.90576171875
+        },
+        {
+          "start": 35.28,
+          "end": 35.48,
+          "word": "配",
+          "probability": 0.43603515625
+        },
+        {
+          "start": 35.48,
+          "end": 35.78,
+          "word": "喜",
+          "probability": 0.34130859375
+        },
+        {
+          "start": 35.78,
+          "end": 36.32,
+          "word": "鬧",
+          "probability": 0.91455078125
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "start": 36.32,
+      "end": 38.72,
+      "text": "抬頭傾灘快意盡照",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 36.32,
+          "end": 36.86,
+          "word": "抬",
+          "probability": 0.995361328125
+        },
+        {
+          "start": 36.86,
+          "end": 37.12,
+          "word": "頭",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 37.12,
+          "end": 37.3,
+          "word": "傾",
+          "probability": 0.885498046875
+        },
+        {
+          "start": 37.3,
+          "end": 37.56,
+          "word": "灘",
+          "probability": 0.773193359375
+        },
+        {
+          "start": 37.56,
+          "end": 37.76,
+          "word": "快",
+          "probability": 0.92919921875
+        },
+        {
+          "start": 37.76,
+          "end": 38.06,
+          "word": "意",
+          "probability": 0.93701171875
+        },
+        {
+          "start": 38.06,
+          "end": 38.36,
+          "word": "盡",
+          "probability": 0.823974609375
+        },
+        {
+          "start": 38.36,
+          "end": 38.72,
+          "word": "照",
+          "probability": 0.5546875
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "start": 38.72,
+      "end": 40.82,
+      "text": "長夜",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 38.72,
+          "end": 40.18,
+          "word": "長",
+          "probability": 0.57177734375
+        },
+        {
+          "start": 40.18,
+          "end": 40.82,
+          "word": "夜",
+          "probability": 0.94482421875
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "start": 42.18,
+      "end": 43.72,
+      "text": "劫前因緣刀",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 41.849999999999994,
+          "end": 42.3,
+          "word": "劫",
+          "probability": 0.52056884765625
+        },
+        {
+          "start": 42.3,
+          "end": 42.76,
+          "word": "前",
+          "probability": 0.298583984375
+        },
+        {
+          "start": 42.76,
+          "end": 43.06,
+          "word": "因",
+          "probability": 0.382080078125
+        },
+        {
+          "start": 43.06,
+          "end": 43.3,
+          "word": "緣",
+          "probability": 0.98046875
+        },
+        {
+          "start": 43.3,
+          "end": 43.72,
+          "word": "刀",
+          "probability": 0.638427734375
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "start": 43.72,
+      "end": 46.96,
+      "text": "不如隨心皆逍遙",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 43.72,
+          "end": 44.3,
+          "word": "不",
+          "probability": 0.97265625
+        },
+        {
+          "start": 44.3,
+          "end": 44.58,
+          "word": "如",
+          "probability": 0.9560546875
+        },
+        {
+          "start": 44.58,
+          "end": 44.74,
+          "word": "隨",
+          "probability": 0.96533203125
+        },
+        {
+          "start": 44.74,
+          "end": 45.32,
+          "word": "心",
+          "probability": 0.6728515625
+        },
+        {
+          "start": 45.32,
+          "end": 45.76,
+          "word": "皆",
+          "probability": 0.303955078125
+        },
+        {
+          "start": 45.76,
+          "end": 46.2,
+          "word": "逍",
+          "probability": 0.998291015625
+        },
+        {
+          "start": 46.2,
+          "end": 46.96,
+          "word": "遙",
+          "probability": 0.997314453125
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "start": 48.68,
+      "end": 50.84,
+      "text": "往遠方",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 48.269999999999996,
+          "end": 48.72,
+          "word": "往",
+          "probability": 0.484375
+        },
+        {
+          "start": 48.72,
+          "end": 50.2,
+          "word": "遠",
+          "probability": 0.99072265625
+        },
+        {
+          "start": 50.2,
+          "end": 50.84,
+          "word": "方",
+          "probability": 0.99267578125
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "start": 52.18,
+      "end": 54.84,
+      "text": "一彩流光",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 51.790000000000006,
+          "end": 52.24,
+          "word": "一",
+          "probability": 0.8271484375
+        },
+        {
+          "start": 52.24,
+          "end": 53.1,
+          "word": "彩",
+          "probability": 0.9404296875
+        },
+        {
+          "start": 53.1,
+          "end": 54.26,
+          "word": "流",
+          "probability": 0.95166015625
+        },
+        {
+          "start": 54.26,
+          "end": 54.84,
+          "word": "光",
+          "probability": 0.99267578125
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "start": 56.68,
+      "end": 58.32,
+      "text": "誰共上",
+      "avg_logprob": -0.5273919635348849,
+      "no_speech_prob": 0.7822265625,
+      "compression_ratio": 1.0227272727272727,
+      "words": [
+        {
+          "start": 56.25,
+          "end": 56.7,
+          "word": "誰",
+          "probability": 0.96240234375
+        },
+        {
+          "start": 56.7,
+          "end": 57.58,
+          "word": "共",
+          "probability": 0.779296875
+        },
+        {
+          "start": 57.58,
+          "end": 58.32,
+          "word": "上",
+          "probability": 0.28955078125
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "start": 58.32,
+      "end": 62.44,
+      "text": "燈火琳瑯相傍",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 58.32,
+          "end": 59.42,
+          "word": "燈",
+          "probability": 0.6947021484375
+        },
+        {
+          "start": 59.42,
+          "end": 59.76,
+          "word": "火",
+          "probability": 0.998046875
+        },
+        {
+          "start": 59.76,
+          "end": 60.44,
+          "word": "琳",
+          "probability": 0.663818359375
+        },
+        {
+          "start": 60.44,
+          "end": 60.9,
+          "word": "瑯",
+          "probability": 0.84375
+        },
+        {
+          "start": 60.9,
+          "end": 62.02,
+          "word": "相",
+          "probability": 0.947265625
+        },
+        {
+          "start": 62.02,
+          "end": 62.44,
+          "word": "傍",
+          "probability": 0.79248046875
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "start": 62.44,
+      "end": 65.9,
+      "text": "眷戀間尋常",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 62.44,
+          "end": 63.42,
+          "word": "眷",
+          "probability": 0.5447998046875
+        },
+        {
+          "start": 63.42,
+          "end": 63.96,
+          "word": "戀",
+          "probability": 0.697265625
+        },
+        {
+          "start": 63.96,
+          "end": 64.4,
+          "word": "間",
+          "probability": 0.8916015625
+        },
+        {
+          "start": 64.4,
+          "end": 65.06,
+          "word": "尋",
+          "probability": 0.630859375
+        },
+        {
+          "start": 65.06,
+          "end": 65.9,
+          "word": "常",
+          "probability": 0.92041015625
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "start": 65.9,
+      "end": 69.76,
+      "text": "緣有片刻換魂藏",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 65.9,
+          "end": 66.86,
+          "word": "緣",
+          "probability": 0.6956787109375
+        },
+        {
+          "start": 66.86,
+          "end": 67.28,
+          "word": "有",
+          "probability": 0.52587890625
+        },
+        {
+          "start": 67.28,
+          "end": 67.86,
+          "word": "片",
+          "probability": 0.53125
+        },
+        {
+          "start": 67.86,
+          "end": 68.28,
+          "word": "刻",
+          "probability": 0.9453125
+        },
+        {
+          "start": 68.28,
+          "end": 68.78,
+          "word": "換",
+          "probability": 0.24609375
+        },
+        {
+          "start": 68.78,
+          "end": 69.3,
+          "word": "魂",
+          "probability": 0.56146240234375
+        },
+        {
+          "start": 69.3,
+          "end": 69.76,
+          "word": "藏",
+          "probability": 0.6669921875
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "start": 70.32,
+      "end": 73.92,
+      "text": "浮浪樹瘋變",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 70.32,
+          "end": 71.32,
+          "word": "浮",
+          "probability": 0.6829833984375
+        },
+        {
+          "start": 71.32,
+          "end": 71.88,
+          "word": "浪",
+          "probability": 0.5458984375
+        },
+        {
+          "start": 71.88,
+          "end": 72.22,
+          "word": "樹",
+          "probability": 0.329345703125
+        },
+        {
+          "start": 72.22,
+          "end": 72.8,
+          "word": "瘋",
+          "probability": 0.5286458333333334
+        },
+        {
+          "start": 72.8,
+          "end": 73.92,
+          "word": "變",
+          "probability": 0.38916015625
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "start": 73.92,
+      "end": 77.46,
+      "text": "煙火去寒霜",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 73.92,
+          "end": 74.88,
+          "word": "煙",
+          "probability": 0.948486328125
+        },
+        {
+          "start": 74.88,
+          "end": 75.28,
+          "word": "火",
+          "probability": 0.82666015625
+        },
+        {
+          "start": 75.28,
+          "end": 75.64,
+          "word": "去",
+          "probability": 0.80224609375
+        },
+        {
+          "start": 75.64,
+          "end": 76.48,
+          "word": "寒",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 76.48,
+          "end": 77.46,
+          "word": "霜",
+          "probability": 0.926513671875
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "start": 78.32,
+      "end": 81.66,
+      "text": "昨天像月光",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 78.32,
+          "end": 79.2,
+          "word": "昨",
+          "probability": 0.56787109375
+        },
+        {
+          "start": 79.2,
+          "end": 79.76,
+          "word": "天",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 79.76,
+          "end": 80.3,
+          "word": "像",
+          "probability": 0.33203125
+        },
+        {
+          "start": 80.3,
+          "end": 80.84,
+          "word": "月",
+          "probability": 0.9892578125
+        },
+        {
+          "start": 80.84,
+          "end": 81.66,
+          "word": "光",
+          "probability": 0.99169921875
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "start": 82.32,
+      "end": 87.18,
+      "text": "灑下萬千盞燈微笑",
+      "avg_logprob": -0.5539772479565113,
+      "no_speech_prob": 0.30126953125,
+      "compression_ratio": 1.0,
+      "words": [
+        {
+          "start": 82.32,
+          "end": 83.24,
+          "word": "灑",
+          "probability": 0.82958984375
+        },
+        {
+          "start": 83.24,
+          "end": 83.82,
+          "word": "下",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 83.82,
+          "end": 84.38,
+          "word": "萬",
+          "probability": 0.9052734375
+        },
+        {
+          "start": 84.38,
+          "end": 84.86,
+          "word": "千",
+          "probability": 0.97265625
+        },
+        {
+          "start": 84.86,
+          "end": 85.68,
+          "word": "盞",
+          "probability": 0.56402587890625
+        },
+        {
+          "start": 85.68,
+          "end": 86.16,
+          "word": "燈",
+          "probability": 0.763427734375
+        },
+        {
+          "start": 86.16,
+          "end": 86.58,
+          "word": "微",
+          "probability": 0.204345703125
+        },
+        {
+          "start": 86.58,
+          "end": 87.18,
+          "word": "笑",
+          "probability": 0.953125
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "start": 87.18,
+      "end": 93.36,
+      "text": "浩浩悠閃 破忘心想",
+      "avg_logprob": -0.8618163876235485,
+      "no_speech_prob": 0.2041015625,
+      "compression_ratio": 0.7575757575757576,
+      "words": [
+        {
+          "start": 87.18,
+          "end": 88.36,
+          "word": "浩",
+          "probability": 0.590576171875
+        },
+        {
+          "start": 88.36,
+          "end": 88.58,
+          "word": "浩",
+          "probability": 0.54833984375
+        },
+        {
+          "start": 88.58,
+          "end": 88.88,
+          "word": "悠",
+          "probability": 0.880859375
+        },
+        {
+          "start": 88.88,
+          "end": 89.68,
+          "word": "閃",
+          "probability": 0.541748046875
+        },
+        {
+          "start": 89.78,
+          "end": 90.9,
+          "word": " 破",
+          "probability": 0.5283203125
+        },
+        {
+          "start": 90.9,
+          "end": 91.3,
+          "word": "忘",
+          "probability": 0.1446533203125
+        },
+        {
+          "start": 91.3,
+          "end": 92.68,
+          "word": "心",
+          "probability": 0.26171875
+        },
+        {
+          "start": 92.68,
+          "end": 93.36,
+          "word": "想",
+          "probability": 0.246337890625
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "start": 117.18,
+      "end": 147.16,
+      "text": "作词 作曲 编曲 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音 混音",
+      "avg_logprob": -0.07527777989705403,
+      "no_speech_prob": 0.1881103515625,
+      "compression_ratio": 13.256410256410257,
+      "words": [
+        {
+          "start": 117.18,
+          "end": 117.5,
+          "word": "作",
+          "probability": 0.00018227100372314453
+        },
+        {
+          "start": 117.5,
+          "end": 118.0,
+          "word": "词",
+          "probability": 0.59375
+        },
+        {
+          "start": 118.0,
+          "end": 118.64,
+          "word": " 作",
+          "probability": 0.136962890625
+        },
+        {
+          "start": 118.64,
+          "end": 118.64,
+          "word": "曲",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 118.64,
+          "end": 119.08,
+          "word": " 编",
+          "probability": 0.930908203125
+        },
+        {
+          "start": 119.08,
+          "end": 119.14,
+          "word": "曲",
+          "probability": 0.994140625
+        },
+        {
+          "start": 119.14,
+          "end": 119.14,
+          "word": " 混",
+          "probability": 0.35205078125
+        },
+        {
+          "start": 119.14,
+          "end": 119.14,
+          "word": "音",
+          "probability": 0.970703125
+        },
+        {
+          "start": 119.14,
+          "end": 119.14,
+          "word": " 混",
+          "probability": 0.295166015625
+        },
+        {
+          "start": 119.14,
+          "end": 119.14,
+          "word": "音",
+          "probability": 0.94775390625
+        },
+        {
+          "start": 120.34,
+          "end": 120.34,
+          "word": " 混",
+          "probability": 0.328857421875
+        },
+        {
+          "start": 120.34,
+          "end": 120.34,
+          "word": "音",
+          "probability": 0.95458984375
+        },
+        {
+          "start": 120.42,
+          "end": 120.94,
+          "word": " 混",
+          "probability": 0.41357421875
+        },
+        {
+          "start": 120.94,
+          "end": 120.94,
+          "word": "音",
+          "probability": 0.9736328125
+        },
+        {
+          "start": 120.94,
+          "end": 122.76,
+          "word": " 混",
+          "probability": 0.6513671875
+        },
+        {
+          "start": 122.76,
+          "end": 122.76,
+          "word": "音",
+          "probability": 0.994140625
+        },
+        {
+          "start": 122.78,
+          "end": 122.96,
+          "word": " 混",
+          "probability": 0.8203125
+        },
+        {
+          "start": 122.96,
+          "end": 122.96,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 123.72,
+          "end": 124.56,
+          "word": " 混",
+          "probability": 0.90234375
+        },
+        {
+          "start": 124.56,
+          "end": 124.72,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 124.84,
+          "end": 124.9,
+          "word": " 混",
+          "probability": 0.93798828125
+        },
+        {
+          "start": 124.9,
+          "end": 125.06,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 125.06,
+          "end": 125.18,
+          "word": " 混",
+          "probability": 0.9541015625
+        },
+        {
+          "start": 125.18,
+          "end": 125.74,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 125.78,
+          "end": 126.72,
+          "word": " 混",
+          "probability": 0.962890625
+        },
+        {
+          "start": 126.72,
+          "end": 127.0,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 127.32,
+          "end": 127.38,
+          "word": " 混",
+          "probability": 0.96728515625
+        },
+        {
+          "start": 127.38,
+          "end": 127.48,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 127.7,
+          "end": 127.7,
+          "word": " 混",
+          "probability": 0.9716796875
+        },
+        {
+          "start": 127.7,
+          "end": 128.0,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": " 混",
+          "probability": 0.97314453125
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": " 混",
+          "probability": 0.97509765625
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": " 混",
+          "probability": 0.9765625
+        },
+        {
+          "start": 128.58,
+          "end": 128.58,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 128.8,
+          "end": 128.92,
+          "word": " 混",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 128.92,
+          "end": 128.92,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 129.36,
+          "end": 129.6,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 129.6,
+          "end": 129.6,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 129.92,
+          "end": 129.92,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 129.92,
+          "end": 130.04,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 132.2,
+          "end": 132.38,
+          "word": " 混",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 132.38,
+          "end": 132.38,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 132.6,
+          "end": 132.86,
+          "word": " 混",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 132.86,
+          "end": 133.16,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 133.36,
+          "end": 133.54,
+          "word": " 混",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 133.54,
+          "end": 133.66,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 133.78,
+          "end": 133.78,
+          "word": " 混",
+          "probability": 0.98046875
+        },
+        {
+          "start": 133.78,
+          "end": 133.78,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 133.96,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.9814453125
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": " 混",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 134.0,
+          "end": 134.0,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.0,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.08,
+          "end": 134.08,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": " 混",
+          "probability": 0.982421875
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.38,
+          "end": 134.38,
+          "word": "音",
+          "probability": 0.99609375
+        },
+        {
+          "start": 134.4,
+          "end": 134.46,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.46,
+          "end": 134.46,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.46,
+          "end": 134.46,
+          "word": " 混",
+          "probability": 0.98193359375
+        },
+        {
+          "start": 134.46,
+          "end": 134.46,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.46,
+          "end": 134.46,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.46,
+          "end": 134.46,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.46,
+          "end": 134.52,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.52,
+          "end": 134.52,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.52,
+          "end": 134.62,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.62,
+          "end": 134.62,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.62,
+          "end": 134.62,
+          "word": " 混",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 134.62,
+          "end": 134.62,
+          "word": "音",
+          "probability": 0.99658203125
+        },
+        {
+          "start": 134.62,
+          "end": 134.62,
+          "word": " 混",
+          "probability": 0.98046875
+        },
+        {
+          "start": 134.62,
+          "end": 134.62,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 134.62,
+          "end": 134.66,
+          "word": " 混",
+          "probability": 0.98046875
+        },
+        {
+          "start": 134.66,
+          "end": 134.9,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 135.1,
+          "end": 135.12,
+          "word": " 混",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 135.12,
+          "end": 135.38,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 135.58,
+          "end": 135.7,
+          "word": " 混",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 135.7,
+          "end": 136.08,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 136.08,
+          "end": 136.44,
+          "word": " 混",
+          "probability": 0.97998046875
+        },
+        {
+          "start": 136.44,
+          "end": 136.5,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": " 混",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": "音",
+          "probability": 0.9970703125
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": " 混",
+          "probability": 0.97900390625
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": " 混",
+          "probability": 0.97900390625
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": " 混",
+          "probability": 0.978515625
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 136.5,
+          "end": 136.5,
+          "word": " 混",
+          "probability": 0.978515625
+        },
+        {
+          "start": 136.5,
+          "end": 136.58,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 136.7,
+          "end": 138.38,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 138.38,
+          "end": 138.66,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 138.66,
+          "end": 139.18,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 139.18,
+          "end": 139.32,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 139.66,
+          "end": 140.18,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 140.18,
+          "end": 140.62,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 140.62,
+          "end": 141.18,
+          "word": " 混",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 141.18,
+          "end": 141.68,
+          "word": "音",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 141.68,
+          "end": 142.2,
+          "word": " 混",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 142.2,
+          "end": 147.16,
+          "word": "音",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "start": 147.16,
+      "end": 150.36,
+      "text": "眼前花正好 溫馨被嬉鬧",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 147.16,
+          "end": 147.26,
+          "word": "眼",
+          "probability": 0.499267578125
+        },
+        {
+          "start": 147.26,
+          "end": 147.56,
+          "word": "前",
+          "probability": 0.62939453125
+        },
+        {
+          "start": 147.56,
+          "end": 147.76,
+          "word": "花",
+          "probability": 0.439453125
+        },
+        {
+          "start": 147.76,
+          "end": 148.08,
+          "word": "正",
+          "probability": 0.89794921875
+        },
+        {
+          "start": 148.08,
+          "end": 148.62,
+          "word": "好",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 148.68,
+          "end": 149.06,
+          "word": " 溫",
+          "probability": 0.6265869140625
+        },
+        {
+          "start": 149.06,
+          "end": 149.24,
+          "word": "馨",
+          "probability": 0.9833984375
+        },
+        {
+          "start": 149.24,
+          "end": 149.52,
+          "word": "被",
+          "probability": 0.69287109375
+        },
+        {
+          "start": 149.52,
+          "end": 149.94,
+          "word": "嬉",
+          "probability": 0.7309163411458334
+        },
+        {
+          "start": 149.94,
+          "end": 150.36,
+          "word": "鬧",
+          "probability": 0.99169921875
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "start": 150.36,
+      "end": 152.74,
+      "text": "猜到晴天快已盡早",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 150.36,
+          "end": 150.86,
+          "word": "猜",
+          "probability": 0.715087890625
+        },
+        {
+          "start": 150.86,
+          "end": 151.06,
+          "word": "到",
+          "probability": 0.81689453125
+        },
+        {
+          "start": 151.06,
+          "end": 151.32,
+          "word": "晴",
+          "probability": 0.7587890625
+        },
+        {
+          "start": 151.32,
+          "end": 151.56,
+          "word": "天",
+          "probability": 0.99951171875
+        },
+        {
+          "start": 151.56,
+          "end": 151.72,
+          "word": "快",
+          "probability": 0.955078125
+        },
+        {
+          "start": 151.72,
+          "end": 152.08,
+          "word": "已",
+          "probability": 0.81689453125
+        },
+        {
+          "start": 152.08,
+          "end": 152.36,
+          "word": "盡",
+          "probability": 0.7178955078125
+        },
+        {
+          "start": 152.36,
+          "end": 152.74,
+          "word": "早",
+          "probability": 0.367919921875
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "start": 154.1,
+      "end": 157.72,
+      "text": "長夜 借塵因緣刀",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 153.74,
+          "end": 154.16,
+          "word": "長",
+          "probability": 0.38720703125
+        },
+        {
+          "start": 154.16,
+          "end": 154.84,
+          "word": "夜",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 155.08,
+          "end": 156.38,
+          "word": " 借",
+          "probability": 0.5640869140625
+        },
+        {
+          "start": 156.38,
+          "end": 156.82,
+          "word": "塵",
+          "probability": 0.59161376953125
+        },
+        {
+          "start": 156.82,
+          "end": 157.08,
+          "word": "因",
+          "probability": 0.110595703125
+        },
+        {
+          "start": 157.08,
+          "end": 157.32,
+          "word": "緣",
+          "probability": 0.978515625
+        },
+        {
+          "start": 157.32,
+          "end": 157.72,
+          "word": "刀",
+          "probability": 0.6422119140625
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "start": 157.72,
+      "end": 160.92,
+      "text": "不如隨心且逍遙",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 157.72,
+          "end": 158.24,
+          "word": "不",
+          "probability": 0.984375
+        },
+        {
+          "start": 158.24,
+          "end": 158.6,
+          "word": "如",
+          "probability": 0.98095703125
+        },
+        {
+          "start": 158.6,
+          "end": 158.78,
+          "word": "隨",
+          "probability": 0.94482421875
+        },
+        {
+          "start": 158.78,
+          "end": 159.32,
+          "word": "心",
+          "probability": 0.46484375
+        },
+        {
+          "start": 159.32,
+          "end": 159.78,
+          "word": "且",
+          "probability": 0.420166015625
+        },
+        {
+          "start": 159.78,
+          "end": 160.22,
+          "word": "逍",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 160.22,
+          "end": 160.92,
+          "word": "遙",
+          "probability": 0.996337890625
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "start": 162.51999999999998,
+      "end": 168.88,
+      "text": "望遠方 一彩流光",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 162.51999999999998,
+          "end": 163.35999999999999,
+          "word": "望",
+          "probability": 0.75732421875
+        },
+        {
+          "start": 163.35999999999999,
+          "end": 164.2,
+          "word": "遠",
+          "probability": 0.8076171875
+        },
+        {
+          "start": 164.2,
+          "end": 164.88,
+          "word": "方",
+          "probability": 0.99853515625
+        },
+        {
+          "start": 165.56,
+          "end": 166.24,
+          "word": " 一",
+          "probability": 0.580078125
+        },
+        {
+          "start": 166.24,
+          "end": 167.22,
+          "word": "彩",
+          "probability": 0.923828125
+        },
+        {
+          "start": 167.22,
+          "end": 168.32,
+          "word": "流",
+          "probability": 0.93359375
+        },
+        {
+          "start": 168.32,
+          "end": 168.88,
+          "word": "光",
+          "probability": 0.98583984375
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "start": 170.56,
+      "end": 176.38,
+      "text": "誰共上 燈火凌亂相逢",
+      "avg_logprob": -0.48602941316716813,
+      "no_speech_prob": 0.1531982421875,
+      "compression_ratio": 1.0422535211267605,
+      "words": [
+        {
+          "start": 170.38000000000002,
+          "end": 170.8,
+          "word": "誰",
+          "probability": 0.98046875
+        },
+        {
+          "start": 170.8,
+          "end": 171.52,
+          "word": "共",
+          "probability": 0.79296875
+        },
+        {
+          "start": 171.52,
+          "end": 172.38,
+          "word": "上",
+          "probability": 0.37841796875
+        },
+        {
+          "start": 172.62,
+          "end": 173.44,
+          "word": " 燈",
+          "probability": 0.975341796875
+        },
+        {
+          "start": 173.44,
+          "end": 173.86,
+          "word": "火",
+          "probability": 0.9990234375
+        },
+        {
+          "start": 173.86,
+          "end": 174.52,
+          "word": "凌",
+          "probability": 0.754638671875
+        },
+        {
+          "start": 174.52,
+          "end": 174.94,
+          "word": "亂",
+          "probability": 0.8046875
+        },
+        {
+          "start": 174.94,
+          "end": 176.04,
+          "word": "相",
+          "probability": 0.1748046875
+        },
+        {
+          "start": 176.04,
+          "end": 176.38,
+          "word": "逢",
+          "probability": 0.400848388671875
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "start": 176.38,
+      "end": 183.72,
+      "text": "卷雲間尋常 圓腰片的花魂芳",
+      "avg_logprob": -0.5166330424047285,
+      "no_speech_prob": 0.1693115234375,
+      "compression_ratio": 0.9310344827586207,
+      "words": [
+        {
+          "start": 176.38,
+          "end": 177.4,
+          "word": "卷",
+          "probability": 0.618408203125
+        },
+        {
+          "start": 177.4,
+          "end": 177.92,
+          "word": "雲",
+          "probability": 0.742919921875
+        },
+        {
+          "start": 177.92,
+          "end": 178.36,
+          "word": "間",
+          "probability": 0.9921875
+        },
+        {
+          "start": 178.36,
+          "end": 179.06,
+          "word": "尋",
+          "probability": 0.828369140625
+        },
+        {
+          "start": 179.06,
+          "end": 179.84,
+          "word": "常",
+          "probability": 0.87353515625
+        },
+        {
+          "start": 180.08,
+          "end": 180.92,
+          "word": " 圓",
+          "probability": 0.6785888671875
+        },
+        {
+          "start": 180.92,
+          "end": 181.4,
+          "word": "腰",
+          "probability": 0.7052001953125
+        },
+        {
+          "start": 181.4,
+          "end": 181.72,
+          "word": "片",
+          "probability": 0.6513671875
+        },
+        {
+          "start": 181.72,
+          "end": 182.08,
+          "word": "的",
+          "probability": 0.1829833984375
+        },
+        {
+          "start": 182.08,
+          "end": 182.64,
+          "word": "花",
+          "probability": 0.421630859375
+        },
+        {
+          "start": 182.64,
+          "end": 183.34,
+          "word": "魂",
+          "probability": 0.583984375
+        },
+        {
+          "start": 183.34,
+          "end": 183.72,
+          "word": "芳",
+          "probability": 0.92333984375
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "start": 184.38,
+      "end": 191.32,
+      "text": "浮揚是烽煉 煙火去暗上",
+      "avg_logprob": -0.5166330424047285,
+      "no_speech_prob": 0.1693115234375,
+      "compression_ratio": 0.9310344827586207,
+      "words": [
+        {
+          "start": 184.38,
+          "end": 185.34,
+          "word": "浮",
+          "probability": 0.5222015380859375
+        },
+        {
+          "start": 185.34,
+          "end": 185.86,
+          "word": "揚",
+          "probability": 0.74658203125
+        },
+        {
+          "start": 185.86,
+          "end": 186.34,
+          "word": "是",
+          "probability": 0.56982421875
+        },
+        {
+          "start": 186.34,
+          "end": 186.92,
+          "word": "烽",
+          "probability": 0.1925048828125
+        },
+        {
+          "start": 186.92,
+          "end": 187.98,
+          "word": "煉",
+          "probability": 0.6175537109375
+        },
+        {
+          "start": 188.12,
+          "end": 188.76,
+          "word": " 煙",
+          "probability": 0.94287109375
+        },
+        {
+          "start": 188.76,
+          "end": 189.28,
+          "word": "火",
+          "probability": 0.97265625
+        },
+        {
+          "start": 189.28,
+          "end": 189.64,
+          "word": "去",
+          "probability": 0.475830078125
+        },
+        {
+          "start": 189.64,
+          "end": 190.72,
+          "word": "暗",
+          "probability": 0.6759033203125
+        },
+        {
+          "start": 190.72,
+          "end": 191.32,
+          "word": "上",
+          "probability": 0.1270751953125
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "start": 192.38,
+      "end": 201.32,
+      "text": "拖天下月光 灑下萬千讓它回響",
+      "avg_logprob": -0.5166330424047285,
+      "no_speech_prob": 0.1693115234375,
+      "compression_ratio": 0.9310344827586207,
+      "words": [
+        {
+          "start": 192.38,
+          "end": 193.3,
+          "word": "拖",
+          "probability": 0.53857421875
+        },
+        {
+          "start": 193.3,
+          "end": 193.72,
+          "word": "天",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 193.72,
+          "end": 194.22,
+          "word": "下",
+          "probability": 0.254150390625
+        },
+        {
+          "start": 194.22,
+          "end": 194.74,
+          "word": "月",
+          "probability": 0.92626953125
+        },
+        {
+          "start": 194.74,
+          "end": 195.6,
+          "word": "光",
+          "probability": 0.86181640625
+        },
+        {
+          "start": 196.36,
+          "end": 197.2,
+          "word": " 灑",
+          "probability": 0.838623046875
+        },
+        {
+          "start": 197.2,
+          "end": 197.74,
+          "word": "下",
+          "probability": 0.89990234375
+        },
+        {
+          "start": 197.74,
+          "end": 198.4,
+          "word": "萬",
+          "probability": 0.7861328125
+        },
+        {
+          "start": 198.4,
+          "end": 198.82,
+          "word": "千",
+          "probability": 0.89306640625
+        },
+        {
+          "start": 198.82,
+          "end": 199.54,
+          "word": "讓",
+          "probability": 0.31005859375
+        },
+        {
+          "start": 199.54,
+          "end": 200.2,
+          "word": "它",
+          "probability": 0.7216796875
+        },
+        {
+          "start": 200.2,
+          "end": 200.74,
+          "word": "回",
+          "probability": 0.7890625
+        },
+        {
+          "start": 200.74,
+          "end": 201.32,
+          "word": "響",
+          "probability": 0.76123046875
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "start": 201.32,
+      "end": 207.5,
+      "text": "好梦悠长 莫忘倾向",
+      "avg_logprob": -0.4947916915019353,
+      "no_speech_prob": 0.12548828125,
+      "compression_ratio": 0.8472222222222222,
+      "words": [
+        {
+          "start": 201.32,
+          "end": 202.26,
+          "word": "好",
+          "probability": 0.428466796875
+        },
+        {
+          "start": 202.26,
+          "end": 202.58,
+          "word": "梦",
+          "probability": 0.632568359375
+        },
+        {
+          "start": 202.58,
+          "end": 202.86,
+          "word": "悠",
+          "probability": 0.9169921875
+        },
+        {
+          "start": 202.86,
+          "end": 203.54,
+          "word": "长",
+          "probability": 0.7607421875
+        },
+        {
+          "start": 203.8,
+          "end": 204.92,
+          "word": " 莫",
+          "probability": 0.60797119140625
+        },
+        {
+          "start": 204.92,
+          "end": 205.7,
+          "word": "忘",
+          "probability": 0.939453125
+        },
+        {
+          "start": 205.7,
+          "end": 206.86,
+          "word": "倾",
+          "probability": 0.6595458984375
+        },
+        {
+          "start": 206.86,
+          "end": 207.5,
+          "word": "向",
+          "probability": 0.93505859375
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "start": 208.32,
+      "end": 211.32,
+      "text": "续人间寻常",
+      "avg_logprob": -0.4947916915019353,
+      "no_speech_prob": 0.12548828125,
+      "compression_ratio": 0.8472222222222222,
+      "words": [
+        {
+          "start": 208.32,
+          "end": 209.38,
+          "word": "续",
+          "probability": 0.485595703125
+        },
+        {
+          "start": 209.38,
+          "end": 209.82,
+          "word": "人",
+          "probability": 0.9775390625
+        },
+        {
+          "start": 209.82,
+          "end": 210.44,
+          "word": "间",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 210.44,
+          "end": 210.94,
+          "word": "寻",
+          "probability": 0.967529296875
+        },
+        {
+          "start": 210.94,
+          "end": 211.56,
+          "word": "常",
+          "probability": 0.74609375
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "start": 211.88,
+      "end": 215.8,
+      "text": "此去一目一无恙",
+      "avg_logprob": -0.4947916915019353,
+      "no_speech_prob": 0.12548828125,
+      "compression_ratio": 0.8472222222222222,
+      "words": [
+        {
+          "start": 211.88,
+          "end": 212.7,
+          "word": "此",
+          "probability": 0.82666015625
+        },
+        {
+          "start": 212.7,
+          "end": 213.34,
+          "word": "去",
+          "probability": 0.96875
+        },
+        {
+          "start": 213.34,
+          "end": 213.82,
+          "word": "一",
+          "probability": 0.82373046875
+        },
+        {
+          "start": 213.82,
+          "end": 214.28,
+          "word": "目",
+          "probability": 0.2313232421875
+        },
+        {
+          "start": 214.28,
+          "end": 214.7,
+          "word": "一",
+          "probability": 0.89404296875
+        },
+        {
+          "start": 214.7,
+          "end": 215.3,
+          "word": "无",
+          "probability": 0.80908203125
+        },
+        {
+          "start": 215.3,
+          "end": 215.8,
+          "word": "恙",
+          "probability": 0.845458984375
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "start": 215.8,
+      "end": 224.68,
+      "text": "前灯在烽烟拂远方",
+      "avg_logprob": -0.5083007924258709,
+      "no_speech_prob": 0.48388671875,
+      "compression_ratio": 0.6857142857142857,
+      "words": [
+        {
+          "start": 215.8,
+          "end": 217.16,
+          "word": "前",
+          "probability": 0.1685791015625
+        },
+        {
+          "start": 217.16,
+          "end": 218.02,
+          "word": "灯",
+          "probability": 0.7509765625
+        },
+        {
+          "start": 218.02,
+          "end": 218.38,
+          "word": "在",
+          "probability": 0.87451171875
+        },
+        {
+          "start": 218.38,
+          "end": 219.0,
+          "word": "烽",
+          "probability": 0.4984130859375
+        },
+        {
+          "start": 219.0,
+          "end": 220.12,
+          "word": "烟",
+          "probability": 0.8291015625
+        },
+        {
+          "start": 220.12,
+          "end": 220.98,
+          "word": "拂",
+          "probability": 0.920166015625
+        },
+        {
+          "start": 220.98,
+          "end": 223.8,
+          "word": "远",
+          "probability": 0.93017578125
+        },
+        {
+          "start": 223.8,
+          "end": 224.68,
+          "word": "方",
+          "probability": 0.9951171875
+        }
+      ]
+    }
+  ],
+  "refined": [
+    {
+      "start": 0.2,
+      "end": 1.935,
+      "text": "詞曲李宗盛"
+    },
+    {
+      "start": 2.055,
+      "end": 3.09,
+      "text": "混音李宗盛"
+    },
+    {
+      "start": 5.0600000000000005,
+      "end": 5.41,
+      "text": "混音"
+    },
+    {
+      "start": 8.02,
+      "end": 8.975,
+      "text": "李宗盛"
+    },
+    {
+      "start": 9.095,
+      "end": 9.445,
+      "text": "混音"
+    },
+    {
+      "start": 9.86,
+      "end": 10.954999999999998,
+      "text": "李宗盛"
+    },
+    {
+      "start": 11.075,
+      "end": 11.424999999999999,
+      "text": "混音"
+    },
+    {
+      "start": 12.219999999999999,
+      "end": 13.034999999999998,
+      "text": "李宗盛"
+    },
+    {
+      "start": 13.155,
+      "end": 15.135,
+      "text": "混音李宗盛"
+    },
+    {
+      "start": 15.255,
+      "end": 15.605,
+      "text": "混音"
+    },
+    {
+      "start": 15.799999999999999,
+      "end": 18.155,
+      "text": "李宗盛"
+    },
+    {
+      "start": 18.275,
+      "end": 19.97,
+      "text": "混音李宗盛"
+    },
+    {
+      "start": 21.68,
+      "end": 22.75,
+      "text": "混音李宗盛"
+    },
+    {
+      "start": 25.34,
+      "end": 27.07,
+      "text": "混音李宗盛"
+    },
+    {
+      "start": 30.18,
+      "end": 30.99,
+      "text": "不寂寥"
+    },
+    {
+      "start": 32.97,
+      "end": 34.754999999999995,
+      "text": "眼前花枝頭"
+    },
+    {
+      "start": 34.875,
+      "end": 36.495000000000005,
+      "text": "問心配喜鬧"
+    },
+    {
+      "start": 36.61500000000001,
+      "end": 38.894999999999996,
+      "text": "抬頭傾灘快意盡照"
+    },
+    {
+      "start": 39.015,
+      "end": 41.09,
+      "text": "長夜"
+    },
+    {
+      "start": 42.05,
+      "end": 43.894999999999996,
+      "text": "劫前因緣刀"
+    },
+    {
+      "start": 44.015,
+      "end": 47.230000000000004,
+      "text": "不如隨心皆逍遙"
+    },
+    {
+      "start": 48.47,
+      "end": 51.11000000000001,
+      "text": "往遠方"
+    },
+    {
+      "start": 51.99000000000001,
+      "end": 55.11000000000001,
+      "text": "一彩流光"
+    },
+    {
+      "start": 56.45,
+      "end": 58.495000000000005,
+      "text": "誰共上"
+    },
+    {
+      "start": 58.61500000000001,
+      "end": 62.614999999999995,
+      "text": "燈火琳瑯相傍"
+    },
+    {
+      "start": 62.735,
+      "end": 66.075,
+      "text": "眷戀間尋常"
+    },
+    {
+      "start": 66.19500000000001,
+      "end": 70.03,
+      "text": "緣有片刻換魂藏"
+    },
+    {
+      "start": 70.52,
+      "end": 74.095,
+      "text": "浮浪樹瘋變"
+    },
+    {
+      "start": 74.215,
+      "end": 77.72999999999999,
+      "text": "煙火去寒霜"
+    },
+    {
+      "start": 78.52,
+      "end": 81.92999999999999,
+      "text": "昨天像月光"
+    },
+    {
+      "start": 82.52,
+      "end": 87.355,
+      "text": "灑下萬千盞燈微笑"
+    },
+    {
+      "start": 87.47500000000001,
+      "end": 93.63,
+      "text": "浩浩悠閃破忘心想"
+    },
+    {
+      "start": 147.35999999999999,
+      "end": 150.53500000000003,
+      "text": "眼前花正好溫馨被嬉鬧"
+    },
+    {
+      "start": 150.65500000000003,
+      "end": 153.01000000000002,
+      "text": "猜到晴天快已盡早"
+    },
+    {
+      "start": 153.94,
+      "end": 157.89499999999998,
+      "text": "長夜借塵因緣刀"
+    },
+    {
+      "start": 158.015,
+      "end": 161.19,
+      "text": "不如隨心且逍遙"
+    },
+    {
+      "start": 162.71999999999997,
+      "end": 165.15,
+      "text": "望遠方"
+    },
+    {
+      "start": 165.76,
+      "end": 169.15,
+      "text": "一彩流光"
+    },
+    {
+      "start": 170.58,
+      "end": 176.555,
+      "text": "誰共上燈火凌亂相逢"
+    },
+    {
+      "start": 176.675,
+      "end": 183.99,
+      "text": "卷雲間尋常圓腰片的花魂芳"
+    },
+    {
+      "start": 184.57999999999998,
+      "end": 191.59,
+      "text": "浮揚是烽煉煙火去暗上"
+    },
+    {
+      "start": 192.57999999999998,
+      "end": 195.87,
+      "text": "拖天下月光"
+    },
+    {
+      "start": 196.56,
+      "end": 201.495,
+      "text": "灑下萬千讓它回響"
+    },
+    {
+      "start": 201.615,
+      "end": 207.77,
+      "text": "好梦悠长莫忘倾向"
+    },
+    {
+      "start": 208.51999999999998,
+      "end": 211.83,
+      "text": "续人间寻常"
+    },
+    {
+      "start": 212.07999999999998,
+      "end": 215.97500000000002,
+      "text": "此去一目一无恙"
+    },
+    {
+      "start": 216.09500000000003,
+      "end": 224.95000000000002,
+      "text": "前灯在烽烟拂远方"
+    }
+  ]
+}

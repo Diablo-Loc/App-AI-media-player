@@ -1,0 +1,1749 @@
+{
+  "metrics": {
+    "number": 1,
+    "language": "en",
+    "primary": {
+      "seconds": 12.319792800000869,
+      "process_cpu_seconds": 3.125,
+      "process_rss_before_mib": 823.38671875,
+      "process_rss_peak_mib": 962.5390625,
+      "process_rss_extra_peak_mib": 139.15234375,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 21
+    },
+    "coverage": {
+      "seconds": 9.402137299999595,
+      "process_cpu_seconds": 2.84375,
+      "process_rss_before_mib": 827.68359375,
+      "process_rss_peak_mib": 860.80859375,
+      "process_rss_extra_peak_mib": 33.125,
+      "gpu_total_memory_peak_mib": 4197.0,
+      "gpu_utilization_peak_percent": 100.0,
+      "gpu_samples": 16
+    },
+    "retry_count": 11,
+    "retry_audio_seconds": 114.79400000000001,
+    "primary_cues": 29,
+    "final_cues": 31,
+    "added": 2,
+    "all_primary_text_times_unchanged": true,
+    "primary_input_unmodified": true,
+    "no_overlap": true,
+    "diagnostic": {
+      "duration": 202.478,
+      "gaps_before": [
+        [
+          25.54,
+          29.95
+        ],
+        [
+          31.48,
+          41.89
+        ],
+        [
+          51.18,
+          55.57
+        ],
+        [
+          63.62,
+          67.85
+        ],
+        [
+          92.12,
+          97.61
+        ],
+        [
+          100.54,
+          113.35
+        ],
+        [
+          138.16,
+          146.71
+        ],
+        [
+          148.24,
+          153.31
+        ],
+        [
+          154.84,
+          159.89
+        ],
+        [
+          197.78,
+          202.478
+        ]
+      ],
+      "attempts": [
+        {
+          "start": 23.54,
+          "end": 35.54,
+          "round": 1,
+          "added": 1
+        },
+        {
+          "start": 29.48,
+          "end": 41.480000000000004,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 49.18,
+          "end": 61.18,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 61.62,
+          "end": 73.62,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 90.12,
+          "end": 102.12,
+          "round": 1,
+          "added": 1
+        },
+        {
+          "start": 136.16,
+          "end": 148.16,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 146.24,
+          "end": 158.24,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 152.84,
+          "end": 164.84,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 195.78,
+          "end": 202.478,
+          "round": 1,
+          "added": 0
+        },
+        {
+          "start": 50.976,
+          "end": 56.928,
+          "round": 2,
+          "added": 0
+        },
+        {
+          "start": 63.84,
+          "end": 69.984,
+          "round": 2,
+          "added": 0
+        }
+      ],
+      "added_cues": 2,
+      "speech": [
+        [
+          0.368,
+          34.256
+        ],
+        [
+          52.976,
+          54.928
+        ],
+        [
+          57.648,
+          60.56
+        ],
+        [
+          65.84,
+          67.984
+        ],
+        [
+          70.064,
+          72.976
+        ],
+        [
+          74.608,
+          100.24
+        ],
+        [
+          113.584,
+          144.848
+        ],
+        [
+          146.928,
+          199.76
+        ]
+      ],
+      "unresolved_speech": [
+        [
+          31.48,
+          34.256
+        ],
+        [
+          52.976,
+          54.928
+        ],
+        [
+          65.84,
+          67.85
+        ],
+        [
+          138.16,
+          144.848
+        ],
+        [
+          148.24,
+          153.31
+        ],
+        [
+          154.84,
+          159.89
+        ],
+        [
+          197.78,
+          199.76
+        ]
+      ]
+    },
+    "primary_character_inventory_preserved": true
+  },
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.72,
+      "end": 5.02,
+      "text": " Muse over the antique memories",
+      "avg_logprob": -0.6600694232516818,
+      "no_speech_prob": 0.76513671875,
+      "compression_ratio": 1.3014705882352942,
+      "words": [
+        {
+          "start": 0.72,
+          "end": 1.32,
+          "word": " Muse",
+          "probability": 0.9345703125
+        },
+        {
+          "start": 1.32,
+          "end": 2.42,
+          "word": " over",
+          "probability": 0.7880859375
+        },
+        {
+          "start": 2.42,
+          "end": 2.98,
+          "word": " the",
+          "probability": 0.98779296875
+        },
+        {
+          "start": 2.98,
+          "end": 3.62,
+          "word": " antique",
+          "probability": 0.853515625
+        },
+        {
+          "start": 3.62,
+          "end": 5.02,
+          "word": " memories",
+          "probability": 0.97314453125
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 6.360000000000001,
+      "end": 12.48,
+      "text": " Realize again every fragment shown to know why",
+      "avg_logprob": -0.6600694232516818,
+      "no_speech_prob": 0.76513671875,
+      "compression_ratio": 1.3014705882352942,
+      "words": [
+        {
+          "start": 6.360000000000001,
+          "end": 7.4,
+          "word": " Realize",
+          "probability": 0.902587890625
+        },
+        {
+          "start": 7.4,
+          "end": 7.7,
+          "word": " again",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 7.7,
+          "end": 9.24,
+          "word": " every",
+          "probability": 0.3056640625
+        },
+        {
+          "start": 9.24,
+          "end": 10.0,
+          "word": " fragment",
+          "probability": 0.69091796875
+        },
+        {
+          "start": 10.0,
+          "end": 10.56,
+          "word": " shown",
+          "probability": 0.8310546875
+        },
+        {
+          "start": 10.56,
+          "end": 10.94,
+          "word": " to",
+          "probability": 0.9541015625
+        },
+        {
+          "start": 10.94,
+          "end": 11.3,
+          "word": " know",
+          "probability": 0.94580078125
+        },
+        {
+          "start": 11.3,
+          "end": 12.48,
+          "word": " why",
+          "probability": 0.658203125
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 13.6,
+      "end": 18.86,
+      "text": " On my ugly dress in the millions of laughs occurs",
+      "avg_logprob": -0.6600694232516818,
+      "no_speech_prob": 0.76513671875,
+      "compression_ratio": 1.3014705882352942,
+      "words": [
+        {
+          "start": 13.440000000000001,
+          "end": 13.96,
+          "word": " On",
+          "probability": 0.18310546875
+        },
+        {
+          "start": 13.96,
+          "end": 14.16,
+          "word": " my",
+          "probability": 0.6728515625
+        },
+        {
+          "start": 14.16,
+          "end": 14.5,
+          "word": " ugly",
+          "probability": 0.187255859375
+        },
+        {
+          "start": 14.5,
+          "end": 15.86,
+          "word": " dress",
+          "probability": 0.6630859375
+        },
+        {
+          "start": 15.86,
+          "end": 16.38,
+          "word": " in",
+          "probability": 0.79638671875
+        },
+        {
+          "start": 16.38,
+          "end": 16.68,
+          "word": " the",
+          "probability": 0.94287109375
+        },
+        {
+          "start": 16.68,
+          "end": 17.3,
+          "word": " millions",
+          "probability": 0.45654296875
+        },
+        {
+          "start": 17.3,
+          "end": 17.78,
+          "word": " of",
+          "probability": 0.931640625
+        },
+        {
+          "start": 17.78,
+          "end": 18.34,
+          "word": " laughs",
+          "probability": 0.6689453125
+        },
+        {
+          "start": 18.34,
+          "end": 18.86,
+          "word": " occurs",
+          "probability": 0.40966796875
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 20.240000000000002,
+      "end": 25.46,
+      "text": " Fool me but I could and I act like show is luxury",
+      "avg_logprob": -0.6600694232516818,
+      "no_speech_prob": 0.76513671875,
+      "compression_ratio": 1.3014705882352942,
+      "words": [
+        {
+          "start": 20.02,
+          "end": 20.54,
+          "word": " Fool",
+          "probability": 0.373779296875
+        },
+        {
+          "start": 20.54,
+          "end": 20.8,
+          "word": " me",
+          "probability": 0.9755859375
+        },
+        {
+          "start": 20.8,
+          "end": 20.96,
+          "word": " but",
+          "probability": 0.62646484375
+        },
+        {
+          "start": 20.96,
+          "end": 21.18,
+          "word": " I",
+          "probability": 0.499267578125
+        },
+        {
+          "start": 21.18,
+          "end": 21.44,
+          "word": " could",
+          "probability": 0.436279296875
+        },
+        {
+          "start": 21.44,
+          "end": 22.9,
+          "word": " and",
+          "probability": 0.40234375
+        },
+        {
+          "start": 22.9,
+          "end": 23.26,
+          "word": " I",
+          "probability": 0.83154296875
+        },
+        {
+          "start": 23.26,
+          "end": 23.68,
+          "word": " act",
+          "probability": 0.381591796875
+        },
+        {
+          "start": 23.68,
+          "end": 23.9,
+          "word": " like",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 23.9,
+          "end": 24.26,
+          "word": " show",
+          "probability": 0.6953125
+        },
+        {
+          "start": 24.26,
+          "end": 24.6,
+          "word": " is",
+          "probability": 0.47705078125
+        },
+        {
+          "start": 24.6,
+          "end": 25.46,
+          "word": " luxury",
+          "probability": 0.90087890625
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 30.0,
+      "end": 31.4,
+      "text": " A fantasy",
+      "avg_logprob": -0.9471982594194084,
+      "no_speech_prob": 0.4921875,
+      "compression_ratio": 1.123456790123457,
+      "words": [
+        {
+          "start": 30.0,
+          "end": 30.58,
+          "word": " A",
+          "probability": 0.1558837890625
+        },
+        {
+          "start": 30.58,
+          "end": 31.4,
+          "word": " fantasy",
+          "probability": 0.7177734375
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 41.94,
+      "end": 49.06,
+      "text": " For a long time, this body burned in the fire",
+      "avg_logprob": -0.9471982594194084,
+      "no_speech_prob": 0.4921875,
+      "compression_ratio": 1.123456790123457,
+      "words": [
+        {
+          "start": 41.94,
+          "end": 43.099999999999994,
+          "word": " For",
+          "probability": 0.0005373954772949219
+        },
+        {
+          "start": 43.099999999999994,
+          "end": 44.26,
+          "word": " a",
+          "probability": 0.4560546875
+        },
+        {
+          "start": 44.26,
+          "end": 44.44,
+          "word": " long",
+          "probability": 0.93017578125
+        },
+        {
+          "start": 44.44,
+          "end": 45.02,
+          "word": " time,",
+          "probability": 0.97412109375
+        },
+        {
+          "start": 45.08,
+          "end": 45.8,
+          "word": " this",
+          "probability": 0.375
+        },
+        {
+          "start": 45.8,
+          "end": 46.38,
+          "word": " body",
+          "probability": 0.96484375
+        },
+        {
+          "start": 46.38,
+          "end": 47.52,
+          "word": " burned",
+          "probability": 0.1517333984375
+        },
+        {
+          "start": 47.52,
+          "end": 48.2,
+          "word": " in",
+          "probability": 0.1385498046875
+        },
+        {
+          "start": 48.2,
+          "end": 48.6,
+          "word": " the",
+          "probability": 0.224365234375
+        },
+        {
+          "start": 48.6,
+          "end": 49.06,
+          "word": " fire",
+          "probability": 0.312744140625
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 49.06,
+      "end": 51.1,
+      "text": " Asking for the meaning of the truth",
+      "avg_logprob": -0.9471982594194084,
+      "no_speech_prob": 0.4921875,
+      "compression_ratio": 1.123456790123457,
+      "words": [
+        {
+          "start": 49.06,
+          "end": 50.98,
+          "word": " Asking",
+          "probability": 0.424407958984375
+        },
+        {
+          "start": 50.98,
+          "end": 50.98,
+          "word": " for",
+          "probability": 0.190185546875
+        },
+        {
+          "start": 50.98,
+          "end": 50.98,
+          "word": " the",
+          "probability": 0.896484375
+        },
+        {
+          "start": 50.98,
+          "end": 50.98,
+          "word": " meaning",
+          "probability": 0.80517578125
+        },
+        {
+          "start": 50.98,
+          "end": 50.98,
+          "word": " of",
+          "probability": 0.87353515625
+        },
+        {
+          "start": 50.98,
+          "end": 51.0,
+          "word": " the",
+          "probability": 0.36474609375
+        },
+        {
+          "start": 51.0,
+          "end": 51.1,
+          "word": " truth",
+          "probability": 0.03704833984375
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 55.620000000000005,
+      "end": 58.06,
+      "text": " 本当の二十歳の意味を尋ねて 本当の二十歳の意味を尋ねて",
+      "avg_logprob": -0.3248197166965558,
+      "no_speech_prob": 0.38232421875,
+      "compression_ratio": 1.9054054054054055,
+      "words": [
+        {
+          "start": 55.620000000000005,
+          "end": 57.02,
+          "word": " 本当の二十歳の意味を尋ねて",
+          "probability": 0.7794054667154948
+        },
+        {
+          "start": 57.02,
+          "end": 58.06,
+          "word": " 本当の二十歳の意味を尋ねて",
+          "probability": 0.8972819010416667
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 62.14,
+      "end": 63.54,
+      "text": " それが人の汲めた呪いでも それが人の汲めた呪いでも",
+      "avg_logprob": -0.3248197166965558,
+      "no_speech_prob": 0.38232421875,
+      "compression_ratio": 1.9054054054054055,
+      "words": [
+        {
+          "start": 62.14,
+          "end": 63.54,
+          "word": " それが人の汲めた呪いでも",
+          "probability": 0.9084676106770834
+        },
+        {
+          "start": 63.54,
+          "end": 63.54,
+          "word": " それが人の汲めた呪いでも",
+          "probability": 0.922271728515625
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 67.89999999999999,
+      "end": 73.22,
+      "text": " 心が夢る 名は咲かせましょう 心が夢る 名は咲かせましょう",
+      "avg_logprob": -0.3248197166965558,
+      "no_speech_prob": 0.38232421875,
+      "compression_ratio": 1.9054054054054055,
+      "words": [
+        {
+          "start": 67.89999999999999,
+          "end": 69.3,
+          "word": " 心が夢る",
+          "probability": 0.7802734375
+        },
+        {
+          "start": 69.3,
+          "end": 70.7,
+          "word": " 名は咲かせましょう",
+          "probability": 0.775604248046875
+        },
+        {
+          "start": 70.7,
+          "end": 73.22,
+          "word": " 心が夢る",
+          "probability": 0.6313339233398437
+        },
+        {
+          "start": 73.22,
+          "end": 73.22,
+          "word": " 名は咲かせましょう",
+          "probability": 0.9986572265625
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 73.22,
+      "end": 79.16,
+      "text": " それでも世が愛しい 神様らは悪い",
+      "avg_logprob": -0.3248197166965558,
+      "no_speech_prob": 0.38232421875,
+      "compression_ratio": 1.9054054054054055,
+      "words": [
+        {
+          "start": 73.22,
+          "end": 75.54,
+          "word": " それでも世が愛しい",
+          "probability": 0.897216796875
+        },
+        {
+          "start": 75.54,
+          "end": 79.16,
+          "word": " 神様らは悪い",
+          "probability": 0.64239501953125
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 83.19999999999999,
+      "end": 86.0,
+      "text": " 壊れたと想像するほど 生命線が座ってばかりで",
+      "avg_logprob": -0.24180328259702588,
+      "no_speech_prob": 0.580078125,
+      "compression_ratio": 1.2014925373134329,
+      "words": [
+        {
+          "start": 83.19999999999999,
+          "end": 84.6,
+          "word": " 壊れたと想像するほど",
+          "probability": 0.7846544053819444
+        },
+        {
+          "start": 84.6,
+          "end": 86.0,
+          "word": " 生命線が座ってばかりで",
+          "probability": 0.889404296875
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 89.24,
+      "end": 92.04,
+      "text": " 花びらが柔らかい 毒薬の味が",
+      "avg_logprob": -0.24180328259702588,
+      "no_speech_prob": 0.580078125,
+      "compression_ratio": 1.2014925373134329,
+      "words": [
+        {
+          "start": 89.24,
+          "end": 90.64,
+          "word": " 花びらが柔らかい",
+          "probability": 0.936083984375
+        },
+        {
+          "start": 90.64,
+          "end": 92.04,
+          "word": " 毒薬の味が",
+          "probability": 0.7931954520089286
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 97.65999999999998,
+      "end": 100.46,
+      "text": " 忘れられておられるまで 囚われていたい",
+      "avg_logprob": -0.24180328259702588,
+      "no_speech_prob": 0.580078125,
+      "compression_ratio": 1.2014925373134329,
+      "words": [
+        {
+          "start": 97.65999999999998,
+          "end": 99.05999999999999,
+          "word": " 忘れられておられるまで",
+          "probability": 0.8443467881944444
+        },
+        {
+          "start": 99.05999999999999,
+          "end": 100.46,
+          "word": " 囚われていたい",
+          "probability": 0.96630859375
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 113.39999999999999,
+      "end": 118.54,
+      "text": " Chantelle, egg, flowers, pick from my balm",
+      "avg_logprob": -0.5331357923047296,
+      "no_speech_prob": 0.437255859375,
+      "compression_ratio": 1.2698412698412698,
+      "words": [
+        {
+          "start": 113.39999999999999,
+          "end": 114.52,
+          "word": " Chantelle,",
+          "probability": 0.478515625
+        },
+        {
+          "start": 114.52,
+          "end": 115.06,
+          "word": " egg,",
+          "probability": 0.6044921875
+        },
+        {
+          "start": 115.54,
+          "end": 116.16,
+          "word": " flowers,",
+          "probability": 0.931640625
+        },
+        {
+          "start": 116.58,
+          "end": 116.96,
+          "word": " pick",
+          "probability": 0.283203125
+        },
+        {
+          "start": 116.96,
+          "end": 117.42,
+          "word": " from",
+          "probability": 0.9189453125
+        },
+        {
+          "start": 117.42,
+          "end": 117.94,
+          "word": " my",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 117.94,
+          "end": 118.54,
+          "word": " balm",
+          "probability": 0.35302734375
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 121.07999999999998,
+      "end": 125.32,
+      "text": " Hitoriko, tsumuete no kurishin",
+      "avg_logprob": -0.5331357923047296,
+      "no_speech_prob": 0.437255859375,
+      "compression_ratio": 1.2698412698412698,
+      "words": [
+        {
+          "start": 121.07999999999998,
+          "end": 122.19999999999999,
+          "word": " Hitoriko,",
+          "probability": 0.4909261067708333
+        },
+        {
+          "start": 122.19999999999999,
+          "end": 123.32,
+          "word": " tsumuete",
+          "probability": 0.6901041666666666
+        },
+        {
+          "start": 123.32,
+          "end": 123.88,
+          "word": " no",
+          "probability": 0.96044921875
+        },
+        {
+          "start": 123.88,
+          "end": 125.32,
+          "word": " kurishin",
+          "probability": 0.52392578125
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 126.17999999999999,
+      "end": 132.34,
+      "text": " My love for Brazil, your vital human heart",
+      "avg_logprob": -0.5331357923047296,
+      "no_speech_prob": 0.437255859375,
+      "compression_ratio": 1.2698412698412698,
+      "words": [
+        {
+          "start": 126.17999999999999,
+          "end": 126.88,
+          "word": " My",
+          "probability": 0.51953125
+        },
+        {
+          "start": 126.88,
+          "end": 127.36,
+          "word": " love",
+          "probability": 0.78857421875
+        },
+        {
+          "start": 127.36,
+          "end": 127.76,
+          "word": " for",
+          "probability": 0.80859375
+        },
+        {
+          "start": 127.76,
+          "end": 128.52,
+          "word": " Brazil,",
+          "probability": 0.44921875
+        },
+        {
+          "start": 128.88,
+          "end": 129.76,
+          "word": " your",
+          "probability": 0.253662109375
+        },
+        {
+          "start": 129.76,
+          "end": 130.52,
+          "word": " vital",
+          "probability": 0.96337890625
+        },
+        {
+          "start": 130.52,
+          "end": 131.3,
+          "word": " human",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 131.3,
+          "end": 132.34,
+          "word": " heart",
+          "probability": 0.8759765625
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 133.38,
+      "end": 138.08,
+      "text": " Mayu no naka de umarete kita, nagai wa doku",
+      "avg_logprob": -0.5331357923047296,
+      "no_speech_prob": 0.437255859375,
+      "compression_ratio": 1.2698412698412698,
+      "words": [
+        {
+          "start": 133.38,
+          "end": 134.16,
+          "word": " Mayu",
+          "probability": 0.4622802734375
+        },
+        {
+          "start": 134.16,
+          "end": 134.34,
+          "word": " no",
+          "probability": 0.962890625
+        },
+        {
+          "start": 134.34,
+          "end": 134.7,
+          "word": " naka",
+          "probability": 0.918701171875
+        },
+        {
+          "start": 134.7,
+          "end": 135.0,
+          "word": " de",
+          "probability": 0.93115234375
+        },
+        {
+          "start": 135.0,
+          "end": 136.16,
+          "word": " umarete",
+          "probability": 0.9475911458333334
+        },
+        {
+          "start": 136.16,
+          "end": 136.48,
+          "word": " kita,",
+          "probability": 0.9482421875
+        },
+        {
+          "start": 136.64,
+          "end": 137.4,
+          "word": " nagai",
+          "probability": 0.919921875
+        },
+        {
+          "start": 137.4,
+          "end": 137.52,
+          "word": " wa",
+          "probability": 0.95068359375
+        },
+        {
+          "start": 137.52,
+          "end": 138.08,
+          "word": " doku",
+          "probability": 0.47412109375
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 146.76,
+      "end": 148.16,
+      "text": " 声も目黒もないこの場所で",
+      "avg_logprob": -0.34314903444968736,
+      "no_speech_prob": 0.40576171875,
+      "compression_ratio": 1.0956521739130434,
+      "words": [
+        {
+          "start": 146.76,
+          "end": 148.16,
+          "word": " 声も目黒もないこの場所で",
+          "probability": 0.7176647186279297
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 153.35999999999999,
+      "end": 154.76,
+      "text": " 朧に映る影に見とれてる",
+      "avg_logprob": -0.34314903444968736,
+      "no_speech_prob": 0.40576171875,
+      "compression_ratio": 1.0956521739130434,
+      "words": [
+        {
+          "start": 153.35999999999999,
+          "end": 154.76,
+          "word": " 朧に映る影に見とれてる",
+          "probability": 0.8237116887019231
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "start": 159.94,
+      "end": 161.34,
+      "text": " それが人の喰うまた呪いでも",
+      "avg_logprob": -0.34314903444968736,
+      "no_speech_prob": 0.40576171875,
+      "compression_ratio": 1.0956521739130434,
+      "words": [
+        {
+          "start": 159.94,
+          "end": 161.34,
+          "word": " それが人の喰うまた呪いでも",
+          "probability": 0.7724863688151041
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "start": 163.29999999999998,
+      "end": 164.7,
+      "text": " 私にくれる",
+      "avg_logprob": -0.34314903444968736,
+      "no_speech_prob": 0.40576171875,
+      "compression_ratio": 1.0956521739130434,
+      "words": [
+        {
+          "start": 163.29999999999998,
+          "end": 164.7,
+          "word": " 私にくれる",
+          "probability": 0.96181640625
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "start": 164.7,
+      "end": 168.5,
+      "text": " Let's make it bloom",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 164.7,
+          "end": 166.56,
+          "word": " Let's",
+          "probability": 0.4217872619628906
+        },
+        {
+          "start": 166.56,
+          "end": 168.5,
+          "word": " make",
+          "probability": 0.061981201171875
+        },
+        {
+          "start": 168.5,
+          "end": 168.5,
+          "word": " it",
+          "probability": 0.56103515625
+        },
+        {
+          "start": 168.5,
+          "end": 168.5,
+          "word": " bloom",
+          "probability": 0.9453125
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "start": 168.5,
+      "end": 172.32,
+      "text": " Even so, I don't know",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 168.5,
+          "end": 170.48,
+          "word": " Even",
+          "probability": 0.030792236328125
+        },
+        {
+          "start": 170.48,
+          "end": 171.34,
+          "word": " so,",
+          "probability": 0.91064453125
+        },
+        {
+          "start": 171.58,
+          "end": 171.76,
+          "word": " I",
+          "probability": 0.63427734375
+        },
+        {
+          "start": 171.76,
+          "end": 172.2,
+          "word": " don't",
+          "probability": 0.840576171875
+        },
+        {
+          "start": 172.2,
+          "end": 172.32,
+          "word": " know",
+          "probability": 0.85888671875
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "start": 174.0,
+      "end": 176.54,
+      "text": " God's words and love",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 174.0,
+          "end": 175.08,
+          "word": " God's",
+          "probability": 0.550048828125
+        },
+        {
+          "start": 175.08,
+          "end": 175.54,
+          "word": " words",
+          "probability": 0.120849609375
+        },
+        {
+          "start": 175.54,
+          "end": 175.74,
+          "word": " and",
+          "probability": 0.171875
+        },
+        {
+          "start": 175.74,
+          "end": 176.54,
+          "word": " love",
+          "probability": 0.06634521484375
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "start": 176.54,
+      "end": 179.70000000000002,
+      "text": " The more I think about it",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 176.54,
+          "end": 177.52,
+          "word": " The",
+          "probability": 0.32568359375
+        },
+        {
+          "start": 177.52,
+          "end": 177.88,
+          "word": " more",
+          "probability": 0.92626953125
+        },
+        {
+          "start": 177.88,
+          "end": 177.88,
+          "word": " I",
+          "probability": 0.701171875
+        },
+        {
+          "start": 177.88,
+          "end": 178.58,
+          "word": " think",
+          "probability": 0.326904296875
+        },
+        {
+          "start": 178.58,
+          "end": 178.78,
+          "word": " about",
+          "probability": 0.5224609375
+        },
+        {
+          "start": 178.78,
+          "end": 179.70000000000002,
+          "word": " it",
+          "probability": 0.6591796875
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "start": 180.24,
+      "end": 181.18,
+      "text": " The more I can't live",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 180.24,
+          "end": 180.34,
+          "word": " The",
+          "probability": 0.1795654296875
+        },
+        {
+          "start": 180.34,
+          "end": 180.34,
+          "word": " more",
+          "probability": 0.9306640625
+        },
+        {
+          "start": 180.34,
+          "end": 180.76,
+          "word": " I",
+          "probability": 0.65087890625
+        },
+        {
+          "start": 180.76,
+          "end": 181.18,
+          "word": " can't",
+          "probability": 0.419586181640625
+        },
+        {
+          "start": 181.18,
+          "end": 181.18,
+          "word": " live",
+          "probability": 0.06549072265625
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "start": 181.18,
+      "end": 185.9,
+      "text": " The petals are soft",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 181.18,
+          "end": 181.86,
+          "word": " The",
+          "probability": 0.10443115234375
+        },
+        {
+          "start": 181.86,
+          "end": 184.94,
+          "word": " petals",
+          "probability": 0.1405029296875
+        },
+        {
+          "start": 184.94,
+          "end": 185.48,
+          "word": " are",
+          "probability": 0.89306640625
+        },
+        {
+          "start": 185.48,
+          "end": 185.9,
+          "word": " soft",
+          "probability": 0.6796875
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "start": 185.9,
+      "end": 188.48,
+      "text": " The taste of poison",
+      "avg_logprob": -0.7912735624133416,
+      "no_speech_prob": 0.84765625,
+      "compression_ratio": 1.3157894736842106,
+      "words": [
+        {
+          "start": 185.9,
+          "end": 187.6,
+          "word": " The",
+          "probability": 0.1351318359375
+        },
+        {
+          "start": 187.6,
+          "end": 188.36,
+          "word": " taste",
+          "probability": 0.410888671875
+        },
+        {
+          "start": 188.36,
+          "end": 188.36,
+          "word": " of",
+          "probability": 0.98291015625
+        },
+        {
+          "start": 188.36,
+          "end": 188.48,
+          "word": " poison",
+          "probability": 0.058013916015625
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "start": 188.48,
+      "end": 197.7,
+      "text": " Thank you so much for watching this video, and I'll see you in the next video!",
+      "avg_logprob": -1.0063920183615251,
+      "no_speech_prob": 0.1663818359375,
+      "compression_ratio": 1.0129870129870129,
+      "words": [
+        {
+          "start": 188.48,
+          "end": 188.92,
+          "word": " Thank",
+          "probability": 0.0618896484375
+        },
+        {
+          "start": 188.92,
+          "end": 188.92,
+          "word": " you",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 188.92,
+          "end": 188.92,
+          "word": " so",
+          "probability": 0.054840087890625
+        },
+        {
+          "start": 188.92,
+          "end": 189.1,
+          "word": " much",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 189.1,
+          "end": 189.3,
+          "word": " for",
+          "probability": 0.751953125
+        },
+        {
+          "start": 189.3,
+          "end": 190.04,
+          "word": " watching",
+          "probability": 0.8193359375
+        },
+        {
+          "start": 190.04,
+          "end": 190.24,
+          "word": " this",
+          "probability": 0.098876953125
+        },
+        {
+          "start": 190.24,
+          "end": 190.68,
+          "word": " video,",
+          "probability": 0.7548828125
+        },
+        {
+          "start": 190.68,
+          "end": 191.2,
+          "word": " and",
+          "probability": 0.114990234375
+        },
+        {
+          "start": 191.2,
+          "end": 191.52,
+          "word": " I'll",
+          "probability": 0.413330078125
+        },
+        {
+          "start": 191.52,
+          "end": 191.82,
+          "word": " see",
+          "probability": 0.9208984375
+        },
+        {
+          "start": 191.82,
+          "end": 193.84,
+          "word": " you",
+          "probability": 0.984375
+        },
+        {
+          "start": 193.84,
+          "end": 194.12,
+          "word": " in",
+          "probability": 0.4052734375
+        },
+        {
+          "start": 194.12,
+          "end": 196.94,
+          "word": " the",
+          "probability": 0.73046875
+        },
+        {
+          "start": 196.94,
+          "end": 197.58,
+          "word": " next",
+          "probability": 0.9794921875
+        },
+        {
+          "start": 197.58,
+          "end": 197.7,
+          "word": " video!",
+          "probability": 0.525390625
+        }
+      ]
+    }
+  ],
+  "primary": [
+    {
+      "start": 0.67,
+      "end": 5.1,
+      "text": "Muse over the antique memories"
+    },
+    {
+      "start": 6.31,
+      "end": 12.56,
+      "text": "Realize again every fragment shown to know why"
+    },
+    {
+      "start": 13.39,
+      "end": 18.94,
+      "text": "On my ugly dress in the millions of laughs occurs"
+    },
+    {
+      "start": 19.97,
+      "end": 25.54,
+      "text": "Fool me but I could and I act like show is luxury"
+    },
+    {
+      "start": 29.95,
+      "end": 31.48,
+      "text": "A fantasy"
+    },
+    {
+      "start": 41.89,
+      "end": 49.01,
+      "text": "For a long time, this body burned in the fire"
+    },
+    {
+      "start": 49.01,
+      "end": 51.18,
+      "text": "Asking for the meaning of the truth"
+    },
+    {
+      "start": 55.57,
+      "end": 58.14,
+      "text": "本当の二十歳の意味を尋ねて本当の二十歳の意味を尋ねて"
+    },
+    {
+      "start": 62.09,
+      "end": 63.62,
+      "text": "それが人の汲めた呪いでもそれが人の汲めた呪いでも"
+    },
+    {
+      "start": 67.85,
+      "end": 73.17,
+      "text": "心が夢る名は咲かせましょう心が夢る名は咲かせましょう"
+    },
+    {
+      "start": 73.17,
+      "end": 79.24,
+      "text": "それでも世が愛しい神様らは悪い"
+    },
+    {
+      "start": 83.15,
+      "end": 86.08,
+      "text": "壊れたと想像するほど生命線が座ってばかりで"
+    },
+    {
+      "start": 89.19,
+      "end": 92.12,
+      "text": "花びらが柔らかい毒薬の味が"
+    },
+    {
+      "start": 97.61,
+      "end": 100.54,
+      "text": "忘れられておられるまで囚われていたい"
+    },
+    {
+      "start": 113.35,
+      "end": 116.24,
+      "text": "Chantelle, egg, flowers,"
+    },
+    {
+      "start": 116.53,
+      "end": 118.62,
+      "text": "pick from my balm"
+    },
+    {
+      "start": 121.03,
+      "end": 125.4,
+      "text": "Hitoriko, tsumuete no kurishin"
+    },
+    {
+      "start": 126.13,
+      "end": 128.6,
+      "text": "My love for Brazil,"
+    },
+    {
+      "start": 128.83,
+      "end": 132.42,
+      "text": "your vital human heart"
+    },
+    {
+      "start": 133.33,
+      "end": 138.16,
+      "text": "Mayu no naka de umarete kita, nagai wa doku"
+    },
+    {
+      "start": 146.71,
+      "end": 148.24,
+      "text": "声も目黒もないこの場所で"
+    },
+    {
+      "start": 153.31,
+      "end": 154.84,
+      "text": "朧に映る影に見とれてる"
+    },
+    {
+      "start": 159.89,
+      "end": 161.42,
+      "text": "それが人の喰うまた呪いでも"
+    },
+    {
+      "start": 163.25,
+      "end": 168.45,
+      "text": "私にくれる Let's make it bloom"
+    },
+    {
+      "start": 168.45,
+      "end": 172.4,
+      "text": "Even so, I don't know"
+    },
+    {
+      "start": 173.95,
+      "end": 179.78,
+      "text": "God's words and love The more I think about it"
+    },
+    {
+      "start": 180.19,
+      "end": 185.85,
+      "text": "The more I can't live The petals are soft"
+    },
+    {
+      "start": 185.85,
+      "end": 193.79,
+      "text": "The taste of poison Thank you so much for watching this video, and I'll see you"
+    },
+    {
+      "start": 193.79,
+      "end": 197.78,
+      "text": "in the next video!"
+    }
+  ],
+  "final": [
+    {
+      "start": 0.67,
+      "end": 5.1,
+      "text": "Muse over the antique memories"
+    },
+    {
+      "start": 6.31,
+      "end": 12.56,
+      "text": "Realize again every fragment shown to know why"
+    },
+    {
+      "start": 13.39,
+      "end": 18.94,
+      "text": "On my ugly dress in the millions of laughs occurs"
+    },
+    {
+      "start": 19.97,
+      "end": 25.54,
+      "text": "Fool me but I could and I act like show is luxury"
+    },
+    {
+      "start": 28.55,
+      "end": 29.95,
+      "text": "A"
+    },
+    {
+      "start": 29.95,
+      "end": 31.48,
+      "text": "A fantasy"
+    },
+    {
+      "start": 41.89,
+      "end": 49.01,
+      "text": "For a long time, this body burned in the fire"
+    },
+    {
+      "start": 49.01,
+      "end": 51.18,
+      "text": "Asking for the meaning of the truth"
+    },
+    {
+      "start": 55.57,
+      "end": 58.14,
+      "text": "本当の二十歳の意味を尋ねて本当の二十歳の意味を尋ねて"
+    },
+    {
+      "start": 62.09,
+      "end": 63.62,
+      "text": "それが人の汲めた呪いでもそれが人の汲めた呪いでも"
+    },
+    {
+      "start": 67.85,
+      "end": 73.17,
+      "text": "心が夢る名は咲かせましょう心が夢る名は咲かせましょう"
+    },
+    {
+      "start": 73.17,
+      "end": 79.24,
+      "text": "それでも世が愛しい神様らは悪い"
+    },
+    {
+      "start": 83.15,
+      "end": 86.08,
+      "text": "壊れたと想像するほど生命線が座ってばかりで"
+    },
+    {
+      "start": 89.19,
+      "end": 92.12,
+      "text": "花びらが柔らかい毒薬の味が"
+    },
+    {
+      "start": 92.41,
+      "end": 96.64,
+      "text": "忘れられておられるまで"
+    },
+    {
+      "start": 97.61,
+      "end": 100.54,
+      "text": "忘れられておられるまで囚われていたい"
+    },
+    {
+      "start": 113.35,
+      "end": 116.24,
+      "text": "Chantelle, egg, flowers,"
+    },
+    {
+      "start": 116.53,
+      "end": 118.62,
+      "text": "pick from my balm"
+    },
+    {
+      "start": 121.03,
+      "end": 125.4,
+      "text": "Hitoriko, tsumuete no kurishin"
+    },
+    {
+      "start": 126.13,
+      "end": 128.6,
+      "text": "My love for Brazil,"
+    },
+    {
+      "start": 128.83,
+      "end": 132.42,
+      "text": "your vital human heart"
+    },
+    {
+      "start": 133.33,
+      "end": 138.16,
+      "text": "Mayu no naka de umarete kita, nagai wa doku"
+    },
+    {
+      "start": 146.71,
+      "end": 148.24,
+      "text": "声も目黒もないこの場所で"
+    },
+    {
+      "start": 153.31,
+      "end": 154.84,
+      "text": "朧に映る影に見とれてる"
+    },
+    {
+      "start": 159.89,
+      "end": 161.42,
+      "text": "それが人の喰うまた呪いでも"
+    },
+    {
+      "start": 163.25,
+      "end": 168.45,
+      "text": "私にくれる Let's make it bloom"
+    },
+    {
+      "start": 168.45,
+      "end": 172.4,
+      "text": "Even so, I don't know"
+    },
+    {
+      "start": 173.95,
+      "end": 179.78,
+      "text": "God's words and love The more I think about it"
+    },
+    {
+      "start": 180.19,
+      "end": 185.85,
+      "text": "The more I can't live The petals are soft"
+    },
+    {
+      "start": 185.85,
+      "end": 193.79,
+      "text": "The taste of poison Thank you so much for watching this video, and I'll see you"
+    },
+    {
+      "start": 193.79,
+      "end": 197.78,
+      "text": "in the next video!"
+    }
+  ]
+}

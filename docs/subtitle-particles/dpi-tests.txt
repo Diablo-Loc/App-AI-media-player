@@ -1,0 +1,121 @@
+test_presets_change_once_keep_master_and_round_trip_all_controls (tests.test_subtitle_particles.ParticlePanelTests.test_presets_change_once_keep_master_and_round_trip_all_controls) ... ok
+test_saved_data_keys_and_popup_editor_guard_remain_original (tests.test_subtitle_particles.ParticlePanelTests.test_saved_data_keys_and_popup_editor_guard_remain_original) ... ok
+test_all_old_app_sources_and_previous_manifests_are_preserved (tests.test_subtitle_particles.ParticleScopeTests.test_all_old_app_sources_and_previous_manifests_are_preserved) ... ok
+test_all_styles_lengths_fonts_and_frames_keep_text_and_geometry (tests.test_subtitle_particles.ParticleTests.test_all_styles_lengths_fonts_and_frames_keep_text_and_geometry) ... ok
+test_empty_whitespace_and_one_pixel_widget_safe (tests.test_subtitle_particles.ParticleTests.test_empty_whitespace_and_one_pixel_widget_safe) ... ok
+test_grapheme_units_preserve_accents_emoji_and_utf16_indices (tests.test_subtitle_particles.ParticleTests.test_grapheme_units_preserve_accents_emoji_and_utf16_indices) ... ok
+test_layout_regions_bidi_and_multilingual_are_bounded (tests.test_subtitle_particles.ParticleTests.test_layout_regions_bidi_and_multilingual_are_bounded) ... ok
+test_long_dense_short_and_pathological_cues_have_bounded_plans (tests.test_subtitle_particles.ParticleTests.test_long_dense_short_and_pathological_cues_have_bounded_plans) ... ok
+test_new_options_validate_and_missing_keys_preserve_old_styles (tests.test_subtitle_particles.ParticleTests.test_new_options_validate_and_missing_keys_preserve_old_styles) ... ok
+test_preview_is_finite_and_hidden_off_empty_cancel_immediately (tests.test_subtitle_particles.ParticleTests.test_preview_is_finite_and_hidden_off_empty_cancel_immediately) ... ok
+test_same_cue_reuses_layout_and_sprite_repeated_cue_still_sweeps (tests.test_subtitle_particles.ParticleTests.test_same_cue_reuses_layout_and_sprite_repeated_cue_still_sweeps) ... ok
+test_timer_uses_media_clock_holds_stalls_and_handles_pause_rate_seek (tests.test_subtitle_particles.ParticleTests.test_timer_uses_media_clock_holds_stalls_and_handles_pause_rate_seek) ... ok
+test_very_short_cues_keep_full_text_without_particle_flash (tests.test_subtitle_particles.ParticleTests.test_very_short_cues_keep_full_text_without_particle_flash) ... ok
+test_word_morph_restores_text_and_never_makes_it_invisible (tests.test_subtitle_particles.ParticleTests.test_word_morph_restores_text_and_never_makes_it_invisible) ... ok
+test_all_prior_app_sources_unchanged_outside_three_ui_adapters (tests.test_subtitle_effects.EffectScopeTests.test_all_prior_app_sources_unchanged_outside_three_ui_adapters) ... ok
+test_only_painter_and_settings_adapters_change_old_production (tests.test_subtitle_effects.EffectScopeTests.test_only_painter_and_settings_adapters_change_old_production) ... ok
+test_all_modes_render_unicode_and_stable_geometry (tests.test_subtitle_effects.EffectTests.test_all_modes_render_unicode_and_stable_geometry) ... ok
+test_complete_animation_is_finite_and_reset_restores_original_pixels (tests.test_subtitle_effects.EffectTests.test_complete_animation_is_finite_and_reset_restores_original_pixels) ... ok
+test_hidden_off_empty_and_load_cancel_animation (tests.test_subtitle_effects.EffectTests.test_hidden_off_empty_and_load_cancel_animation) ... ok
+test_off_pixels_and_cues_equal_captured_renderer (tests.test_subtitle_effects.EffectTests.test_off_pixels_and_cues_equal_captured_renderer) ... ok
+test_options_off_by_default_and_validate_corrupt_input (tests.test_subtitle_effects.EffectTests.test_options_off_by_default_and_validate_corrupt_input) ... ok
+test_player_pause_resume_stop_and_rate (tests.test_subtitle_effects.EffectTests.test_player_pause_resume_stop_and_rate) ... ok
+test_same_cue_does_not_restart_and_identical_next_cue_does (tests.test_subtitle_effects.EffectTests.test_same_cue_does_not_restart_and_identical_next_cue_does) ... ok
+test_seek_midcue_is_complete_and_seek_back_uses_media_offset (tests.test_subtitle_effects.EffectTests.test_seek_midcue_is_complete_and_seek_back_uses_media_offset) ... ok
+test_short_cues_never_extend_timing_or_consume_whole_cue (tests.test_subtitle_effects.EffectTests.test_short_cues_never_extend_timing_or_consume_whole_cue) ... ok
+test_static_gradient_has_no_animation_and_path_reused (tests.test_subtitle_effects.EffectTests.test_static_gradient_has_no_animation_and_path_reused) ... ok
+test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay (tests.test_subtitle_effects.PanelTests.test_editor_with_effects_on_suppresses_and_resumes_current_cue_without_replay) ... ok
+test_popup_scroll_all_controls_reachable_and_inside_screen (tests.test_subtitle_effects.PanelTests.test_popup_scroll_all_controls_reachable_and_inside_screen) ... ok
+test_preview_uses_production_painter_and_stops_on_hide (tests.test_subtitle_effects.PanelTests.test_preview_uses_production_painter_and_stops_on_hide) ... ok
+test_saved_effects_loaded_at_startup_without_rewriting_preferences (tests.test_subtitle_effects.PanelTests.test_saved_effects_loaded_at_startup_without_rewriting_preferences) ... ok
+test_shell_persists_only_appearance_and_reset_off (tests.test_subtitle_effects.PanelTests.test_shell_persists_only_appearance_and_reset_off) ... ok
+test_sync_does_not_emit_and_options_can_combine (tests.test_subtitle_effects.PanelTests.test_sync_does_not_emit_and_options_can_combine) ... ok
+test_canceled_hide_callback_never_hides_next_fade_in (tests.test_subtitle_presentation.FadeTests.test_canceled_hide_callback_never_hides_next_fade_in) ... ok
+test_fade_in_opacity_is_monotonic_and_geometry_stays_stable (tests.test_subtitle_presentation.FadeTests.test_fade_in_opacity_is_monotonic_and_geometry_stays_stable) ... ok
+test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact (tests.test_subtitle_presentation.FadeTests.test_inclusive_endpoints_gaps_fade_setting_and_source_timing_stay_intact) ... ok
+test_old_snapshot_reproduces_restart_and_stale_callback (tests.test_subtitle_presentation.FadeTests.test_old_snapshot_reproduces_restart_and_stale_callback) ... ok
+test_repeated_gap_updates_do_not_restart_fade_out (tests.test_subtitle_presentation.FadeTests.test_repeated_gap_updates_do_not_restart_fade_out) ... ok
+test_seek_back_into_same_cue_reverses_fade_without_opacity_reset (tests.test_subtitle_presentation.FadeTests.test_seek_back_into_same_cue_reverses_fade_without_opacity_reset) ... ok
+test_closing_editor_in_gap_never_resurrects_old_text (tests.test_subtitle_presentation.PresentationTests.test_closing_editor_in_gap_never_resurrects_old_text) ... ok
+test_mini_minimized_inactive_and_mode_off_never_show (tests.test_subtitle_presentation.PresentationTests.test_mini_minimized_inactive_and_mode_off_never_show) ... ok
+test_modal_editor_blocks_ticks_direct_show_and_setvisible (tests.test_subtitle_presentation.PresentationTests.test_modal_editor_blocks_ticks_direct_show_and_setvisible) ... ok
+test_modeless_editor_also_blocks_and_paused_cue_restores (tests.test_subtitle_presentation.PresentationTests.test_modeless_editor_also_blocks_and_paused_cue_restores) ... ok
+test_nested_dialog_hidden_owner_empty_cues_and_shutdown (tests.test_subtitle_presentation.PresentationTests.test_nested_dialog_hidden_owner_empty_cues_and_shutdown) ... ok
+test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant (tests.test_subtitle_presentation.PresentationTests.test_video_cue_end_keeps_220ms_fade_while_dialog_suppression_is_instant) ... ok
+test_video_hidden_or_detached_blocks_and_restores_latest_cue (tests.test_subtitle_presentation.PresentationTests.test_video_hidden_or_detached_blocks_and_restores_latest_cue) ... ok
+test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump (tests.test_subtitle_presentation.ShellIntegrationTests.test_detached_foryou_cue_is_placed_before_fade_and_does_not_jump) ... ok
+test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner (tests.test_subtitle_presentation.ShellIntegrationTests.test_existing_editor_exec_suppresses_overlay_and_keeps_video_owner) ... ok
+test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots (tests.test_subtitle_presentation.SourceScopeTests.test_only_reviewed_rendering_methods_change_and_old_gates_keep_snapshots) ... ok
+
+----------------------------------------------------------------------
+Ran 48 tests in 48.710s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+⛔ Đang dừng Thumbnail Scanner...
+✅ Đóng ứng dụng theo luồng an toàn

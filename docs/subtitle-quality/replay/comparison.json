@@ -1,0 +1,41 @@
+[
+  {
+    "video": "Brand New Sky",
+    "duration": 217.0703125,
+    "language": "en",
+    "original_cues": 49,
+    "new_cues": 37,
+    "original_refined_overlaps": 0,
+    "original_saved_overlaps": 38,
+    "new_overlaps": 0,
+    "recognized_characters_preserved": true,
+    "source_reference": "captured raw ASR, not human lyric/timing ground truth",
+    "new_saved_overlaps": 0
+  },
+  {
+    "video": "Unwavering Startorch",
+    "duration": 232.9890625,
+    "language": "en",
+    "original_cues": 35,
+    "new_cues": 33,
+    "original_refined_overlaps": 0,
+    "original_saved_overlaps": 20,
+    "new_overlaps": 0,
+    "recognized_characters_preserved": true,
+    "source_reference": "captured raw ASR, not human lyric/timing ground truth",
+    "new_saved_overlaps": 0
+  },
+  {
+    "video": "人生エンドロール",
+    "duration": 203.486625,
+    "language": "ja",
+    "original_cues": 27,
+    "new_cues": 25,
+    "original_refined_overlaps": 0,
+    "original_saved_overlaps": 16,
+    "new_overlaps": 0,
+    "recognized_characters_preserved": true,
+    "source_reference": "captured raw ASR, not human lyric/timing ground truth",
+    "new_saved_overlaps": 0
+  }
+]

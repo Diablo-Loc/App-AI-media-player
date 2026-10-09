@@ -1,5 +1,5 @@
 # app/control/app_controller.py
-from PySide6.QtCore import QObject, Slot, Signal, QUrl, QSettings, QFileInfo, QStandardPaths, QUrl
+from PySide6.QtCore import QObject, Slot, Signal, QUrl, QSettings, QFileInfo, QStandardPaths, QUrl, QTimer
 from PySide6.QtMultimedia import QMediaPlayer
 import logging
 import gc
@@ -45,6 +45,10 @@ class AppController(QObject):
 
         # THUMBNAIL WORKER
         self.thumb_worker = None
+        self._thumb_pending = False
+        self._thumb_timer = QTimer(self)
+        self._thumb_timer.setSingleShot(True)
+        self._thumb_timer.timeout.connect(self.start_thumbnail_scan)
         
         # ==============================
         # AI SIGNALS
@@ -65,8 +69,11 @@ class AppController(QObject):
         """
         # Nếu đang chạy thì dừng cái cũ
         if self.thumb_worker and self.thumb_worker.isRunning():
-            self.thumb_worker.stop()
-            self.thumb_worker.wait()
+            self._thumb_pending = True
+            self.thumb_worker.cancel()
+            return
+
+        self._thumb_pending = False
 
         if not self.media_lib.items:
             return
@@ -79,13 +86,26 @@ class AppController(QObject):
         # Nối dây tín hiệu: Worker tìm thấy -> Báo cho Controller -> Controller báo cho UI
         # (Cách này giúp UI không cần biết Worker là ai, chỉ cần nghe Controller)
         self.thumb_worker.thumbnail_ready.connect(self.thumbnail_ready.emit)
+        self.thumb_worker.finished.connect(self._thumbnail_scan_finished)
+        self.thumb_worker.finished.connect(self.thumb_worker.deleteLater)
         
         self.thumb_worker.start()
 
     def stop_thumbnail_scan(self):
+        self._thumb_pending = False
+        self._thumb_timer.stop()
         if self.thumb_worker:
             self.thumb_worker.stop()
             self.thumb_worker.wait()
+            self.thumb_worker = None
+
+    @Slot()
+    def _thumbnail_scan_finished(self):
+        if self.sender() is not self.thumb_worker:
+            return
+        self.thumb_worker = None
+        if self._thumb_pending:
+            self._thumb_timer.start(0)
     
     # =========================================================
     # UI → CONTROLLER
@@ -127,6 +147,7 @@ class AppController(QObject):
         # ===== RESET SUB UI =====
         sub = getattr(self.window, "sub_layer", None)
         if sub:
+            sub.load_subtitles([])
             sub.clear()
             sub.hide()
 
@@ -155,8 +176,10 @@ class AppController(QObject):
 
         if result.status == SubtitleStatus.READY:
             logger.info("📄 Subtitle READY → load")
-            self._load_subtitle_to_ui(media_id)
-            self._show_status("📄 Phụ đề có sẵn")
+            if self._load_subtitle_to_ui(media_id) is False:
+                self._show_status("ℹ️ Chưa nhận diện được lời (có thể là nhạc không lời).")
+            else:
+                self._show_status("📄 Phụ đề có sẵn")
             return
 
         if result.status == SubtitleStatus.NEED_AI:
@@ -182,11 +205,14 @@ class AppController(QObject):
         source_path = str(self.current_media_item.path) if self.current_media_item else None
         
         # ===== 2. LƯU JSON (CỰC QUAN TRỌNG) =====
-        self.subtitle_mgr.save_segments(
+        saved_path = self.subtitle_mgr.save_segments(
             media_id=media_id,
             segments=segments,
             source_path=source_path 
         )
+        if not saved_path:
+            self._show_status("❌ Không lưu được phụ đề. Vui lòng kiểm tra thư mục lưu.")
+            return
 
         # ===== 3. RENDER ASS =====
        #success = self.subtitle_mgr.render_ass_from_json(media_id)
@@ -197,7 +223,10 @@ class AppController(QObject):
         """
         # ===== 3. LOAD VÀO UI =====
         self._load_subtitle_to_ui(media_id)
-        self._show_status("✨ Phụ đề AI sẵn sàng")
+        if segments:
+            self._show_status("✨ Phụ đề AI sẵn sàng")
+        else:
+            self._show_status("ℹ️ Đã lưu kết quả rỗng: chưa nhận diện được lời.")
 
         # ===== CLEAN GPU =====
         gc.collect()
@@ -225,14 +254,19 @@ class AppController(QObject):
         segments = self.subtitle_mgr.get_segments_for_ui(media_id)
 
         sub = getattr(self.window, "sub_layer", None)
-        if not sub or not segments:
-            logger.warning("⚠️ Không có sub_layer hoặc subtitle rỗng")
+        if not sub:
+            logger.warning("⚠️ Không có sub_layer")
             return
 
         sub.load_subtitles(segments)
+        if not segments:
+            sub.clear()
+            sub._smart_hide(instant=True)
+            return False
         sub.show()
         sub.raise_()
         sub.center_at_bottom()
+        return True
 
     # =========================================================
     # STATUS BAR

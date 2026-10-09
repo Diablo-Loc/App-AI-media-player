@@ -1,0 +1,23 @@
+test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent (tests.test_foryou_spacing.ForYouSpacingTests.test_other_page_margins_are_restored_and_reapplying_theme_is_idempotent) ... ok
+test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes (tests.test_foryou_spacing.ForYouSpacingTests.test_outer_gutters_and_column_gap_are_twelve_at_multiple_sizes) ... ok
+test_search_top_bottom_and_horizontal_center_are_balanced (tests.test_foryou_spacing.ForYouSpacingTests.test_search_top_bottom_and_horizontal_center_are_balanced) ... ok
+test_style_observer_never_changes_flags_geometry_or_native_video_owners (tests.test_foryou_spacing.ForYouSpacingTests.test_style_observer_never_changes_flags_geometry_or_native_video_owners) ... ok
+test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized (tests.test_foryou_spacing.FrameColorTests.test_native_attribute_values_are_correct_and_hwnd_is_pointer_sized) ... ok
+test_only_for_you_presentation_and_shell_installs_change_captured_sources (tests.test_foryou_spacing.FrameColorTests.test_only_for_you_presentation_and_shell_installs_change_captured_sources) ... ok
+test_unavailable_or_unsupported_dwm_does_not_break_startup (tests.test_foryou_spacing.FrameColorTests.test_unavailable_or_unsupported_dwm_does_not_break_startup) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.793s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: False
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

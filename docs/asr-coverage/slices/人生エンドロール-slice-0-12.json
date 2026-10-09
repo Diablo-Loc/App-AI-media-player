@@ -1,0 +1,120 @@
+[
+  {
+    "id": 1,
+    "start": 5.480000000000001,
+    "end": 8.86,
+    "text": "くだらない人生の最後の一手",
+    "avg_logprob": -0.38988096373421804,
+    "no_speech_prob": 0.452392578125,
+    "compression_ratio": 0.8636363636363636,
+    "words": [
+      {
+        "start": 5.480000000000001,
+        "end": 6.04,
+        "word": "く",
+        "probability": 0.422607421875
+      },
+      {
+        "start": 6.04,
+        "end": 6.16,
+        "word": "だ",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 6.16,
+        "end": 6.32,
+        "word": "ら",
+        "probability": 0.99951171875
+      },
+      {
+        "start": 6.32,
+        "end": 6.6,
+        "word": "ない",
+        "probability": 0.99658203125
+      },
+      {
+        "start": 6.6,
+        "end": 6.86,
+        "word": "人",
+        "probability": 0.98583984375
+      },
+      {
+        "start": 6.86,
+        "end": 7.24,
+        "word": "生",
+        "probability": 0.9990234375
+      },
+      {
+        "start": 7.24,
+        "end": 7.5,
+        "word": "の",
+        "probability": 0.994140625
+      },
+      {
+        "start": 7.5,
+        "end": 7.88,
+        "word": "最後",
+        "probability": 0.82568359375
+      },
+      {
+        "start": 7.88,
+        "end": 8.36,
+        "word": "の",
+        "probability": 0.99853515625
+      },
+      {
+        "start": 8.36,
+        "end": 8.56,
+        "word": "一",
+        "probability": 0.83056640625
+      },
+      {
+        "start": 8.56,
+        "end": 8.86,
+        "word": "手",
+        "probability": 0.7421875
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "start": 10.64,
+    "end": 11.94,
+    "text": "エンドロイド",
+    "avg_logprob": -0.38988096373421804,
+    "no_speech_prob": 0.452392578125,
+    "compression_ratio": 0.8636363636363636,
+    "words": [
+      {
+        "start": 10.64,
+        "end": 11.2,
+        "word": "エ",
+        "probability": 0.4296875
+      },
+      {
+        "start": 11.2,
+        "end": 11.6,
+        "word": "ンド",
+        "probability": 0.99755859375
+      },
+      {
+        "start": 11.6,
+        "end": 11.66,
+        "word": "ロ",
+        "probability": 0.9384765625
+      },
+      {
+        "start": 11.66,
+        "end": 11.94,
+        "word": "イ",
+        "probability": 0.52880859375
+      },
+      {
+        "start": 11.94,
+        "end": 11.94,
+        "word": "ド",
+        "probability": 0.990234375
+      }
+    ]
+  }
+]

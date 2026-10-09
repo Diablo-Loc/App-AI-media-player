@@ -1,0 +1,10 @@
+{
+  "app/translate/lyric_translation.py": {
+    "before_sha256": "2f53629341dbedd3f58e491434476ee9ae54c3c4b704fbdb3c4de8beb1100772",
+    "after_sha256": "787423769f49d17e5685bc0cc47896a8517448f707fbb6d76066e02460854688"
+  },
+  "app/translate/online_logic.py": {
+    "before_sha256": "8a337d7ef7ec278dcbfec4a465b443501a7404abed3c01f3b069dcb21d1efa0c",
+    "after_sha256": "db0a437cc6f32da078557eaf7b55714f7a9f8deca815b4575e42f0e890814235"
+  }
+}

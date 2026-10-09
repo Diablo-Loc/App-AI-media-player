@@ -1,0 +1,69 @@
+{
+  "app/pipeline/lyric_refinement.py": {
+    "before_sha256": "0e3cfc9ed3ea24c7fa6dcd14753a0c4c26a845934e9dfcee787939e9f19cac4d",
+    "after_sha256": "c61fc81e77a1a0350db2ed82cb3a65a9c2f182af23a90850ea2af9cb3ff57229",
+    "edits": [
+      {
+        "before": "    CJK onset (+100 ms from the word) and saved tails (370/700 ms). Latin cues\n",
+        "after": "    CJK onset (+100 ms from the word), with saved tails 100 ms shorter\n    (270/600 ms). Latin cues\n"
+      },
+      {
+        "before": "    tail_shift = (0.37 if cjk else 0.7) - OFFSET_TAIL\n",
+        "after": "    tail_shift = (0.27 if cjk else 0.6) - OFFSET_TAIL\n"
+      }
+    ],
+    "allowed_older_sha256": [
+      "2995a38643f8b2c69133b0f9f2a7a0633b8bcd1221b279e11d603e4d60de2fc5",
+      "0e3cfc9ed3ea24c7fa6dcd14753a0c4c26a845934e9dfcee787939e9f19cac4d"
+    ]
+  },
+  "tests/test_subtitle_display_timing.py": {
+    "before_sha256": "223c43380cc1106caf271b1665c24e4236c6d0bc3b7ae9832d8bbf37c143c2db",
+    "after_sha256": "a44893dca6031ad4d6cab355cde09294ad57d8025d491f5af2bbef999748e480",
+    "edits": [
+      {
+        "before": "    def test_v31_cjk_onset_and_tail_are_applied_once_to_new_generation(self):\n",
+        "after": "    def test_cjk_onset_and_reduced_tail_are_applied_once_to_new_generation(self):\n"
+      },
+      {
+        "before": "        self.assertEqual(display, [dict(start=10.1, end=12.37, text='君の声')])\n",
+        "after": "        self.assertEqual(display, [dict(start=10.1, end=12.27, text='君の声')])\n"
+      },
+      {
+        "before": "            self.assertEqual((saved['start'], saved['end']), (10.1, 12.37))\n",
+        "after": "            self.assertEqual((saved['start'], saved['end']), (10.1, 12.27))\n"
+      },
+      {
+        "before": "    def test_latin_onset_never_anticipates_word_and_tail_matches_v31_saved_tail(self):\n",
+        "after": "    def test_latin_onset_never_anticipates_word_and_tail_is_100ms_shorter(self):\n"
+      },
+      {
+        "before": "            dict(start=1, end=4.7, text='Stay with me.')])\n",
+        "after": "            dict(start=1, end=4.6, text='Stay with me.')])\n"
+      },
+      {
+        "before": "                             (5370, 'Second line.'), (5371, None),\n",
+        "after": "                             (5270, 'Second line.'), (5271, None),\n"
+      }
+    ],
+    "allowed_older_sha256": []
+  },
+  "tests/test_asr_coverage.py": {
+    "before_sha256": "a0b2634457dec412c105aff6a6e28458d924511551bd64b9cfe8d230a31f538d",
+    "after_sha256": "955f10c402bc758ad9fb7425d473de00c8825875229b8cdd39a0ed3b35bb1f84",
+    "edits": [
+      {
+        "before": "            self.assertEqual(rows(new)[0][:2], (1.0, 4.7))\n",
+        "after": "            self.assertEqual(rows(new)[0][:2], (1.0, 4.6))\n"
+      },
+      {
+        "before": "                writer([dict(start=1.0, end=4.7, text=\"A complete original line\")], expected)\n",
+        "after": "                writer([dict(start=1.0, end=4.6, text=\"A complete original line\")], expected)\n"
+      }
+    ],
+    "allowed_older_sha256": [
+      "998422dbe7e8181308d503a570325812e74c6e0394c9d9b8330801ff18f7bed6",
+      "a0b2634457dec412c105aff6a6e28458d924511551bd64b9cfe8d230a31f538d"
+    ]
+  }
+}

@@ -1,0 +1,3838 @@
+{
+  "python": "3.11.0 (main, Oct 24 2022, 18:26:48) [MSC v.1933 64 bit (AMD64)]",
+  "faster_whisper": "1.0.2",
+  "psutil": "5.9.6",
+  "model": "local large-v3",
+  "device": "cuda/float16",
+  "rounds": 3,
+  "model_loads": 1,
+  "model_load": {
+    "seconds": 3.102526399998169,
+    "process_cpu_seconds": 0.28125,
+    "process_rss_before_mib": 392.74609375,
+    "process_rss_peak_mib": 3453.8515625,
+    "process_rss_extra_peak_mib": 3061.10546875,
+    "gpu_total_memory_peak_mib": 1907.0,
+    "gpu_utilization_peak_percent": 0.0,
+    "gpu_samples": 5
+  },
+  "measurement": "wall/CPU seconds and sampled process RSS; NVIDIA memory is entire GPU, including other apps",
+  "files": [
+    {
+      "media": "A Small Miracle(short).mp4",
+      "file_size": 7390691,
+      "media_sha256": "dc7301664612974578cfbe3f7a40e5769ce68ead5f8fbce866247ce1cbd126f6",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "jw",
+          "primary": {
+            "seconds": 9.520346500001324,
+            "process_cpu_seconds": 2.28125,
+            "process_rss_before_mib": 538.9765625,
+            "process_rss_peak_mib": 797.01171875,
+            "process_rss_extra_peak_mib": 258.03515625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 16
+          },
+          "coverage": {
+            "seconds": 6.531966399998055,
+            "process_cpu_seconds": 2.078125,
+            "process_rss_before_mib": 786.90234375,
+            "process_rss_peak_mib": 844.4609375,
+            "process_rss_extra_peak_mib": 57.55859375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 11
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 65.28,
+          "primary_cues": 24,
+          "final_cues": 26,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 143.1611875,
+            "gaps_before": [
+              [
+                30.06,
+                38.87
+              ],
+              [
+                70.86,
+                84.77
+              ],
+              [
+                111.64,
+                135.05
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 28.06,
+                "end": 40.06,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 68.86,
+                "end": 80.86,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 78.86,
+                "end": 90.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 109.64,
+                "end": 121.64,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 31.200000000000003,
+                "end": 36.512,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 77.984,
+                "end": 84.896,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 116.32,
+                "end": 121.376,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                15.216,
+                20.496
+              ],
+              [
+                33.2,
+                34.512
+              ],
+              [
+                39.536,
+                77.712
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                86.0,
+                87.632
+              ],
+              [
+                89.264,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                33.2,
+                34.512
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                111.64,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "jw",
+          "primary": {
+            "seconds": 10.81157190000522,
+            "process_cpu_seconds": 4.703125,
+            "process_rss_before_mib": 813.89453125,
+            "process_rss_peak_mib": 909.7578125,
+            "process_rss_extra_peak_mib": 95.86328125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 19
+          },
+          "coverage": {
+            "seconds": 6.418826100001752,
+            "process_cpu_seconds": 2.078125,
+            "process_rss_before_mib": 817.296875,
+            "process_rss_peak_mib": 848.76171875,
+            "process_rss_extra_peak_mib": 31.46484375,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 11
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 65.28,
+          "primary_cues": 24,
+          "final_cues": 26,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 143.1611875,
+            "gaps_before": [
+              [
+                30.06,
+                38.87
+              ],
+              [
+                70.86,
+                84.77
+              ],
+              [
+                111.64,
+                135.05
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 28.06,
+                "end": 40.06,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 68.86,
+                "end": 80.86,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 78.86,
+                "end": 90.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 109.64,
+                "end": 121.64,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 31.200000000000003,
+                "end": 36.512,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 77.984,
+                "end": 84.896,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 116.32,
+                "end": 121.376,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                15.216,
+                20.496
+              ],
+              [
+                33.2,
+                34.512
+              ],
+              [
+                39.536,
+                77.712
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                86.0,
+                87.632
+              ],
+              [
+                89.264,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                33.2,
+                34.512
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                111.64,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "jw",
+          "primary": {
+            "seconds": 10.860761200005072,
+            "process_cpu_seconds": 3.796875,
+            "process_rss_before_mib": 819.296875,
+            "process_rss_peak_mib": 907.87890625,
+            "process_rss_extra_peak_mib": 88.58203125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 18
+          },
+          "coverage": {
+            "seconds": 4.683469700001297,
+            "process_cpu_seconds": 1.25,
+            "process_rss_before_mib": 821.01171875,
+            "process_rss_peak_mib": 848.8359375,
+            "process_rss_extra_peak_mib": 27.82421875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 8
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 65.28,
+          "primary_cues": 24,
+          "final_cues": 26,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 143.1611875,
+            "gaps_before": [
+              [
+                30.06,
+                38.87
+              ],
+              [
+                70.86,
+                84.77
+              ],
+              [
+                111.64,
+                135.05
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 28.06,
+                "end": 40.06,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 68.86,
+                "end": 80.86,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 78.86,
+                "end": 90.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 109.64,
+                "end": 121.64,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 31.200000000000003,
+                "end": 36.512,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 77.984,
+                "end": 84.896,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 116.32,
+                "end": 121.376,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                15.216,
+                20.496
+              ],
+              [
+                33.2,
+                34.512
+              ],
+              [
+                39.536,
+                77.712
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                86.0,
+                87.632
+              ],
+              [
+                89.264,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                33.2,
+                34.512
+              ],
+              [
+                79.984,
+                82.896
+              ],
+              [
+                111.64,
+                116.432
+              ],
+              [
+                118.32,
+                119.376
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.15114590000302996,
+      "duration": 143.1611875,
+      "median_asr_seconds": 10.81157190000522,
+      "median_coverage_seconds": 6.418826100001752
+    },
+    {
+      "media": "Brand New Sky.mp4",
+      "file_size": 11431119,
+      "media_sha256": "1e280cf21c8ce1d069d3183ccc23497afcf268fec704f76f8e35458722ec7a99",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "en",
+          "primary": {
+            "seconds": 9.095501000003424,
+            "process_cpu_seconds": 0.828125,
+            "process_rss_before_mib": 821.87890625,
+            "process_rss_peak_mib": 955.69140625,
+            "process_rss_extra_peak_mib": 133.8125,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 16
+          },
+          "coverage": {
+            "seconds": 3.9932953999959864,
+            "process_cpu_seconds": 1.15625,
+            "process_rss_before_mib": 820.8125,
+            "process_rss_peak_mib": 850.45703125,
+            "process_rss_extra_peak_mib": 29.64453125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 86.0,
+            "gpu_samples": 7
+          },
+          "retry_count": 5,
+          "retry_audio_seconds": 56.064,
+          "primary_cues": 37,
+          "final_cues": 37,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 217.0703125,
+            "gaps_before": [
+              [
+                0.0,
+                14.35
+              ],
+              [
+                88.82,
+                105.71
+              ],
+              [
+                176.82,
+                187.71
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 86.82,
+                "end": 98.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 174.82,
+                "end": 186.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 184.82,
+                "end": 196.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.6080000000000001,
+                "end": 8.672,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                15.664,
+                91.024
+              ],
+              [
+                106.48,
+                181.776
+              ],
+              [
+                185.072,
+                214.992
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                88.82,
+                91.024
+              ],
+              [
+                176.82,
+                181.776
+              ],
+              [
+                185.072,
+                187.71
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "en",
+          "primary": {
+            "seconds": 14.353687100003299,
+            "process_cpu_seconds": 6.6875,
+            "process_rss_before_mib": 822.40234375,
+            "process_rss_peak_mib": 924.625,
+            "process_rss_extra_peak_mib": 102.22265625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 93.0,
+            "gpu_samples": 24
+          },
+          "coverage": {
+            "seconds": 5.493441200000234,
+            "process_cpu_seconds": 2.15625,
+            "process_rss_before_mib": 821.27734375,
+            "process_rss_peak_mib": 860.15234375,
+            "process_rss_extra_peak_mib": 38.875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 10
+          },
+          "retry_count": 5,
+          "retry_audio_seconds": 56.064,
+          "primary_cues": 37,
+          "final_cues": 37,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 217.0703125,
+            "gaps_before": [
+              [
+                0.0,
+                14.35
+              ],
+              [
+                88.82,
+                105.71
+              ],
+              [
+                176.82,
+                187.71
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 86.82,
+                "end": 98.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 174.82,
+                "end": 186.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 184.82,
+                "end": 196.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.6080000000000001,
+                "end": 8.672,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                15.664,
+                91.024
+              ],
+              [
+                106.48,
+                181.776
+              ],
+              [
+                185.072,
+                214.992
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                88.82,
+                91.024
+              ],
+              [
+                176.82,
+                181.776
+              ],
+              [
+                185.072,
+                187.71
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "en",
+          "primary": {
+            "seconds": 13.879806400000234,
+            "process_cpu_seconds": 4.90625,
+            "process_rss_before_mib": 822.59375,
+            "process_rss_peak_mib": 958.25390625,
+            "process_rss_extra_peak_mib": 135.66015625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 23
+          },
+          "coverage": {
+            "seconds": 5.352061500001582,
+            "process_cpu_seconds": 1.578125,
+            "process_rss_before_mib": 823.30859375,
+            "process_rss_peak_mib": 861.34375,
+            "process_rss_extra_peak_mib": 38.03515625,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 9
+          },
+          "retry_count": 5,
+          "retry_audio_seconds": 56.064,
+          "primary_cues": 37,
+          "final_cues": 37,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 217.0703125,
+            "gaps_before": [
+              [
+                0.0,
+                14.35
+              ],
+              [
+                88.82,
+                105.71
+              ],
+              [
+                176.82,
+                187.71
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 86.82,
+                "end": 98.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 174.82,
+                "end": 186.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 184.82,
+                "end": 196.82,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.6080000000000001,
+                "end": 8.672,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                15.664,
+                91.024
+              ],
+              [
+                106.48,
+                181.776
+              ],
+              [
+                185.072,
+                214.992
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                2.608,
+                6.672
+              ],
+              [
+                88.82,
+                91.024
+              ],
+              [
+                176.82,
+                181.776
+              ],
+              [
+                185.072,
+                187.71
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.17235339999751886,
+      "duration": 217.0703125,
+      "median_asr_seconds": 13.879806400000234,
+      "median_coverage_seconds": 5.352061500001582
+    },
+    {
+      "media": "Empty old City - Looma.mp4",
+      "file_size": 59846840,
+      "media_sha256": "1024a88f7b7840f6ada2fed6ee5306d12705a71af3bbd7a4c1d1ae1552aad9c9",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "en",
+          "primary": {
+            "seconds": 12.319792800000869,
+            "process_cpu_seconds": 3.125,
+            "process_rss_before_mib": 823.38671875,
+            "process_rss_peak_mib": 962.5390625,
+            "process_rss_extra_peak_mib": 139.15234375,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 21
+          },
+          "coverage": {
+            "seconds": 9.402137299999595,
+            "process_cpu_seconds": 2.84375,
+            "process_rss_before_mib": 827.68359375,
+            "process_rss_peak_mib": 860.80859375,
+            "process_rss_extra_peak_mib": 33.125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 16
+          },
+          "retry_count": 11,
+          "retry_audio_seconds": 114.79400000000001,
+          "primary_cues": 29,
+          "final_cues": 31,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 202.478,
+            "gaps_before": [
+              [
+                25.54,
+                29.95
+              ],
+              [
+                31.48,
+                41.89
+              ],
+              [
+                51.18,
+                55.57
+              ],
+              [
+                63.62,
+                67.85
+              ],
+              [
+                92.12,
+                97.61
+              ],
+              [
+                100.54,
+                113.35
+              ],
+              [
+                138.16,
+                146.71
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                202.478
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 23.54,
+                "end": 35.54,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 29.48,
+                "end": 41.480000000000004,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 49.18,
+                "end": 61.18,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 61.62,
+                "end": 73.62,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 90.12,
+                "end": 102.12,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 136.16,
+                "end": 148.16,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 146.24,
+                "end": 158.24,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 152.84,
+                "end": 164.84,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 195.78,
+                "end": 202.478,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 50.976,
+                "end": 56.928,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 63.84,
+                "end": 69.984,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                0.368,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                57.648,
+                60.56
+              ],
+              [
+                65.84,
+                67.984
+              ],
+              [
+                70.064,
+                72.976
+              ],
+              [
+                74.608,
+                100.24
+              ],
+              [
+                113.584,
+                144.848
+              ],
+              [
+                146.928,
+                199.76
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                31.48,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                65.84,
+                67.85
+              ],
+              [
+                138.16,
+                144.848
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                199.76
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "en",
+          "primary": {
+            "seconds": 12.841753900000185,
+            "process_cpu_seconds": 4.671875,
+            "process_rss_before_mib": 827.71875,
+            "process_rss_peak_mib": 954.5703125,
+            "process_rss_extra_peak_mib": 126.8515625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 22
+          },
+          "coverage": {
+            "seconds": 9.792184700003418,
+            "process_cpu_seconds": 3.53125,
+            "process_rss_before_mib": 827.6875,
+            "process_rss_peak_mib": 859.1171875,
+            "process_rss_extra_peak_mib": 31.4296875,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 17
+          },
+          "retry_count": 11,
+          "retry_audio_seconds": 114.79400000000001,
+          "primary_cues": 29,
+          "final_cues": 31,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 202.478,
+            "gaps_before": [
+              [
+                25.54,
+                29.95
+              ],
+              [
+                31.48,
+                41.89
+              ],
+              [
+                51.18,
+                55.57
+              ],
+              [
+                63.62,
+                67.85
+              ],
+              [
+                92.12,
+                97.61
+              ],
+              [
+                100.54,
+                113.35
+              ],
+              [
+                138.16,
+                146.71
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                202.478
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 23.54,
+                "end": 35.54,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 29.48,
+                "end": 41.480000000000004,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 49.18,
+                "end": 61.18,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 61.62,
+                "end": 73.62,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 90.12,
+                "end": 102.12,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 136.16,
+                "end": 148.16,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 146.24,
+                "end": 158.24,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 152.84,
+                "end": 164.84,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 195.78,
+                "end": 202.478,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 50.976,
+                "end": 56.928,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 63.84,
+                "end": 69.984,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                0.368,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                57.648,
+                60.56
+              ],
+              [
+                65.84,
+                67.984
+              ],
+              [
+                70.064,
+                72.976
+              ],
+              [
+                74.608,
+                100.24
+              ],
+              [
+                113.584,
+                144.848
+              ],
+              [
+                146.928,
+                199.76
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                31.48,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                65.84,
+                67.85
+              ],
+              [
+                138.16,
+                144.848
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                199.76
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "en",
+          "primary": {
+            "seconds": 12.928267700001015,
+            "process_cpu_seconds": 4.515625,
+            "process_rss_before_mib": 827.734375,
+            "process_rss_peak_mib": 970.48828125,
+            "process_rss_extra_peak_mib": 142.75390625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 22
+          },
+          "coverage": {
+            "seconds": 9.938060500004212,
+            "process_cpu_seconds": 3.734375,
+            "process_rss_before_mib": 827.671875,
+            "process_rss_peak_mib": 861.5,
+            "process_rss_extra_peak_mib": 33.828125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 17
+          },
+          "retry_count": 11,
+          "retry_audio_seconds": 114.79400000000001,
+          "primary_cues": 29,
+          "final_cues": 31,
+          "added": 2,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 202.478,
+            "gaps_before": [
+              [
+                25.54,
+                29.95
+              ],
+              [
+                31.48,
+                41.89
+              ],
+              [
+                51.18,
+                55.57
+              ],
+              [
+                63.62,
+                67.85
+              ],
+              [
+                92.12,
+                97.61
+              ],
+              [
+                100.54,
+                113.35
+              ],
+              [
+                138.16,
+                146.71
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                202.478
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 23.54,
+                "end": 35.54,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 29.48,
+                "end": 41.480000000000004,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 49.18,
+                "end": 61.18,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 61.62,
+                "end": 73.62,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 90.12,
+                "end": 102.12,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 136.16,
+                "end": 148.16,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 146.24,
+                "end": 158.24,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 152.84,
+                "end": 164.84,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 195.78,
+                "end": 202.478,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 50.976,
+                "end": 56.928,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 63.84,
+                "end": 69.984,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 2,
+            "speech": [
+              [
+                0.368,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                57.648,
+                60.56
+              ],
+              [
+                65.84,
+                67.984
+              ],
+              [
+                70.064,
+                72.976
+              ],
+              [
+                74.608,
+                100.24
+              ],
+              [
+                113.584,
+                144.848
+              ],
+              [
+                146.928,
+                199.76
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                31.48,
+                34.256
+              ],
+              [
+                52.976,
+                54.928
+              ],
+              [
+                65.84,
+                67.85
+              ],
+              [
+                138.16,
+                144.848
+              ],
+              [
+                148.24,
+                153.31
+              ],
+              [
+                154.84,
+                159.89
+              ],
+              [
+                197.78,
+                199.76
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.26402219999727095,
+      "duration": 202.478,
+      "median_asr_seconds": 12.841753900000185,
+      "median_coverage_seconds": 9.792184700003418
+    },
+    {
+      "media": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+      "file_size": 26079017,
+      "media_sha256": "b7d2691624aedefae28623e81dddf928841463837c8316f0674bdf91323529f1",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "ja",
+          "primary": {
+            "seconds": 31.71077140000125,
+            "process_cpu_seconds": 9.0625,
+            "process_rss_before_mib": 826.8359375,
+            "process_rss_peak_mib": 989.53125,
+            "process_rss_extra_peak_mib": 162.6953125,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 53
+          },
+          "coverage": {
+            "seconds": 14.753901900003257,
+            "process_cpu_seconds": 3.90625,
+            "process_rss_before_mib": 827.63671875,
+            "process_rss_peak_mib": 862.21875,
+            "process_rss_extra_peak_mib": 34.58203125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 25
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 73.568,
+          "primary_cues": 45,
+          "final_cues": 50,
+          "added": 5,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 236.5416875,
+            "gaps_before": [
+              [
+                82.32,
+                94.73
+              ],
+              [
+                143.92,
+                164.73
+              ],
+              [
+                191.34,
+                199.83
+              ],
+              [
+                222.7,
+                236.5416875
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 80.32,
+                "end": 92.32,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 90.32,
+                "end": 102.32,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 141.92,
+                "end": 153.92,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 189.34,
+                "end": 201.34,
+                "round": 1,
+                "added": 3
+              },
+              {
+                "start": 220.7,
+                "end": 232.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 83.488,
+                "end": 91.744,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 227.296,
+                "end": 232.608,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 5,
+            "speech": [
+              [
+                0.112,
+                3.088
+              ],
+              [
+                6.32,
+                8.528
+              ],
+              [
+                12.464,
+                28.624
+              ],
+              [
+                32.816,
+                84.048
+              ],
+              [
+                85.488,
+                89.744
+              ],
+              [
+                93.424,
+                145.04
+              ],
+              [
+                168.816,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                88.87,
+                89.744
+              ],
+              [
+                93.424,
+                94.73
+              ],
+              [
+                143.92,
+                145.04
+              ],
+              [
+                222.7,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "ja",
+          "primary": {
+            "seconds": 31.498505400006252,
+            "process_cpu_seconds": 10.8125,
+            "process_rss_before_mib": 827.0546875,
+            "process_rss_peak_mib": 989.09375,
+            "process_rss_extra_peak_mib": 162.0390625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 53
+          },
+          "coverage": {
+            "seconds": 14.39243169999827,
+            "process_cpu_seconds": 5.0,
+            "process_rss_before_mib": 828.91796875,
+            "process_rss_peak_mib": 864.3046875,
+            "process_rss_extra_peak_mib": 35.38671875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 25
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 73.568,
+          "primary_cues": 45,
+          "final_cues": 50,
+          "added": 5,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 236.5416875,
+            "gaps_before": [
+              [
+                82.32,
+                94.73
+              ],
+              [
+                143.92,
+                164.73
+              ],
+              [
+                191.34,
+                199.83
+              ],
+              [
+                222.7,
+                236.5416875
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 80.32,
+                "end": 92.32,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 90.32,
+                "end": 102.32,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 141.92,
+                "end": 153.92,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 189.34,
+                "end": 201.34,
+                "round": 1,
+                "added": 3
+              },
+              {
+                "start": 220.7,
+                "end": 232.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 83.488,
+                "end": 91.744,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 227.296,
+                "end": 232.608,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 5,
+            "speech": [
+              [
+                0.112,
+                3.088
+              ],
+              [
+                6.32,
+                8.528
+              ],
+              [
+                12.464,
+                28.624
+              ],
+              [
+                32.816,
+                84.048
+              ],
+              [
+                85.488,
+                89.744
+              ],
+              [
+                93.424,
+                145.04
+              ],
+              [
+                168.816,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                88.87,
+                89.744
+              ],
+              [
+                93.424,
+                94.73
+              ],
+              [
+                143.92,
+                145.04
+              ],
+              [
+                222.7,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "ja",
+          "primary": {
+            "seconds": 26.206784400004835,
+            "process_cpu_seconds": 5.390625,
+            "process_rss_before_mib": 829.10546875,
+            "process_rss_peak_mib": 974.83203125,
+            "process_rss_extra_peak_mib": 145.7265625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 44
+          },
+          "coverage": {
+            "seconds": 9.339914300006058,
+            "process_cpu_seconds": 1.84375,
+            "process_rss_before_mib": 829.16796875,
+            "process_rss_peak_mib": 857.17578125,
+            "process_rss_extra_peak_mib": 28.0078125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 16
+          },
+          "retry_count": 7,
+          "retry_audio_seconds": 73.568,
+          "primary_cues": 45,
+          "final_cues": 50,
+          "added": 5,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 236.5416875,
+            "gaps_before": [
+              [
+                82.32,
+                94.73
+              ],
+              [
+                143.92,
+                164.73
+              ],
+              [
+                191.34,
+                199.83
+              ],
+              [
+                222.7,
+                236.5416875
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 80.32,
+                "end": 92.32,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 90.32,
+                "end": 102.32,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 141.92,
+                "end": 153.92,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 189.34,
+                "end": 201.34,
+                "round": 1,
+                "added": 3
+              },
+              {
+                "start": 220.7,
+                "end": 232.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 83.488,
+                "end": 91.744,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 227.296,
+                "end": 232.608,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 5,
+            "speech": [
+              [
+                0.112,
+                3.088
+              ],
+              [
+                6.32,
+                8.528
+              ],
+              [
+                12.464,
+                28.624
+              ],
+              [
+                32.816,
+                84.048
+              ],
+              [
+                85.488,
+                89.744
+              ],
+              [
+                93.424,
+                145.04
+              ],
+              [
+                168.816,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                88.87,
+                89.744
+              ],
+              [
+                93.424,
+                94.73
+              ],
+              [
+                143.92,
+                145.04
+              ],
+              [
+                222.7,
+                225.04
+              ],
+              [
+                229.296,
+                230.608
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.24521359999926062,
+      "duration": 236.5416875,
+      "median_asr_seconds": 31.498505400006252,
+      "median_coverage_seconds": 14.39243169999827
+    },
+    {
+      "media": "Unwavering Startorch.mp4",
+      "file_size": 18134588,
+      "media_sha256": "fe9b96d0af56c20582dcaa3eb765f41494c383a68225b999f4601b9ade344f62",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "en",
+          "primary": {
+            "seconds": 8.015122199998586,
+            "process_cpu_seconds": 1.328125,
+            "process_rss_before_mib": 829.25390625,
+            "process_rss_peak_mib": 957.5703125,
+            "process_rss_extra_peak_mib": 128.31640625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 14
+          },
+          "coverage": {
+            "seconds": 3.944808700005524,
+            "process_cpu_seconds": 0.6875,
+            "process_rss_before_mib": 829.0078125,
+            "process_rss_peak_mib": 857.078125,
+            "process_rss_extra_peak_mib": 28.0703125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 7
+          },
+          "retry_count": 6,
+          "retry_audio_seconds": 51.583999999999996,
+          "primary_cues": 33,
+          "final_cues": 33,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 232.9890625,
+            "gaps_before": [
+              [
+                0.0,
+                10.77
+              ],
+              [
+                80.1,
+                96.01
+              ],
+              [
+                142.86,
+                157.53
+              ],
+              [
+                207.52,
+                229.15
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.1,
+                "end": 90.1,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 3.7439999999999998,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 3.5519999999999996,
+                "end": 9.504,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 207.776,
+                "end": 213.664,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                11.696,
+                82.96
+              ],
+              [
+                96.56,
+                139.28
+              ],
+              [
+                161.264,
+                185.488
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                80.1,
+                82.96
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "en",
+          "primary": {
+            "seconds": 7.906588099998771,
+            "process_cpu_seconds": 0.9375,
+            "process_rss_before_mib": 830.0546875,
+            "process_rss_peak_mib": 974.75390625,
+            "process_rss_extra_peak_mib": 144.69921875,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 13
+          },
+          "coverage": {
+            "seconds": 3.7190700999999535,
+            "process_cpu_seconds": 0.59375,
+            "process_rss_before_mib": 831.01171875,
+            "process_rss_peak_mib": 861.92578125,
+            "process_rss_extra_peak_mib": 30.9140625,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 94.0,
+            "gpu_samples": 7
+          },
+          "retry_count": 6,
+          "retry_audio_seconds": 51.583999999999996,
+          "primary_cues": 33,
+          "final_cues": 33,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 232.9890625,
+            "gaps_before": [
+              [
+                0.0,
+                10.77
+              ],
+              [
+                80.1,
+                96.01
+              ],
+              [
+                142.86,
+                157.53
+              ],
+              [
+                207.52,
+                229.15
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.1,
+                "end": 90.1,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 3.7439999999999998,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 3.5519999999999996,
+                "end": 9.504,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 207.776,
+                "end": 213.664,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                11.696,
+                82.96
+              ],
+              [
+                96.56,
+                139.28
+              ],
+              [
+                161.264,
+                185.488
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                80.1,
+                82.96
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "en",
+          "primary": {
+            "seconds": 8.040188099999796,
+            "process_cpu_seconds": 1.1875,
+            "process_rss_before_mib": 831.046875,
+            "process_rss_peak_mib": 974.6953125,
+            "process_rss_extra_peak_mib": 143.6484375,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 96.0,
+            "gpu_samples": 14
+          },
+          "coverage": {
+            "seconds": 3.833452099999704,
+            "process_cpu_seconds": 0.625,
+            "process_rss_before_mib": 830.94140625,
+            "process_rss_peak_mib": 865.0546875,
+            "process_rss_extra_peak_mib": 34.11328125,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 7
+          },
+          "retry_count": 6,
+          "retry_audio_seconds": 51.583999999999996,
+          "primary_cues": 33,
+          "final_cues": 33,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 232.9890625,
+            "gaps_before": [
+              [
+                0.0,
+                10.77
+              ],
+              [
+                80.1,
+                96.01
+              ],
+              [
+                142.86,
+                157.53
+              ],
+              [
+                207.52,
+                229.15
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.1,
+                "end": 90.1,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 3.7439999999999998,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 3.5519999999999996,
+                "end": 9.504,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 207.776,
+                "end": 213.664,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                11.696,
+                82.96
+              ],
+              [
+                96.56,
+                139.28
+              ],
+              [
+                161.264,
+                185.488
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.0,
+                1.744
+              ],
+              [
+                5.552,
+                7.504
+              ],
+              [
+                80.1,
+                82.96
+              ],
+              [
+                209.776,
+                211.664
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.34427680000226246,
+      "duration": 232.9890625,
+      "median_asr_seconds": 8.015122199998586,
+      "median_coverage_seconds": 3.833452099999704
+    },
+    {
+      "media": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "file_size": 39880518,
+      "media_sha256": "44e419faabac247b964870459124e64a8e4215c63f192330dedd9a5ae0df1669",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "ja",
+          "primary": {
+            "seconds": 11.36274979999871,
+            "process_cpu_seconds": 1.234375,
+            "process_rss_before_mib": 830.109375,
+            "process_rss_peak_mib": 959.0390625,
+            "process_rss_extra_peak_mib": 128.9296875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 19
+          },
+          "coverage": {
+            "seconds": 6.191472099999373,
+            "process_cpu_seconds": 1.375,
+            "process_rss_before_mib": 828.74609375,
+            "process_rss_peak_mib": 868.2578125,
+            "process_rss_extra_peak_mib": 39.51171875,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 11
+          },
+          "retry_count": 10,
+          "retry_audio_seconds": 108.70400000000001,
+          "primary_cues": 38,
+          "final_cues": 39,
+          "added": 1,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 255.23375,
+            "gaps_before": [
+              [
+                0.0,
+                24.05
+              ],
+              [
+                80.2,
+                96.65
+              ],
+              [
+                151.2,
+                162.01
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                255.23375
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.2,
+                "end": 90.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 88.2,
+                "end": 100.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 149.2,
+                "end": 161.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 159.2,
+                "end": 171.2,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 216.66,
+                "end": 228.66,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 226.7,
+                "end": 238.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 236.7,
+                "end": 248.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 7.328,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 5.152,
+                "end": 10.528,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 1,
+            "speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                25.648,
+                86.416
+              ],
+              [
+                94.704,
+                239.12
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                80.2,
+                86.416
+              ],
+              [
+                94.704,
+                96.65
+              ],
+              [
+                151.2,
+                159.15
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                239.12
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "ja",
+          "primary": {
+            "seconds": 11.241084299996146,
+            "process_cpu_seconds": 2.1875,
+            "process_rss_before_mib": 829.07421875,
+            "process_rss_peak_mib": 985.12109375,
+            "process_rss_extra_peak_mib": 156.046875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 19
+          },
+          "coverage": {
+            "seconds": 6.195862799999304,
+            "process_cpu_seconds": 1.234375,
+            "process_rss_before_mib": 829.046875,
+            "process_rss_peak_mib": 865.3828125,
+            "process_rss_extra_peak_mib": 36.3359375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 11
+          },
+          "retry_count": 10,
+          "retry_audio_seconds": 108.70400000000001,
+          "primary_cues": 38,
+          "final_cues": 39,
+          "added": 1,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 255.23375,
+            "gaps_before": [
+              [
+                0.0,
+                24.05
+              ],
+              [
+                80.2,
+                96.65
+              ],
+              [
+                151.2,
+                162.01
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                255.23375
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.2,
+                "end": 90.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 88.2,
+                "end": 100.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 149.2,
+                "end": 161.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 159.2,
+                "end": 171.2,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 216.66,
+                "end": 228.66,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 226.7,
+                "end": 238.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 236.7,
+                "end": 248.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 7.328,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 5.152,
+                "end": 10.528,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 1,
+            "speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                25.648,
+                86.416
+              ],
+              [
+                94.704,
+                239.12
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                80.2,
+                86.416
+              ],
+              [
+                94.704,
+                96.65
+              ],
+              [
+                151.2,
+                159.15
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                239.12
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "ja",
+          "primary": {
+            "seconds": 11.4049554000012,
+            "process_cpu_seconds": 2.09375,
+            "process_rss_before_mib": 829.1015625,
+            "process_rss_peak_mib": 985.02734375,
+            "process_rss_extra_peak_mib": 155.92578125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 19
+          },
+          "coverage": {
+            "seconds": 6.185505599998578,
+            "process_cpu_seconds": 1.375,
+            "process_rss_before_mib": 828.97265625,
+            "process_rss_peak_mib": 855.00390625,
+            "process_rss_extra_peak_mib": 26.03125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 11
+          },
+          "retry_count": 10,
+          "retry_audio_seconds": 108.70400000000001,
+          "primary_cues": 38,
+          "final_cues": 39,
+          "added": 1,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 255.23375,
+            "gaps_before": [
+              [
+                0.0,
+                24.05
+              ],
+              [
+                80.2,
+                96.65
+              ],
+              [
+                151.2,
+                162.01
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                255.23375
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 78.2,
+                "end": 90.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 88.2,
+                "end": 100.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 149.2,
+                "end": 161.2,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 159.2,
+                "end": 171.2,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 216.66,
+                "end": 228.66,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 226.7,
+                "end": 238.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 236.7,
+                "end": 248.7,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 0.0,
+                "end": 7.328,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 5.152,
+                "end": 10.528,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 1,
+            "speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                25.648,
+                86.416
+              ],
+              [
+                94.704,
+                239.12
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.752,
+                5.328
+              ],
+              [
+                7.152,
+                8.528
+              ],
+              [
+                80.2,
+                86.416
+              ],
+              [
+                94.704,
+                96.65
+              ],
+              [
+                151.2,
+                159.15
+              ],
+              [
+                218.66,
+                227.45
+              ],
+              [
+                228.7,
+                239.12
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.271844200004125,
+      "duration": 255.23375,
+      "median_asr_seconds": 11.36274979999871,
+      "median_coverage_seconds": 6.191472099999373
+    },
+    {
+      "media": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+      "file_size": 35477074,
+      "media_sha256": "652cb32ec57aa50b76e8965a4dec04b655863a482fa74f939fd07ff52a1f47c8",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "ja",
+          "primary": {
+            "seconds": 12.995915699997568,
+            "process_cpu_seconds": 2.390625,
+            "process_rss_before_mib": 828.9609375,
+            "process_rss_peak_mib": 930.83203125,
+            "process_rss_extra_peak_mib": 101.87109375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 22
+          },
+          "coverage": {
+            "seconds": 4.247741799998039,
+            "process_cpu_seconds": 0.8125,
+            "process_rss_before_mib": 829.38671875,
+            "process_rss_peak_mib": 863.73046875,
+            "process_rss_extra_peak_mib": 34.34375,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 8
+          },
+          "retry_count": 8,
+          "retry_audio_seconds": 88.384,
+          "primary_cues": 36,
+          "final_cues": 36,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 221.4255,
+            "gaps_before": [
+              [
+                0.0,
+                19.83
+              ],
+              [
+                175.86,
+                184.19
+              ],
+              [
+                194.94,
+                205.95
+              ],
+              [
+                207.52,
+                221.4255
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 173.86,
+                "end": 185.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 192.94,
+                "end": 204.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 202.94,
+                "end": 214.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 201.632,
+                "end": 212.704,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 211.424,
+                "end": 216.736,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.496,
+                177.104
+              ],
+              [
+                185.968,
+                201.68
+              ],
+              [
+                203.632,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.496,
+                19.83
+              ],
+              [
+                175.86,
+                177.104
+              ],
+              [
+                194.94,
+                201.68
+              ],
+              [
+                203.632,
+                205.95
+              ],
+              [
+                207.52,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "ja",
+          "primary": {
+            "seconds": 18.817324399999052,
+            "process_cpu_seconds": 5.40625,
+            "process_rss_before_mib": 829.48828125,
+            "process_rss_peak_mib": 934.6796875,
+            "process_rss_extra_peak_mib": 105.19140625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 97.0,
+            "gpu_samples": 32
+          },
+          "coverage": {
+            "seconds": 7.646744600002421,
+            "process_cpu_seconds": 2.84375,
+            "process_rss_before_mib": 829.421875,
+            "process_rss_peak_mib": 863.4296875,
+            "process_rss_extra_peak_mib": 34.0078125,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 13
+          },
+          "retry_count": 8,
+          "retry_audio_seconds": 88.384,
+          "primary_cues": 36,
+          "final_cues": 36,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 221.4255,
+            "gaps_before": [
+              [
+                0.0,
+                19.83
+              ],
+              [
+                175.86,
+                184.19
+              ],
+              [
+                194.94,
+                205.95
+              ],
+              [
+                207.52,
+                221.4255
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 173.86,
+                "end": 185.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 192.94,
+                "end": 204.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 202.94,
+                "end": 214.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 201.632,
+                "end": 212.704,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 211.424,
+                "end": 216.736,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.496,
+                177.104
+              ],
+              [
+                185.968,
+                201.68
+              ],
+              [
+                203.632,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.496,
+                19.83
+              ],
+              [
+                175.86,
+                177.104
+              ],
+              [
+                194.94,
+                201.68
+              ],
+              [
+                203.632,
+                205.95
+              ],
+              [
+                207.52,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "ja",
+          "primary": {
+            "seconds": 23.920076999995217,
+            "process_cpu_seconds": 6.421875,
+            "process_rss_before_mib": 829.19921875,
+            "process_rss_peak_mib": 966.8515625,
+            "process_rss_extra_peak_mib": 137.65234375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 40
+          },
+          "coverage": {
+            "seconds": 7.394076700002188,
+            "process_cpu_seconds": 1.75,
+            "process_rss_before_mib": 829.50390625,
+            "process_rss_peak_mib": 866.5546875,
+            "process_rss_extra_peak_mib": 37.05078125,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 13
+          },
+          "retry_count": 8,
+          "retry_audio_seconds": 88.384,
+          "primary_cues": 36,
+          "final_cues": 36,
+          "added": 0,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 221.4255,
+            "gaps_before": [
+              [
+                0.0,
+                19.83
+              ],
+              [
+                175.86,
+                184.19
+              ],
+              [
+                194.94,
+                205.95
+              ],
+              [
+                207.52,
+                221.4255
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 173.86,
+                "end": 185.86,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 192.94,
+                "end": 204.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 202.94,
+                "end": 214.94,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 205.52,
+                "end": 217.52,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 201.632,
+                "end": 212.704,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 211.424,
+                "end": 216.736,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 0,
+            "speech": [
+              [
+                0.496,
+                177.104
+              ],
+              [
+                185.968,
+                201.68
+              ],
+              [
+                203.632,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                0.496,
+                19.83
+              ],
+              [
+                175.86,
+                177.104
+              ],
+              [
+                194.94,
+                201.68
+              ],
+              [
+                203.632,
+                205.95
+              ],
+              [
+                207.52,
+                210.704
+              ],
+              [
+                213.424,
+                214.736
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.21572240000386955,
+      "duration": 221.4255,
+      "median_asr_seconds": 18.817324399999052,
+      "median_coverage_seconds": 7.394076700002188
+    },
+    {
+      "media": "人生エンドロール.mp4",
+      "file_size": 9629175,
+      "media_sha256": "94dd21600d9dfe32203877a04e9ab45e09e045b9a7f8b8a510706526525c970d",
+      "rounds": [
+        {
+          "number": 1,
+          "language": "ja",
+          "primary": {
+            "seconds": 13.659757999994326,
+            "process_cpu_seconds": 4.796875,
+            "process_rss_before_mib": 829.44921875,
+            "process_rss_peak_mib": 958.0390625,
+            "process_rss_extra_peak_mib": 128.58984375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 23
+          },
+          "coverage": {
+            "seconds": 8.236368899997615,
+            "process_cpu_seconds": 2.015625,
+            "process_rss_before_mib": 830.63671875,
+            "process_rss_peak_mib": 858.37890625,
+            "process_rss_extra_peak_mib": 27.7421875,
+            "gpu_total_memory_peak_mib": 4197.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 14
+          },
+          "retry_count": 9,
+          "retry_audio_seconds": 95.00800000000001,
+          "primary_cues": 25,
+          "final_cues": 28,
+          "added": 3,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 203.486625,
+            "gaps_before": [
+              [
+                0.0,
+                29.95
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                157.91
+              ],
+              [
+                190.44,
+                203.486625
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 20.0,
+                "end": 32.0,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 71.0,
+                "end": 83.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 134.76,
+                "end": 146.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 144.76,
+                "end": 156.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 188.44,
+                "end": 200.44,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 18.912,
+                "end": 24.416,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 144.416,
+                "end": 149.92,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 3,
+            "speech": [
+              [
+                5.808,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                28.784,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                158.192,
+                196.304
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                14.16,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                190.44,
+                196.304
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 2,
+          "language": "ja",
+          "primary": {
+            "seconds": 13.211718700003985,
+            "process_cpu_seconds": 4.53125,
+            "process_rss_before_mib": 830.53515625,
+            "process_rss_peak_mib": 970.2265625,
+            "process_rss_extra_peak_mib": 139.69140625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 22
+          },
+          "coverage": {
+            "seconds": 8.001661099995545,
+            "process_cpu_seconds": 2.609375,
+            "process_rss_before_mib": 830.58203125,
+            "process_rss_peak_mib": 867.71484375,
+            "process_rss_extra_peak_mib": 37.1328125,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 14
+          },
+          "retry_count": 9,
+          "retry_audio_seconds": 95.00800000000001,
+          "primary_cues": 25,
+          "final_cues": 28,
+          "added": 3,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 203.486625,
+            "gaps_before": [
+              [
+                0.0,
+                29.95
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                157.91
+              ],
+              [
+                190.44,
+                203.486625
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 20.0,
+                "end": 32.0,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 71.0,
+                "end": 83.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 134.76,
+                "end": 146.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 144.76,
+                "end": 156.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 188.44,
+                "end": 200.44,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 18.912,
+                "end": 24.416,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 144.416,
+                "end": 149.92,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 3,
+            "speech": [
+              [
+                5.808,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                28.784,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                158.192,
+                196.304
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                14.16,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                190.44,
+                196.304
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        },
+        {
+          "number": 3,
+          "language": "ja",
+          "primary": {
+            "seconds": 12.958399299997836,
+            "process_cpu_seconds": 3.796875,
+            "process_rss_before_mib": 830.66796875,
+            "process_rss_peak_mib": 958.01953125,
+            "process_rss_extra_peak_mib": 127.3515625,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 22
+          },
+          "coverage": {
+            "seconds": 8.013530200005334,
+            "process_cpu_seconds": 2.34375,
+            "process_rss_before_mib": 830.60546875,
+            "process_rss_peak_mib": 856.7265625,
+            "process_rss_extra_peak_mib": 26.12109375,
+            "gpu_total_memory_peak_mib": 4229.0,
+            "gpu_utilization_peak_percent": 100.0,
+            "gpu_samples": 14
+          },
+          "retry_count": 9,
+          "retry_audio_seconds": 95.00800000000001,
+          "primary_cues": 25,
+          "final_cues": 28,
+          "added": 3,
+          "all_primary_text_times_unchanged": true,
+          "primary_input_unmodified": true,
+          "no_overlap": true,
+          "diagnostic": {
+            "duration": 203.486625,
+            "gaps_before": [
+              [
+                0.0,
+                29.95
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                157.91
+              ],
+              [
+                190.44,
+                203.486625
+              ]
+            ],
+            "attempts": [
+              {
+                "start": 0.0,
+                "end": 12.0,
+                "round": 1,
+                "added": 2
+              },
+              {
+                "start": 10.0,
+                "end": 22.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 20.0,
+                "end": 32.0,
+                "round": 1,
+                "added": 1
+              },
+              {
+                "start": 71.0,
+                "end": 83.0,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 134.76,
+                "end": 146.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 144.76,
+                "end": 156.76,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 188.44,
+                "end": 200.44,
+                "round": 1,
+                "added": 0
+              },
+              {
+                "start": 18.912,
+                "end": 24.416,
+                "round": 2,
+                "added": 0
+              },
+              {
+                "start": 144.416,
+                "end": 149.92,
+                "round": 2,
+                "added": 0
+              }
+            ],
+            "added_cues": 3,
+            "speech": [
+              [
+                5.808,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                28.784,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                158.192,
+                196.304
+              ]
+            ],
+            "unresolved_speech": [
+              [
+                14.16,
+                15.312
+              ],
+              [
+                20.912,
+                22.416
+              ],
+              [
+                73.0,
+                81.81
+              ],
+              [
+                136.76,
+                144.72
+              ],
+              [
+                146.416,
+                147.92
+              ],
+              [
+                190.44,
+                196.304
+              ]
+            ]
+          },
+          "primary_character_inventory_preserved": true
+        }
+      ],
+      "extract_seconds": 0.21652590000303462,
+      "duration": 203.486625,
+      "median_asr_seconds": 13.211718700003985,
+      "median_coverage_seconds": 8.013530200005334
+    }
+  ],
+  "existing_subtitle_files_unchanged": true,
+  "existing_subtitle_file_count": 21
+}

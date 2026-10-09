@@ -1,0 +1,22 @@
+{
+  "app/ai/pipeline.py": {
+    "before_sha256": "d5de97196bc36077b9bc0d55c33c4ba8d2d9726ade6908d78fa168297c3c6b74",
+    "after_sha256": "f70c3eb6825f2904a8dab7b80af528d3da32f1b27dd97f33f03125d769df6d85"
+  },
+  "app/pipeline/lyric_refinement.py": {
+    "before_sha256": "d87f23a49cdc51ef80f49f5b012ad2628db57a4ac232a600461e608fa134f9c4",
+    "after_sha256": "2995a38643f8b2c69133b0f9f2a7a0633b8bcd1221b279e11d603e4d60de2fc5"
+  },
+  "tests/subtitle_kinetic_contracts.py": {
+    "before_sha256": "abc08e5b2b5613051c64bcf2fd0e5e8591e369f7b6e613060675f3b4ccb1ae1f",
+    "after_sha256": "42ea1647e77a41b245e640bcdb285ef2503828d88ef996768b671e2c75c4ad74"
+  },
+  "tests/lyric_phrase_contracts.py": {
+    "before_sha256": "8280f496e74bcf4489f8071af3a55ca68bf5684088531a033c0c8a7487572037",
+    "after_sha256": "8c54845f4e69528754827af678c655a767049f2b6598f870b2bfea685ce6faff"
+  },
+  "tests/test_asr_coverage.py": {
+    "before_sha256": "07557746eaa7036fb4887f0aa1cb5fb946825585606d0a94e11048339ccf1420",
+    "after_sha256": "8b8d4178b8ed6aea36bc4c12d9773ea2db9927a7fbab5d1a955512a571b5c9a0"
+  }
+}

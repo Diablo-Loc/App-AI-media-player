@@ -1,0 +1,982 @@
+{
+  "media": "video\\From the Heart, Dare the Heavens.mp4",
+  "model": "large-v3",
+  "device": "cuda",
+  "faster_whisper": "1.0.2",
+  "options": {
+    "language": null,
+    "word_timestamps": true,
+    "condition_on_previous_text": false,
+    "beam_size": 3,
+    "temperature": 0.0,
+    "vad_filter": false,
+    "vad_parameters": {
+      "min_silence_duration_ms": 1000
+    },
+    "initial_prompt": " .+"
+  },
+  "language": "zh",
+  "language_probability": 0.986328125,
+  "duration": 45.0,
+  "asr_seconds": 5.093000000000757,
+  "raw": [
+    {
+      "id": 1,
+      "start": 0.0,
+      "end": 2.52,
+      "text": "作词曲 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 0.0,
+          "end": 0.0,
+          "word": "作",
+          "probability": 0.0161895751953125
+        },
+        {
+          "start": 0.0,
+          "end": 0.1,
+          "word": "词",
+          "probability": 0.766845703125
+        },
+        {
+          "start": 0.1,
+          "end": 0.14,
+          "word": "曲",
+          "probability": 0.0023097991943359375
+        },
+        {
+          "start": 0.62,
+          "end": 0.62,
+          "word": " 李",
+          "probability": 0.57861328125
+        },
+        {
+          "start": 0.62,
+          "end": 2.52,
+          "word": "宗",
+          "probability": 0.60302734375
+        },
+        {
+          "start": 2.52,
+          "end": 2.52,
+          "word": "盛",
+          "probability": 0.99365234375
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "start": 3.9999999999999964,
+      "end": 16.5,
+      "text": "编曲 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 3.9999999999999964,
+          "end": 4.419999999999998,
+          "word": "编",
+          "probability": 0.5382080078125
+        },
+        {
+          "start": 4.419999999999998,
+          "end": 4.84,
+          "word": "曲",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 5.02,
+          "end": 5.8,
+          "word": " 李",
+          "probability": 0.6533203125
+        },
+        {
+          "start": 5.8,
+          "end": 16.14,
+          "word": "宗",
+          "probability": 0.943115234375
+        },
+        {
+          "start": 16.14,
+          "end": 16.5,
+          "word": "盛",
+          "probability": 0.995849609375
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "start": 21.799999999999997,
+      "end": 23.08,
+      "text": "编写 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 21.799999999999997,
+          "end": 22.22,
+          "word": "编",
+          "probability": 0.53271484375
+        },
+        {
+          "start": 22.22,
+          "end": 22.64,
+          "word": "写",
+          "probability": 0.162078857421875
+        },
+        {
+          "start": 23.08,
+          "end": 23.08,
+          "word": " 李",
+          "probability": 0.47900390625
+        },
+        {
+          "start": 23.08,
+          "end": 23.08,
+          "word": "宗",
+          "probability": 0.976806640625
+        },
+        {
+          "start": 23.08,
+          "end": 23.08,
+          "word": "盛",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "start": 23.819999999999997,
+      "end": 25.02,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 23.819999999999997,
+          "end": 24.24,
+          "word": "制",
+          "probability": 0.006023406982421875
+        },
+        {
+          "start": 24.24,
+          "end": 24.58,
+          "word": "作",
+          "probability": 0.91552734375
+        },
+        {
+          "start": 24.58,
+          "end": 24.68,
+          "word": "人",
+          "probability": 0.814453125
+        },
+        {
+          "start": 24.68,
+          "end": 24.68,
+          "word": " 李",
+          "probability": 0.69970703125
+        },
+        {
+          "start": 24.68,
+          "end": 25.02,
+          "word": "宗",
+          "probability": 0.97802734375
+        },
+        {
+          "start": 25.02,
+          "end": 25.02,
+          "word": "盛",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "start": 25.02,
+      "end": 25.04,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 25.02,
+          "end": 25.02,
+          "word": "制",
+          "probability": 0.08245849609375
+        },
+        {
+          "start": 25.02,
+          "end": 25.02,
+          "word": "作",
+          "probability": 0.9521484375
+        },
+        {
+          "start": 25.02,
+          "end": 25.02,
+          "word": "人",
+          "probability": 0.6826171875
+        },
+        {
+          "start": 25.02,
+          "end": 25.02,
+          "word": " 李",
+          "probability": 0.98583984375
+        },
+        {
+          "start": 25.02,
+          "end": 25.04,
+          "word": "宗",
+          "probability": 0.99365234375
+        },
+        {
+          "start": 25.04,
+          "end": 25.04,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "start": 25.04,
+      "end": 25.1,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 25.04,
+          "end": 25.1,
+          "word": "制",
+          "probability": 0.1446533203125
+        },
+        {
+          "start": 25.1,
+          "end": 25.1,
+          "word": "作",
+          "probability": 0.95849609375
+        },
+        {
+          "start": 25.1,
+          "end": 25.1,
+          "word": "人",
+          "probability": 0.91357421875
+        },
+        {
+          "start": 25.1,
+          "end": 25.1,
+          "word": " 李",
+          "probability": 0.98828125
+        },
+        {
+          "start": 25.1,
+          "end": 25.1,
+          "word": "宗",
+          "probability": 0.992919921875
+        },
+        {
+          "start": 25.1,
+          "end": 25.1,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "start": 25.1,
+      "end": 25.12,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 25.1,
+          "end": 25.12,
+          "word": "制",
+          "probability": 0.180419921875
+        },
+        {
+          "start": 25.12,
+          "end": 25.12,
+          "word": "作",
+          "probability": 0.9599609375
+        },
+        {
+          "start": 25.12,
+          "end": 25.12,
+          "word": "人",
+          "probability": 0.95068359375
+        },
+        {
+          "start": 25.12,
+          "end": 25.12,
+          "word": " 李",
+          "probability": 0.98876953125
+        },
+        {
+          "start": 25.12,
+          "end": 25.12,
+          "word": "宗",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 25.12,
+          "end": 25.12,
+          "word": "盛",
+          "probability": 0.998779296875
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "start": 25.12,
+      "end": 25.16,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 25.12,
+          "end": 25.16,
+          "word": "制",
+          "probability": 0.34619140625
+        },
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": "作",
+          "probability": 0.955078125
+        },
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": "人",
+          "probability": 0.98681640625
+        },
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": " 李",
+          "probability": 0.9912109375
+        },
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": "宗",
+          "probability": 0.9921875
+        },
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": "盛",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "start": 25.16,
+      "end": 26.92,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 25.16,
+          "end": 25.16,
+          "word": "制",
+          "probability": 0.447998046875
+        },
+        {
+          "start": 25.16,
+          "end": 25.22,
+          "word": "作",
+          "probability": 0.94189453125
+        },
+        {
+          "start": 25.22,
+          "end": 25.26,
+          "word": "人",
+          "probability": 0.99072265625
+        },
+        {
+          "start": 25.3,
+          "end": 25.62,
+          "word": " 李",
+          "probability": 0.9921875
+        },
+        {
+          "start": 25.62,
+          "end": 25.86,
+          "word": "宗",
+          "probability": 0.991943359375
+        },
+        {
+          "start": 25.86,
+          "end": 26.92,
+          "word": "盛",
+          "probability": 0.997802734375
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "start": 26.92,
+      "end": 27.46,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 26.92,
+          "end": 26.92,
+          "word": "制",
+          "probability": 0.485595703125
+        },
+        {
+          "start": 26.92,
+          "end": 27.14,
+          "word": "作",
+          "probability": 0.93505859375
+        },
+        {
+          "start": 27.14,
+          "end": 27.28,
+          "word": "人",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 27.34,
+          "end": 27.34,
+          "word": " 李",
+          "probability": 0.9921875
+        },
+        {
+          "start": 27.34,
+          "end": 27.34,
+          "word": "宗",
+          "probability": 0.991943359375
+        },
+        {
+          "start": 27.34,
+          "end": 27.46,
+          "word": "盛",
+          "probability": 0.997802734375
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "start": 27.46,
+      "end": 29.08,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 27.46,
+          "end": 27.58,
+          "word": "制",
+          "probability": 0.5478515625
+        },
+        {
+          "start": 27.58,
+          "end": 27.78,
+          "word": "作",
+          "probability": 0.9326171875
+        },
+        {
+          "start": 27.78,
+          "end": 27.78,
+          "word": "人",
+          "probability": 0.9931640625
+        },
+        {
+          "start": 27.92,
+          "end": 28.02,
+          "word": " 李",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 28.02,
+          "end": 28.9,
+          "word": "宗",
+          "probability": 0.991943359375
+        },
+        {
+          "start": 28.9,
+          "end": 29.08,
+          "word": "盛",
+          "probability": 0.997802734375
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "start": 29.08,
+      "end": 29.98,
+      "text": "制作人 李宗盛",
+      "avg_logprob": -0.1470833396911621,
+      "no_speech_prob": 0.086669921875,
+      "compression_ratio": 7.113207547169812,
+      "words": [
+        {
+          "start": 29.08,
+          "end": 29.08,
+          "word": "制",
+          "probability": 0.5869140625
+        },
+        {
+          "start": 29.08,
+          "end": 29.08,
+          "word": "作",
+          "probability": 0.92431640625
+        },
+        {
+          "start": 29.08,
+          "end": 29.2,
+          "word": "人",
+          "probability": 0.99462890625
+        },
+        {
+          "start": 29.2,
+          "end": 29.46,
+          "word": " 李",
+          "probability": 0.99267578125
+        },
+        {
+          "start": 29.46,
+          "end": 29.98,
+          "word": "宗",
+          "probability": 0.99169921875
+        },
+        {
+          "start": 29.98,
+          "end": 29.98,
+          "word": "盛",
+          "probability": 0.99755859375
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "start": 29.98,
+      "end": 31.06,
+      "text": "不亦否定",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 29.98,
+          "end": 30.14,
+          "word": "不",
+          "probability": 0.283447265625
+        },
+        {
+          "start": 30.14,
+          "end": 30.34,
+          "word": "亦",
+          "probability": 0.5987548828125
+        },
+        {
+          "start": 30.34,
+          "end": 30.58,
+          "word": "否",
+          "probability": 0.1368408203125
+        },
+        {
+          "start": 30.58,
+          "end": 31.06,
+          "word": "定",
+          "probability": 0.998046875
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "start": 31.06,
+      "end": 33.06,
+      "text": "亦不亦迷惧",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 31.06,
+          "end": 31.7,
+          "word": "亦",
+          "probability": 0.685302734375
+        },
+        {
+          "start": 31.7,
+          "end": 32.02,
+          "word": "不",
+          "probability": 0.986328125
+        },
+        {
+          "start": 32.02,
+          "end": 32.42,
+          "word": "亦",
+          "probability": 0.996337890625
+        },
+        {
+          "start": 32.42,
+          "end": 32.78,
+          "word": "迷",
+          "probability": 0.57666015625
+        },
+        {
+          "start": 32.78,
+          "end": 33.06,
+          "word": "惧",
+          "probability": 0.57147216796875
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "start": 33.06,
+      "end": 35.0,
+      "text": "未完的誓言",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 33.06,
+          "end": 33.44,
+          "word": "未",
+          "probability": 0.67431640625
+        },
+        {
+          "start": 33.44,
+          "end": 33.94,
+          "word": "完",
+          "probability": 0.970703125
+        },
+        {
+          "start": 33.94,
+          "end": 34.18,
+          "word": "的",
+          "probability": 0.9697265625
+        },
+        {
+          "start": 34.18,
+          "end": 34.64,
+          "word": "誓",
+          "probability": 0.99755859375
+        },
+        {
+          "start": 34.64,
+          "end": 35.0,
+          "word": "言",
+          "probability": 0.9990234375
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "start": 35.0,
+      "end": 36.94,
+      "text": "成如安静誓言",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 35.0,
+          "end": 35.18,
+          "word": "成",
+          "probability": 0.11578369140625
+        },
+        {
+          "start": 35.18,
+          "end": 35.56,
+          "word": "如",
+          "probability": 0.88916015625
+        },
+        {
+          "start": 35.56,
+          "end": 35.86,
+          "word": "安",
+          "probability": 0.81103515625
+        },
+        {
+          "start": 35.86,
+          "end": 36.18,
+          "word": "静",
+          "probability": 0.939453125
+        },
+        {
+          "start": 36.18,
+          "end": 36.52,
+          "word": "誓",
+          "probability": 0.947021484375
+        },
+        {
+          "start": 36.52,
+          "end": 36.94,
+          "word": "言",
+          "probability": 0.99658203125
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "start": 36.94,
+      "end": 38.92,
+      "text": "棋子散落棋盤",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 36.94,
+          "end": 37.5,
+          "word": "棋",
+          "probability": 0.830078125
+        },
+        {
+          "start": 37.5,
+          "end": 37.86,
+          "word": "子",
+          "probability": 0.998046875
+        },
+        {
+          "start": 37.86,
+          "end": 38.16,
+          "word": "散",
+          "probability": 0.993408203125
+        },
+        {
+          "start": 38.16,
+          "end": 38.4,
+          "word": "落",
+          "probability": 0.99560546875
+        },
+        {
+          "start": 38.4,
+          "end": 38.62,
+          "word": "棋",
+          "probability": 0.977294921875
+        },
+        {
+          "start": 38.62,
+          "end": 38.92,
+          "word": "盤",
+          "probability": 0.6055908203125
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "start": 38.92,
+      "end": 40.36,
+      "text": "相识自尽",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 38.92,
+          "end": 39.28,
+          "word": "相",
+          "probability": 0.2890625
+        },
+        {
+          "start": 39.28,
+          "end": 39.84,
+          "word": "识",
+          "probability": 0.8857421875
+        },
+        {
+          "start": 39.84,
+          "end": 40.04,
+          "word": "自",
+          "probability": 0.4130859375
+        },
+        {
+          "start": 40.04,
+          "end": 40.36,
+          "word": "尽",
+          "probability": 0.761474609375
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "start": 40.36,
+      "end": 41.5,
+      "text": "尘潭洋开",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 40.36,
+          "end": 40.56,
+          "word": "尘",
+          "probability": 0.6463623046875
+        },
+        {
+          "start": 40.56,
+          "end": 40.84,
+          "word": "潭",
+          "probability": 0.8525390625
+        },
+        {
+          "start": 40.84,
+          "end": 41.34,
+          "word": "洋",
+          "probability": 0.6142578125
+        },
+        {
+          "start": 41.34,
+          "end": 41.5,
+          "word": "开",
+          "probability": 0.4697265625
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "start": 41.5,
+      "end": 44.52,
+      "text": "一卷无声的波澜",
+      "avg_logprob": -0.4188311595421333,
+      "no_speech_prob": 0.0193634033203125,
+      "compression_ratio": 1.025,
+      "words": [
+        {
+          "start": 41.5,
+          "end": 41.78,
+          "word": "一",
+          "probability": 0.416259765625
+        },
+        {
+          "start": 41.78,
+          "end": 42.3,
+          "word": "卷",
+          "probability": 0.7939453125
+        },
+        {
+          "start": 42.3,
+          "end": 42.46,
+          "word": "无",
+          "probability": 0.97607421875
+        },
+        {
+          "start": 42.46,
+          "end": 42.76,
+          "word": "声",
+          "probability": 0.91650390625
+        },
+        {
+          "start": 42.76,
+          "end": 43.62,
+          "word": "的",
+          "probability": 0.9580078125
+        },
+        {
+          "start": 43.62,
+          "end": 43.98,
+          "word": "波",
+          "probability": 0.994140625
+        },
+        {
+          "start": 43.98,
+          "end": 44.52,
+          "word": "澜",
+          "probability": 0.939697265625
+        }
+      ]
+    }
+  ],
+  "refined": [
+    {
+      "start": 0.2,
+      "end": 2.79,
+      "text": "作词曲李宗盛"
+    },
+    {
+      "start": 4.199999999999997,
+      "end": 16.77,
+      "text": "编曲李宗盛"
+    },
+    {
+      "start": 21.999999999999996,
+      "end": 23.349999999999998,
+      "text": "编写李宗盛"
+    },
+    {
+      "start": 24.019999999999996,
+      "end": 25.29,
+      "text": "制作人李宗盛"
+    },
+    {
+      "start": 27.12,
+      "end": 27.73,
+      "text": "制作人李宗盛"
+    },
+    {
+      "start": 29.279999999999998,
+      "end": 30.155,
+      "text": "制作人李宗盛"
+    },
+    {
+      "start": 30.275,
+      "end": 31.235,
+      "text": "不亦否定"
+    },
+    {
+      "start": 31.354999999999997,
+      "end": 33.235,
+      "text": "亦不亦迷惧"
+    },
+    {
+      "start": 33.355000000000004,
+      "end": 35.175,
+      "text": "未完的誓言"
+    },
+    {
+      "start": 35.295,
+      "end": 37.114999999999995,
+      "text": "成如安静誓言"
+    },
+    {
+      "start": 37.235,
+      "end": 39.095,
+      "text": "棋子散落棋盤"
+    },
+    {
+      "start": 39.215,
+      "end": 40.535,
+      "text": "相识自尽"
+    },
+    {
+      "start": 40.655,
+      "end": 41.675,
+      "text": "尘潭洋开"
+    },
+    {
+      "start": 41.795,
+      "end": 44.790000000000006,
+      "text": "一卷无声的波澜"
+    }
+  ]
+}

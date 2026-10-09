@@ -1,0 +1,121 @@
+{
+  "environment": "Windows / Python 3.11 / Qt offscreen / DPR 1",
+  "logical_size": [
+    900,
+    240
+  ],
+  "rows": "JP+EN+VI, wrapped long text, rich density",
+  "results": [
+    {
+      "style": "none",
+      "frames": 120,
+      "cold_ms": 46.894,
+      "median_ms": 0.136,
+      "p95_ms": 0.264,
+      "max_marks": 0,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "sparkles",
+      "frames": 120,
+      "cold_ms": 42.13,
+      "median_ms": 0.297,
+      "p95_ms": 0.382,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "shuriken",
+      "frames": 120,
+      "cold_ms": 41.112,
+      "median_ms": 0.453,
+      "p95_ms": 0.525,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "comet",
+      "frames": 120,
+      "cold_ms": 42.803,
+      "median_ms": 0.387,
+      "p95_ms": 0.487,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "fireflies",
+      "frames": 120,
+      "cold_ms": 41.814,
+      "median_ms": 0.416,
+      "p95_ms": 0.546,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "snow",
+      "frames": 120,
+      "cold_ms": 41.185,
+      "median_ms": 0.348,
+      "p95_ms": 0.435,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "petals",
+      "frames": 120,
+      "cold_ms": 40.882,
+      "median_ms": 0.492,
+      "p95_ms": 0.587,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "bubbles",
+      "frames": 120,
+      "cold_ms": 40.792,
+      "median_ms": 0.378,
+      "p95_ms": 0.419,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "diamonds",
+      "frames": 120,
+      "cold_ms": 42.039,
+      "median_ms": 0.335,
+      "p95_ms": 0.373,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    },
+    {
+      "style": "ribbon",
+      "frames": 120,
+      "cold_ms": 40.299,
+      "median_ms": 0.397,
+      "p95_ms": 0.463,
+      "max_marks": 20,
+      "unique_layouts": 1,
+      "unique_paths": 1,
+      "interval_ms": 33
+    }
+  ],
+  "limitation": "Raster render calls including cache/layout build, not native screen FPS/GPU or full CPU."
+}

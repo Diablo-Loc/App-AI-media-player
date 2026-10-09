@@ -1,0 +1,265 @@
+{
+  "report": {
+    "dataset": "A Small Miracle(short)-round-3.json",
+    "media_exists": true,
+    "language": "jw",
+    "raw_words": 205,
+    "before_cues": 24,
+    "after_cues": 25,
+    "accepted_text_and_order_unchanged": true,
+    "no_overlap": true,
+    "finite_in_bounds": true,
+    "median_refine_ms": 3.5348000019439496,
+    "saved_times_equal_refined": true,
+    "ass_saved": true
+  },
+  "before": [
+    {
+      "start": 0.0,
+      "end": 4.58,
+      "text": "I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 4.59,
+      "end": 12.27,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm"
+    },
+    {
+      "start": 12.27,
+      "end": 14.76,
+      "text": "sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 14.97,
+      "end": 15.11,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 15.11,
+      "end": 19.07,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.07,
+      "end": 19.39,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.39,
+      "end": 22.57,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.57,
+      "end": 22.63,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.63,
+      "end": 25.24,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 25.27,
+      "end": 30.06,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry"
+    },
+    {
+      "start": 38.87,
+      "end": 43.16,
+      "text": "Isn't it so incredible"
+    },
+    {
+      "start": 43.57,
+      "end": 50.72,
+      "text": "We're here sharing the same tired space"
+    },
+    {
+      "start": 50.89,
+      "end": 55.73,
+      "text": "In your eyes, the stars look like"
+    },
+    {
+      "start": 55.73,
+      "end": 58.99,
+      "text": "Thousands of bright stars"
+    },
+    {
+      "start": 58.99,
+      "end": 63.23,
+      "text": "I have gazed at four thousands of time"
+    },
+    {
+      "start": 63.23,
+      "end": 67.67,
+      "text": "Da da da, da da da"
+    },
+    {
+      "start": 67.67,
+      "end": 70.86,
+      "text": "Da da da"
+    },
+    {
+      "start": 84.77,
+      "end": 89.51,
+      "text": "You build a world of miracles"
+    },
+    {
+      "start": 89.51,
+      "end": 95.33,
+      "text": "Some wanting the precious This dream of shimmering daily moments"
+    },
+    {
+      "start": 95.33,
+      "end": 101.49,
+      "text": "Return way to my soul Stop me from drifting in my feet"
+    },
+    {
+      "start": 101.49,
+      "end": 104.85,
+      "text": "That solid ground I stand So I sing together"
+    },
+    {
+      "start": 104.85,
+      "end": 109.19,
+      "text": "Every light I'm giving all goes back to you"
+    },
+    {
+      "start": 109.19,
+      "end": 111.64,
+      "text": "Goes back to you"
+    },
+    {
+      "start": 135.05,
+      "end": 142.86,
+      "text": "Terima kasih telah menonton!"
+    }
+  ],
+  "after": [
+    {
+      "start": 0.0,
+      "end": 13.17,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 13.17,
+      "end": 15.11,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 15.11,
+      "end": 18.01,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 18.01,
+      "end": 19.07,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 19.07,
+      "end": 20.67,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 20.67,
+      "end": 22.63,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 22.63,
+      "end": 24.45,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry,"
+    },
+    {
+      "start": 24.45,
+      "end": 30.06,
+      "text": "I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry, I'm sorry"
+    },
+    {
+      "start": 38.87,
+      "end": 43.16,
+      "text": "Isn't it so incredible"
+    },
+    {
+      "start": 43.57,
+      "end": 50.72,
+      "text": "We're here sharing the same tired space"
+    },
+    {
+      "start": 50.89,
+      "end": 55.73,
+      "text": "In your eyes, the stars look like"
+    },
+    {
+      "start": 55.73,
+      "end": 58.99,
+      "text": "Thousands of bright stars"
+    },
+    {
+      "start": 58.99,
+      "end": 63.23,
+      "text": "I have gazed at four thousands of time"
+    },
+    {
+      "start": 63.23,
+      "end": 67.67,
+      "text": "Da da da, da da da"
+    },
+    {
+      "start": 67.67,
+      "end": 70.86,
+      "text": "Da da da"
+    },
+    {
+      "start": 84.77,
+      "end": 89.51,
+      "text": "You build a world of miracles"
+    },
+    {
+      "start": 89.51,
+      "end": 91.95,
+      "text": "Some wanting the precious"
+    },
+    {
+      "start": 91.95,
+      "end": 95.33,
+      "text": "This dream of shimmering daily moments"
+    },
+    {
+      "start": 95.33,
+      "end": 98.07,
+      "text": "Return way to my soul"
+    },
+    {
+      "start": 98.07,
+      "end": 101.49,
+      "text": "Stop me from drifting in my feet"
+    },
+    {
+      "start": 101.49,
+      "end": 103.05,
+      "text": "That solid ground I stand"
+    },
+    {
+      "start": 103.05,
+      "end": 104.85,
+      "text": "So I sing together"
+    },
+    {
+      "start": 104.85,
+      "end": 109.19,
+      "text": "Every light I'm giving all goes back to you"
+    },
+    {
+      "start": 109.19,
+      "end": 111.64,
+      "text": "Goes back to you"
+    },
+    {
+      "start": 135.05,
+      "end": 142.86,
+      "text": "Terima kasih telah menonton!"
+    }
+  ]
+}

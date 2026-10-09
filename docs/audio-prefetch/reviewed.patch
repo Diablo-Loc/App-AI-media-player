@@ -1,0 +1,257 @@
+--- before/app/control/audio_effects.py
++++ after/app/control/audio_effects.py
+@@ -11,6 +11,7 @@
+ from core.audio_loudness import LoudnessCache, measure_loudness, native_gain, valid_measurement, DEFAULT_TARGET, TARGETS
+ from core.subtitle_persistence import atomic_bytes
+ from control.audio_volume import AudioVolumeControl
++from control.audio_prefetch import NextAudioPrefetch
+ from control.worker_lifecycle import OwnedProcesses
+ from ui.audio_effects_panel import AudioEffectsPanel
+ from ui.icons import button_icon, TEXT, ACCENT
+@@ -67,6 +68,7 @@
+         self.loudness_cache = LoudnessCache(Path(root) / 'audio-loudness-cache', self.cache.root)
+         self.settings_path = Path(root) / 'audio-effects.json'
+         self.target_lufs = DEFAULT_TARGET
++        self.prefetch_enabled = True
+         self.profile = self._load_profile()
+         self._measurement = None
+         self._applied_tone = 'off'
+@@ -129,6 +131,9 @@
+             lambda: self._seek_requested(window.playback_bar.time_slider.value()))
+         self.panel.settings_changed.connect(self.set_profile)
+         window.playback_bar.btn_audio.clicked.connect(self.toggle_panel)
++        self.prefetch = NextAudioPrefetch(self)
++        self.panel.set_prefetch(self.prefetch_enabled)
++        self.panel.prefetch_changed.connect(self.set_prefetch)
+         self._update_button()
+         if self.profile.enabled:
+             self._request_timer.start()
+@@ -138,6 +143,8 @@
+             data = json.loads(self.settings_path.read_text(encoding='utf-8'))
+             if isinstance(data, dict) and data.get('target_lufs') in TARGETS:
+                 self.target_lufs = int(data['target_lufs'])
++            if isinstance(data, dict) and isinstance(data.get('prefetch_next'), bool):
++                self.prefetch_enabled = data['prefetch_next']
+             return AudioProfile.from_dict(data)
+         except (OSError, ValueError):
+             return AudioProfile()
+@@ -153,7 +160,7 @@
+         if self._closed:
+             return
+         self._clear_start()
+-        self.player.stop()
++        self.prefetch.stop_for_selection(source)
+         if self.profile.tone != 'off' and source.isLocalFile():
+             self._starting = {'source': source, 'state': QMediaPlayer.PlaybackState.PlayingState,
+                               'position': 0, 'ready': False}
+@@ -259,11 +266,22 @@
+             self._transition_failed()
+ 
+     def _save_profile(self):
+-        data = dict(self.profile.as_dict(), target_lufs=self.target_lufs)
++        data = dict(self.profile.as_dict(), target_lufs=self.target_lufs, prefetch_next=self.prefetch_enabled)
+         try:
+             atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
+         except OSError:
+             self.panel.set_status('Đã đổi cho phiên này; chưa lưu được tùy chọn.')
++
++    def set_prefetch(self, enabled):
++        if self._closed:
++            return
++        self.prefetch_enabled = enabled is True
++        self.panel.set_prefetch(self.prefetch_enabled)
++        self._save_profile()
++        self.prefetch.refresh()
++
++    def playback_queue_changed(self):
++        self.prefetch.refresh()
+ 
+     def set_target(self, target):
+         if self._closed or target not in TARGETS:
+@@ -324,6 +342,8 @@
+         self.panel.set_profile(profile.normalize, profile.tone)
+         self._save_profile()
+         self._update_button()
++        if old_tone != profile.tone:
++            self.prefetch.refresh()
+         self._apply_normalization()
+         if old_tone == profile.tone and self._measurement is not None:
+             if not profile.normalize:
+@@ -353,9 +373,16 @@
+     def _queue_latest(self):
+         self._generation += 1
+         self._pending = True
++        self.prefetch.invalidate(stop=False)
+         if self.worker is not None:
++            if self.prefetch.promote(self.worker):
++                self._pending = False
++                self._request_timer.stop()
++                self.panel.set_status('Đang hoàn tất âm thanh đã chuẩn bị trước…', busy=True)
++                return True
+             self.worker.stop()
+         self._request_timer.start()
++        return False
+ 
+     def _source_changed(self, source):
+         if self._closed:
+@@ -375,8 +402,8 @@
+         self._applied_tone = 'off'
+         self._tone_gain = 0.0
+         self._apply_normalization(ramp=False)
+-        self._queue_latest()
+-        if self.profile.enabled:
++        promoted = self._queue_latest()
++        if self.profile.enabled and not promoted:
+             # A cached measurement can apply as the new file starts. Keep
+             # analysis off the GUI thread and let rapid source edits supersede it.
+             self._request_timer.start(0)
+@@ -431,6 +458,11 @@
+             return
+         self.worker = None
+         if self._closed:
++            return
++        if getattr(worker, 'prefetch', False):
++            self.prefetch.finished(worker)
++            if self._pending:
++                self._request_timer.start(0)
+             return
+         current = worker.generation == self._generation and not worker.isInterruptionRequested()
+         if current and worker.result:
+@@ -474,6 +506,8 @@
+         self._finish_start()
+         if self._pending:
+             self._request_timer.start()
++        else:
++            self.prefetch.schedule()
+ 
+     def _switch(self, target):
+         if self._closed or target.isEmpty() or target == self.player.source():
+@@ -597,6 +631,7 @@
+         self._request_timer.stop()
+         self._transition_timer.stop()
+         self._clear_start()
++        self.prefetch.shutdown()
+         self.panel.hide()
+         self.volume_control.shutdown()
+         if self.worker is not None:
+--- before/app/ui/audio_effects_panel.py
++++ after/app/ui/audio_effects_panel.py
+@@ -8,6 +8,7 @@
+ class AudioEffectsPanel(QWidget):
+     settings_changed = Signal(bool, str)
+     level_changed = Signal(int)
++    prefetch_changed = Signal(bool)
+ 
+     def __init__(self, parent=None):
+         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+@@ -23,6 +24,8 @@
+             QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid #526173;
+                 border-radius: 4px; background: #101722; }
+             QCheckBox::indicator:checked { background: #77E0BE; border-color: #77E0BE; }
++            QCheckBox:disabled { color: #657585; }
++            QCheckBox::indicator:disabled { background: #273445; border-color: #354351; }
+             QProgressBar { border: none; background: #273445; }
+             QProgressBar::chunk { background: #77E0BE; }
+         ''')
+@@ -49,6 +52,12 @@
+             self.tone.addItem(text, key)
+         self.tone.setMinimumHeight(36)
+         layout.addWidget(self.tone)
++        self.prefetch_next = QCheckBox('Chuẩn bị trước bài kế tiếp')
++        self.prefetch_next.setToolTip('Chỉ khi bật EQ: chuẩn bị một bài dưới nền để giảm chờ khi chuyển bài.')
++        self.prefetch_next.setChecked(True)
++        self.prefetch_next.setEnabled(False)
++        self.prefetch_next.toggled.connect(self.prefetch_changed.emit)
++        layout.addWidget(self.prefetch_next)
+         note = QLabel('Cân bằng trực tiếp giữ phổ âm và độ động, không nạp lại video. '
+                       'Chọn bài có EQ: chờ chuẩn bị rồi mới phát. Đổi EQ giữa bài vẫn cần nạp lại nguồn; '
+                       'chọn Nguyên bản để phát liền mạch.')
+@@ -74,6 +83,7 @@
+ 
+     def _emit_settings(self, *_):
+         self.level.setEnabled(self.normalize.isChecked())
++        self.prefetch_next.setEnabled(self.tone.currentData() != 'off')
+         self.settings_changed.emit(self.normalize.isChecked(), self.tone.currentData())
+ 
+     def _reset(self):
+@@ -86,8 +96,14 @@
+         self.normalize.setChecked(normalize)
+         self.level.setEnabled(normalize)
+         self.tone.setCurrentIndex(max(0, self.tone.findData(tone)))
++        self.prefetch_next.setEnabled(tone != 'off')
+         self.normalize.blockSignals(False)
+         self.tone.blockSignals(False)
++
++    def set_prefetch(self, enabled):
++        self.prefetch_next.blockSignals(True)
++        self.prefetch_next.setChecked(enabled)
++        self.prefetch_next.blockSignals(False)
+ 
+     def set_target(self, target):
+         self.level.blockSignals(True)
+@@ -100,6 +116,11 @@
+ 
+     def open_at(self, button):
+         self.adjustSize()
++        # Wrapped labels must be measured at the fixed popup width, not the
++        # wider preferred size used by QWidget.adjustSize().
++        height = self.layout().totalHeightForWidth(self.width())
++        if height >= 0:
++            self.resize(self.width(), height)
+         point = button.mapToGlobal(QPoint(button.width() // 2, 0))
+         screen = button.screen().availableGeometry()
+         x = max(screen.left() + 8, min(point.x() - self.width() // 2, screen.right() - self.width() - 8))
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -1273,9 +1273,9 @@
+             self.foryou_page.video_container.video_height = 1080
+             self.foryou_page.video_container.update_layout() # Dùng hàm update_layout có timer cho mượt
+         # ngay sau khi bài mới được kích hoạt, cập nhật mini player
+-        self.sync_mini_player_state()
+-    
+-    def _on_video_metadata_ready(self):
++        self.sync_mini_player_state()
++    
++    def _on_video_metadata_ready(self):
+         """Hàm callback khi video load xong metadata (để lấy width/height)"""
+         if not hasattr(self, 'foryou_page'): return
+         
+@@ -2206,7 +2206,8 @@
+         self.foryou_page.set_playback_playlist(new_list)
+         
+         # 4. ⭐ QUAN TRỌNG: Cập nhật danh sách phát nhạc (dùng cho next/prev)
+-        self.active_playlist = new_list
++        self.active_playlist = new_list
++        self.audio_effects.playback_queue_changed()
+ 
+     # --- [HÀM MỚI] ĐỒNG BỘ CONTROLLER ---
+     def sync_playlist_to_backend(self, playlist):
+--- before/tests/test_audio_realtime.py
++++ after/tests/test_audio_realtime.py
+@@ -249,6 +249,7 @@
+             self.assertAlmostEqual(output.volume(), 0.5)
+             self.assertTrue(output.isMuted())
+             settings = json.loads(controller.settings_path.read_text())
++            self.assertIs(settings.pop('prefetch_next'), True)
+             self.assertEqual(settings, dict(normalize=False, tone='off', target_lufs=-14))
+             player.stop()
+             player.setSource(QUrl())
+--- before/tests/test_audio_start.py
++++ after/tests/test_audio_start.py
+@@ -16,6 +16,7 @@
+ from control.worker_lifecycle import OwnedProcesses
+ from tests.test_audio_effects import command, wait_until, FFMPEG, FFPROBE
+ from tests.audio_start_contracts import before_start_changes
++from tests.audio_prefetch_contracts import before_prefetch_changes
+ from tools.capture_reliability_contracts import functions
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+@@ -302,7 +303,7 @@
+         for relative in manifest:
+             before_start_changes(relative)
+         original = before_start_changes('app/ui/main_window.py')
+-        current = (ROOT / 'app/ui/main_window.py').read_text(encoding='utf-8')
++        current = before_prefetch_changes('app/ui/main_window.py')
+         old_functions, new_functions = functions(original), functions(current)
+         for name in old_functions:
+             if name not in manifest['app/ui/main_window.py']['changed_functions']:

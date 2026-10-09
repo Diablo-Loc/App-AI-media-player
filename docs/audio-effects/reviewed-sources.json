@@ -1,0 +1,43 @@
+{
+  "app/ui/assets/icons/manifest.json": {
+    "before_sha256": "88bc0c86c5268ee9ec2776e2c1c33b031ec366810da84fdcba912a97cdfe091f",
+    "after_sha256": "dd8a36148fb9597fcfd5f251d800f779e6e1554fe39f6dd38fc0aa62d28ebce2",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "a45e153e0e46a6a417e61d842e8f7f2671d702b652e161505c77146018582571",
+    "after_sha256": "63c29ecd41f60b4ddd888b196637252810bd64751201dca6a3e0978eb444a246",
+    "changed_functions": [
+      "MainWindow.__init__",
+      "MainWindow.closeEvent",
+      "MainWindow.hide_controls"
+    ],
+    "added_functions": []
+  },
+  "app/ui/playback_bar.py": {
+    "before_sha256": "63aa6afe526c4caa0cc38cd2b5a5ea2c97f8c6824e73dc74b4776548e5536549",
+    "after_sha256": "9088153def81389a2838ed943ee756d13c0f36954ddf9bb3752e848ce18e91e3",
+    "changed_functions": [
+      "PlaybackBar.__init__",
+      "PlaybackBar.init_ui",
+      "PlaybackBar._arrange_controls"
+    ],
+    "added_functions": []
+  },
+  "app/ui/subs_ui/subtitle_layer.py": {
+    "before_sha256": "7f735fc0b231360d7048bfe5ccf7b04205270c942e1fc587226105790f4b7e1e",
+    "after_sha256": "7f735fc0b231360d7048bfe5ccf7b04205270c942e1fc587226105790f4b7e1e",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "app/ui/subtitle_presentation.py": {
+    "before_sha256": "f6321b5aad991ea0dab186753507245e744ab025c25676e6d472ae9c3f20c445",
+    "after_sha256": "6c024d966bf3ab7a03fe1b26d41d5654d047705b2300e19defd39496857c49eb",
+    "changed_functions": [
+      "SubtitlePresentationGuard.context_allows",
+      "SubtitlePresentationGuard.eventFilter"
+    ],
+    "added_functions": []
+  }
+}

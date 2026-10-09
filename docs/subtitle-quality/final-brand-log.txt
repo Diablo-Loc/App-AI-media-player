@@ -1,0 +1,26 @@
+5 🎧 Trích xuất audio
+🎵 Đang trích xuất âm thanh: Brand New Sky.mp4...
+15 🧠 Nạp Whisper (large-v3)
+⚡ Đang chạy Model từ nguồn Local tuyệt đối: D:\HocTap\11_MusicApp\App-AI-media-player\app_resources\whisper_models\large-v3
+30 📝 Nhận diện lời nói
+INFO:faster_whisper:Processing audio with duration 03:37.070
+INFO:faster_whisper:Detected language 'en' with probability 0.84
+📡 Ngôn ngữ phát hiện: en (84.1%)
+50 🧹 Làm sạch dữ liệu (en)
+55 ✂️ Căn chỉnh subtitle
+57 🛠 Kiểm tra lời bị thiếu: 0.0–12.0s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 86.8–98.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 174.8–186.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 184.8–196.8s
+INFO:faster_whisper:Processing audio with duration 00:12.000
+57 🛠 Kiểm tra lời bị thiếu: 0.6–8.7s
+INFO:faster_whisper:Processing audio with duration 00:08.064
+🛠 Kiểm tra coverage: thêm 0 dòng, 5 lượt nhận diện lại.
+⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: [(2.608, 6.672), (88.82, 91.024), (176.82, 181.776), (185.072, 187.71)]
+70 🌍 Đang chuẩn bị dịch thuật...
+85 💻 Đang dịch bằng Local NLLB (Cố định)...
+100 ✅ Hoàn tất AI
+Production output: 37 [{'start': 14.35, 'end': 19.79, 'text': 'I was standing in the quiet watching shadows softly breathe'}, {'start': 19.79, 'end': 25.62, 'text': 'Those unspoken wishes like a mystery'}, {'start': 26.49, 'end': 31.08, 'text': 'Every step feels bigger than but a crowd is all to me'}]

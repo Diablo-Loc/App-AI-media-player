@@ -1,6 +1,12 @@
 import re
-import json
 import requests
+from PySide6.QtCore import QSettings
+
+from translate.translation_models import (
+    extract_openai_responses_text,
+    openai_uses_responses_api,
+    resolve_translation_model,
+)
 
 try:
     from google import genai
@@ -13,8 +19,22 @@ def correct_raw_segments_online(raw_segments, provider, key, master_lyric, song_
     Hàm đối soát chữ Whisper theo Lyric chuẩn.
     An toàn tuyệt đối: Bất kỳ lỗi nào xảy ra sẽ tự động trả lại raw_segments gốc.
     """
-    # Guard clause: Kiểm tra dữ liệu đầu vào
-    if not raw_segments or not key or not str(key).strip() or not master_lyric or not str(master_lyric).strip():
+    settings = QSettings("MyStudio", "AI_Music_Player")
+    provider = str(provider or settings.value("online_provider", "Local Default") or "").strip()
+    key = str(key or settings.value("api_key", "") or "").strip()
+    translation_model = resolve_translation_model(
+        provider,
+        settings.value("translation_model", ""),
+    )
+
+    # Guard clause: Kiểm tra dữ liệu đầu vào và provider online hợp lệ.
+    if (
+        not raw_segments
+        or not key
+        or not master_lyric
+        or not str(master_lyric).strip()
+        or not translation_model
+    ):
         return raw_segments
 
     clean_title = song_title_raw or "Unknown Song"
@@ -49,52 +69,76 @@ def correct_raw_segments_online(raw_segments, provider, key, master_lyric, song_
 
     # --- BƯỚC 2: GỌI API AN TOÀN ---
     try:
-        if "Gemini" in str(provider):
+        if provider == "Google Gemini":
             if not genai:
                 print("⚠️ Thư viện google-genai chưa cài đặt.")
                 return raw_segments
                 
             client = genai.Client(api_key=key)
             response = client.models.generate_content(
-                model="gemini-3-flash-preview",
+                model=translation_model,
                 contents=user_content,
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.0
+                    temperature=0.0,
+                    max_output_tokens=16384,
                 )
             )
             corrected_response_text = response.text or ""
 
-        elif "Claude" in str(provider):
+        elif provider == "Claude 3.5":
             headers = {
                 "x-api-key": key,
                 "anthropic-version": "2023-06-01",
                 "content-type": "application/json"
             }
             payload = {
-                "model": "claude-3-5-sonnet-20240620",
-                "max_tokens": 4096,
+                "model": translation_model,
+                "max_tokens": 8192,
                 "system": system_prompt,
                 "messages": [{"role": "user", "content": user_content}],
                 "temperature": 0.0
             }
             r = requests.post("https://api.anthropic.com/v1/messages", json=payload, timeout=30)
-            if r.status_code == 200:
-                corrected_response_text = r.json()['content'][0]['text']
+            r.raise_for_status()
+            corrected_response_text = r.json()['content'][0]['text']
 
-        else:  # OpenAI / Default
+        elif provider == "OpenAI (GPT-4o)":
             headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-            payload = {
-                "model": "gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content}
-                ],
-                "temperature": 0.0
-            }
-            r = requests.post("https://api.openai.com/v1/chat/completions", json=payload, timeout=30)
-            if r.status_code == 200:
+            if openai_uses_responses_api(translation_model):
+                payload = {
+                    "model": translation_model,
+                    "instructions": system_prompt,
+                    "input": user_content,
+                    "store": False,
+                }
+                r = requests.post(
+                    "https://api.openai.com/v1/responses",
+                    json=payload,
+                    headers=headers,
+                    timeout=30,
+                )
+                r.raise_for_status()
+                corrected_response_text = extract_openai_responses_text(r.json())
+            else:
+                payload = {
+                    "model": translation_model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_content}
+                    ],
+                    "temperature": 0.0
+                }
+                r = requests.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    json=payload,
+                    headers=headers,
+                    timeout=30,
+                )
+                r.raise_for_status()
                 corrected_response_text = r.json()['choices'][0]['message']['content']
+        else:
+            return raw_segments
 
     except Exception as e:
         print(f"⚠️ API Sửa Lyric gặp sự cố ({e}). Tự động dùng kết quả Whisper gốc.")

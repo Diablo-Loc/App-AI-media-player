@@ -1,0 +1,254 @@
+﻿[
+    {
+        "after_sha256":  "e014fef59dd6f4b100e852606727ea3db4c29db29ebf2421129d1645b467f698",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\output\\translation_cache.json",
+        "unchanged":  true,
+        "before_sha256":  "e014fef59dd6f4b100e852606727ea3db4c29db29ebf2421129d1645b467f698"
+    },
+    {
+        "after_sha256":  "275fd83bcb8cca87fecab96f2824d6f65504846bf6e36b82162e7df023ada4aa",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\app_config.json",
+        "unchanged":  true,
+        "before_sha256":  "275fd83bcb8cca87fecab96f2824d6f65504846bf6e36b82162e7df023ada4aa"
+    },
+    {
+        "after_sha256":  "539effcb7050f4c3807d934de70eb9cdeee78198c54f1f43c16e844f102c92b7",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\audio-effects.json",
+        "unchanged":  true,
+        "before_sha256":  "539effcb7050f4c3807d934de70eb9cdeee78198c54f1f43c16e844f102c92b7"
+    },
+    {
+        "after_sha256":  "2702b0bf148fbaa432f6e16ac2c655ee3447c47f3114bb5a0ac65111adb9a0c6",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\library_cache.json",
+        "unchanged":  true,
+        "before_sha256":  "2702b0bf148fbaa432f6e16ac2c655ee3447c47f3114bb5a0ac65111adb9a0c6"
+    },
+    {
+        "after_sha256":  "4d322044cc1d65f33c7c27b3e49bf19e2f7af5e1c0e3faebb3ee7ba08e7ac610",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\playback-volume.json",
+        "unchanged":  true,
+        "before_sha256":  "4d322044cc1d65f33c7c27b3e49bf19e2f7af5e1c0e3faebb3ee7ba08e7ac610"
+    },
+    {
+        "after_sha256":  "4f5b17cd687c9a1aa22d28c4e49c0af8c0b2a9d34ddc213c17261c11a006aaa9",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\setting.json",
+        "unchanged":  true,
+        "before_sha256":  "4f5b17cd687c9a1aa22d28c4e49c0af8c0b2a9d34ddc213c17261c11a006aaa9"
+    },
+    {
+        "after_sha256":  "d5601767e93e245f585b8ed15f77ea4d264bf4ad06093c6aec011bafbcbce9c5",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\11918bba543b3d394eda866b57fe9c5f.ass",
+        "unchanged":  true,
+        "before_sha256":  "d5601767e93e245f585b8ed15f77ea4d264bf4ad06093c6aec011bafbcbce9c5"
+    },
+    {
+        "after_sha256":  "9f5a00f2978202c9df13a1a0d46ae765edeec11cad6be145f6a021bc92f748be",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\17fe770fe427369d9f44f9efbe7cd410.ass",
+        "unchanged":  true,
+        "before_sha256":  "9f5a00f2978202c9df13a1a0d46ae765edeec11cad6be145f6a021bc92f748be"
+    },
+    {
+        "after_sha256":  "9f2d21f0bb61810126b87190a6653793c6dbf976002bed299c0d56a14adc0407",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\265b7e91949aabb2364c50c0c5cb9d32.ass",
+        "unchanged":  true,
+        "before_sha256":  "9f2d21f0bb61810126b87190a6653793c6dbf976002bed299c0d56a14adc0407"
+    },
+    {
+        "after_sha256":  "04c994d0e304f6f6f8d993288fb540bc7eb13060f3ec30ffda23b7eb5f890bb0",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\ac01f08b113847ef7b4e5da2711c021f.ass",
+        "unchanged":  true,
+        "before_sha256":  "04c994d0e304f6f6f8d993288fb540bc7eb13060f3ec30ffda23b7eb5f890bb0"
+    },
+    {
+        "after_sha256":  "fd878fa50a31df0ec2a64b364b49fc2be83ed94dfb87179f502ca3c8a212ba71",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\bc84fec0d624e465fb2775b180b61662.ass",
+        "unchanged":  true,
+        "before_sha256":  "fd878fa50a31df0ec2a64b364b49fc2be83ed94dfb87179f502ca3c8a212ba71"
+    },
+    {
+        "after_sha256":  "d3e1f4ca20a4633bb49958d0af56714f992bd4652de9bbb2173677d428e33aff",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\c17176b63126976c922ea8b66ff7a0ff.ass",
+        "unchanged":  true,
+        "before_sha256":  "d3e1f4ca20a4633bb49958d0af56714f992bd4652de9bbb2173677d428e33aff"
+    },
+    {
+        "after_sha256":  "1ef1d9dd8e49270cd4035127ad28f9553f53f1ad6754638f7aa2ec1a7d61bd0a",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\ass\\f7743c2c44ae0079fb7fea2778993ff4.ass",
+        "unchanged":  true,
+        "before_sha256":  "1ef1d9dd8e49270cd4035127ad28f9553f53f1ad6754638f7aa2ec1a7d61bd0a"
+    },
+    {
+        "after_sha256":  "dbee9a344f79bdf749cef78e395179461e4840be07dff4e90355ba58cda52240",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\11918bba543b3d394eda866b57fe9c5f.json",
+        "unchanged":  true,
+        "before_sha256":  "dbee9a344f79bdf749cef78e395179461e4840be07dff4e90355ba58cda52240"
+    },
+    {
+        "after_sha256":  "5bbf8f239ad58b8b48a4acbad557eb5134edc3d1341beff06b97679a4af87a1b",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\17fe770fe427369d9f44f9efbe7cd410.json",
+        "unchanged":  true,
+        "before_sha256":  "5bbf8f239ad58b8b48a4acbad557eb5134edc3d1341beff06b97679a4af87a1b"
+    },
+    {
+        "after_sha256":  "346f4e881cae751c80913545e7a1892bca6579d88832c1d7df5983d4efac031b",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\265b7e91949aabb2364c50c0c5cb9d32.json",
+        "unchanged":  true,
+        "before_sha256":  "346f4e881cae751c80913545e7a1892bca6579d88832c1d7df5983d4efac031b"
+    },
+    {
+        "after_sha256":  "cfcd4f07996e83c1e8da0f5a0aff30c7514b873d327c282d3b7b4c52d61947bf",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\ac01f08b113847ef7b4e5da2711c021f.json",
+        "unchanged":  true,
+        "before_sha256":  "cfcd4f07996e83c1e8da0f5a0aff30c7514b873d327c282d3b7b4c52d61947bf"
+    },
+    {
+        "after_sha256":  "160c0ec94d24a58a0bf55f9ab23be9a69220b12791bf5bb7dd635014027a1c4d",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\bc84fec0d624e465fb2775b180b61662.json",
+        "unchanged":  true,
+        "before_sha256":  "160c0ec94d24a58a0bf55f9ab23be9a69220b12791bf5bb7dd635014027a1c4d"
+    },
+    {
+        "after_sha256":  "6d085d940da776170df2f42ec8fa5d2a8f57d46cbcda6f84f7483d43ce4193f7",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\c17176b63126976c922ea8b66ff7a0ff.json",
+        "unchanged":  true,
+        "before_sha256":  "6d085d940da776170df2f42ec8fa5d2a8f57d46cbcda6f84f7483d43ce4193f7"
+    },
+    {
+        "after_sha256":  "ed643c4411ac9c62798d4857e792e80862f46534f78e1cd321e021806e00930b",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\json\\f7743c2c44ae0079fb7fea2778993ff4.json",
+        "unchanged":  true,
+        "before_sha256":  "ed643c4411ac9c62798d4857e792e80862f46534f78e1cd321e021806e00930b"
+    },
+    {
+        "after_sha256":  "dc39b0d061857f8311745bba587b3cb20d6823208cc426c83b5b2b775a30b45a",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\media_index.json",
+        "unchanged":  true,
+        "before_sha256":  "dc39b0d061857f8311745bba587b3cb20d6823208cc426c83b5b2b775a30b45a"
+    },
+    {
+        "after_sha256":  "3206410bce366d1df43d4b2d276edfe67550857ab62469ff00627153452a1756",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.lrc",
+        "unchanged":  true,
+        "before_sha256":  "3206410bce366d1df43d4b2d276edfe67550857ab62469ff00627153452a1756"
+    },
+    {
+        "after_sha256":  "3a37f8c52cc75142673252c378e221d30ada663634afbef799c6c7d37b35f95b",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\A Small Miracle(short).lrc",
+        "unchanged":  true,
+        "before_sha256":  "3a37f8c52cc75142673252c378e221d30ada663634afbef799c6c7d37b35f95b"
+    },
+    {
+        "after_sha256":  "686139ae125def54585462f08128d03d674dcbd16526ad605700d6e18f575d84",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Brand New Sky.lrc",
+        "unchanged":  true,
+        "before_sha256":  "686139ae125def54585462f08128d03d674dcbd16526ad605700d6e18f575d84"
+    },
+    {
+        "after_sha256":  "56e9320a7d3bb61d6d439542fac60fb0fd41d8c593573ae56bac0a3bda1b2827",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.lrc",
+        "unchanged":  true,
+        "before_sha256":  "56e9320a7d3bb61d6d439542fac60fb0fd41d8c593573ae56bac0a3bda1b2827"
+    },
+    {
+        "after_sha256":  "f17a914c661ccbdf31366c2942bf5036f7970f9fb8a90807ff0ec49fd01e0dda",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\Unwavering Startorch.lrc",
+        "unchanged":  true,
+        "before_sha256":  "f17a914c661ccbdf31366c2942bf5036f7970f9fb8a90807ff0ec49fd01e0dda"
+    },
+    {
+        "after_sha256":  "29b2ea9b841f213127b12ebf2c2542e50b1c87c3c0b2ccd1addf75eb04f3b338",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\lrc\\人生エンドロール.lrc",
+        "unchanged":  true,
+        "before_sha256":  "29b2ea9b841f213127b12ebf2c2542e50b1c87c3c0b2ccd1addf75eb04f3b338"
+    },
+    {
+        "after_sha256":  "fb27cd8b64b3201d0455caca36728a392b92fa4261a69e244eb009e1827d5a23",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.srt",
+        "unchanged":  true,
+        "before_sha256":  "fb27cd8b64b3201d0455caca36728a392b92fa4261a69e244eb009e1827d5a23"
+    },
+    {
+        "after_sha256":  "cfbe82f7c298557fbca5764958d5724f6b8b35f4d0922ac6755ad694b0b9c5c0",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\A Small Miracle(short).srt",
+        "unchanged":  true,
+        "before_sha256":  "cfbe82f7c298557fbca5764958d5724f6b8b35f4d0922ac6755ad694b0b9c5c0"
+    },
+    {
+        "after_sha256":  "158251fd06cfa08902778464f95ec03c1c1f82a2c4a2e5e83a39deacecbe0003",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Brand New Sky.srt",
+        "unchanged":  true,
+        "before_sha256":  "158251fd06cfa08902778464f95ec03c1c1f82a2c4a2e5e83a39deacecbe0003"
+    },
+    {
+        "after_sha256":  "7ca34ac3e5481793c969c1fc4528a12e192c536f2b0e35cdef727dd3e3bfc3a2",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.srt",
+        "unchanged":  true,
+        "before_sha256":  "7ca34ac3e5481793c969c1fc4528a12e192c536f2b0e35cdef727dd3e3bfc3a2"
+    },
+    {
+        "after_sha256":  "ce8b78b9a752123535eefe66f9e08c2368fd34399376c6e27a79daad280780bc",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\Unwavering Startorch.srt",
+        "unchanged":  true,
+        "before_sha256":  "ce8b78b9a752123535eefe66f9e08c2368fd34399376c6e27a79daad280780bc"
+    },
+    {
+        "after_sha256":  "e225cb20d78958e137fab647e2726bcc424da3d1dcaf24a964e44498bf7c7a45",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\storage\\subtitles\\source\\srt\\人生エンドロール.srt",
+        "unchanged":  true,
+        "before_sha256":  "e225cb20d78958e137fab647e2726bcc424da3d1dcaf24a964e44498bf7c7a45"
+    },
+    {
+        "after_sha256":  "44e419faabac247b964870459124e64a8e4215c63f192330dedd9a5ae0df1669",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+        "unchanged":  true,
+        "before_sha256":  "44e419faabac247b964870459124e64a8e4215c63f192330dedd9a5ae0df1669"
+    },
+    {
+        "after_sha256":  "652cb32ec57aa50b76e8965a4dec04b655863a482fa74f939fd07ff52a1f47c8",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！.mp4",
+        "unchanged":  true,
+        "before_sha256":  "652cb32ec57aa50b76e8965a4dec04b655863a482fa74f939fd07ff52a1f47c8"
+    },
+    {
+        "after_sha256":  "dc7301664612974578cfbe3f7a40e5769ce68ead5f8fbce866247ce1cbd126f6",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\A Small Miracle(short).mp4",
+        "unchanged":  true,
+        "before_sha256":  "dc7301664612974578cfbe3f7a40e5769ce68ead5f8fbce866247ce1cbd126f6"
+    },
+    {
+        "after_sha256":  "1e280cf21c8ce1d069d3183ccc23497afcf268fec704f76f8e35458722ec7a99",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Brand New Sky.mp4",
+        "unchanged":  true,
+        "before_sha256":  "1e280cf21c8ce1d069d3183ccc23497afcf268fec704f76f8e35458722ec7a99"
+    },
+    {
+        "after_sha256":  "1024a88f7b7840f6ada2fed6ee5306d12705a71af3bbd7a4c1d1ae1552aad9c9",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Empty old City - Looma.mp4",
+        "unchanged":  true,
+        "before_sha256":  "1024a88f7b7840f6ada2fed6ee5306d12705a71af3bbd7a4c1d1ae1552aad9c9"
+    },
+    {
+        "after_sha256":  "0c73f9859467286fe246f73a6b8d91dfe08e2ea867823643e5f7e9a9d8459b6c",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Moon\u0027s Voice Ends, Heart\u0027s Light Shines.mp4",
+        "unchanged":  true,
+        "before_sha256":  "0c73f9859467286fe246f73a6b8d91dfe08e2ea867823643e5f7e9a9d8459b6c"
+    },
+    {
+        "after_sha256":  "b7d2691624aedefae28623e81dddf928841463837c8316f0674bdf91323529f1",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unbreakable Machine Doll ED - _Maware! Setsugetsuka_.mp4",
+        "unchanged":  true,
+        "before_sha256":  "b7d2691624aedefae28623e81dddf928841463837c8316f0674bdf91323529f1"
+    },
+    {
+        "after_sha256":  "fe9b96d0af56c20582dcaa3eb765f41494c383a68225b999f4601b9ade344f62",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\Unwavering Startorch.mp4",
+        "unchanged":  true,
+        "before_sha256":  "fe9b96d0af56c20582dcaa3eb765f41494c383a68225b999f4601b9ade344f62"
+    },
+    {
+        "after_sha256":  "94dd21600d9dfe32203877a04e9ab45e09e045b9a7f8b8a510706526525c970d",
+        "path":  "D:\\HocTap\\11_MusicApp\\App-AI-media-player\\video\\人生エンドロール.mp4",
+        "unchanged":  true,
+        "before_sha256":  "94dd21600d9dfe32203877a04e9ab45e09e045b9a7f8b8a510706526525c970d"
+    }
+]

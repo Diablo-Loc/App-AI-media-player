@@ -1,0 +1,177 @@
+--- before/app/ui/main_window.py
++++ after/app/ui/main_window.py
+@@ -351,8 +351,13 @@
+         super().changeEvent(event)
+ 
+         # Nếu chưa có sub_layer thì không làm gì cả
+-        if not hasattr(self, "sub_layer") or self.sub_layer is None:
+-            return
++        if not hasattr(self, "sub_layer") or self.sub_layer is None:
++            return
++        guard = getattr(self.sub_layer, '_presentation_guard', None)
++        if guard is not None and event.type() in (
++                QEvent.Type.ActivationChange, QEvent.Type.WindowStateChange):
++            guard.schedule_refresh()
++            return
+         
+         # --- CASE 1: XỬ LÝ ALT + TAB (Chuyển cửa sổ) ---
+         if event.type() == QEvent.Type.ActivationChange:
+--- before/app/ui/subs_ui/subtitle_layer.py
++++ after/app/ui/subs_ui/subtitle_layer.py
+@@ -4,7 +4,8 @@
+ from PySide6.QtWidgets import QLabel, QSizePolicy, QStyleOption, QStyle
+ from PySide6.QtCore import Qt, QPoint, QRect, QPropertyAnimation, QEasingCurve, QAbstractAnimation, Property
+ from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
+-from subtitle.mode import SubtitleMode 
++from subtitle.mode import SubtitleMode 
++from app.ui.subtitle_presentation import SubtitlePresentationGuard
+ 
+ class DraggableSubtitle(QLabel):
+     def __init__(self, parent=None):
+@@ -265,7 +266,12 @@
+         # Anim tác động trực tiếp vào property 'opacity' đã tạo ở trên
+         self.fade_anim = QPropertyAnimation(self, b"opacity")
+         self.fade_anim.setDuration(220) 
+-        self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
++        self.fade_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
++        self.fade_anim.finished.connect(self._finish_fade)
++        self._presentation_guard = (
++            SubtitlePresentationGuard(parent, self)
++            if parent is not None and hasattr(parent, 'video_display') else None
++        )
+ 
+         self.setWindowFlags(
+             Qt.WindowType.FramelessWindowHint | 
+@@ -273,8 +279,23 @@
+         )
+         self.set_opacity(1.0)
+         self.setObjectName("SubtitleLayer")
+-        self.hide() 
+-
++        self.hide() 
++
++    def show(self):
++        self.setVisible(True)
++
++    def setVisible(self, visible):
++        guard = getattr(self, '_presentation_guard', None)
++        if visible and guard is not None and not guard.allows():
++            self.fade_anim.stop()
++            self.set_opacity(0.0)
++            visible = False
++        super().setVisible(visible)
++
++    def _finish_fade(self):
++        if self.fade_anim.endValue() == 0.0 and self._opacity <= 0.0:
++            self.hide()
++
+     def set_fade_enabled(self, enabled: bool):
+         """Hàm công khai để giao diện Setting gọi bật/tắt Fade"""
+         self.use_fade_effect = bool(enabled)
+@@ -360,7 +381,9 @@
+     def update_position(self, pts_ms: int):
+         self._current_ms_cache = pts_ms
+ 
+-        if not self.enable_render or self.mode == SubtitleMode.OFF or not self.subtitles:
++        guard = self._presentation_guard
++        if (not self.enable_render or self.mode == SubtitleMode.OFF or not self.subtitles
++                or (guard is not None and not guard.context_allows())):
+             self._smart_hide(instant=True)
+             return
+ 
+@@ -385,16 +408,21 @@
+             return
+ 
+         # Nếu chữ giống hệt đang hiển thị -> Giữ nguyên
+-        if not self.isHidden() and self.text() == new_text:
+-            return
++        if not self.isHidden() and self.text() == new_text:
++            if (self.fade_anim.state() == QAbstractAnimation.State.Running
++                    and self.fade_anim.endValue() == 0.0):
++                self._smart_show(instant=False)
++            return
+ 
+         prev_sub_end = self.subtitles[idx - 1]['end'] if idx > 0 else 0
+         gap_from_prev = active_sub['start'] - prev_sub_end
+ 
+         # Cập nhật chữ mới + Vị trí chuẩn TRƯỚC KHI hiển thị
+-        self.setText(new_text)
+-        self.adjustSize()
+-        self.recalc_position()
++        self.setText(new_text)
++        self.adjustSize()
++        self.recalc_position()
++        if guard is not None:
++            guard.prepare_geometry()
+ 
+         if self.isHidden():
+             if gap_from_prev > 400 or idx == 0:
+@@ -405,16 +433,17 @@
+             self.fade_anim.stop()
+             self.set_opacity(1.0)
+ 
+-    def _smart_show(self, instant=False):
+-        """Hiển thị sub chuẩn mượt không chớp nháy"""
+-        self.fade_anim.stop()
++    def _smart_show(self, instant=False):
++        """Hiển thị sub chuẩn mượt không chớp nháy"""
++        if (self.use_fade_effect and not instant
++                and self.fade_anim.state() == QAbstractAnimation.State.Running
++                and self.fade_anim.endValue() == 1.0):
++            return
++        self.fade_anim.stop()
+ 
+         if not self.use_fade_effect or instant:
+             self.set_opacity(1.0)
+             self.show()
+-            return
+-
+-        if self.fade_anim.state() == QAbstractAnimation.State.Running and self.fade_anim.endValue() == 1.0:
+             return
+ 
+         # Đặt Opacity từ giá trị hiện tại (hoặc 0.0) TRƯỚC KHI show()
+@@ -427,25 +456,27 @@
+         self.fade_anim.start()
+ 
+     def _smart_hide(self, instant=False):
+-        """Ẩn sub an toàn"""
+-        if self.isHidden():
+-            return
+-
+-        self.fade_anim.stop()
+-
+-        if not self.use_fade_effect or instant:
++        """Ẩn sub an toàn"""
++        if self.isHidden():
++            if instant:
++                self.fade_anim.stop()
++                self.set_opacity(0.0)
++            return
++
++        if not self.use_fade_effect or instant:
++            self.fade_anim.stop()
+             self.set_opacity(0.0)
+             self.hide()
+             return
+ 
+-        if self.fade_anim.state() == QAbstractAnimation.State.Running and self.fade_anim.endValue() == 0.0:
+-            return
+-
++        if self.fade_anim.state() == QAbstractAnimation.State.Running and self.fade_anim.endValue() == 0.0:
++            return
++
++        self.fade_anim.stop()
+         self.fade_anim.setStartValue(self._opacity)
+         self.fade_anim.setEndValue(0.0)
+         
+-        self.fade_anim.finished.connect(self.hide, Qt.ConnectionType.SingleShotConnection)
+-        self.fade_anim.start()
++        self.fade_anim.start()
+ 
+     def update_after_resize(self):
+         if self.isHidden(): 
+@@ -497,4 +528,4 @@
+         if self._current_margin != margin:
+             self._current_margin = margin
+             if not self.isHidden():
+-                self.recalc_position()+                self.recalc_position()

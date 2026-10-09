@@ -1,0 +1,32 @@
+test_malformed_eq_cache_measurement_never_reaches_source_switch_or_gui_math (tests.test_audio_realtime.ActualNativePlayerTests.test_malformed_eq_cache_measurement_never_reaches_source_switch_or_gui_math) ... Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'C:/Users/DIABLO/AppData/Local/Temp/tmpj2gapyqq/native.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2mp41
+    encoder         : Lavf62.1.103
+  Duration: 00:00:15.00, start: 0.000000, bitrate: 137 kb/s
+  Stream #0:0[0x1](und): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 64x48 [SAR 1:1 DAR 4:3], 4 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+      Metadata:
+        handler_name    : VideoHandler
+        vendor_id       : [0][0][0][0]
+        encoder         : Lavc62.6.100 mpeg4
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 48000 Hz, mono, fltp, 127 kb/s (default)
+      Metadata:
+        handler_name    : SoundHandler
+        vendor_id       : [0][0][0][0]
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 1.200s
+
+OK
+✅ Icon loaded from: D:\HocTap\11_MusicApp\App-AI-media-player\icon\app_icon.ico
+⚠️ MainWindow: Tự khởi tạo InternalMediaPlayer.
+⚠️ Mode 'None' không hợp lệ, về mặc định EN_VI
+🎯 Loaded Subtitle Mode: en_vi
+DEBUG: Gọi lệnh ẩn/hiện video nhỏ: True
+📏 Video Size Detected: 64x48
+🔻 Đang thực hiện quy trình đóng ứng dụng...
+🔌 Đang hủy liên kết và giải phóng Native Audio Engine C++...
+⛔ Đang gửi lệnh dừng tới các Worker...
+✅ Đóng ứng dụng theo luồng an toàn

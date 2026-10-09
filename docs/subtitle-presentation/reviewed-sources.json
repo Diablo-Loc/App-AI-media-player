@@ -1,0 +1,25 @@
+{
+  "app/ui/main_window.py": {
+    "before_sha256": "bf626d15d5412371943f700273ab4150d620feac9f66e9d19e50bf45626de24d",
+    "after_sha256": "a45e153e0e46a6a417e61d842e8f7f2671d702b652e161505c77146018582571",
+    "changed_functions": [
+      "MainWindow.changeEvent"
+    ],
+    "added_functions": []
+  },
+  "app/ui/subs_ui/subtitle_layer.py": {
+    "before_sha256": "d4bb41a2e5141f2fd0dc36b199b4784e09c94cc6b5a16ecd77166aebeaa89412",
+    "after_sha256": "ae21c5bad564969652f25e31dd069408db6a2ccf737da2026b02f66307ea8a0f",
+    "changed_functions": [
+      "SubtitleLayer.__init__",
+      "SubtitleLayer.update_position",
+      "SubtitleLayer._smart_show",
+      "SubtitleLayer._smart_hide"
+    ],
+    "added_functions": [
+      "SubtitleLayer.show",
+      "SubtitleLayer.setVisible",
+      "SubtitleLayer._finish_fade"
+    ]
+  }
+}

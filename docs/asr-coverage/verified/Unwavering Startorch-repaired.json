@@ -1,0 +1,253 @@
+{
+  "cues": [
+    {
+      "start": 0,
+      "end": 1.56,
+      "text": "Thank you"
+    },
+    {
+      "start": 10.819999999999999,
+      "end": 16.32,
+      "text": "See how far we've come together"
+    },
+    {
+      "start": 16.88,
+      "end": 21.200000000000003,
+      "text": "And we are stronger than before"
+    },
+    {
+      "start": 22.02,
+      "end": 28.040000000000003,
+      "text": "And these are memories we'll cherish more and more"
+    },
+    {
+      "start": 28.16,
+      "end": 32.54,
+      "text": "We'll walk as one with dawn"
+    },
+    {
+      "start": 33.94,
+      "end": 38.92,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 39.040000000000006,
+      "end": 43.92,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 44.86,
+      "end": 51.160000000000004,
+      "text": "And may our shared ideas cut through the haze of time"
+    },
+    {
+      "start": 51.68,
+      "end": 54.9,
+      "text": "Amidst where stars arise"
+    },
+    {
+      "start": 56.04,
+      "end": 67.5,
+      "text": "I'll carry this light moving strong I'll tell it our hardship is to learn"
+    },
+    {
+      "start": 67.62,
+      "end": 73.61999999999999,
+      "text": "We're made for this moment We're chosen and we know it"
+    },
+    {
+      "start": 73.74,
+      "end": 80.61999999999999,
+      "text": "Today is the day we're never to fly ever so high"
+    },
+    {
+      "start": 96.06,
+      "end": 101.25999999999999,
+      "text": "May your courage never fail you"
+    },
+    {
+      "start": 101.38,
+      "end": 106.17999999999999,
+      "text": "Your future's yours alone to write"
+    },
+    {
+      "start": 106.98,
+      "end": 112.96,
+      "text": "And may our shared ideas come through the haze of time"
+    },
+    {
+      "start": 113.08,
+      "end": 117.08,
+      "text": "A mist where stars arise"
+    },
+    {
+      "start": 118.06000000000002,
+      "end": 124.24,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 124.36,
+      "end": 129.82,
+      "text": "We're rising so high above the storm"
+    },
+    {
+      "start": 129.94,
+      "end": 132.89999999999998,
+      "text": "In search of good and all in"
+    },
+    {
+      "start": 133.01999999999998,
+      "end": 135.56,
+      "text": "We're focusing devoted"
+    },
+    {
+      "start": 135.72,
+      "end": 137.35999999999999,
+      "text": "Let's rise"
+    },
+    {
+      "start": 137.72,
+      "end": 139.76,
+      "text": "Night or daylight"
+    },
+    {
+      "start": 139.88,
+      "end": 143.38,
+      "text": "You know the light of mine"
+    },
+    {
+      "start": 157.58,
+      "end": 163.44,
+      "text": "I'll carry this light moving strong"
+    },
+    {
+      "start": 163.56,
+      "end": 169.2,
+      "text": "I'll tear it when hardship is too far"
+    },
+    {
+      "start": 169.32,
+      "end": 172.33999999999997,
+      "text": "We're waiting for this moment"
+    },
+    {
+      "start": 172.45999999999998,
+      "end": 175.24,
+      "text": "We're chosen and we know it"
+    },
+    {
+      "start": 175.36,
+      "end": 179.76,
+      "text": "Today is now or never"
+    },
+    {
+      "start": 180.10000000000002,
+      "end": 186.3,
+      "text": "We're shining so bright as the sun"
+    },
+    {
+      "start": 186.42000000000002,
+      "end": 191.74,
+      "text": "We're rising so high above the stars"
+    },
+    {
+      "start": 191.86,
+      "end": 194.98000000000002,
+      "text": "In search of truth and knowledge"
+    },
+    {
+      "start": 195.10000000000002,
+      "end": 197.26,
+      "text": "We're focused and devoted"
+    },
+    {
+      "start": 197.38,
+      "end": 199.41,
+      "text": "Let's rise"
+    },
+    {
+      "start": 199.53,
+      "end": 202.14,
+      "text": "Night or daylight"
+    },
+    {
+      "start": 204.16,
+      "end": 208.04,
+      "text": "Keep going right or left"
+    },
+    {
+      "start": 209.17600000000002,
+      "end": 214.036,
+      "text": "you for watching."
+    },
+    {
+      "start": 229.2,
+      "end": 232.68,
+      "text": "© transcript Emily Beynon"
+    }
+  ],
+  "diagnostic": {
+    "duration": 232.9890625,
+    "gaps_before": [
+      [
+        0.0,
+        10.819999999999999
+      ],
+      [
+        80.61999999999999,
+        96.06
+      ],
+      [
+        143.38,
+        157.58
+      ],
+      [
+        208.04,
+        229.2
+      ]
+    ],
+    "attempts": [
+      {
+        "start": 0.0,
+        "end": 12.0,
+        "round": 1,
+        "added": 1
+      },
+      {
+        "start": 78.61999999999999,
+        "end": 90.61999999999999,
+        "round": 1,
+        "added": 0
+      },
+      {
+        "start": 206.04,
+        "end": 218.04,
+        "round": 1,
+        "added": 0
+      },
+      {
+        "start": 3.5519999999999996,
+        "end": 9.504,
+        "round": 2,
+        "added": 0
+      },
+      {
+        "start": 207.776,
+        "end": 213.664,
+        "round": 2,
+        "added": 1
+      }
+    ],
+    "added_cues": 2,
+    "unresolved_speech": [
+      [
+        5.552,
+        7.504
+      ],
+      [
+        80.61999999999999,
+        82.96
+      ]
+    ]
+  }
+}

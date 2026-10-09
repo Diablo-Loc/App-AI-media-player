@@ -1,0 +1,430 @@
+﻿[
+    {
+        "Path":  "app/config.py",
+        "Hash":  "20D9D04825756488FF4BBBE05A431B8D9507C95D32A6574EFB601847ED09A39E"
+    },
+    {
+        "Path":  "app/downloader.py",
+        "Hash":  "75FBDB3DB6774727E5777DEEA30CCEB7B3DBDB93E2BF4CAA5F642B1F595D7B00"
+    },
+    {
+        "Path":  "app/paths.py",
+        "Hash":  "02EE7EDAD223CAE6216E806D4A3C3E83FD26C8AE6C798EC67D8CD7BEECEE6739"
+    },
+    {
+        "Path":  "app/run_app.py",
+        "Hash":  "61EA4BBBB15C27B7E772E909CDBE7334057711F5F572626FDCF5AC92E6AE58EA"
+    },
+    {
+        "Path":  "app/test_build_app.py",
+        "Hash":  "E97BF316541E7C9863383BA2E85FFAD2D274CB0E87E2096ACBE41005FD3ADB99"
+    },
+    {
+        "Path":  "app/updater.py",
+        "Hash":  "EB4E09DE6CB607F295848A4BA9E00F6FEAD61FB3E427D185C64206EF8681D298"
+    },
+    {
+        "Path":  "app/worker.py",
+        "Hash":  "CA28F46F4C9B446EADE126EA3ACEF83623DA63EEAC1296CF2AE38AA9F64CC9CD"
+    },
+    {
+        "Path":  "app/ai/pipeline.py",
+        "Hash":  "D5DE97196BC36077B9BC0D55C33C4BA8D2D9726ADE6908D78FA168297C3C6B74"
+    },
+    {
+        "Path":  "app/ai/whisper_engine.py",
+        "Hash":  "DEE5D9A89758F2CD720107875997B182BF3A2A817A8DB0DC86DF4ADA2ECBC932"
+    },
+    {
+        "Path":  "app/control/ai_controller.py",
+        "Hash":  "1B712F580D0416CAEF9CF62359AED324760E681A155625F6DB0810BDB67C07BE"
+    },
+    {
+        "Path":  "app/control/ai_process_manager.py",
+        "Hash":  "C7CA8C4DF936156849960B9657B70CD37B356A278052F2F72D269687316146EB"
+    },
+    {
+        "Path":  "app/control/app_controller.py",
+        "Hash":  "DA9619C39EDA338B9375FB2E200448ECCFD08EA3E9813FBDB72057CD8084E528"
+    },
+    {
+        "Path":  "app/control/library_scan.py",
+        "Hash":  "CAA9EB8D7F9920927BC76FBD67604013335B7ED45E59FC3C41EADED98A0D996F"
+    },
+    {
+        "Path":  "app/control/worker_lifecycle.py",
+        "Hash":  "E29D55AD75EFF675E613CB05E64461596B555811B89276BB272C81463C45E864"
+    },
+    {
+        "Path":  "app/core/media_control.py",
+        "Hash":  "F625D917D704A7C66ACB781DFADC35A419CC1D9DED46E4C71ACD5C414BF8320D"
+    },
+    {
+        "Path":  "app/core/media_library.py",
+        "Hash":  "F683BDACE89C9AC76332237D56739B5F26BB974B1C22F6574264A071E3241320"
+    },
+    {
+        "Path":  "app/core/subtitle_manager.py",
+        "Hash":  "68631DEEF5D2DFB7544752FB812BDC128C86B8B0864707A5921C6ED8FB00824B"
+    },
+    {
+        "Path":  "app/core/subtitle_persistence.py",
+        "Hash":  "F58851296CF0E9CB0DA8C3FF1FD685B1169F91CF9E4378637CCE058B8E4D5D07"
+    },
+    {
+        "Path":  "app/core/subtitle_renderer.py",
+        "Hash":  "7571361AE65EAB08642395890D1788921CD37DD956D1A09853453012469DF513"
+    },
+    {
+        "Path":  "app/download_core/download_source_app.py",
+        "Hash":  "3F14C6011E049138108101B452CD506673E689AACAF3FC38678F3A6B982D1AE1"
+    },
+    {
+        "Path":  "app/download_core/download_worker.py",
+        "Hash":  "4C96587FDACA32FBE4524EBE06F2482D5C1C3CCB9457E3565AAE76E783106F78"
+    },
+    {
+        "Path":  "app/download_core/get_title_worker.py",
+        "Hash":  "A36DB0C74EA20E31981C601818F4B818B5B2141C546D05F4D1BF707076CCB960"
+    },
+    {
+        "Path":  "app/download_core/utils.py",
+        "Hash":  "B216F8F2D05AE8E09F32F36061C7FAC1D9C38DCCAEA9FF5472BAC9CF7DF50A27"
+    },
+    {
+        "Path":  "app/download_core/yt_dlp.py",
+        "Hash":  "6AC3D3C40D014C779164DA2D14796E2D9D4B86139B02FD84C8AC883233507C93"
+    },
+    {
+        "Path":  "app/job/job_manager.py",
+        "Hash":  "AD7FD572A4B5FD6CFA7DF3A1C5C6BB9FBDF02806C98E988B4F39704660420618"
+    },
+    {
+        "Path":  "app/job/job_state.py",
+        "Hash":  "6F21D15D0F353DE6050DA00E4F54245EB9983BC10D63FA658592EBD7FAD5CDA4"
+    },
+    {
+        "Path":  "app/pipeline/aligner.py",
+        "Hash":  "BF590C7F079B10588AC1361111DBD8D3F6DF3E9189AC308A89ECF63987B1D7C6"
+    },
+    {
+        "Path":  "app/pipeline/asr_coverage.py",
+        "Hash":  "E988FBCA7A1A3BC9416D1D8EA6276271C8D9920A94169C4301B70BDE3B8A1236"
+    },
+    {
+        "Path":  "app/pipeline/asr_engine.py",
+        "Hash":  "80FCFF1FF925F52C8A9E03B179E5F88AB7751C6777C616B8FF87BBF1D86FFAD7"
+    },
+    {
+        "Path":  "app/pipeline/extractor.py",
+        "Hash":  "A5E8357ED0DFC82D606837007C151EA43CBE24664143B330D319FF5D59D4A07C"
+    },
+    {
+        "Path":  "app/pipeline/forced_aligner.py",
+        "Hash":  "40BEE0F56ABE0903C2FA82DAB45673DBEA8DD7EC8D7E7DBF3E04A4BA705F39C8"
+    },
+    {
+        "Path":  "app/pipeline/jp_normalizer.py",
+        "Hash":  "EEF841D8D088A37A5A424302D51F0EA7896E4CC666EAB0CC0A6EDEC91169A8BD"
+    },
+    {
+        "Path":  "app/pipeline/lyric_corrector.py",
+        "Hash":  "DD913D201F0033881A787CE2AC94264EF96D5309D3CECC4A91892242930BCB98"
+    },
+    {
+        "Path":  "app/pipeline/lyric_formatter.py",
+        "Hash":  "47D31ED45F262AF09AB33867F36C4312E97E38913E5B1D72006B3998E7CEBEA2"
+    },
+    {
+        "Path":  "app/pipeline/lyric_phrases.py",
+        "Hash":  "0D3051F008AD7DF4C8EDE0F991F8E0C603C02A23D8633746A456C3433931F96B"
+    },
+    {
+        "Path":  "app/pipeline/lyric_refinement.py",
+        "Hash":  "D87F23A49CDC51EF80F49F5B012AD2628DB57A4AC232A600461E608FA134F9C4"
+    },
+    {
+        "Path":  "app/pipeline/postprocess.py",
+        "Hash":  "2AF4F00AC5484FC492E3FBC00B9784BC133AF04FBBA655A9F1F71DF4A7CD4752"
+    },
+    {
+        "Path":  "app/pipeline/utils.py",
+        "Hash":  "B6A6DE1344B1194CD92B5480DE79719E7C694299667500A0F71C28BE2499B691"
+    },
+    {
+        "Path":  "app/pipeline/vad.py",
+        "Hash":  "527854C1C52AEFA3449911085F5475D0DB083CC70F453747807908C1C8E6E226"
+    },
+    {
+        "Path":  "app/pipeline/vocal_separator.py",
+        "Hash":  "01F49FF7E08135B48F5E00F7A0C5221DD33698D8D50EF5FF159E16351C217B2C"
+    },
+    {
+        "Path":  "app/subtitle/config.py",
+        "Hash":  "252A122B519FD40ABFF7CC6556947523C311664359AFC8765A6C93F522DF142F"
+    },
+    {
+        "Path":  "app/subtitle/converter.py",
+        "Hash":  "9420CD0439A7C8EB1C848E1249143C8A2AB65AB4A83B1418DFA4A6CE0AF85009"
+    },
+    {
+        "Path":  "app/subtitle/engine.py",
+        "Hash":  "1FA842CAA420D08558F6969352C9AEFCC0190680C9032FF3D03B67C1ACD52889"
+    },
+    {
+        "Path":  "app/subtitle/mode.py",
+        "Hash":  "FF25A1FCB651C9017C321882BAC5850971E53CE4A2F510FF4674F7A83425B2AA"
+    },
+    {
+        "Path":  "app/subtitle/model.py",
+        "Hash":  "064106754383FA074DBE928FB561B4AC494C5134259294C08C4B926B9407B056"
+    },
+    {
+        "Path":  "app/subtitle/models.py",
+        "Hash":  "EB684322BC3357460841AFDDCACCD8BFDC68C53F86A0ADE09A4040D85801A64A"
+    },
+    {
+        "Path":  "app/subtitle/profile.py",
+        "Hash":  "6ED202B44EEAF826E132DC531FA3C0774A57DC12A19E9DF79A78709396E72932"
+    },
+    {
+        "Path":  "app/subtitle/storage.py",
+        "Hash":  "933883A5431D9E3B957FE0F1F5F7DFBAE88A264D4F7D9E01652E4BD335E3D2EB"
+    },
+    {
+        "Path":  "app/subtitle/timing_format.py",
+        "Hash":  "F816FC8A9411C0E6EF8D2FFA2594219B5A389CC86639331D2F30A260433A9483"
+    },
+    {
+        "Path":  "app/subtitle/ass/ass_parser.py",
+        "Hash":  "75E73EFE68247FE96C2F456F75365E0C5E55402CB7D3C7E63F4A81F4DFF3AFE0"
+    },
+    {
+        "Path":  "app/subtitle/ass/renderer.py",
+        "Hash":  "F49CF7565A22F719C8BC9442A1B2F6ABF4123ED71D7BDD32397A202A6948BCCC"
+    },
+    {
+        "Path":  "app/subtitle/ass/style.py",
+        "Hash":  "D90377EDC93519ECA4F35AD2602D690DCB5D8C97D931E240FE1BCAA5EEEE0639"
+    },
+    {
+        "Path":  "app/subtitle/ass/utils.py",
+        "Hash":  "D1C0E54FFA7A1413180AE07F59D817956FB6321508006CAFF1CCE3D59E51E8FD"
+    },
+    {
+        "Path":  "app/test/main.py",
+        "Hash":  "C3E15657E506B91815145D3F8F8D3A7683119D7BD9DCEE1C5C84EC9884A5270F"
+    },
+    {
+        "Path":  "app/test/test.py",
+        "Hash":  "86C127FD69E4CD69B126329911002846F5BAEF81182BA28DECF679D902D405F5"
+    },
+    {
+        "Path":  "app/test/test_ai.py",
+        "Hash":  "0D5AC9EA5F4A29549360CB9827955D518C4FFD4C60E2B517F9F64D94606B93B5"
+    },
+    {
+        "Path":  "app/test/test_ai_controller.py",
+        "Hash":  "55FA613685FE789F441D329E0C0668CEAA03216FE124366766BD8C2B4C30ABF7"
+    },
+    {
+        "Path":  "app/test/test_aligner_optimizations.py",
+        "Hash":  "2BD5D7E91E96CE5E74846DE12F2A3AC29A00C2AC3563B9F237883BEC8FA98146"
+    },
+    {
+        "Path":  "app/test/test_pipeline.py",
+        "Hash":  "F97D7FDA7DD9DD36646F49E02CBBFFD416907C43274268E84DD812572198C393"
+    },
+    {
+        "Path":  "app/test/test_sub.py",
+        "Hash":  "F2293950AF825404837E7838768FF7E2B15139E27025847950435A3EE195152E"
+    },
+    {
+        "Path":  "app/test/test_worker.py",
+        "Hash":  "331C8D954422B63B7D2F9D055AB7CE1FE22E2C8B96A9A09D0D357671E7BADA66"
+    },
+    {
+        "Path":  "app/thumbnail/thumbnail_manager.py",
+        "Hash":  "5EDABE9CCE2FCC955354352AB2307E9892E37C1A33A8F2C285C6AB33C5E7E351"
+    },
+    {
+        "Path":  "app/thumbnail/thumbnail_workers.py",
+        "Hash":  "A9266712E1CA496C33D4BDE68AA82275ECB6648059E228DBAA3D1F18C539B4F8"
+    },
+    {
+        "Path":  "app/translate/cache.py",
+        "Hash":  "652A67A23425AB8BA5321B7C2364FB2D6E6FEDF44AB80D520F623F5A79DC0F75"
+    },
+    {
+        "Path":  "app/translate/nllb.py",
+        "Hash":  "26888A55F15ACE973313EBFCD337CC87EED54B101CA419263FDE3E270D8BC813"
+    },
+    {
+        "Path":  "app/translate/online_logic.py",
+        "Hash":  "157DBF8963503DD89A9094855F8096DEFF4AF55CEBB0BC067755B952FCBDF880"
+    },
+    {
+        "Path":  "app/translate/pipeline.py",
+        "Hash":  "D32080A91051A57478F42B977A8AC7799F4E8F9398AB19F7767BA975C6AA82A1"
+    },
+    {
+        "Path":  "app/translate/translator.py",
+        "Hash":  "000AE8C7CF848460F29F4D28FB9872F13FD8C271F56CDE67D69A73C9B384E1CD"
+    },
+    {
+        "Path":  "app/ui/design_system.py",
+        "Hash":  "05E4E05DE3DA0F9A3EBF869265F40F4E7B04EC3480FF2563003DE6C5BF227DEA"
+    },
+    {
+        "Path":  "app/ui/elided_label.py",
+        "Hash":  "788E8D86FEC9FA25E651F2B8E5B9F649A91E5F11033550A7E3B40C117289B89A"
+    },
+    {
+        "Path":  "app/ui/foryou_playlist_view.py",
+        "Hash":  "CCECBFC8FA969FE295815F154DFF341079074E5F41AD501AB7C28FDC0FCCA89C"
+    },
+    {
+        "Path":  "app/ui/foryou_spacing.py",
+        "Hash":  "A0948602735E3CF2E0910A21CB3AB1F42EA4B3AAB697C4864E9C12ED42C1C168"
+    },
+    {
+        "Path":  "app/ui/icons.py",
+        "Hash":  "0DAFF61FA78DA6B121EC23409F54F2D7F9BC677D3F2E962C0EACC05806F30FCC"
+    },
+    {
+        "Path":  "app/ui/main_window.py",
+        "Hash":  "A45E153E0E46A6A417E61D842E8F7F2671D702B652E161505C77146018582571"
+    },
+    {
+        "Path":  "app/ui/media_card.py",
+        "Hash":  "FCC14BE0DF7FD0AA8D06D44502E6CC74873EFAC2ADC9F651E0940F02D3CB1BA3"
+    },
+    {
+        "Path":  "app/ui/media_player.py",
+        "Hash":  "CA94C492A173171FEF3A6B0807131DC159BBCFC7F37C98E7686B62D52B8D65BA"
+    },
+    {
+        "Path":  "app/ui/mini_video_dock.py",
+        "Hash":  "09DD030708292F74B9C2B36DADDDFF39D1044F43414987ED6CE9E6B6FE505D73"
+    },
+    {
+        "Path":  "app/ui/native_frame_style.py",
+        "Hash":  "DCC379CEF026C8DE1A555F76BC1380F3A7263FA73406EE490C72EE9C48C69020"
+    },
+    {
+        "Path":  "app/ui/overlay_input_guard.py",
+        "Hash":  "DE19432CB4F287F9D2899975A33FE690F235A15FA108CE47207B172158C38E6A"
+    },
+    {
+        "Path":  "app/ui/playback_bar.py",
+        "Hash":  "63AA6AFE526C4CAA0CC38CD2B5A5EA2C97F8C6824E73DC74B4776548E5536549"
+    },
+    {
+        "Path":  "app/ui/playlist_loading_overlay.py",
+        "Hash":  "7A7BC07409827EA8A36D64350F0A3229020D36AE7DE3F55C8048AFEDFC8756A5"
+    },
+    {
+        "Path":  "app/ui/playlist_thumbnail.py",
+        "Hash":  "67CDAF952776BE602B414882E93070C1423297A3CB0D238C2C49B4618DCE8F83"
+    },
+    {
+        "Path":  "app/ui/playlist_thumbnail_queue.py",
+        "Hash":  "FA91B60A153D91C7DE8B10543DD3573A524DBBEA76A14632AD8DECFB3E8F76AE"
+    },
+    {
+        "Path":  "app/ui/styles.py",
+        "Hash":  "A14C85A661998E9119CDCDE690D54A2B66B1B9531745D3BCEF8EE5C0F0601BE2"
+    },
+    {
+        "Path":  "app/ui/subtitle_presentation.py",
+        "Hash":  "F6321B5AAD991EA0DAB186753507245E744AB025C25676E6D472AE9C3F20C445"
+    },
+    {
+        "Path":  "app/ui/system_media_manager.py",
+        "Hash":  "263A120EFA97D3CC2A606C57C8E62D359A641D57B741E91FE31096FBFDCCDB7D"
+    },
+    {
+        "Path":  "app/ui/track_label.py",
+        "Hash":  "7782B7A5CD834D289125D52FB7E5052B2643CAE942D461DF23CD67117E7DA825"
+    },
+    {
+        "Path":  "app/ui/video_info_popup.py",
+        "Hash":  "398209AFB826BDB0DFFFF52AE03E9204D49C104D45C7174E20EECBCD58D9B23E"
+    },
+    {
+        "Path":  "app/ui/vol_panel.py",
+        "Hash":  "2FF6D2EDEBDC3FEBD21E8690C1CC4A5FFE01076B915F76F029C3D0C56D3C05C6"
+    },
+    {
+        "Path":  "app/ui/nav/sidebar.py",
+        "Hash":  "98D9DAC4AF8391570825E89465E84F07481B3DCE19727700F944CAA7C561EF13"
+    },
+    {
+        "Path":  "app/ui/pages/content_manager.py",
+        "Hash":  "6431A94FD792B9C7CE42FEE182444BC8A4140D8F3076527DFED9E6209F44D89C"
+    },
+    {
+        "Path":  "app/ui/pages/download.py",
+        "Hash":  "611BC8848BC46CFD755D939ABADEA6133CCB4844DA5BEDA58B7E1CD17A83ABFB"
+    },
+    {
+        "Path":  "app/ui/pages/dynamic_island.py",
+        "Hash":  "1E391890C090511065F25A42E82282AEEDF550D9D3B8B9989DBFD7E558676B26"
+    },
+    {
+        "Path":  "app/ui/pages/for_you.py",
+        "Hash":  "9C7C683F8E606DA08DAA99646EFFF6F611A4863F0AAB1E86A5B69FD8066E9EFF"
+    },
+    {
+        "Path":  "app/ui/pages/mode_manager.py",
+        "Hash":  "1446DA8141B077D3C4741C407EF32154F32D4AC27755D0D4CF03731FD5EA83B1"
+    },
+    {
+        "Path":  "app/ui/pages/settings.py",
+        "Hash":  "8BAA6EE2A769A95BBD226F6FB49C8F27295DB175D6B3F92A9BB2DA3E1A2C6588"
+    },
+    {
+        "Path":  "app/ui/pages/settings_dialog.py",
+        "Hash":  "23351A035130B41119C29E815544FB951AEBE2E9CD2CE33B8B26B279E97FA221"
+    },
+    {
+        "Path":  "app/ui/subs_ui/lyric_settings_dialog.py",
+        "Hash":  "127207F6F365B378B5D5BBBA4FFA3356B3A808C61BD0488DAFDAD94CFE7199D6"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_commands.py",
+        "Hash":  "C3AD430AA2428D32548EFE8D613A1D4C710D34D2DE1816E5D04E6270ECE2D8FB"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_dialog_logic.py",
+        "Hash":  "A675F9A99D1C75F4FAAFFD1ECC71069D33D37ED12F4EF73253524B5013D0D690"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_editor.py",
+        "Hash":  "86095AFDC49FB420E44041370B87A395D1F5405BB572E631305422BDF639ABDC"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_io.py",
+        "Hash":  "A3CA722CA76511905FCF1A512E5373DEEE05CB13A8DF286772114813114B8A7E"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_layer.py",
+        "Hash":  "7F735FC0B231360D7048BFE5CCF7B04205270C942E1FC587226105790F4B7E1E"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_model.py",
+        "Hash":  "12158B8D1721257A2E7FEAC0D2C75C2A345E325A404A6330F7A467BBBF541183"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_utils.py",
+        "Hash":  "64424DA59542A5859F82E903216BBA3FC309E42A4470E91700E4D5BDC72C794D"
+    },
+    {
+        "Path":  "app/ui/subs_ui/subtitle_workers.py",
+        "Hash":  "B3DFB749926F6315DD036B4E313A91047298FCD45ED10A37C11250443D0C9F6F"
+    },
+    {
+        "Path":  "app/ui/subs_ui/sub_panel.py",
+        "Hash":  "4F18A0F7F5D02512722391B4C22A6B604D150786C6D5E4EE18D980938C573B83"
+    }
+]

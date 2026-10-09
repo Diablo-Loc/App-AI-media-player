@@ -1,0 +1,82 @@
+{
+  "app/control/audio_effects.py": {
+    "before_sha256": "4eb149ffb1784712ffe143cc62fbc1b04aad97d5da71560e187be7a36ff5ccff",
+    "after_sha256": "535fe5b10d9ba0b5df5dd14806c73b9493a6372a85132e158b4879e1b600ede0",
+    "changed_functions": [
+      "AudioEffectsController.__init__",
+      "AudioEffectsController._load_profile",
+      "AudioEffectsController.set_profile",
+      "AudioEffectsController._source_changed",
+      "AudioEffectsController._tracks_changed",
+      "AudioEffectsController._prepare",
+      "AudioEffectsController._prepared",
+      "AudioEffectsController._transition_failed",
+      "AudioEffectsController.shutdown"
+    ],
+    "added_functions": [
+      "LoudnessMeasurementWorker.run",
+      "AudioEffectsController.volume",
+      "AudioEffectsController.set_volume",
+      "AudioEffectsController._save_profile",
+      "AudioEffectsController.set_target",
+      "AudioEffectsController._apply_normalization"
+    ]
+  },
+  "app/core/audio_effects.py": {
+    "before_sha256": "b3afda722a28814d5123358f967d1e0c6c05b84eaa8364c87ef3a92ee83eeb66",
+    "after_sha256": "b3afda722a28814d5123358f967d1e0c6c05b84eaa8364c87ef3a92ee83eeb66",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "app/core/audio_profile.py": {
+    "before_sha256": "fde20e49afc0036e9de7fa99a65b36c23d085d4ed4742f9503c0fe0116887301",
+    "after_sha256": "fde20e49afc0036e9de7fa99a65b36c23d085d4ed4742f9503c0fe0116887301",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "app/ui/audio_effects_panel.py": {
+    "before_sha256": "2eb32d6771bf2e840d00322e78b171c44560ac92bfeca4888adc37bd4ff06bb5",
+    "after_sha256": "7ed0149ab5e5db410240bf09c5b17030a8cca9a5d9fec0612b24b01008535ce3",
+    "changed_functions": [
+      "AudioEffectsPanel.__init__",
+      "AudioEffectsPanel._emit_settings",
+      "AudioEffectsPanel.set_profile"
+    ],
+    "added_functions": [
+      "AudioEffectsPanel.set_target"
+    ]
+  },
+  "app/ui/main_window.py": {
+    "before_sha256": "63c29ecd41f60b4ddd888b196637252810bd64751201dca6a3e0978eb444a246",
+    "after_sha256": "81ed806947f33c94f444d1122ed63c4a8c25bc1d664bceeca5015139e5cf3395",
+    "changed_functions": [
+      "MainWindow.show_volume_popup",
+      "MainWindow.update_volume_from_popup",
+      "MainWindow.adjust_volume"
+    ],
+    "added_functions": []
+  },
+  "app/ui/playback_bar.py": {
+    "before_sha256": "9088153def81389a2838ed943ee756d13c0f36954ddf9bb3752e848ce18e91e3",
+    "after_sha256": "9088153def81389a2838ed943ee756d13c0f36954ddf9bb3752e848ce18e91e3",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "app/ui/subtitle_presentation.py": {
+    "before_sha256": "6c024d966bf3ab7a03fe1b26d41d5654d047705b2300e19defd39496857c49eb",
+    "after_sha256": "6c024d966bf3ab7a03fe1b26d41d5654d047705b2300e19defd39496857c49eb",
+    "changed_functions": [],
+    "added_functions": []
+  },
+  "tests/test_audio_effects.py": {
+    "before_sha256": "b2eece9e992ca21a35f3b71d6d535ffd94df074e748f8340828786b5758e0c7d",
+    "after_sha256": "fd217a8bc138ecb2b5e8bc861f759c3292cfc9e77783df8b014f6d13069db8ed",
+    "changed_functions": [
+      "ControllerTests.test_off_cancels_preparation_restores_original_and_persists_only_new_settings",
+      "ControllerTests.test_latest_worker_only_no_gui_wait_and_shutdown_reaps_owned_thread",
+      "SourceScopeTests.test_exact_reviewed_audio_adapters_and_unchanged_all_other_sources",
+      "NativeDecoderTests.test_muted_actual_qt_decoder_switches_cache_and_original_with_same_owners"
+    ],
+    "added_functions": []
+  }
+}

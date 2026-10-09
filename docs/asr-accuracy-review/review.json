@@ -1,0 +1,260 @@
+{
+  "reference": "Captured ASR replay; not human lyrics/timing ground truth or fresh ASR",
+  "datasets": 24,
+  "videos": 8,
+  "captured_languages": {
+    "jw": 3,
+    "en": 9,
+    "ja": 12
+  },
+  "reports": [
+    {
+      "dataset": "A Small Miracle(short)-round-1.json",
+      "language": "jw",
+      "cues": 25,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "A Small Miracle(short)-round-2.json",
+      "language": "jw",
+      "cues": 25,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "A Small Miracle(short)-round-3.json",
+      "language": "jw",
+      "cues": 25,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Brand New Sky-round-1.json",
+      "language": "en",
+      "cues": 49,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Brand New Sky-round-2.json",
+      "language": "en",
+      "cues": 49,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Brand New Sky-round-3.json",
+      "language": "en",
+      "cues": 49,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Empty old City - Looma-round-1.json",
+      "language": "en",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Empty old City - Looma-round-2.json",
+      "language": "en",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Empty old City - Looma-round-3.json",
+      "language": "en",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-1.json",
+      "language": "ja",
+      "cues": 43,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-2.json",
+      "language": "ja",
+      "cues": 43,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unbreakable Machine Doll ED - _Maware! Setsugetsuka_-round-3.json",
+      "language": "ja",
+      "cues": 43,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unwavering Startorch-round-1.json",
+      "language": "en",
+      "cues": 35,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unwavering Startorch-round-2.json",
+      "language": "en",
+      "cues": 35,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "Unwavering Startorch-round-3.json",
+      "language": "en",
+      "cues": 35,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json",
+      "language": "ja",
+      "cues": 44,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-2.json",
+      "language": "ja",
+      "cues": 44,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-3.json",
+      "language": "ja",
+      "cues": 44,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-1.json",
+      "language": "ja",
+      "cues": 55,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-2.json",
+      "language": "ja",
+      "cues": 55,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "【歌ってみた】ロンリーユニバース – Aqu3ra - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！-round-3.json",
+      "language": "ja",
+      "cues": 55,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "人生エンドロール-round-1.json",
+      "language": "ja",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "人生エンドロール-round-2.json",
+      "language": "ja",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    },
+    {
+      "dataset": "人生エンドロール-round-3.json",
+      "language": "ja",
+      "cues": 28,
+      "equal_recorded_phrase_output": true,
+      "accepted_text_order_equal": true,
+      "no_overlap": true,
+      "in_bounds": true
+    }
+  ],
+  "synthetic_credit_policy_outputs": {
+    "I love you.": [
+      {
+        "start": 0.95,
+        "end": 3.08,
+        "text": "I love you."
+      }
+    ],
+    "Eye of the tiger.": [],
+    "This is fiction.": [],
+    "Keep your copyright.": [],
+    "音楽が好きだ": [],
+    "ご視聴ありがとうございました": []
+  },
+  "synthetic_three_second_gap": [],
+  "production_transcribe_kwargs": [
+    {
+      "language": "None",
+      "word_timestamps": "True",
+      "condition_on_previous_text": "False",
+      "beam_size": "3",
+      "temperature": "0.0",
+      "vad_filter": "False",
+      "vad_parameters": "dict(min_silence_duration_ms=1000)",
+      "initial_prompt": "prompt_text"
+    },
+    {
+      "word_timestamps": "True"
+    }
+  ],
+  "saved_files": 39,
+  "saved_hashes_unchanged": true
+}
