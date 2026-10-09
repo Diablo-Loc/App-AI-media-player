@@ -354,6 +354,18 @@ def run_ai_pipeline(
                     f"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery "
                     "vì lượt xác minh độc lập bị lỗi."
                 )
+            # Align only already accepted text, after all coverage decisions.
+            # The loaded local model stays owned by this worker; no new ASR or
+            # provider request, and unreliable candidates keep the old timing.
+            from pipeline.lyric_timing import align_lyric_onsets
+            _check_cancel(cancel_cb)
+            _report(progress_cb, 58, "⏱ Căn mốc lời hát")
+            final_segments, timing_report = align_lyric_onsets(
+                model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)
+            print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
+                  f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
+            if timing_report["errors"] or timing_report["capped"]:
+                print("ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.")
         except Exception as error:
             _check_cancel(cancel_cb)
             # Preserve primary recognition if optional local coverage detection fails.
@@ -364,7 +376,11 @@ def run_ai_pipeline(
             if hasattr(torch, "cuda") and torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-        final_segments = finalize_cue_times(final_segments, duration=coverage.get("duration"))
+        # Display margins belong after coverage, so they never change which
+        # vocal gaps trigger recovery or which recovered words are accepted.
+        from pipeline.lyric_refinement import finalize_display_times
+        final_segments = finalize_display_times(
+            final_segments, cjk=is_cjk, duration=coverage.get("duration"))
         _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng

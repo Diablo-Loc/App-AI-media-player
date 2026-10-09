@@ -1,5 +1,9 @@
 # Kiểm tra đợt refactor trước
 
+Căn onset 09/10/2026: dùng model local đã nạp, giữ chữ/chia câu/recovery/API; chỉ dời các mốc sớm có alignment đủ tin cậy, đọc WAV theo cửa sổ và giữ mốc cũ khi lỗi/hết budget. SRT chỉ là benchmark: 38 nhóm câu giảm MAE đầu 441→239 ms, cuối 600→490 ms. Ba bài giữ đủ 42/31/49 câu; đoạn 5–9 s cũ không đổi. Chưa bảo đảm timestamp đúng mọi bài.
+
+Timing hiển thị 08/10/2026: chỉ thêm final display pass trong helper refinement và một điểm nối sau coverage ở pipeline. Không refactor UI/player/effect hay thay ASR/translation/save schema. Fixture patch mới kiểm tra toàn source trước khi peel; mọi manifest/snapshot lịch sử giữ nguyên. Regression sau sửa có cùng danh sách lỗi đã có ở baseline.
+
 Tối ưu tài nguyên 05/10/2026: không áp architectural refactor. Chỉ bốn module tài nguyên/UI và ba helper mới; gỡ đúng năm grid adapters/import phục hồi toàn AST MainWindow trước phase. Giữ worktree edits, sub/audio/ASR/dữ liệu và frozen manifests. Snapshot/adapter mới phục hồi gate lịch sử; phạm vi và đo trước/sau ghi ở [RESOURCE_PERFORMANCE_FIX.md](RESOURCE_PERFORMANCE_FIX.md).
 
 Audit tài nguyên 05/10/2026: chỉ thêm báo cáo/probe/snapshot mới, không áp refactor hoặc sửa code app. Quét cả tám ví dụ Python ignored; không thực thi chúng. Cache/grid được đo bằng production methods trong môi trường cô lập; toàn source và 49 file phụ đề/output/video đã tồn tại giữ nguyên. Hash 819/819 đầu probe đạt; kiểm tra cuối có cache/index/file mới cập nhật trong phiên và ghi riêng, không khẳng định cả storage bất biến. Những manifest cũ và worktree edits có sẵn không được recapture/rollback. Xem [APP_PERFORMANCE_REVIEW.md](APP_PERFORMANCE_REVIEW.md).

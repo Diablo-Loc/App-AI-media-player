@@ -218,6 +218,26 @@ def refine_lyrics(segments, max_chars=22, min_pause=0.54, start_offset=-0.2,
     return finalize_cue_times(output)
 
 
+def finalize_display_times(cues, cjk=False, duration=None):
+    """Apply playback margins once, after recognition and coverage are complete.
+
+    Coverage keeps the existing narrow word margins. Playback restores v3.1's
+    CJK onset (+100 ms from the word) and saved tails (370/700 ms). Latin cues
+    start at their word onset instead of adding the old early storage padding.
+    Only the outgoing tail is clipped at the next cue; no padded midpoint moves
+    that cue's onset. Very short cues retain room for their original text.
+    """
+    cues = finalize_cue_times(cues, duration=duration)
+    onset_shift = ONSET_LEAD + (0.1 if cjk else 0.0)
+    tail_shift = (0.37 if cjk else 0.7) - OFFSET_TAIL
+    output = []
+    for cue in cues:
+        start = min(cue["start"] + onset_shift,
+                    max(cue["start"], cue["end"] - 0.02))
+        output.append(dict(cue, start=start, end=cue["end"] + tail_shift))
+    return finalize_cue_times(output, duration=duration)
+
+
 def mark_final_timing(subtitles):
     """Runtime-only marker survives spawn/pickle; persisted schemas stay unchanged.
 

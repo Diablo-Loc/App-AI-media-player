@@ -1,0 +1,40 @@
+{
+  "app/ai/pipeline.py": {
+    "before_sha256": "c7f63094cf9ff127332ecfc660501df4dd4dab39e98fb3eb163f27a90980c2ef",
+    "after_sha256": "edd01bf6824b2a7420ac850c13e29c5ffc9d5762d38692a1906dab7fa08a0379",
+    "edits": [
+      {
+        "before": "        final_segments = finalize_cue_times(final_segments, duration=coverage.get(\"duration\"))\n",
+        "after": "        # Display margins belong after coverage, so they never change which\n        # vocal gaps trigger recovery or which recovered words are accepted.\n        from pipeline.lyric_refinement import finalize_display_times\n        final_segments = finalize_display_times(\n            final_segments, cjk=is_cjk, duration=coverage.get(\"duration\"))\n"
+      },
+      {
+        "before": "        except Exception as error:\n",
+        "after": "            # Align only already accepted text, after all coverage decisions.\n            # The loaded local model stays owned by this worker; no new ASR or\n            # provider request, and unreliable candidates keep the old timing.\n            from pipeline.lyric_timing import align_lyric_onsets\n            _check_cancel(cancel_cb)\n            _report(progress_cb, 58, \"⏱ Căn mốc lời hát\")\n            final_segments, timing_report = align_lyric_onsets(\n                model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)\n            print(f\"⏱ Căn mốc local: {timing_report['changed']} câu, \"\n                  f\"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.\")\n            if timing_report[\"errors\"] or timing_report[\"capped\"]:\n                print(\"ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.\")\n        except Exception as error:\n"
+      }
+    ]
+  },
+  "app/pipeline/lyric_refinement.py": {
+    "before_sha256": "2995a38643f8b2c69133b0f9f2a7a0633b8bcd1221b279e11d603e4d60de2fc5",
+    "after_sha256": "0e3cfc9ed3ea24c7fa6dcd14753a0c4c26a845934e9dfcee787939e9f19cac4d",
+    "edits": [
+      {
+        "before": "def mark_final_timing(subtitles):",
+        "after": "def finalize_display_times(cues, cjk=False, duration=None):\n    \"\"\"Apply playback margins once, after recognition and coverage are complete.\n\n    Coverage keeps the existing narrow word margins. Playback restores v3.1's\n    CJK onset (+100 ms from the word) and saved tails (370/700 ms). Latin cues\n    start at their word onset instead of adding the old early storage padding.\n    Only the outgoing tail is clipped at the next cue; no padded midpoint moves\n    that cue's onset. Very short cues retain room for their original text.\n    \"\"\"\n    cues = finalize_cue_times(cues, duration=duration)\n    onset_shift = ONSET_LEAD + (0.1 if cjk else 0.0)\n    tail_shift = (0.37 if cjk else 0.7) - OFFSET_TAIL\n    output = []\n    for cue in cues:\n        start = min(cue[\"start\"] + onset_shift,\n                    max(cue[\"start\"], cue[\"end\"] - 0.02))\n        output.append(dict(cue, start=start, end=cue[\"end\"] + tail_shift))\n    return finalize_cue_times(output, duration=duration)\n\n\ndef mark_final_timing(subtitles):"
+      }
+    ]
+  },
+  "tests/test_asr_coverage.py": {
+    "before_sha256": "998422dbe7e8181308d503a570325812e74c6e0394c9d9b8330801ff18f7bed6",
+    "after_sha256": "a0b2634457dec412c105aff6a6e28458d924511551bd64b9cfe8d230a31f538d",
+    "edits": [
+      {
+        "before": "self.assertEqual(rows(new)[0][:2], (0.95, 4.08))",
+        "after": "self.assertEqual(rows(new)[0][:2], (1.0, 4.7))"
+      },
+      {
+        "before": "writer([dict(start=0.95, end=4.08, text=\"A complete original line\")], expected)",
+        "after": "writer([dict(start=1.0, end=4.7, text=\"A complete original line\")], expected)"
+      }
+    ]
+  }
+}

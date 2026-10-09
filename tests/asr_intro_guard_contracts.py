@@ -13,6 +13,8 @@ _RELAXED_INTRO_NORMALIZED_SHA256 = (
 def before_asr_intro_guard_changes(relative, current=None, raw=False):
     if current is None:
         current = (ROOT / relative).read_bytes()
+    from tests.subtitle_display_timing_contracts import before_display_timing_changes
+    current = before_display_timing_changes(relative, current=current, raw=True)
     manifest = json.loads(
         (ROOT / "docs/asr-intro-guard/reviewed-sources.json").read_text(
             encoding="utf-8"

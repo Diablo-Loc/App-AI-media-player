@@ -1,5 +1,9 @@
 # Roadmap sau khi khôi phục app gốc
 
+Căn onset 09/10/2026: dùng model local đã nạp, giữ chữ/chia câu/recovery/API; chỉ dời các mốc sớm có alignment đủ tin cậy, đọc WAV theo cửa sổ và giữ mốc cũ khi lỗi/hết budget. SRT chỉ là benchmark: 38 nhóm câu giảm MAE đầu 441→239 ms, cuối 600→490 ms. Ba bài giữ đủ 42/31/49 câu; đoạn 5–9 s cũ không đổi. Chưa bảo đảm timestamp đúng mọi bài.
+
+Timing hiển thị 08/10/2026: đã sửa margin của sub mới sau bước recovery, đối chiếu v3.1 và hai bài local. Không đổi model/coverage/chia câu hay tự sửa file sub đã lưu. Phụ đề đã tạo trước sửa cần người dùng chủ động tạo lại để có mốc mới; độ đúng timestamp ASR theo giọng hát vẫn cần nghe đối chiếu, không bù bằng một delay toàn bài tùy ý.
+
 Online translation single-pass 06/10/2026: **đã ưu tiên lại tính ổn định và chi phí API**. Normal one-batch success chỉ gọi provider đúng một lần và dùng thẳng output đó; semantic near-repeat quality review đã được gỡ khỏi production. Chỉ incomplete-ID, transient 429/502/503/504 hoặc lyric quá lớn mới có thể phát sinh request bổ sung theo các giới hạn đã có. Xem [TRANSLATION_SINGLE_PASS.md](TRANSLATION_SINGLE_PASS.md).
 
 Semantic near-repeat review 06/10/2026: **đã khóa pattern model copy bản dịch refrain cũ cho cue dài hơn và làm mất phần source bổ sung**. Chỉ cue bị nghi mới có một same-provider review; full batch context vẫn được gửi để model tự sửa ASR/dịch nghĩa. Xem [TRANSLATION_SEMANTIC_REVIEW.md](TRANSLATION_SEMANTIC_REVIEW.md).

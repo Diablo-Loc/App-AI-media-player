@@ -1,5 +1,9 @@
 # Hợp đồng tính năng của baseline đã khôi phục
 
+Căn onset 09/10/2026: dùng model local đã nạp, giữ chữ/chia câu/recovery/API; chỉ dời các mốc sớm có alignment đủ tin cậy, đọc WAV theo cửa sổ và giữ mốc cũ khi lỗi/hết budget. SRT chỉ là benchmark: 38 nhóm câu giảm MAE đầu 441→239 ms, cuối 600→490 ms. Ba bài giữ đủ 42/31/49 câu; đoạn 5–9 s cũ không đổi. Chưa bảo đảm timestamp đúng mọi bài.
+
+Timing hiển thị 08/10/2026: chỉ lần tạo sub mới áp margin sau coverage: CJK bắt đầu ở word onset +100 ms, ngôn ngữ khác ở word onset; đuôi tối đa 370/700 ms như thời gian lưu v3.1, chặn ở câu tiếp theo/duration. Giữ nguyên nhận dạng, recovery intro, chia câu, chữ, API và sub đã lưu; static/effect dùng chung cue. 7 regression mới đạt, tạo thử local hai bài và thử Qt player hai video; 63 file sub giữ hash. Full suite không thêm lỗi so với baseline nhưng vẫn có 44 failure/6 error cũ, nên không coi là full pass hay chứng nhận timestamp Whisper đúng mọi bài.
+
 Online translation single-pass 06/10/2026: luồng dịch Online đã quay về kiểu ổn định gần bản backup: một batch thành công chỉ dùng một kết quả dịch của provider, không còn semantic review lần hai tự sửa câu đã dịch. Prompt vẫn giữ đủ nghĩa và độ dài lyric mềm; missing-ID repair, retry lỗi tạm thời và batching bài cực dài chỉ chạy khi thật sự cần recovery/giới hạn context. Xem [TRANSLATION_SINGLE_PASS.md](TRANSLATION_SINGLE_PASS.md).
 
 Semantic near-repeat review 06/10/2026: sau khi Online trả đủ batch, app phát hiện cue dài hơn chứa nguyên refrain ngắn hơn nhưng EN/VI lại bị copy y hệt, rồi yêu cầu chính provider Online review riêng cue dài với full batch context. Normal batch không có pattern này vẫn chỉ 1 request. Mục tiêu là chặn lỗi kiểu cue có thêm đuôi nhưng model bỏ đuôi và tái dùng bản dịch refrain cũ. Xem [TRANSLATION_SEMANTIC_REVIEW.md](TRANSLATION_SEMANTIC_REVIEW.md).
