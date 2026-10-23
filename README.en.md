@@ -1,8 +1,20 @@
 # BoTube · AI Media Player
 
+<p align="center">
+  <strong>Next-Gen AI Media Player for Windows with Neural ASR, Multi-LLM Translation & Kinetic Subtitle Engine</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=0078D4&label=Latest%20Release" alt="Latest Release"/></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11"/>
+  <img src="https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6 / Qt6"/>
+  <img src="https://img.shields.io/badge/AI_Engine-Faster--Whisper%20%2B%20CUDA-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA"/>
+</p>
+
 [Tiếng Việt](README.md) · **English**
 
-BoTube is a Windows music and video player with a media library, downloads, AI subtitle generation, translation, and subtitle editing. Its interface is built with Python and PySide6. Install the application with `BoTube_Setup.exe`, then download the AI libraries and models separately in Settings.
+BoTube is a next-generation Windows media player seamlessly combining local media organization, online media downloading, neural speech-to-text subtitle generation, multi-LLM translation, and professional subtitle editing. Featuring a modern interface built with Python and PySide6, BoTube can be easily installed via `BoTube_Setup.exe`, with AI models and acceleration libraries modularly managed in Settings.
 
 This README describes the latest version with **Lyrics** and **Dialogue / Film** modes. Older releases may not include all the features below. The application interface currently uses Vietnamese; instructions include the corresponding button labels where needed.
 

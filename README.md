@@ -1,8 +1,20 @@
 # BoTube · AI Media Player
 
+<p align="center">
+  <strong>Next-Gen AI Media Player for Windows with Neural ASR, Multi-LLM Translation & Kinetic Subtitle Engine</strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=0078D4&label=Latest%20Release" alt="Latest Release"/></a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11"/>
+  <img src="https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6 / Qt6"/>
+  <img src="https://img.shields.io/badge/AI_Engine-Faster--Whisper%20%2B%20CUDA-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA"/>
+</p>
+
 **Tiếng Việt** · [English](README.en.md)
 
-BoTube là ứng dụng phát nhạc và video trên Windows, kết hợp thư viện media, tải nội dung, tạo phụ đề bằng AI, dịch thuật và chỉnh sửa phụ đề. Giao diện được xây dựng bằng Python và PySide6. Có thể cài ứng dụng bằng `BoTube_Setup.exe`; thư viện AI và model được tải riêng trong Settings.
+BoTube là ứng dụng phát nhạc và video thế hệ mới trên Windows, kết hợp toàn diện giữa thư viện media cục bộ, tải nội dung trực tuyến, tạo phụ đề tự động bằng AI, dịch thuật đa mô hình và biên tập phụ đề chuyên nghiệp. Giao diện hiện đại được xây dựng tối ưu bằng Python và PySide6. Người dùng có thể cài đặt dễ dàng bằng `BoTube_Setup.exe`; các mô hình AI và thư viện tăng tốc được tải linh hoạt trong phần Cài đặt.
 
 README này mô tả bản mới nhất có hai chế độ **Lời bài hát** và **Hội thoại / Phim**. Các bản cũ có thể chưa có đầy đủ tính năng bên dưới.
 
