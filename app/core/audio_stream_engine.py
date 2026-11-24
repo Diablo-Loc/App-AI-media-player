@@ -1,5 +1,4 @@
-"""Zero-disk 64-bit FFmpeg -> RAM ring buffer -> WASAPI Shared/Exclusive audio engine."""
-from collections import deque
+"""Zero-disk 64-bit FFmpeg -> RAM pre-buffer -> GIL-free C-blocking WASAPI Shared/Exclusive engine."""
 import logging
 import os
 import subprocess
@@ -12,6 +11,12 @@ from core.audio_profile import AudioProfile, build_realtime_filter_graph
 
 logger = logging.getLogger(__name__)
 
+# Precomputed 65536-sample TPDF dither table (~256 KB RAM) for fast, zero-allocation quantization.
+_TPDF_TABLE = (
+    np.random.default_rng(20261124).random(65536, dtype=np.float32)
+    - np.random.default_rng(20261125).random(65536, dtype=np.float32)
+)
+
 
 def is_stream_engine_available():
     """Return True when sounddevice/PortAudio and FFmpeg are usable."""
@@ -23,7 +28,22 @@ def is_stream_engine_available():
         return False
 
 
-def quantize_pcm(samples_f32: np.ndarray, dtype: str, rng: np.random.Generator | None = None) -> bytes:
+def _tpdf_slice(shape, offset: int) -> np.ndarray:
+    total = int(shape[0]) * int(shape[1])
+    tbl_len = len(_TPDF_TABLE)
+    start = offset % tbl_len
+    if start + total <= tbl_len:
+        return _TPDF_TABLE[start:start + total].reshape(shape)
+    idx = (np.arange(total, dtype=np.int64) + start) % tbl_len
+    return _TPDF_TABLE[idx].reshape(shape)
+
+
+def quantize_pcm(
+    samples_f32: np.ndarray,
+    dtype: str,
+    rng: np.random.Generator | None = None,
+    dither_offset: int = 0,
+) -> bytes:
     """Quantize stereo float32 [-1, 1] frames to target DAC format with optional TPDF dither."""
     if samples_f32.size == 0:
         return b''
@@ -31,24 +51,23 @@ def quantize_pcm(samples_f32: np.ndarray, dtype: str, rng: np.random.Generator |
     if dtype == 'float32':
         return np.clip(arr, -1.0, 1.0).astype('<f4', copy=False).tobytes()
 
-    if dtype == 'int32':
+    def _dither(lsb_scale: float) -> np.ndarray:
         if rng is not None:
-            dither = (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * (1.0 / 2147483647.0)
-            arr = arr + dither
+            return (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * lsb_scale
+        return _tpdf_slice(arr.shape, dither_offset) * lsb_scale
+
+    if dtype == 'int32':
+        arr = arr + _dither(1.0 / 2147483647.0)
         scaled = np.clip(arr * 2147483647.0, -2147483648.0, 2147483647.0)
         return scaled.astype('<i4').tobytes()
 
     if dtype == 'int24':
-        if rng is not None:
-            dither = (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * (1.0 / 8388607.0)
-            arr = arr + dither
+        arr = arr + _dither(1.0 / 8388607.0)
         scaled = np.clip(arr * 8388607.0, -8388608.0, 8388607.0).astype('<i4')
         return scaled.view(np.uint8).reshape(-1, 4)[:, :3].tobytes()
 
     if dtype == 'int16':
-        if rng is not None:
-            dither = (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * (1.0 / 32767.0)
-            arr = arr + dither
+        arr = arr + _dither(1.0 / 32767.0)
         scaled = np.clip(arr * 32767.0, -32768.0, 32767.0)
         return scaled.astype('<i2').tobytes()
 
@@ -115,69 +134,11 @@ def select_wasapi_device(sd, preferred_name: str = ''):
     return idx, sd.query_devices(idx)
 
 
-class _AudioRingBuffer:
-    """Bounded in-RAM FIFO of float32 stereo frames with backpressure."""
-
-    def __init__(self, capacity_frames: int):
-        self.capacity = max(2048, int(capacity_frames))
-        self._chunks: deque[np.ndarray] = deque()
-        self._head_offset = 0
-        self._frames = 0
-        self._eof = False
-        self._closed = False
-        self._cond = threading.Condition()
-
-    def push(self, chunk: np.ndarray, cancel_event: threading.Event) -> bool:
-        if len(chunk) == 0:
-            return True
-        with self._cond:
-            while self._frames >= self.capacity and not self._closed and not cancel_event.is_set():
-                self._cond.wait(timeout=0.05)
-            if self._closed or cancel_event.is_set():
-                return False
-            self._chunks.append(chunk)
-            self._frames += len(chunk)
-            self._cond.notify_all()
-            return True
-
-    def mark_eof(self):
-        with self._cond:
-            self._eof = True
-            self._cond.notify_all()
-
-    def pop(self, count: int) -> tuple[np.ndarray, int, bool]:
-        """Non-blocking pop of up to `count` stereo float32 frames for the WASAPI callback."""
-        with self._cond:
-            if self._frames == 0:
-                return np.zeros((count, 2), dtype=np.float32), 0, self._eof
-            out = np.zeros((count, 2), dtype=np.float32)
-            filled = 0
-            while filled < count and self._chunks:
-                head = self._chunks[0]
-                avail = len(head) - self._head_offset
-                take = min(count - filled, avail)
-                out[filled:filled + take] = head[self._head_offset:self._head_offset + take]
-                filled += take
-                self._head_offset += take
-                self._frames -= take
-                if self._head_offset >= len(head):
-                    self._chunks.popleft()
-                    self._head_offset = 0
-            eof_reached = self._eof and self._frames == 0
-            self._cond.notify_all()
-            return out, filled, eof_reached
-
-    def close(self):
-        with self._cond:
-            self._closed = True
-            self._chunks.clear()
-            self._head_offset = 0
-            self._frames = 0
-            self._cond.notify_all()
-
-
 class AudioStreamEngine:
-    """Real-time FFmpeg 64-bit DSP pipe feeding WASAPI Shared or Exclusive."""
+    """Zero-disk FFmpeg 64-bit DSP pipe feeding C-blocking WASAPI Shared or Exclusive."""
+
+    _CHUNK_FRAMES = 2048
+    _PREBUFFER_CHUNKS = 3  # ~128 ms pre-buffered before starting hardware DAC stream
 
     def __init__(self, on_before_exclusive=None, on_after_exclusive=None):
         self._lock = threading.RLock()
@@ -185,17 +146,15 @@ class AudioStreamEngine:
         self._on_after_exclusive = on_after_exclusive
 
         self._op_id = 0
-        self._stream = None
-        self._proc: subprocess.Popen | None = None
-        self._reader_thread: threading.Thread | None = None
-        self._stop_event = threading.Event()
-        self._ring: _AudioRingBuffer | None = None
+        self._writer_thread: threading.Thread | None = None
+        self._cancel_event = threading.Event()
+        self._active_proc: subprocess.Popen | None = None
+        self._active_stream = None
 
         self._user_volume = 0.5
         self._muted = False
         self._trim_linear = 1.0
         self._current_amp = 0.0
-        self._fading_out = False
 
         self._playing = False
         self._paused = False
@@ -210,8 +169,8 @@ class AudioStreamEngine:
         self._actual_mode = 'shared'
         self._fallback_reason = ''
         self._filter_summary = {}
+        self._underflows = 0
 
-        # Active source parameters for resume/seek/reconfigure.
         self._source_path = ''
         self._profile = AudioProfile()
         self._source_info = None
@@ -231,7 +190,7 @@ class AudioStreamEngine:
 
     def is_active(self) -> bool:
         with self._lock:
-            return self._playing and not self._paused and self._stream is not None
+            return self._playing and not self._paused and self._active_stream is not None
 
     def position_ms(self) -> int:
         with self._lock:
@@ -251,40 +210,10 @@ class AudioStreamEngine:
                 'dtype': self._out_dtype,
                 'fallback_reason': self._fallback_reason,
                 'filter_summary': dict(self._filter_summary),
+                'underflows': self._underflows,
             }
 
-    def _make_callback(self, ring: _AudioRingBuffer, sr: int, dtype: str, stop_event: threading.Event):
-        local_rng = np.random.default_rng() if dtype != 'float32' else None
-        fade_samples = max(1, int(0.012 * sr))
-
-        def _callback(outdata, frames, _time_info, _status):
-            # Strictly wait-free relative to self._lock so Pa_AbortStream/Pa_StopStream can never deadlock.
-            pcm, popped, _ = ring.pop(frames)
-            if stop_event.is_set() or self._fading_out or self._muted or not self._playing or self._paused:
-                target_amp = 0.0
-            else:
-                target_amp = self._user_volume * self._trim_linear
-            if popped > 0:
-                self._played_frames += popped
-            processed, end_amp = apply_micro_fade(pcm, self._current_amp, target_amp, fade_samples)
-            self._current_amp = end_amp
-            raw_bytes = quantize_pcm(processed, dtype, rng=local_rng)
-            expected = len(outdata)
-            if len(raw_bytes) >= expected:
-                outdata[:] = raw_bytes[:expected]
-            else:
-                outdata[:len(raw_bytes)] = raw_bytes
-                outdata[len(raw_bytes):] = b'\x00' * (expected - len(raw_bytes))
-
-        return _callback
-
-    def _open_wasapi_stream(
-        self,
-        profile: AudioProfile,
-        source_info: dict | None,
-        preferred_device: str,
-        stop_event: threading.Event,
-    ):
+    def _open_wasapi_stream(self, profile: AudioProfile, source_info: dict | None, preferred_device: str):
         import sounddevice as sd
 
         dev_idx, dev_info = select_wasapi_device(sd, preferred_device)
@@ -310,26 +239,20 @@ class AudioStreamEngine:
             for sr in rates:
                 for dtype in ('int32', 'int24', 'float32', 'int16'):
                     stream = None
-                    ring = _AudioRingBuffer(int(sr * 0.40))
                     try:
+                        # No Python callback: PortAudio runs WASAPI Exclusive pump in pure C!
                         stream = sd.RawOutputStream(
                             device=dev_idx,
                             channels=2,
                             dtype=dtype,
                             samplerate=sr,
-                            latency=0.025,
+                            blocksize=0,
+                            latency=0.10,
                             extra_settings=sd.WasapiSettings(exclusive=True),
-                            callback=self._make_callback(ring, sr, dtype, stop_event),
                         )
-                        stream.start()
-                        return stream, ring, dev_name, sr, dtype, 'exclusive', ''
+                        return stream, dev_name, sr, dtype, 'exclusive', ''
                     except Exception:
-                        ring.close()
                         if stream is not None:
-                            try:
-                                stream.abort()
-                            except Exception:
-                                pass
                             try:
                                 stream.close()
                             except Exception:
@@ -357,27 +280,20 @@ class AudioStreamEngine:
 
         for sr in (dev_sr, 48000, 44100):
             stream = None
-            ring = _AudioRingBuffer(int(sr * 0.40))
             try:
                 stream = sd.RawOutputStream(
                     device=dev_idx,
                     channels=2,
                     dtype='float32',
                     samplerate=sr,
-                    latency=0.035,
+                    blocksize=0,
+                    latency=0.16,
                     extra_settings=sd.WasapiSettings(exclusive=False),
-                    callback=self._make_callback(ring, sr, 'float32', stop_event),
                 )
-                stream.start()
                 actual_mode = 'shared_fallback' if fallback_reason else 'shared'
-                return stream, ring, dev_name, sr, 'float32', actual_mode, fallback_reason
+                return stream, dev_name, sr, 'float32', actual_mode, fallback_reason
             except Exception:
-                ring.close()
                 if stream is not None:
-                    try:
-                        stream.abort()
-                    except Exception:
-                        pass
                     try:
                         stream.close()
                     except Exception:
@@ -405,56 +321,104 @@ class AudioStreamEngine:
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
-            bufsize=65536,
+            bufsize=131072,
             creationflags=flags,
         )
 
-    def _reader_loop(self, proc: subprocess.Popen, ring: _AudioRingBuffer, cancel_event: threading.Event):
-        chunk_bytes = 2048 * 2 * 4
-        leftover = b''
+    @staticmethod
+    def _read_exact(stdout, size: int, cancel_event: threading.Event) -> bytes:
+        chunks = []
+        remaining = size
+        while remaining > 0 and not cancel_event.is_set():
+            part = stdout.read(remaining)
+            if not part:
+                break
+            chunks.append(part)
+            remaining -= len(part)
+        return b''.join(chunks)
+
+    def _writer_loop(
+        self,
+        op_id: int,
+        stream,
+        proc: subprocess.Popen,
+        out_sr: int,
+        out_dtype: str,
+        cancel_event: threading.Event,
+    ):
+        chunk_bytes = self._CHUNK_FRAMES * 2 * 4
+        fade_samples = max(1, int(0.012 * out_sr))
+        dither_offset = 0
+        current_amp = 0.0
+        started = False
         try:
             stdout = proc.stdout
             if stdout is None:
                 return
-            while not cancel_event.is_set():
-                data = stdout.read(chunk_bytes)
-                if not data:
+
+            # Pre-buffer ~128ms of decoded 64-bit DSP audio in RAM BEFORE starting DAC stream.
+            prebuffer = []
+            while len(prebuffer) < self._PREBUFFER_CHUNKS and not cancel_event.is_set():
+                raw = self._read_exact(stdout, chunk_bytes, cancel_event)
+                if not raw:
                     break
-                buf = leftover + data
-                usable = len(buf) - (len(buf) % 8)
-                leftover = buf[usable:]
+                usable = len(raw) - (len(raw) % 8)
                 if usable > 0:
-                    frames = np.frombuffer(buf[:usable], dtype='<f4').reshape(-1, 2).copy()
-                    if not ring.push(frames, cancel_event):
+                    prebuffer.append(np.frombuffer(raw[:usable], dtype='<f4').reshape(-1, 2).copy())
+                if len(raw) < chunk_bytes:
+                    break
+
+            if cancel_event.is_set() or op_id != self._op_id or not prebuffer:
+                return
+
+            stream.start()
+            started = True
+
+            def _emit_chunk(pcm: np.ndarray) -> bool:
+                nonlocal current_amp, dither_offset
+                with self._lock:
+                    if cancel_event.is_set() or op_id != self._op_id or self._muted or not self._playing or self._paused:
+                        target_amp = 0.0
+                    else:
+                        target_amp = self._user_volume * self._trim_linear
+                processed, current_amp = apply_micro_fade(pcm, current_amp, target_amp, fade_samples)
+                raw_bytes = quantize_pcm(processed, out_dtype, rng=None, dither_offset=dither_offset)
+                dither_offset = (dither_offset + pcm.size) % len(_TPDF_TABLE)
+                uf = stream.write(raw_bytes)
+                with self._lock:
+                    self._current_amp = current_amp
+                    if op_id == self._op_id:
+                        self._played_frames += len(pcm)
+                        if uf:
+                            self._underflows += 1
+                return not (cancel_event.is_set() or op_id != self._op_id)
+
+            for chunk in prebuffer:
+                if not _emit_chunk(chunk):
+                    return
+
+            while not cancel_event.is_set() and op_id == self._op_id:
+                raw = self._read_exact(stdout, chunk_bytes, cancel_event)
+                if not raw:
+                    break
+                usable = len(raw) - (len(raw) % 8)
+                if usable > 0:
+                    pcm = np.frombuffer(raw[:usable], dtype='<f4').reshape(-1, 2).copy()
+                    if not _emit_chunk(pcm):
                         break
+                if len(raw) < chunk_bytes:
+                    break
         except Exception as err:
-            logger.debug('AudioStreamEngine reader stopped: %s', err)
+            logger.debug('AudioStreamEngine writer exited: %s', err)
         finally:
-            ring.mark_eof()
-
-    def _detach_locked(self, release_exclusive: bool):
-        stop_event = self._stop_event
-        ring = self._ring
-        proc = self._proc
-        thread = self._reader_thread
-        stream = self._stream
-        release_excl = bool(release_exclusive and self._exclusive_held)
-        if release_excl:
-            self._exclusive_held = False
-        self._ring = None
-        self._proc = None
-        self._reader_thread = None
-        self._stream = None
-        return (stop_event, ring, proc, thread, stream, release_excl)
-
-    def _close_detached(self, detached):
-        """Must always run OUTSIDE self._lock so PortAudio callback threads never deadlock."""
-        stop_event, ring, proc, thread, stream, release_excl = detached
-        if stop_event is not None:
-            stop_event.set()
-        if ring is not None:
-            ring.close()
-        if stream is not None:
+            # Smooth 12ms fade-out tail if stream started and was paused/stopped cleanly.
+            if started and current_amp > 1e-4:
+                try:
+                    tail = np.zeros((fade_samples, 2), dtype=np.float32)
+                    raw_tail = quantize_pcm(tail, out_dtype, rng=None, dither_offset=dither_offset)
+                    stream.write(raw_tail)
+                except Exception:
+                    pass
             try:
                 stream.abort()
             except Exception:
@@ -463,7 +427,6 @@ class AudioStreamEngine:
                 stream.close()
             except Exception:
                 pass
-        if proc is not None:
             try:
                 if proc.poll() is None:
                     proc.kill()
@@ -475,8 +438,46 @@ class AudioStreamEngine:
                     proc.stdout.close()
             except Exception:
                 pass
+
+    def _stop_active_worker(self, release_exclusive: bool = True):
+        with self._lock:
+            cancel_ev = self._cancel_event
+            proc = self._active_proc
+            stream = self._active_stream
+            thread = self._writer_thread
+            release_excl = bool(release_exclusive and self._exclusive_held)
+            if release_excl:
+                self._exclusive_held = False
+            self._active_proc = None
+            self._active_stream = None
+            self._writer_thread = None
+
+        if cancel_ev is not None:
+            cancel_ev.set()
+        if proc is not None:
+            try:
+                if proc.poll() is None:
+                    proc.kill()
+            except Exception:
+                pass
         if thread is not None and thread is not threading.current_thread():
-            thread.join(timeout=1.0)
+            thread.join(timeout=0.35)
+            if thread.is_alive() and stream is not None:
+                try:
+                    stream.abort()
+                except Exception:
+                    pass
+                thread.join(timeout=0.65)
+        elif stream is not None:
+            try:
+                stream.abort()
+            except Exception:
+                pass
+            try:
+                stream.close()
+            except Exception:
+                pass
+
         if release_excl and self._on_after_exclusive is not None:
             try:
                 self._on_after_exclusive()
@@ -495,7 +496,7 @@ class AudioStreamEngine:
         preferred_device_name: str = '',
         paused: bool = False,
     ) -> dict:
-        """Start or seamlessly reconfigure the in-RAM DSP + WASAPI pipeline."""
+        """Start or seamlessly reconfigure the in-RAM DSP + C-blocking WASAPI pipeline."""
         with self._lock:
             self._op_id += 1
             op_id = self._op_id
@@ -509,19 +510,16 @@ class AudioStreamEngine:
             self._start_ms = float(max(0, int(start_ms)))
             self._played_frames = 0
             self._trim_linear = 1.0
-            self._fading_out = False
+            self._underflows = 0
             self._paused = bool(paused)
             self._playing = True
-            detached = self._detach_locked(release_exclusive=paused)
 
-        self._close_detached(detached)
-
+        self._stop_active_worker(release_exclusive=paused)
         if paused:
             return self.status_info()
 
-        stop_event = threading.Event()
-        stream, ring, dev_name, out_sr, out_dtype, actual_mode, fallback_reason = self._open_wasapi_stream(
-            profile, source_info, preferred_device_name or '', stop_event
+        stream, dev_name, out_sr, out_dtype, actual_mode, fallback_reason = self._open_wasapi_stream(
+            profile, source_info, preferred_device_name or ''
         )
         filter_graph, summary = build_realtime_filter_graph(
             profile,
@@ -531,19 +529,23 @@ class AudioStreamEngine:
             playback_rate=max(0.25, min(4.0, float(playback_rate or 1.0))),
         )
         proc = self._spawn_ffmpeg(str(source_path), max(0, int(start_ms)), int(track), filter_graph)
+        cancel_event = threading.Event()
         thread = threading.Thread(
-            target=self._reader_loop,
-            args=(proc, ring, stop_event),
-            name='BoTube-HiFi-DSP-Pipe',
+            target=self._writer_loop,
+            args=(op_id, stream, proc, out_sr, out_dtype, cancel_event),
+            name='BoTube-HiFi-WASAPI-Pump',
             daemon=True,
         )
 
         with self._lock:
             if op_id != self._op_id or not self._playing or self._paused:
-                # Superseded while opening stream -> abort cleanly outside lock.
-                superseded = (stop_event, ring, proc, None, stream, False)
+                superseded = True
             else:
-                self._stop_event = stop_event
+                superseded = False
+                self._cancel_event = cancel_event
+                self._active_stream = stream
+                self._active_proc = proc
+                self._writer_thread = thread
                 self._current_amp = 0.0
                 self._out_sr = out_sr
                 self._out_dtype = out_dtype
@@ -551,14 +553,19 @@ class AudioStreamEngine:
                 self._actual_mode = actual_mode
                 self._fallback_reason = fallback_reason
                 self._filter_summary = summary
-                self._ring = ring
-                self._proc = proc
-                self._stream = stream
-                self._reader_thread = thread
-                superseded = None
 
-        if superseded is not None:
-            self._close_detached(superseded)
+        if superseded:
+            cancel_event.set()
+            try:
+                stream.close()
+            except Exception:
+                pass
+            try:
+                if proc.poll() is None:
+                    proc.kill()
+                proc.wait(timeout=1.0)
+            except Exception:
+                pass
             return self.status_info()
 
         thread.start()
@@ -569,16 +576,10 @@ class AudioStreamEngine:
             if not self._playing or self._paused:
                 return
             self._op_id += 1
-            self._fading_out = True
             self._paused = True
             self._start_ms = float(self.position_ms())
             self._played_frames = 0
-            has_stream = self._stream is not None
-        if has_stream:
-            threading.Event().wait(0.018)
-        with self._lock:
-            detached = self._detach_locked(release_exclusive=True)
-        self._close_detached(detached)
+        self._stop_active_worker(release_exclusive=True)
 
     def resume(self, current_pos_ms: int | None = None):
         with self._lock:
@@ -623,9 +624,7 @@ class AudioStreamEngine:
             self._op_id += 1
             self._playing = False
             self._paused = False
-            self._fading_out = True
-            detached = self._detach_locked(release_exclusive=True)
-        self._close_detached(detached)
+        self._stop_active_worker(release_exclusive=True)
 
     def shutdown(self):
         self.stop()

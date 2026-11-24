@@ -202,7 +202,7 @@ class AudioEffectsController(QObject):
         self._original = self.player.source()
         self._track = 0
         self._failed_request = None
-        self._last_player_pos = 0
+        self._last_pos_sample = None
         self._last_sync_at = 0.0
 
         self._request_timer = QTimer(self)
@@ -216,7 +216,7 @@ class AudioEffectsController(QObject):
         self._seek_timer.timeout.connect(self._commit_seek)
 
         self._sync_timer = QTimer(self)
-        self._sync_timer.setInterval(250)
+        self._sync_timer.setInterval(500)
         self._sync_timer.timeout.connect(self._sync_tick)
 
         self._device_timer = QTimer(self)
@@ -231,7 +231,6 @@ class AudioEffectsController(QObject):
         self.player.positionChanged.connect(self._position_changed)
 
         slider = window.playback_bar.time_slider
-        slider.sliderMoved.connect(self._seek_requested)
         slider.sliderReleased.connect(lambda: self._seek_requested(slider.value()))
 
         if hasattr(window, 'audio_devices') and hasattr(window.audio_devices, 'audioOutputsChanged'):
@@ -361,18 +360,30 @@ class AudioEffectsController(QObject):
         self._save_profile()
         self._refresh_gain_live()
 
+    def _resolve_current_gain(self):
+        if self._measurement is not None:
+            return compute_mastering_gain_db(
+                self._measurement,
+                self.target_lufs,
+                self.profile.normalize,
+                exclusive=(self.profile.output_mode == 'exclusive'),
+            )
+        if self.profile.normalize:
+            return -1.5, False
+        return compute_mastering_gain_db(
+            None,
+            self.target_lufs,
+            False,
+            exclusive=(self.profile.output_mode == 'exclusive'),
+        )
+
     def _refresh_gain_live(self):
         if self._closed:
             return
         if not self._use_stream_engine():
             self._apply_qt_normalization(ramp=True)
             return
-        gain_db, limited = compute_mastering_gain_db(
-            self._measurement,
-            self.target_lufs,
-            self.profile.normalize,
-            exclusive=(self.profile.output_mode == 'exclusive'),
-        )
+        gain_db, limited = self._resolve_current_gain()
         self._applied_gain_db = gain_db
         self._gain_limited = limited
         if self.stream.is_active():
@@ -488,7 +499,7 @@ class AudioEffectsController(QObject):
         self._initial_gain_db = 0.0
         self._applied_gain_db = 0.0
         self._gain_limited = False
-        self._last_player_pos = 0
+        self._last_pos_sample = None
 
         self._sync_qt_audio_routing()
         if self._use_stream_engine():
@@ -545,11 +556,6 @@ class AudioEffectsController(QObject):
         self._source_info = source_info
         if cached_meas is not None:
             self._measurement = cached_meas
-        duration = float((source_info or {}).get('duration') or 0.0)
-        # If normalized & uncached on a normal-length track, wait ~70ms for quick_measured so 0.0s is already balanced!
-        if cached_meas is None and self.profile.normalize and duration > 16.0:
-            self._update_signal_path()
-            return
         self._start_or_reconfigure_stream()
 
     def _on_quick_measured(self, generation, quick_meas):
@@ -566,12 +572,7 @@ class AudioEffectsController(QObject):
         if self._closed or not self._use_stream_engine():
             return
         source_path = self._original.toLocalFile()
-        gain_db, limited = compute_mastering_gain_db(
-            self._measurement,
-            self.target_lufs,
-            self.profile.normalize,
-            exclusive=(self.profile.output_mode == 'exclusive'),
-        )
+        gain_db, limited = self._resolve_current_gain()
         self._initial_gain_db = gain_db
         self._applied_gain_db = gain_db
         self._gain_limited = limited
@@ -661,6 +662,7 @@ class AudioEffectsController(QObject):
     def _playback_state(self, state):
         if self._closed or not self._use_stream_engine():
             return
+        self._last_pos_sample = None
         if state == QMediaPlayer.PlaybackState.PlayingState:
             if self._source_info is not None:
                 if self.stream.status_info().get('paused'):
@@ -691,16 +693,22 @@ class AudioEffectsController(QObject):
         if self._closed or not self._use_stream_engine():
             return
         pos = self.player.position()
-        self._last_player_pos = pos
+        self._last_pos_sample = (pos, time.monotonic())
         self._last_sync_at = time.monotonic()
         self.stream.seek(pos)
 
     def _position_changed(self, position):
         if self._closed or not self._use_stream_engine():
             return
-        jump = abs(position - self._last_player_pos)
-        self._last_player_pos = position
-        if jump > 650 and not self.window.playback_bar.time_slider.isSliderDown():
+        now = time.monotonic()
+        prev = self._last_pos_sample
+        self._last_pos_sample = (position, now)
+        if prev is None or self.window.playback_bar.time_slider.isSliderDown():
+            return
+        if now - self._last_sync_at < 1.2:
+            return
+        expected = (now - prev[1]) * float(self.player.playbackRate() or 1.0) * 1000.0
+        if abs((position - prev[0]) - expected) > 1800:
             self._seek_timer.start()
 
     def _sync_tick(self):
@@ -710,10 +718,10 @@ class AudioEffectsController(QObject):
             return
         if self.window.playback_bar.time_slider.isSliderDown():
             return
-        if time.monotonic() - self._last_sync_at < 1.5:
+        if time.monotonic() - self._last_sync_at < 8.0:
             return
         drift = abs(self.player.position() - self.stream.position_ms())
-        if drift > 85 and self.player.position() > 150:
+        if drift > 2500 and self.player.position() > 2500:
             self._last_sync_at = time.monotonic()
             self.stream.seek(self.player.position())
 

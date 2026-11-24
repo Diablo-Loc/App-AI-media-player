@@ -9,10 +9,10 @@ TARGET_LUFS = -18.0
 DEFAULT_TARGET_LUFS = -16
 VALID_TARGETS = (-16, -14, -18)
 PEAK_CEILING_DB = -1.7  # Legacy v1 constant preserved for compatibility.
-CS43198_CEILING_DB = -1.5
-CS43198_LIMIT_LINEAR = round(10 ** (CS43198_CEILING_DB / 20.0), 6)  # 0.841395
+CS43198_CEILING_DB = -1.0
+CS43198_EXCLUSIVE_CEILING_DB = -1.2
+CS43198_LIMIT_LINEAR = round(10 ** (CS43198_CEILING_DB / 20.0), 6)  # 0.891251
 MAX_BOOST_DB = 12.0
-MAX_LIMITER_DRIVE_DB = 4.5
 
 OUTPUT_MODES = ('shared', 'exclusive')
 RESTORER_MODES = ('off', 'auto', 'natural', 'vivid')
@@ -26,16 +26,18 @@ LOSSLESS_CODECS = frozenset({
 
 TONES = {
     'off': '',
-    # Moondrop Aria 2 + Dawn Pro 2 Reference: 64-bit float linear biquad polish.
-    'aria2': 'bass=f=55:t=q:w=0.707:g=1.3:r=f64,'
-             'equalizer=f=215:t=q:w=1.1:g=-0.8:r=f64,'
-             'equalizer=f=3100:t=q:w=1.2:g=0.5:r=f64,'
-             'equalizer=f=8000:t=q:w=2.5:g=-1.1:r=f64,'
-             'treble=f=13500:t=q:w=0.707:g=1.3:r=f64',
-    'vocal_clear': 'equalizer=f=185:t=q:w=1.0:g=-1.0:r=f64,'
-                   'equalizer=f=2850:t=q:w=1.1:g=1.0:r=f64,'
-                   'equalizer=f=7800:t=q:w=2.2:g=-0.8:r=f64,'
-                   'treble=f=12500:t=q:w=0.707:g=1.1:r=f64',
+    # Moondrop Aria 2 + Dawn Pro 2 Reference: 64-bit minimum-phase biquads, 1 kHz = 0.0 dB.
+    'aria2': 'highpass=f=20:poles=2,'
+             'equalizer=f=52:t=q:w=0.75:g=1.8:r=f64,'
+             'equalizer=f=220:t=q:w=1.2:g=-0.8:r=f64,'
+             'equalizer=f=2900:t=q:w=1.3:g=0.5:r=f64,'
+             'equalizer=f=8000:t=q:w=3.0:g=-1.2:r=f64,'
+             'treble=f=13000:t=q:w=0.707:g=1.4:r=f64',
+    'vocal_clear': 'highpass=f=25:poles=2,'
+                   'equalizer=f=190:t=q:w=1.1:g=-0.9:r=f64,'
+                   'equalizer=f=2850:t=q:w=1.1:g=1.1:r=f64,'
+                   'equalizer=f=7800:t=q:w=2.5:g=-0.8:r=f64,'
+                   'treble=f=12500:t=q:w=0.707:g=1.2:r=f64',
     'gentle': 'equalizer=f=3200:t=q:w=0.8:g=-2.5:r=f64,treble=f=8000:g=-1.5:r=f64',
     'balanced': 'equalizer=f=3500:t=q:w=1:g=-1.2:r=f64,treble=f=10000:g=-0.7:r=f64',
     'warm': 'equalizer=f=280:t=q:w=0.7:g=-0.7:r=f64,'
@@ -51,8 +53,6 @@ TONES = {
 }
 
 TONE_PREAMP_DB = {
-    'aria2': -1.4,
-    'vocal_clear': -1.2,
     'easy': -1.5,
     'easy_headphones': -1.5,
 }
@@ -161,7 +161,7 @@ def render_filter(profile, decision, sample_rate=48000, channels=2):
 
 
 def resolve_restorer(profile: AudioProfile, source_info: dict | None) -> dict | None:
-    """Decide whether and how strongly to run DSEE-style lossy high-frequency & transient restoration."""
+    """Select phase-clean 64-bit contour compensation for compressed audio; bypass lossless."""
     mode = getattr(profile, 'restorer', 'off')
     if mode == 'off':
         return None
@@ -170,21 +170,21 @@ def resolve_restorer(profile: AudioProfile, source_info: dict | None) -> dict | 
         if sr < 32000:
             return None
     if mode == 'natural':
-        return {'mode': 'Natural', 'air_db': -22.5, 'crystalizer': 1.18}
+        return {'mode': 'Natural', 'sub_db': 0.8, 'mud_db': -0.6, 'pres_db': 0.6, 'air_db': 1.5}
     if mode == 'vivid':
-        return {'mode': 'Vivid', 'air_db': -18.5, 'crystalizer': 1.50}
-    # Auto mode: restore compressed MP3/AAC <= 192 kbps, strictly bypass lossless & high-bitrate streams.
+        return {'mode': 'Vivid', 'sub_db': 1.2, 'mud_db': -1.0, 'pres_db': 1.0, 'air_db': 2.4}
+    # Auto mode: polish compressed MP3/AAC <= 192 kbps, strictly bypass lossless & high-bitrate streams.
     codec = str((source_info or {}).get('codec_name') or '').lower()
     bit_rate = int((source_info or {}).get('bit_rate') or 0)
     if codec in LOSSLESS_CODECS or codec.startswith('pcm_') or codec.startswith('dsd_'):
         return None
     kbps = bit_rate / 1000.0 if bit_rate > 0 else 0.0
     if 0 < kbps <= 140.0:
-        return {'mode': 'Auto (≤128k)', 'air_db': -19.5, 'crystalizer': 1.38}
+        return {'mode': 'Auto (≤128k)', 'sub_db': 1.0, 'mud_db': -0.8, 'pres_db': 0.7, 'air_db': 1.8}
     if 140.0 < kbps <= 196.0 or (codec == 'mp3' and 0 < kbps <= 224.0) or (
         kbps == 0 and codec in {'mp3', 'aac', 'vorbis'}
     ):
-        return {'mode': 'Auto (Lossy)', 'air_db': -22.5, 'crystalizer': 1.15}
+        return {'mode': 'Auto (Lossy)', 'sub_db': 0.6, 'mud_db': -0.5, 'pres_db': 0.5, 'air_db': 1.2}
     return None
 
 
@@ -193,8 +193,10 @@ def compute_mastering_gain_db(
     target_lufs: float,
     normalize: bool,
     exclusive: bool = False,
+    headroom_pad_db: float = 0.0,
 ) -> tuple[float, bool]:
-    """Compute 64-bit float pre-gain allowing lookahead limiter headroom for CS43198 intersample protection."""
+    """ReplayGain 2.0 / Roon pure linear gain preserving 100% transient dynamics and CS43198 headroom."""
+    ceiling = CS43198_EXCLUSIVE_CEILING_DB if exclusive else CS43198_CEILING_DB
     lufs = None
     peak_db = None
     if isinstance(measurement, dict):
@@ -210,15 +212,15 @@ def compute_mastering_gain_db(
             return 0.0, False
         desired = max(-24.0, min(MAX_BOOST_DB, float(target_lufs) - lufs))
         if peak_db is not None:
-            max_allowed = (CS43198_CEILING_DB + MAX_LIMITER_DRIVE_DB) - peak_db
-            actual = min(desired, max_allowed)
+            actual = min(desired, ceiling - peak_db)
         else:
-            actual = desired
+            actual = min(desired, 4.0)
         return round(actual, 3), actual < desired - 0.05
 
-    # Unnormalized path: protect Cirrus Logic CS43198 internal oversampling filters from intersample clipping.
-    if peak_db is not None and peak_db > CS43198_CEILING_DB:
-        return round(max(-2.5, CS43198_CEILING_DB - peak_db), 3), False
+    if peak_db is not None and peak_db > ceiling:
+        return round(max(-2.5, ceiling - peak_db), 3), False
+    if headroom_pad_db < 0:
+        return round(float(headroom_pad_db), 3), False
     if exclusive and measurement is None:
         return -1.0, False
     return 0.0, False
@@ -250,9 +252,15 @@ def build_realtime_filter_graph(
     out_sample_rate: int,
     playback_rate: float = 1.0,
 ) -> tuple[str, dict]:
-    """Assemble a 64-bit float FFmpeg filtergraph with SoXR 28-bit resampling and CS43198 limiter."""
+    """Assemble phase-clean 64-bit float EQ/restorer + SoXR 28-bit resampling + safety ceiling."""
     out_sr = max(8000, int(out_sample_rate))
-    stages = ['aformat=sample_fmts=dblp:channel_layouts=stereo']
+    in_sr = int((source_info or {}).get('sample_rate') or out_sr)
+    in_channels = int((source_info or {}).get('channels') or 2)
+
+    if in_channels == 1:
+        stages = ['aformat=sample_fmts=dblp,pan=stereo|c0=c0|c1=c0']
+    else:
+        stages = ['aformat=sample_fmts=dblp:channel_layouts=stereo']
 
     tempo = atempo_chain(playback_rate)
     if tempo:
@@ -260,26 +268,28 @@ def build_realtime_filter_graph(
 
     restorer = resolve_restorer(profile, source_info)
     if restorer is not None:
-        in_sr = int((source_info or {}).get('sample_rate') or out_sr)
-        nyquist_cap = min(19500, int(min(max(8000, in_sr), out_sr) * 0.44))
-        if nyquist_cap >= 14000:
-            exciter = (
-                'asplit=2[dry][exc];'
-                f'[exc]highpass=f=6800:poles=2,volume=6dB,asoftclip=type=atan:param=1.5,'
-                f'highpass=f=12500:poles=2,lowpass=f={nyquist_cap}:poles=2,'
-                f'volume={restorer["air_db"]:.1f}dB[air];'
-                f'[dry][air]amix=inputs=2:weights=1 1:normalize=0,crystalizer=i={restorer["crystalizer"]:.2f}:c=1'
-            )
-            stages.append(exciter)
-        else:
-            stages.append(f'crystalizer=i={restorer["crystalizer"]:.2f}:c=1')
+        scale = 0.45 if profile.tone == 'aria2' else 1.0
+        nyquist_cap = max(1000, int(min(max(8000, in_sr), out_sr) * 0.44))
+        f_sub = min(58, nyquist_cap)
+        f_mud = min(235, nyquist_cap)
+        f_pres = min(4200, nyquist_cap)
+        f_air = min(12000, nyquist_cap)
+        stages.append(
+            f'equalizer=f={f_sub}:t=q:w=0.8:g={restorer["sub_db"] * scale:.2f}:r=f64,'
+            f'equalizer=f={f_mud}:t=q:w=1.3:g={restorer["mud_db"] * scale:.2f}:r=f64,'
+            f'equalizer=f={f_pres}:t=q:w=1.4:g={restorer["pres_db"] * scale:.2f}:r=f64,'
+            f'treble=f={f_air}:t=q:w=0.707:g={restorer["air_db"] * scale:.2f}:r=f64'
+        )
 
     tone = tone_filter(profile, sample_rate=out_sr, channels=2)
     if tone:
         stages.append(tone)
 
-    if abs(float(gain_db)) >= 0.01:
-        stages.append(f'volume={float(gain_db):.3f}dB')
+    effective_gain_db = float(gain_db)
+    if not profile.normalize and (restorer is not None or profile.tone != 'off') and abs(effective_gain_db) < 0.01:
+        effective_gain_db = -0.8
+    if abs(effective_gain_db) >= 0.01:
+        stages.append(f'volume={effective_gain_db:.3f}dB')
 
     stages.append(f'aresample={out_sr}:resampler=soxr:precision=28')
     stages.append(
@@ -289,7 +299,7 @@ def build_realtime_filter_graph(
     summary = {
         'restorer_active': restorer['mode'] if restorer else 'Bypass',
         'tone': profile.tone,
-        'gain_db': float(gain_db),
+        'gain_db': effective_gain_db,
         'out_sample_rate': out_sr,
     }
     return ','.join(stages), summary
