@@ -1,14 +1,33 @@
-"""Optional audio preparation around the unchanged QMediaPlayer/video owners."""
+"""Zero-disk Studio Hi-Fi audio controller around QMediaPlayer video/timeline."""
 import json
+import logging
 from pathlib import Path
+import time
 
 from PySide6.QtCore import QObject, QThread, QTimer, Signal, QUrl
-from PySide6.QtMultimedia import QMediaPlayer
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QProgressBar
+from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer
 
-from core.audio_profile import AudioProfile
-from core.audio_effects import AudioPlaybackCache, AudioPreparationCancelled, prepare_audio
-from core.audio_loudness import LoudnessCache, measure_loudness, native_gain, valid_measurement, DEFAULT_TARGET, TARGETS
+from core.audio_profile import (
+    AudioProfile,
+    compute_mastering_gain_db,
+    resolve_restorer,
+)
+from core.audio_effects import (
+    AudioPlaybackCache,
+    AudioPreparationCancelled,
+    source_signature,
+)
+from core.audio_loudness import (
+    LoudnessCache,
+    measure_loudness,
+    measure_quick_loudness,
+    native_gain,
+    probe_audio_stream,
+    valid_measurement,
+    DEFAULT_TARGET,
+    TARGETS,
+)
+from core.audio_stream_engine import AudioStreamEngine, is_stream_engine_available
 from core.subtitle_persistence import atomic_bytes
 from control.audio_volume import AudioVolumeControl
 from control.audio_prefetch import NextAudioPrefetch
@@ -16,22 +35,73 @@ from control.worker_lifecycle import OwnedProcesses
 from ui.audio_effects_panel import AudioEffectsPanel
 from ui.icons import button_icon, TEXT, ACCENT
 
+logger = logging.getLogger(__name__)
 
-class AudioPreparationWorker(QThread):
+
+class AudioAnalysisWorker(QThread):
+    """Read-only background stream probe + two-phase EBU R128 loudness worker (zero audio disk files)."""
+    probed = Signal(int, object, object)
+    quick_measured = Signal(int, object)
     progress = Signal(str)
 
-    def __init__(self, source, profile, track, cache, protected, parent=None):
+    def __init__(self, source, profile, track, loudness_cache, generation, parent=None):
         super().__init__(parent)
-        self.source, self.profile, self.track = source, profile, track
-        self.cache, self.protected = cache, protected
+        self.source = source
+        self.profile = profile
+        self.requested_profile = profile
+        self.track = track
+        self.loudness_cache = loudness_cache
+        self.generation = generation
         self.processes = OwnedProcesses()
         self.result = None
         self.error = None
+        self.prefetch = False
 
     def run(self):
         try:
-            self.result = prepare_audio(self.source, self.profile, self.track, self.cache, self.processes,
-                                        self.isInterruptionRequested, self.protected, self.progress.emit)
+            sig = source_signature(self.source)
+            cached = self.loudness_cache.lookup_full(sig, self.track)
+            source_info = cached['source_info'] if cached else None
+            if source_info is None:
+                source_info = probe_audio_stream(self.source, self.track, self.processes, self.isInterruptionRequested)
+            if self.isInterruptionRequested():
+                return
+            cached_meas = cached['measurement'] if cached else None
+            self.probed.emit(self.generation, source_info, cached_meas)
+            if cached_meas is not None:
+                self.result = {
+                    'measurement': cached_meas,
+                    'source_info': source_info,
+                    'cache_hit': True,
+                }
+                return
+            if not self.profile.normalize and self.profile.output_mode != 'exclusive':
+                # Unnormalized Shared mode only needs stream metadata for restorer/SoXR!
+                self.result = {
+                    'measurement': None,
+                    'source_info': source_info,
+                    'cache_hit': False,
+                }
+                return
+
+            if self.profile.normalize:
+                duration = float(source_info.get('duration') or 0.0)
+                if duration > 16.0:
+                    quick = measure_quick_loudness(
+                        self.source, source_info['track'], duration, self.processes, self.isInterruptionRequested
+                    )
+                    if quick is not None and not self.isInterruptionRequested():
+                        self.quick_measured.emit(self.generation, quick)
+
+            self.result = measure_loudness(
+                self.source,
+                source_info['track'],
+                self.loudness_cache,
+                self.processes,
+                self.isInterruptionRequested,
+                self.progress.emit,
+                source_info=source_info,
+            )
         except AudioPreparationCancelled:
             pass
         except Exception as error:
@@ -45,11 +115,36 @@ class AudioPreparationWorker(QThread):
         self.processes.stop()
 
 
-class LoudnessMeasurementWorker(AudioPreparationWorker):
+class LoudnessMeasurementWorker(QThread):
+    """Lightweight pre-measurement worker for the next queued track."""
+    progress = Signal(str)
+
+    def __init__(self, source, profile, track, cache, _protected=(), parent=None):
+        super().__init__(parent)
+        self.source = source
+        self.profile = profile
+        self.requested_profile = profile
+        self.track = track
+        self.cache = cache
+        self.processes = OwnedProcesses()
+        self.result = None
+        self.error = None
+        self.prefetch = True
+
     def run(self):
         try:
-            self.result = measure_loudness(self.source, self.track, self.cache, self.processes,
-                                          self.isInterruptionRequested, self.progress.emit)
+            info = probe_audio_stream(self.source, self.track, self.processes, self.isInterruptionRequested)
+            if self.isInterruptionRequested():
+                return
+            self.result = measure_loudness(
+                self.source,
+                info['track'],
+                self.cache,
+                self.processes,
+                self.isInterruptionRequested,
+                self.progress.emit,
+                source_info=info,
+            )
         except AudioPreparationCancelled:
             pass
         except Exception as error:
@@ -57,6 +152,10 @@ class LoudnessMeasurementWorker(AudioPreparationWorker):
         finally:
             self.processes.stop()
             self.processes.wait()
+
+    def stop(self):
+        self.requestInterruption()
+        self.processes.stop()
 
 
 class AudioEffectsController(QObject):
@@ -70,76 +169,105 @@ class AudioEffectsController(QObject):
         self.target_lufs = DEFAULT_TARGET
         self.prefetch_enabled = True
         self.profile = self._load_profile()
+        self._stream_available = is_stream_engine_available()
+        self._purge_legacy_disk_cache()
+
         self._measurement = None
-        self._applied_tone = 'off'
-        self._tone_gain = 0.0
+        self._source_info = None
+        self._initial_gain_db = 0.0
+        self._applied_gain_db = 0.0
+        self._gain_limited = False
+
         self.volume_control = AudioVolumeControl(window.audio_output, self)
-        self.volume_control.user_changed.connect(lambda value: self._apply_normalization(ramp=False))
+        self.volume_control.user_changed.connect(self._on_user_volume_changed)
+        window.audio_output.mutedChanged.connect(self._on_muted_changed)
+
+        self.stream = AudioStreamEngine(
+            on_before_exclusive=self._pause_smtc_for_exclusive,
+            on_after_exclusive=self._resume_smtc_after_exclusive,
+        )
+        self.stream.set_user_volume(self.volume(), window.audio_output.isMuted())
+
         self.panel = AudioEffectsPanel(window)
-        self.panel.set_profile(self.profile.normalize, self.profile.tone)
+        self.panel.set_profile(
+            self.profile.normalize, self.profile.tone, self.profile.restorer, self.profile.output_mode
+        )
         self.panel.set_target(self.target_lufs)
         self.panel.level_changed.connect(self.set_target)
+
         self.worker = None
         self._pending = False
         self._generation = 0
         self._closed = False
-        self._internal = False
         self._original = self.player.source()
-        self._transition = None
-        self._starting = None
-        self._start_timer = QTimer(self)
-        self._start_timer.setSingleShot(True)
-        self._start_timer.setInterval(15000)
-        self._start_timer.timeout.connect(self._start_failed)
-        self._start_fallback = None
-        self._start_fallback_timer = QTimer(self)
-        self._start_fallback_timer.setSingleShot(True)
-        self._start_fallback_timer.timeout.connect(self._finish_start_fallback)
-        self._start_indicator = QWidget(window)
-        indicator_layout = QHBoxLayout(self._start_indicator)
-        indicator_layout.setContentsMargins(4, 0, 4, 0)
-        indicator_layout.setSpacing(8)
-        self._start_label = QLabel('Chuẩn bị âm thanh…')
-        indicator_layout.addWidget(self._start_label)
-        indicator_progress = QProgressBar()
-        indicator_progress.setRange(0, 0)
-        indicator_progress.setFixedSize(60, 4)
-        indicator_progress.setTextVisible(False)
-        indicator_layout.addWidget(indicator_progress)
-        window.statusBar().addPermanentWidget(self._start_indicator)
-        self._start_indicator.hide()
         self._track = 0
-        self._applied_key = None
         self._failed_request = None
+        self._last_player_pos = 0
+        self._last_sync_at = 0.0
+
         self._request_timer = QTimer(self)
         self._request_timer.setSingleShot(True)
-        self._request_timer.setInterval(180)
+        self._request_timer.setInterval(80)
         self._request_timer.timeout.connect(self._prepare)
-        self._transition_timer = QTimer(self)
-        self._transition_timer.setSingleShot(True)
-        self._transition_timer.setInterval(8000)
-        self._transition_timer.timeout.connect(self._transition_failed)
+
+        self._seek_timer = QTimer(self)
+        self._seek_timer.setSingleShot(True)
+        self._seek_timer.setInterval(90)
+        self._seek_timer.timeout.connect(self._commit_seek)
+
+        self._sync_timer = QTimer(self)
+        self._sync_timer.setInterval(250)
+        self._sync_timer.timeout.connect(self._sync_tick)
+
+        self._device_timer = QTimer(self)
+        self._device_timer.setSingleShot(True)
+        self._device_timer.setInterval(250)
+        self._device_timer.timeout.connect(self._handle_device_change)
+
         self.player.sourceChanged.connect(self._source_changed)
-        self.player.mediaStatusChanged.connect(self._media_status)
         self.player.activeTracksChanged.connect(self._tracks_changed)
         self.player.playbackStateChanged.connect(self._playback_state)
-        self.player.errorOccurred.connect(self._player_error)
         self.player.playbackRateChanged.connect(self._rate_changed)
         self.player.positionChanged.connect(self._position_changed)
-        window.playback_bar.time_slider.sliderMoved.connect(self._seek_requested)
-        window.playback_bar.time_slider.sliderReleased.connect(
-            lambda: self._seek_requested(window.playback_bar.time_slider.value()))
+
+        slider = window.playback_bar.time_slider
+        slider.sliderMoved.connect(self._seek_requested)
+        slider.sliderReleased.connect(lambda: self._seek_requested(slider.value()))
+
+        if hasattr(window, 'audio_devices') and hasattr(window.audio_devices, 'audioOutputsChanged'):
+            window.audio_devices.audioOutputsChanged.connect(lambda: self._device_timer.start())
+
         self.panel.settings_changed.connect(self.set_profile)
         window.playback_bar.btn_audio.clicked.connect(self.toggle_panel)
+
         self.prefetch = NextAudioPrefetch(self)
         self.panel.set_prefetch(self.prefetch_enabled)
         self.panel.prefetch_changed.connect(self.set_prefetch)
         self._update_button()
-        if self.profile.enabled:
-            self._request_timer.start()
+        self._update_signal_path()
+
+    def _purge_legacy_disk_cache(self):
+        try:
+            self.cache.clear_all_owned()
+        except OSError:
+            pass
+
+    def _pause_smtc_for_exclusive(self):
+        manager = getattr(self.window, 'media_manager', None)
+        if manager is not None and getattr(manager, 'enabled', False):
+            manager.stop()
+
+    def _resume_smtc_after_exclusive(self):
+        if self._closed:
+            return
+        manager = getattr(self.window, 'media_manager', None)
+        if manager is not None and getattr(manager, 'enabled', False):
+            manager.restart()
 
     def _load_profile(self):
         try:
+            if not self.settings_path.exists():
+                return AudioProfile.recommended()
             data = json.loads(self.settings_path.read_text(encoding='utf-8'))
             if isinstance(data, dict) and data.get('target_lufs') in TARGETS:
                 self.target_lufs = int(data['target_lufs'])
@@ -147,123 +275,7 @@ class AudioEffectsController(QObject):
                 self.prefetch_enabled = data['prefetch_next']
             return AudioProfile.from_dict(data)
         except (OSError, ValueError):
-            return AudioProfile()
-
-    def volume(self):
-        return self.volume_control.volume()
-
-    def set_volume(self, value):
-        self.volume_control.set_volume(value)
-
-    def play_source(self, source):
-        """New selections wait silently for EQ; the original path stays immediate."""
-        if self._closed:
-            return
-        self._clear_start()
-        self.prefetch.stop_for_selection(source)
-        if self.profile.tone != 'off' and source.isLocalFile():
-            self._starting = {'source': source, 'state': QMediaPlayer.PlaybackState.PlayingState,
-                              'position': 0, 'ready': False}
-            self._start_timer.start()
-            self._start_indicator.show()
-        same_source = source == self.player.source()
-        self.player.setSource(source)
-        if same_source:
-            self._source_changed(source)
-        if self._starting:
-            self._refresh_subtitles()
-            self._sync_start_controls()
-        else:
-            self.player.play()
-
-    def toggle_pending_start(self):
-        if not self._starting:
-            return False
-        return self.set_pending_playback(self._starting['state'] != QMediaPlayer.PlaybackState.PlayingState)
-
-    def pending_playback(self):
-        return None if self._starting is None else self._starting['state'] == QMediaPlayer.PlaybackState.PlayingState
-
-    def set_pending_playback(self, playing):
-        if not self._starting:
-            return False
-        self._starting['state'] = (QMediaPlayer.PlaybackState.PlayingState if playing
-                                  else QMediaPlayer.PlaybackState.PausedState)
-        if self._transition:
-            self._transition['state'] = self._starting['state']
-        self._sync_start_controls()
-        return True
-
-    def _sync_start_controls(self):
-        playing = self._starting['state'] == QMediaPlayer.PlaybackState.PlayingState
-        self.window.playback_bar.update_play_state(playing)
-        self._start_label.setText('Chuẩn bị âm thanh…' if playing else 'Chuẩn bị âm thanh · đã tạm dừng')
-        manager = getattr(self.window, 'media_manager', None)
-        if manager is not None and manager.enabled:
-            manager.set_status(False)
-
-    def _clear_start(self):
-        pending = self._starting is not None
-        self._starting = None
-        self._start_timer.stop()
-        self._start_fallback_timer.stop()
-        self._start_fallback = None
-        self._start_indicator.hide()
-        if pending:
-            self.window.update_ui_state(self.player.playbackState())
-
-    def _finish_start(self):
-        start = self._starting
-        if not start or not start['ready'] or self._transition:
-            return
-        if self.player.mediaStatus() not in (QMediaPlayer.MediaStatus.LoadedMedia,
-                                             QMediaPlayer.MediaStatus.BufferedMedia):
-            return
-        self.player.setPosition(start['position'])
-        if self._starting is not start:
-            return
-        self._clear_start()
-        if start['state'] == QMediaPlayer.PlaybackState.PlayingState:
-            self.player.play()
-        else:
-            self.player.pause()
-        self._refresh_subtitles(start['position'])
-
-    def _start_failed(self):
-        if not self._starting:
-            return
-        if self._starting['ready']:
-            self._clear_start()
-            self.panel.set_status('Không nạp được bài đã chọn; bạn có thể chọn bài khác.')
-            return
-        self._generation += 1
-        self._pending = False
-        self._request_timer.stop()
-        if self.worker is not None:
-            self.worker.stop()
-        self._failed_request = (self._original.toLocalFile(), self.profile, self._track)
-        self._starting['ready'] = True
-        self._start_timer.stop()
-        self.panel.set_status('Chưa chuẩn bị được EQ kịp thời; phát âm thanh gốc cho bài này.')
-        self._start_label.setText('Nạp âm thanh gốc…')
-        if self.player.source() != self._original:
-            self._switch(self._original)
-        else:
-            self._finish_start()
-            if self._starting:
-                self._start_timer.start(8000)
-
-    def _defer_start_fallback(self):
-        # Qt may emit InvalidMedia after errorOccurred finishes. Switching inside
-        # that signal can let the old failure clear a newly loading original.
-        self._start_fallback = self._transition
-        self._start_fallback_timer.start(0)
-
-    def _finish_start_fallback(self):
-        transition = self._start_fallback
-        self._start_fallback = None
-        if not self._closed and transition is not None and self._transition is transition:
-            self._transition_failed()
+            return AudioProfile.recommended()
 
     def _save_profile(self):
         data = dict(self.profile.as_dict(), target_lufs=self.target_lufs, prefetch_next=self.prefetch_enabled)
@@ -271,6 +283,64 @@ class AudioEffectsController(QObject):
             atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
         except OSError:
             self.panel.set_status('Đã đổi cho phiên này; chưa lưu được tùy chọn.')
+
+    @property
+    def switching(self):
+        return False
+
+    def volume(self):
+        return self.volume_control.volume()
+
+    def set_volume(self, value):
+        self.volume_control.set_volume(value)
+
+    def _on_user_volume_changed(self, value):
+        self.stream.set_user_volume(value, self.window.audio_output.isMuted())
+        if not self._use_stream_engine():
+            self._apply_qt_normalization(ramp=False)
+
+    def _on_muted_changed(self, muted):
+        self.stream.set_user_volume(self.volume(), muted)
+
+    def _use_stream_engine(self) -> bool:
+        return (
+            not self._closed
+            and self._stream_available
+            and self.profile.enabled
+            and self._original.isLocalFile()
+            and bool(self._original.toLocalFile())
+        )
+
+    def _sync_qt_audio_routing(self):
+        """Detach QMediaPlayer audioOutput when RAM WASAPI engine owns output (prevents double audio)."""
+        if self._use_stream_engine():
+            if self.player.audioOutput() is not None:
+                self.player.setAudioOutput(None)
+        else:
+            if self.player.audioOutput() is not self.window.audio_output:
+                self.player.setAudioOutput(self.window.audio_output)
+
+    def play_source(self, source):
+        """Start playback instantaneously (0ms disk delay)."""
+        if self._closed:
+            return
+        self.prefetch.stop_for_selection(source)
+        self._original = source
+        self._sync_qt_audio_routing()
+        same_source = source == self.player.source()
+        self.player.setSource(source)
+        if same_source:
+            self._source_changed(source)
+        self.player.play()
+
+    def toggle_pending_start(self):
+        return False
+
+    def pending_playback(self):
+        return None
+
+    def set_pending_playback(self, _playing):
+        return False
 
     def set_prefetch(self, enabled):
         if self._closed:
@@ -289,25 +359,37 @@ class AudioEffectsController(QObject):
         self.target_lufs = target
         self.panel.set_target(target)
         self._save_profile()
-        self._apply_normalization()
+        self._refresh_gain_live()
 
-    def _apply_normalization(self, ramp=True):
+    def _refresh_gain_live(self):
         if self._closed:
             return
-        if not self.profile.normalize or self._measurement is None:
+        if not self._use_stream_engine():
+            self._apply_qt_normalization(ramp=True)
+            return
+        gain_db, limited = compute_mastering_gain_db(
+            self._measurement,
+            self.target_lufs,
+            self.profile.normalize,
+            exclusive=(self.profile.output_mode == 'exclusive'),
+        )
+        self._applied_gain_db = gain_db
+        self._gain_limited = limited
+        if self.stream.is_active():
+            self.stream.set_dynamic_trim_db(gain_db - self._initial_gain_db)
+        self._update_signal_path()
+
+    def _apply_qt_normalization(self, ramp=True):
+        if self._closed or not self.profile.normalize or self._measurement is None:
             self.volume_control.set_gain(0.0, ramp)
             return
-        level, peak = self._measurement['lufs'], self._measurement['peak_db']
-        if level is not None:
-            level, peak = level + self._tone_gain, peak + self._tone_gain
-        decision = native_gain(level, peak, self.target_lufs, self.volume())
+        decision = native_gain(
+            self._measurement['lufs'],
+            self._measurement['peak_db'],
+            self.target_lufs,
+            self.volume(),
+        )
         self.volume_control.set_gain(decision.gain_db, ramp)
-        suffix = ' · Giới hạn đầu ra: một số bài có thể chưa đạt độ lớn mục tiêu' if decision.limited else ''
-        self.panel.set_status(f'Cân bằng trực tiếp · {self.target_lufs} LUFS{suffix}')
-
-    @property
-    def switching(self):
-        return self._transition is not None or self._starting is not None
 
     def _refresh_subtitles(self, position=None):
         overlay = getattr(self.window, 'sub_layer', None)
@@ -322,53 +404,62 @@ class AudioEffectsController(QObject):
             self.panel.hide()
         else:
             self.window.vol_popup.hide()
+            self._update_signal_path()
             self.panel.open_at(self.window.playback_bar.btn_audio)
 
     def _update_button(self):
         button = self.window.playback_bar.btn_audio
         button.setProperty('audioEnabled', self.profile.enabled)
         button_icon(button, 'sliders-horizontal', color=ACCENT if self.profile.enabled else TEXT)
-        button.setToolTip('Âm thanh — đang bật' if self.profile.enabled else 'Âm thanh — nguyên bản')
+        button.setToolTip('Âm thanh — Studio Engine đang bật' if self.profile.enabled else 'Âm thanh — nguyên bản')
 
-    def set_profile(self, normalize, tone):
+    def set_profile(self, normalize, tone, restorer='off', output_mode='shared'):
         if self._closed:
             return
-        profile = AudioProfile.from_dict({'normalize': normalize, 'tone': tone})
+        profile = AudioProfile.from_dict({
+            'normalize': normalize,
+            'tone': tone,
+            'restorer': restorer,
+            'output_mode': output_mode,
+        })
         if profile == self.profile:
             return
-        old_tone = self.profile.tone
+        old = self.profile
         self.profile = profile
         self._failed_request = None
-        self.panel.set_profile(profile.normalize, profile.tone)
+        self.panel.set_profile(profile.normalize, profile.tone, profile.restorer, profile.output_mode)
         self._save_profile()
         self._update_button()
-        if old_tone != profile.tone:
-            self.prefetch.refresh()
-        self._apply_normalization()
-        if old_tone == profile.tone and self._measurement is not None:
-            if not profile.normalize:
-                self.panel.set_status('Đang dùng âm thanh gốc' if profile.tone == 'off' else 'Đang dùng EQ đã chọn')
+        self.prefetch.refresh()
+
+        self._sync_qt_audio_routing()
+        if not self._use_stream_engine():
+            self.stream.stop()
+            self._sync_timer.stop()
+            self._apply_qt_normalization(ramp=True)
+            self.panel.set_status('Đang dùng âm thanh gốc (Bypass)')
+            self._update_signal_path()
             return
-        if old_tone != profile.tone:
-            self._measurement = None
-            self._apply_normalization()
-        self._queue_latest()
-        if self._starting:
-            self._starting['ready'] = profile.tone == 'off'
-            if profile.tone == 'off':
-                self._start_timer.stop()
+
+        need_restart = (
+            old.tone != profile.tone
+            or old.restorer != profile.restorer
+            or old.output_mode != profile.output_mode
+            or not self.stream.is_active()
+        )
+        if not need_restart and old.normalize != profile.normalize:
+            if profile.normalize and self._measurement is None:
+                self._queue_latest()
             else:
-                self._start_timer.start()
-        if profile.tone == 'off' and self._applied_tone != 'off':
-            self._applied_tone = 'off'
-            self._tone_gain = 0.0
-            self._switch(self._original)
-        if not profile.enabled:
-            self._request_timer.stop()
-            self._applied_key = None
-            self._switch(self._original)
-            self.panel.set_status('Đang dùng âm thanh gốc')
-        self._finish_start()
+                self._refresh_gain_live()
+            return
+
+        if self._source_info is not None:
+            self._start_or_reconfigure_stream()
+            if profile.normalize and self._measurement is None:
+                self._queue_latest()
+        else:
+            self._queue_latest()
 
     def _queue_latest(self):
         self._generation += 1
@@ -378,45 +469,45 @@ class AudioEffectsController(QObject):
             if self.prefetch.promote(self.worker):
                 self._pending = False
                 self._request_timer.stop()
-                self.panel.set_status('Đang hoàn tất âm thanh đã chuẩn bị trước…', busy=True)
                 return True
             self.worker.stop()
-        self._request_timer.start()
+        self._request_timer.start(0)
         return False
 
     def _source_changed(self, source):
         if self._closed:
             return
-        if self._transition and source == self._transition['target']:
-            return
-        if self._starting and source != self._starting['source']:
-            self._clear_start()
-        self._transition_timer.stop()
-        self._transition = None
-        self._refresh_subtitles()
+        self._seek_timer.stop()
+        self._sync_timer.stop()
+        self.stream.stop()
         self._original = source
-        self._applied_key = None
         self._failed_request = None
         self._track = 0
         self._measurement = None
-        self._applied_tone = 'off'
-        self._tone_gain = 0.0
-        self._apply_normalization(ramp=False)
-        promoted = self._queue_latest()
-        if self.profile.enabled and not promoted:
-            # A cached measurement can apply as the new file starts. Keep
-            # analysis off the GUI thread and let rapid source edits supersede it.
-            self._request_timer.start(0)
+        self._source_info = None
+        self._initial_gain_db = 0.0
+        self._applied_gain_db = 0.0
+        self._gain_limited = False
+        self._last_player_pos = 0
+
+        self._sync_qt_audio_routing()
+        if self._use_stream_engine():
+            self.volume_control.set_gain(0.0, False)
+            self._queue_latest()
+        else:
+            self._apply_qt_normalization(ramp=False)
+            self._update_signal_path()
 
     def _tracks_changed(self):
-        if self._closed or self._internal or self._transition:
+        if self._closed:
             return
         track = self.player.activeAudioTrack()
         if track >= 0 and track != self._track:
             self._track = track
             self._measurement = None
-            self._apply_normalization(ramp=False)
-            self._queue_latest()
+            self._source_info = None
+            if self._use_stream_engine():
+                self._queue_latest()
 
     def _prepare(self):
         if self._closed:
@@ -425,28 +516,103 @@ class AudioEffectsController(QObject):
             self._pending = True
             return
         self._pending = False
-        if not self.profile.enabled:
+        if not self._use_stream_engine():
             return
-        if not self._original.isLocalFile() or not self._original.toLocalFile():
-            self.panel.set_status('Chọn bài trên máy để xử lý âm thanh.')
-            return
-        request = (self._original.toLocalFile(), self.profile, self._track)
+        source_path = self._original.toLocalFile()
+        request = (source_path, self.profile, self._track)
         if request == self._failed_request:
             return
-        self.panel.set_status('Chuẩn bị nền; bài vẫn đang phát âm thanh hiện tại…', busy=True)
-        protected = (self.player.source().toLocalFile(),)
-        if self.profile.tone == 'off':
-            worker = LoudnessMeasurementWorker(*request, self.loudness_cache, protected, self)
-        else:
-            worker = AudioPreparationWorker(request[0], AudioProfile(False, self.profile.tone), self._track,
-                                            self.cache, protected, self)
-        worker.requested_profile = self.profile
-        worker.generation = self._generation
-        self.worker = worker
+        self.panel.set_status('Đang phân tích luồng âm thanh trong RAM…', busy=True)
+        worker = AudioAnalysisWorker(
+            source_path,
+            self.profile,
+            self._track,
+            self.loudness_cache,
+            self._generation,
+            self,
+        )
+        worker.probed.connect(self._on_probed)
+        worker.quick_measured.connect(self._on_quick_measured)
         worker.progress.connect(self._progress)
         worker.finished.connect(self._prepared)
         worker.finished.connect(worker.deleteLater)
+        self.worker = worker
         worker.start()
+
+    def _on_probed(self, generation, source_info, cached_meas):
+        if self._closed or generation != self._generation or not self._use_stream_engine():
+            return
+        self._source_info = source_info
+        if cached_meas is not None:
+            self._measurement = cached_meas
+        duration = float((source_info or {}).get('duration') or 0.0)
+        # If normalized & uncached on a normal-length track, wait ~70ms for quick_measured so 0.0s is already balanced!
+        if cached_meas is None and self.profile.normalize and duration > 16.0:
+            self._update_signal_path()
+            return
+        self._start_or_reconfigure_stream()
+
+    def _on_quick_measured(self, generation, quick_meas):
+        if self._closed or generation != self._generation or not self._use_stream_engine():
+            return
+        if self._measurement is None:
+            self._measurement = quick_meas
+        if not self.stream.is_active():
+            self._start_or_reconfigure_stream()
+        else:
+            self._refresh_gain_live()
+
+    def _start_or_reconfigure_stream(self):
+        if self._closed or not self._use_stream_engine():
+            return
+        source_path = self._original.toLocalFile()
+        gain_db, limited = compute_mastering_gain_db(
+            self._measurement,
+            self.target_lufs,
+            self.profile.normalize,
+            exclusive=(self.profile.output_mode == 'exclusive'),
+        )
+        self._initial_gain_db = gain_db
+        self._applied_gain_db = gain_db
+        self._gain_limited = limited
+
+        preferred = ''
+        try:
+            preferred = QMediaDevices.defaultAudioOutput().description()
+        except Exception:
+            pass
+        paused = self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState
+        try:
+            self.stream.set_user_volume(self.volume(), self.window.audio_output.isMuted())
+            info = self.stream.start_or_reconfigure(
+                source_path=source_path,
+                start_ms=self.player.position(),
+                profile=self.profile,
+                source_info=self._source_info,
+                gain_db=gain_db,
+                playback_rate=self.player.playbackRate(),
+                track=int((self._source_info or {}).get('track', self._track)),
+                preferred_device_name=preferred,
+                paused=paused,
+            )
+            self._last_sync_at = time.monotonic()
+            if not paused:
+                self._sync_timer.start()
+            if info.get('fallback_reason'):
+                self.panel.set_status(info['fallback_reason'])
+            elif not self.stream.is_active() and paused:
+                self.panel.set_status('Sẵn sàng phát Studio Hi-Fi')
+            else:
+                self.panel.set_status('Đang phát Studio Hi-Fi (0 MB ổ cứng)')
+        except Exception as err:
+            logger.warning('Real-time WASAPI stream fallback to Qt native: %s', err)
+            self.stream.stop()
+            self._sync_timer.stop()
+            if self.player.audioOutput() is not self.window.audio_output:
+                self.player.setAudioOutput(self.window.audio_output)
+            self._apply_qt_normalization(ramp=False)
+            self.panel.set_status('Thiết bị bận; tự động phát qua luồng Qt chuẩn.')
+        self._update_signal_path()
 
     def _progress(self, text):
         if not self._closed and self.sender() is self.worker and self.worker.generation == self._generation:
@@ -464,173 +630,150 @@ class AudioEffectsController(QObject):
             if self._pending:
                 self._request_timer.start(0)
             return
+
         current = worker.generation == self._generation and not worker.isInterruptionRequested()
         if current and worker.result:
-            try:
-                if 'measurement' in worker.result:
-                    measured = worker.result['measurement']
+            info = worker.result.get('source_info')
+            if info:
+                self._source_info = info
+            meas = worker.result.get('measurement')
+            if meas is not None and valid_measurement(meas):
+                self._measurement = meas
+            if self._use_stream_engine():
+                if not self.stream.is_active() and self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                    self._start_or_reconfigure_stream()
                 else:
-                    gain = worker.result['record']['gain']
-                    measured = {'lufs': gain['input_lufs'], 'peak_db': gain['input_peak_db'],
-                                'silent': gain['input_lufs'] is None and gain['input_peak_db'] is None}
-                if not valid_measurement(measured):
-                    raise ValueError()
-            except (KeyError, TypeError, ValueError):
-                worker.result = None
-                worker.error = 'Số đo trong cache chưa hợp lệ; giữ âm thanh hiện tại.'
-        if current and worker.result:
-            if 'measurement' in worker.result:
-                self._measurement = worker.result['measurement']
-            else:
-                self._applied_key = worker.result['record']['key']
-                gain = worker.result['record']['gain']
-                self._tone_gain = gain['gain_db']
-                self._measurement = {'lufs': gain['input_lufs'], 'peak_db': gain['input_peak_db']}
-                self._applied_tone = self.profile.tone
-                # Apply gain before the prepared decoder is allowed to play.
-                self._apply_normalization(ramp=self._starting is None)
-                if self._starting:
-                    self._starting['ready'] = True
-                    self._start_timer.stop()
-                self._switch(QUrl.fromLocalFile(worker.result['path']))
-            self._apply_normalization()
-            if not self.profile.normalize:
-                self.panel.set_status('Đang dùng EQ đã chọn')
+                    self._refresh_gain_live()
+                    self.panel.set_status('Đang phát Studio Hi-Fi (0 MB ổ cứng)')
         elif current and worker.error:
             self._failed_request = (worker.source, worker.requested_profile, worker.track)
-            self.panel.set_status('Chưa áp dụng cho bài này; giữ âm thanh hiện tại. ' + worker.error[:220])
-            if self._starting:
-                self._start_failed()
-        elif current and self._starting:
-            self._start_failed()
-        self._finish_start()
+            if not self.stream.is_active() and self._use_stream_engine():
+                self._start_or_reconfigure_stream()
+            else:
+                self.panel.set_status('Giữ luồng hiện tại: ' + worker.error[:140])
+
+        self._update_signal_path()
         if self._pending:
-            self._request_timer.start()
+            self._request_timer.start(0)
         else:
             self.prefetch.schedule()
 
-    def _switch(self, target):
-        if self._closed or target.isEmpty() or target == self.player.source():
-            return
-        old = self._transition
-        if old is None and self._starting:
-            loaded = self.player.mediaStatus() in (QMediaPlayer.MediaStatus.LoadedMedia,
-                                                   QMediaPlayer.MediaStatus.BufferedMedia)
-            old = dict(self._starting, rate=self.player.playbackRate(), track=self._track,
-                       video=self.player.activeVideoTrack() if loaded else 0,
-                       subtitle=self.player.activeSubtitleTrack() if loaded else -1,
-                       loops=self.player.loops())
-        state = old['state'] if old else self.player.playbackState()
-        position = old['position'] if old else self.player.position()
-        self._transition = {'target': target, 'position': position, 'state': state,
-                            'rate': old['rate'] if old else self.player.playbackRate(), 'track': self._track,
-                            'video': old['video'] if old else self.player.activeVideoTrack(),
-                            'subtitle': old['subtitle'] if old else self.player.activeSubtitleTrack(),
-                            'loops': old['loops'] if old else self.player.loops()}
-        self._transition_timer.start()
-        self._refresh_subtitles()
-        self._internal = True
-        try:
-            self.player.setSource(target)
-        finally:
-            self._internal = False
-
-    def _media_status(self, status):
-        if self._closed:
-            return
-        if self._transition:
-            if self._transition.get('restoring'):
-                return
-            if status in (QMediaPlayer.MediaStatus.LoadedMedia, QMediaPlayer.MediaStatus.BufferedMedia):
-                transition = self._transition
-                if self.player.source() != transition['target']:
-                    return
-                transition['restoring'] = True
-                self._transition_timer.stop()
-                self._internal = True
-                try:
-                    self.player.setActiveAudioTrack(transition['track'])
-                    self.player.setActiveVideoTrack(transition['video'])
-                    self.player.setActiveSubtitleTrack(transition['subtitle'])
-                    self.player.setLoops(transition['loops'])
-                    self.player.setPlaybackRate(transition['rate'])
-                    if self._transition is not transition:
-                        return
-                    self.player.setPosition(transition['position'])
-                    if (transition['state'] == QMediaPlayer.PlaybackState.PlayingState
-                            and (self._starting is None or self._starting['ready'])):
-                        self.player.play()
-                    elif transition['state'] == QMediaPlayer.PlaybackState.PausedState:
-                        self.player.pause()
-                finally:
-                    self._internal = False
-                    if self._transition is transition:
-                        self._transition = None
-                        if self._starting is None or self._starting['ready']:
-                            self._clear_start()
-                        self._refresh_subtitles(transition['position'])
-            elif status == QMediaPlayer.MediaStatus.InvalidMedia:
-                if self._starting:
-                    self._defer_start_fallback()
-                else:
-                    self._transition_failed()
-        elif self._starting:
-            if status == QMediaPlayer.MediaStatus.InvalidMedia:
-                self._clear_start()
-                self.panel.set_status('Không nạp được bài đã chọn; giữ nguyên file gốc.')
-            else:
-                self._finish_start()
-
     def _playback_state(self, state):
-        if self._transition and not self._internal and state != QMediaPlayer.PlaybackState.StoppedState:
-            self._transition['state'] = state
+        if self._closed or not self._use_stream_engine():
+            return
+        if state == QMediaPlayer.PlaybackState.PlayingState:
+            if self._source_info is not None:
+                if self.stream.status_info().get('paused'):
+                    self.stream.resume(self.player.position())
+                elif not self.stream.is_active():
+                    self._start_or_reconfigure_stream()
+                self._last_sync_at = time.monotonic()
+                self._sync_timer.start()
+        elif state == QMediaPlayer.PlaybackState.PausedState:
+            self._sync_timer.stop()
+            self.stream.pause()
+        elif state == QMediaPlayer.PlaybackState.StoppedState:
+            self._sync_timer.stop()
+            self.stream.stop()
+        self._update_signal_path()
 
-    def _rate_changed(self, rate):
-        if self._transition and not self._internal:
-            self._transition['rate'] = rate
+    def _rate_changed(self, _rate):
+        if self._closed or not self._use_stream_engine():
+            return
+        if self.stream.is_active():
+            self._start_or_reconfigure_stream()
 
-    def _seek_requested(self, position):
-        if self._starting and not self._internal:
-            self._starting['position'] = position
-        if self._transition and not self._internal:
-            self._transition['position'] = position
+    def _seek_requested(self, _position):
+        if not self._closed and self._use_stream_engine():
+            self._seek_timer.start()
+
+    def _commit_seek(self):
+        if self._closed or not self._use_stream_engine():
+            return
+        pos = self.player.position()
+        self._last_player_pos = pos
+        self._last_sync_at = time.monotonic()
+        self.stream.seek(pos)
 
     def _position_changed(self, position):
-        # Backend zero during source loading is a reset, not a user seek.
-        if position > 0:
-            self._seek_requested(position)
-
-    def _player_error(self, *_):
-        if self._transition:
-            if self._starting:
-                self._defer_start_fallback()
-            else:
-                self._transition_failed()
-
-    def _transition_failed(self):
-        if not self._transition:
+        if self._closed or not self._use_stream_engine():
             return
-        failed = self._transition['target']
-        self._transition_timer.stop()
-        if failed != self._original:
-            self._measurement = None
-            self._tone_gain = 0.0
-            self._applied_tone = 'off'
-            self._apply_normalization(ramp=False)
-            self._switch(self._original)
+        jump = abs(position - self._last_player_pos)
+        self._last_player_pos = position
+        if jump > 650 and not self.window.playback_bar.time_slider.isSliderDown():
+            self._seek_timer.start()
+
+    def _sync_tick(self):
+        if self._closed or not self._use_stream_engine() or not self.stream.is_active():
+            return
+        if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+            return
+        if self.window.playback_bar.time_slider.isSliderDown():
+            return
+        if time.monotonic() - self._last_sync_at < 1.5:
+            return
+        drift = abs(self.player.position() - self.stream.position_ms())
+        if drift > 85 and self.player.position() > 150:
+            self._last_sync_at = time.monotonic()
+            self.stream.seek(self.player.position())
+
+    def _handle_device_change(self):
+        if self._closed or not self._use_stream_engine():
+            return
+        if self._source_info is not None:
+            self._start_or_reconfigure_stream()
+
+    def _update_signal_path(self):
+        info = self._source_info
+        if info:
+            codec = str(info.get('codec_name') or '?').upper()
+            sr_khz = info['sample_rate'] / 1000.0
+            kbps = int(round((info.get('bit_rate') or 0) / 1000.0))
+            rate_str = f'{kbps} kbps' if kbps > 0 else 'Lossless / VBR'
+            src_text = f'{codec} · {rate_str} · {sr_khz:g} kHz'
         else:
-            self._transition = None
-            self._clear_start()
-            self._refresh_subtitles()
-        self.panel.set_status('Không nạp được bản xử lý; đã yêu cầu trở về âm thanh gốc.')
+            src_text = 'Đang chờ bài phát' if not self._original.isLocalFile() else 'Đang nhận dạng…'
+
+        if not self.profile.enabled:
+            dsp_text = 'Bypass (Âm thanh gốc 100%)'
+            out_text = 'Qt Multimedia mặc định'
+        else:
+            parts = ['64-bit Float']
+            rest = resolve_restorer(self.profile, info)
+            if rest is not None:
+                parts.append(f'Restorer {rest["mode"]}')
+            elif self.profile.restorer == 'auto' and info:
+                parts.append('Restorer Bypass (Nguồn cao)')
+            if self.profile.tone != 'off':
+                parts.append('Aria 2 PEQ' if self.profile.tone == 'aria2' else f'EQ {self.profile.tone}')
+            if self.profile.normalize:
+                parts.append(f'{self.target_lufs} LUFS ({self._applied_gain_db:+.1f} dB)')
+            dsp_text = ' · '.join(parts)
+
+            st = self.stream.status_info()
+            if st.get('active'):
+                mode_label = 'WASAPI Exclusive' if st['output_mode'] == 'exclusive' else 'WASAPI Shared'
+                if st['output_mode'] == 'shared_fallback':
+                    mode_label = 'WASAPI Shared (Fallback)'
+                bits = {'float32': '32-bit Float', 'int32': '32-bit', 'int24': '24-bit', 'int16': '16-bit'}.get(
+                    st['dtype'], st['dtype']
+                )
+                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · SoXR 28-bit'
+            else:
+                mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
+                out_text = f'{mode_label} · SoXR 28-bit (Chờ phát)'
+
+        self.panel.set_signal_path(src_text, dsp_text, out_text)
 
     def shutdown(self):
         if self._closed:
             return
         self._closed = True
         self._request_timer.stop()
-        self._transition_timer.stop()
-        self._clear_start()
+        self._seek_timer.stop()
+        self._sync_timer.stop()
+        self._device_timer.stop()
+        self.stream.shutdown()
         self.prefetch.shutdown()
         self.panel.hide()
         self.volume_control.shutdown()

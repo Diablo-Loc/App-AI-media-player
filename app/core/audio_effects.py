@@ -114,6 +114,29 @@ class AudioPlaybackCache:
         if total + reserve > self.limit:
             raise RuntimeError('Cache âm thanh đã đầy; giữ âm thanh gốc cho bài này.')
 
+    def clear_all_owned(self):
+        """Safely purge legacy owned .mkv/.json cache files to reclaim SSD space."""
+        if not self.root.exists():
+            return 0
+        self.recover_partials()
+        removed = 0
+        for target in list(self.root.glob('*.mkv')):
+            if not ENTRY_PATTERN.fullmatch(target.name) or target.is_symlink():
+                continue
+            try:
+                self._owned(target)
+                metadata = self._owned(target.with_suffix('.json'))
+                record = json.loads(metadata.read_text(encoding='utf-8'))
+                if not isinstance(record, dict) or record.get('owner') != OWNER_MARKER or record.get('key') != target.stem:
+                    continue
+                target.unlink()
+                if metadata.exists():
+                    metadata.unlink()
+                removed += 1
+            except (OSError, ValueError, TypeError):
+                continue
+        return removed
+
     def recover_partials(self):
         """Remove only journal-owned leftovers whose creating app has exited."""
         import psutil

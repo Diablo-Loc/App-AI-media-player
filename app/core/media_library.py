@@ -14,7 +14,10 @@ from core.subtitle_manager import SubtitleManager
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_EXTS = {".mp3", ".mp4", ".mkv", ".wav", ".mov", ".avi"}
+SUPPORTED_EXTS = {
+    ".mp3", ".mp4", ".mkv", ".wav", ".mov", ".avi",
+    ".flac", ".m4a", ".opus", ".ogg", ".aac", ".webm",
+}
 
 # ============================================================
 # 1. HÀM HỖ TRỢ LẤY METADATA (FFPROBE)

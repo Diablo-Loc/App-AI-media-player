@@ -17,6 +17,7 @@ HIDDEN_IMPORTS = (
     'google.genai', 'av', 'psutil', 'cryptography', 'websockets', 'tenacity',
     'huggingface_hub', 'filelock', 'fsspec', 'pickletools', 'pickle', 'struct',
     'difflib', 'ast', 'cProfile', 'profile', 'pstats', 'modulefinder', 'pkgutil', 'importlib.metadata',
+    'sounddevice', '_sounddevice_data', 'cffi', 'numpy',
 )
 
 
