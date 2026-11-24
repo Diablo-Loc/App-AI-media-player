@@ -153,7 +153,9 @@ class AudioStreamEngine:
 
         self._user_volume = 0.5
         self._muted = False
-        self._trim_linear = 1.0
+        self._base_gain_db = 0.0
+        self._gain_db = 0.0
+        self._target_gain_linear = 1.0
         self._current_amp = 0.0
 
         self._playing = False
@@ -164,6 +166,7 @@ class AudioStreamEngine:
         self._played_frames = 0
         self._out_sr = 48000
         self._out_dtype = 'float32'
+        self._latency_sec = 0.16
         self._playback_rate = 1.0
         self._device_name = ''
         self._actual_mode = 'shared'
@@ -183,10 +186,16 @@ class AudioStreamEngine:
             self._user_volume = max(0.0, min(1.0, float(volume)))
             self._muted = bool(muted)
 
-    def set_dynamic_trim_db(self, trim_db: float):
-        clamped = max(-24.0, min(12.0, float(trim_db)))
+    def set_gain_db(self, gain_db: float):
+        clamped = max(-24.0, min(12.0, float(gain_db)))
         with self._lock:
-            self._trim_linear = 10.0 ** (clamped / 20.0)
+            self._gain_db = clamped
+            self._target_gain_linear = 10.0 ** (clamped / 20.0)
+
+    def set_dynamic_trim_db(self, trim_db: float):
+        with self._lock:
+            base = self._base_gain_db
+        self.set_gain_db(base + float(trim_db))
 
     def is_active(self) -> bool:
         with self._lock:
@@ -196,7 +205,8 @@ class AudioStreamEngine:
         with self._lock:
             if self._out_sr <= 0:
                 return int(self._start_ms)
-            elapsed = (self._played_frames / float(self._out_sr)) * 1000.0 * self._playback_rate
+            hw_latency = self._latency_sec if (self._playing and not self._paused) else 0.0
+            elapsed = max(0.0, (self._played_frames / float(self._out_sr)) - hw_latency) * 1000.0 * self._playback_rate
             return max(0, int(round(self._start_ms + elapsed)))
 
     def status_info(self) -> dict:
@@ -350,6 +360,8 @@ class AudioStreamEngine:
         fade_samples = max(1, int(0.012 * out_sr))
         dither_offset = 0
         current_amp = 0.0
+        with self._lock:
+            current_gain_lin = self._target_gain_linear
         started = False
         try:
             stdout = proc.stdout
@@ -371,17 +383,34 @@ class AudioStreamEngine:
             if cancel_event.is_set() or op_id != self._op_id or not prebuffer:
                 return
 
+            with self._lock:
+                current_gain_lin = self._target_gain_linear
             stream.start()
             started = True
 
             def _emit_chunk(pcm: np.ndarray) -> bool:
-                nonlocal current_amp, dither_offset
+                nonlocal current_amp, current_gain_lin, dither_offset
                 with self._lock:
                     if cancel_event.is_set() or op_id != self._op_id or self._muted or not self._playing or self._paused:
                         target_amp = 0.0
                     else:
-                        target_amp = self._user_volume * self._trim_linear
-                processed, current_amp = apply_micro_fade(pcm, current_amp, target_amp, fade_samples)
+                        target_amp = self._user_volume
+                    target_gain = self._target_gain_linear
+
+                # Slew mastering gain smoothly at <= 0.6 dB/sec (~0.025 dB/chunk) so volume changes are inaudible.
+                if abs(target_gain - current_gain_lin) > 1e-5:
+                    max_ratio = 10.0 ** (0.6 * (len(pcm) / float(max(8000, out_sr))) / 20.0)
+                    if target_gain > current_gain_lin:
+                        next_gain = min(target_gain, current_gain_lin * max_ratio)
+                    else:
+                        next_gain = max(target_gain, current_gain_lin / max_ratio)
+                    ramp = np.linspace(current_gain_lin, next_gain, len(pcm), dtype=np.float32)[:, None]
+                    pcm_gained = pcm * ramp
+                    current_gain_lin = next_gain
+                else:
+                    pcm_gained = pcm * float(current_gain_lin)
+
+                processed, current_amp = apply_micro_fade(pcm_gained, current_amp, target_amp, fade_samples)
                 raw_bytes = quantize_pcm(processed, out_dtype, rng=None, dither_offset=dither_offset)
                 dither_offset = (dither_offset + pcm.size) % len(_TPDF_TABLE)
                 uf = stream.write(raw_bytes)
@@ -497,19 +526,25 @@ class AudioStreamEngine:
         paused: bool = False,
     ) -> dict:
         """Start or seamlessly reconfigure the in-RAM DSP + C-blocking WASAPI pipeline."""
+        effective_gain_db = float(gain_db)
+        if not profile.normalize and (profile.tone != 'off' or profile.restorer != 'off') and abs(effective_gain_db) < 0.01:
+            effective_gain_db = -0.8
+        clamped_gain = max(-24.0, min(12.0, effective_gain_db))
+
         with self._lock:
             self._op_id += 1
             op_id = self._op_id
             self._source_path = str(source_path)
             self._profile = profile
             self._source_info = source_info
-            self._gain_db = float(gain_db)
+            self._base_gain_db = clamped_gain
+            self._gain_db = clamped_gain
+            self._target_gain_linear = 10.0 ** (clamped_gain / 20.0)
             self._playback_rate = max(0.25, min(4.0, float(playback_rate or 1.0)))
             self._track = int(track)
             self._preferred_device = preferred_device_name or ''
             self._start_ms = float(max(0, int(start_ms)))
             self._played_frames = 0
-            self._trim_linear = 1.0
             self._underflows = 0
             self._paused = bool(paused)
             self._playing = True
@@ -549,6 +584,7 @@ class AudioStreamEngine:
                 self._current_amp = 0.0
                 self._out_sr = out_sr
                 self._out_dtype = out_dtype
+                self._latency_sec = 0.10 if actual_mode == 'exclusive' else 0.16
                 self._device_name = dev_name
                 self._actual_mode = actual_mode
                 self._fallback_reason = fallback_reason

@@ -9,6 +9,7 @@ from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer
 
 from core.audio_profile import (
     AudioProfile,
+    SCHEMA_VERSION,
     compute_mastering_gain_db,
     resolve_restorer,
 )
@@ -86,7 +87,7 @@ class AudioAnalysisWorker(QThread):
 
             if self.profile.normalize:
                 duration = float(source_info.get('duration') or 0.0)
-                if duration > 16.0:
+                if duration > 600.0:
                     quick = measure_quick_loudness(
                         self.source, source_info['track'], duration, self.processes, self.isInterruptionRequested
                     )
@@ -272,12 +273,24 @@ class AudioEffectsController(QObject):
                 self.target_lufs = int(data['target_lufs'])
             if isinstance(data, dict) and isinstance(data.get('prefetch_next'), bool):
                 self.prefetch_enabled = data['prefetch_next']
+            if (
+                isinstance(data, dict)
+                and data.get('schema_version') != SCHEMA_VERSION
+                and data.get('tone') == 'aria2'
+                and data.get('restorer') == 'auto'
+            ):
+                return AudioProfile.recommended()
             return AudioProfile.from_dict(data)
         except (OSError, ValueError):
             return AudioProfile.recommended()
 
     def _save_profile(self):
-        data = dict(self.profile.as_dict(), target_lufs=self.target_lufs, prefetch_next=self.prefetch_enabled)
+        data = dict(
+            self.profile.as_dict(),
+            schema_version=SCHEMA_VERSION,
+            target_lufs=self.target_lufs,
+            prefetch_next=self.prefetch_enabled,
+        )
         try:
             atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
         except OSError:
@@ -387,7 +400,7 @@ class AudioEffectsController(QObject):
         self._applied_gain_db = gain_db
         self._gain_limited = limited
         if self.stream.is_active():
-            self.stream.set_dynamic_trim_db(gain_db - self._initial_gain_db)
+            self.stream.set_gain_db(gain_db)
         self._update_signal_path()
 
     def _apply_qt_normalization(self, ramp=True):
@@ -766,10 +779,11 @@ class AudioEffectsController(QObject):
                 bits = {'float32': '32-bit Float', 'int32': '32-bit', 'int24': '24-bit', 'int16': '16-bit'}.get(
                     st['dtype'], st['dtype']
                 )
-                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · SoXR 28-bit'
+                sr_tag = 'SoXR 28-bit' if st.get('filter_summary', {}).get('resampled', True) else 'Bit-Pure Native'
+                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}'
             else:
                 mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
-                out_text = f'{mode_label} · SoXR 28-bit (Chờ phát)'
+                out_text = f'{mode_label} · Bit-Pure (Chờ phát)'
 
         self.panel.set_signal_path(src_text, dsp_text, out_text)
 

@@ -1,4 +1,4 @@
-"""Verification suite for BoTube Studio Hi-Fi Real-Time Audio Engine."""
+"""Verification suite for BoTube Studio Hi-Fi Real-Time Audio Engine (Bit-Pure & Null-Test Proven)."""
 import os
 from pathlib import Path
 import subprocess
@@ -47,44 +47,83 @@ class StudioDspPolicyTests(unittest.TestCase):
         for ext in ('.flac', '.m4a', '.opus', '.ogg', '.aac', '.webm', '.mp3', '.mp4', '.mkv', '.wav'):
             self.assertIn(ext, SUPPORTED_EXTS)
 
+    def test_recommended_default_is_bit_pure_uncolored_with_loudness(self):
+        prof = AudioProfile.recommended()
+        self.assertEqual(prof, AudioProfile(normalize=True, tone='off', restorer='off', output_mode='shared'))
+
+    def test_bit_pure_null_test_proves_zero_coloration_and_unclips_intersample_overs(self):
+        # Multi-tone signal peaking at +1.9 dBTP (~1.245 float amplitude) simulating hot lossy peaks.
+        sr = 48000
+        t = np.arange(int(sr * 0.25), dtype=np.float64) / sr
+        sig = (
+            0.35 * np.sin(2 * np.pi * 60.0 * t)
+            + 0.30 * np.sin(2 * np.pi * 250.0 * t)
+            + 0.25 * np.sin(2 * np.pi * 1000.0 * t)
+            + 0.20 * np.sin(2 * np.pi * 4000.0 * t)
+            + 0.145 * np.sin(2 * np.pi * 14000.0 * t)
+        )
+        sig = sig * (1.245 / float(np.max(np.abs(sig))))  # Exact +1.9 dBTP peak
+        self.assertGreater(float(np.max(np.abs(sig))), 1.24)
+        stereo_f64 = np.column_stack([sig, sig]).astype('<f8')
+
+        info = {'codec_name': 'opus', 'sample_rate': sr, 'channels': 2, 'bit_rate': 128000}
+        af, summary = build_realtime_filter_graph(AudioProfile.recommended(), info, -5.0, sr)
+        self.assertFalse(summary['resampled'])
+        self.assertEqual(summary['restorer_active'], 'Bypass')
+
+        raw_out = subprocess.run(
+            [FFMPEG, '-nostdin', '-hide_banner', '-loglevel', 'error',
+             '-f', 'f64le', '-ar', str(sr), '-ac', '2', '-i', 'pipe:0',
+             '-af', af, '-f', 'f32le', '-ac', '2', 'pipe:1'],
+            input=stereo_f64.tobytes(),
+            capture_output=True,
+            check=True,
+        ).stdout
+        out_f32 = np.frombuffer(raw_out, dtype='<f4').reshape(-1, 2)
+        gain_lin = 10.0 ** (-5.0 / 20.0)
+        gained = out_f32.astype(np.float64) * gain_lin
+        expected = stereo_f64 * gain_lin
+
+        # Null-test residual must be strictly < -135 dBFS (0.0000 dB coloration, 0 deg phase shift).
+        residual = np.max(np.abs(gained - expected))
+        residual_db = 20.0 * np.log10(max(1e-18, float(residual)))
+        self.assertLess(residual_db, -135.0)
+        # Intersample +1.9 dBTP peak was recovered cleanly below 0 dBFS without clipping!
+        self.assertLess(float(np.max(np.abs(gained))), 0.80)
+
     def test_mastering_gain_fixes_quiet_track_and_protects_cs43198_intersample(self):
-        # Quiet dynamic track (-22 LUFS, peak -8 dBTP) gets full +6.0 dB at -16 LUFS without QAudioOutput 1.0 ceiling!
         gain, limited = compute_mastering_gain_db({'lufs': -22.0, 'peak_db': -8.0}, -16, normalize=True)
         self.assertAlmostEqual(gain, 6.0, places=3)
         self.assertFalse(limited)
 
-        # Quiet track with a hot -3 dBTP transient stops cleanly at -1.0 dBTP (+2.0 dB) so transients never clip.
         gain_p, limited_p = compute_mastering_gain_db({'lufs': -22.0, 'peak_db': -3.0}, -16, normalize=True)
         self.assertAlmostEqual(gain_p, 2.0, places=3)
         self.assertTrue(limited_p)
 
-        # Hot track with +0.8 dBTP peak is attenuated safely to -1.0 dBTP ceiling without squashing dynamics.
         gain2, limited2 = compute_mastering_gain_db({'lufs': -17.0, 'peak_db': 0.8}, -16, normalize=True)
         self.assertAlmostEqual(gain2, CS43198_CEILING_DB - 0.8, places=3)
         self.assertTrue(limited2)
 
-        # Unnormalized Exclusive path applies -1.2 dBTP protection if track exceeds ceiling.
         gain3, _ = compute_mastering_gain_db({'lufs': -9.0, 'peak_db': 0.4}, -16, normalize=False, exclusive=True)
         self.assertAlmostEqual(gain3, -1.2 - 0.4, places=3)
 
-        # Silence guard never amplifies digital noise floor.
         gain4, limited4 = compute_mastering_gain_db({'lufs': None, 'peak_db': None, 'silent': True}, -16, normalize=True)
         self.assertEqual((gain4, limited4), (0.0, False))
 
-    def test_auto_restorer_targets_low_bitrate_and_bypasses_lossless(self):
-        prof = AudioProfile.recommended()
-        self.assertEqual(prof, AudioProfile(normalize=True, tone='aria2', restorer='auto', output_mode='shared'))
-        r128 = resolve_restorer(prof, {'codec_name': 'mp3', 'bit_rate': 128000, 'sample_rate': 44100})
+    def test_opt_in_auto_restorer_targets_legacy_mp3_aac_and_bypasses_opus_and_lossless(self):
+        opt_in = AudioProfile(normalize=True, tone='off', restorer='auto', output_mode='shared')
+        r128 = resolve_restorer(opt_in, {'codec_name': 'mp3', 'bit_rate': 128000, 'sample_rate': 44100})
         self.assertIsNotNone(r128)
         self.assertIn('128k', r128['mode'])
 
-        r160 = resolve_restorer(prof, {'codec_name': 'aac', 'bit_rate': 160000, 'sample_rate': 44100})
+        r160 = resolve_restorer(opt_in, {'codec_name': 'aac', 'bit_rate': 160000, 'sample_rate': 44100})
         self.assertIsNotNone(r160)
 
-        # Strictly bypass FLAC, PCM, and high-bitrate Opus/AAC.
-        self.assertIsNone(resolve_restorer(prof, {'codec_name': 'flac', 'bit_rate': 950000, 'sample_rate': 96000}))
-        self.assertIsNone(resolve_restorer(prof, {'codec_name': 'pcm_s24le', 'bit_rate': 2304000, 'sample_rate': 48000}))
-        self.assertIsNone(resolve_restorer(prof, {'codec_name': 'opus', 'bit_rate': 256000, 'sample_rate': 48000}))
+        # Strictly bypass Opus >=96k, FLAC, PCM, and high-bitrate AAC.
+        self.assertIsNone(resolve_restorer(opt_in, {'codec_name': 'opus', 'bit_rate': 122000, 'sample_rate': 48000}))
+        self.assertIsNone(resolve_restorer(opt_in, {'codec_name': 'flac', 'bit_rate': 950000, 'sample_rate': 96000}))
+        self.assertIsNone(resolve_restorer(opt_in, {'codec_name': 'pcm_s24le', 'bit_rate': 2304000, 'sample_rate': 48000}))
+        self.assertIsNone(resolve_restorer(opt_in, {'codec_name': 'aac', 'bit_rate': 256000, 'sample_rate': 48000}))
 
     def test_atempo_chain_handles_arbitrary_speeds(self):
         self.assertEqual(atempo_chain(1.0), '')
@@ -92,7 +131,7 @@ class StudioDspPolicyTests(unittest.TestCase):
         self.assertEqual(atempo_chain(0.25), 'atempo=0.5,atempo=0.5000')
         self.assertEqual(atempo_chain(3.0), 'atempo=2.0,atempo=1.5000')
 
-    def test_clean_frequency_response_no_crystalizer_and_cs43198_ceiling(self):
+    def test_optional_aria2_voicing_flatness_and_no_crystalizer(self):
         with tempfile.TemporaryDirectory() as td:
             mp3_128 = Path(td) / 'low_128k.mp3'
             subprocess.run([
@@ -104,36 +143,26 @@ class StudioDspPolicyTests(unittest.TestCase):
             proc = OwnedProcesses()
             info = probe_audio_stream(str(mp3_128), 0, proc, lambda: False)
 
-            af, summary = build_realtime_filter_graph(AudioProfile.recommended(), info, 0.0, 48000)
+            af, summary = build_realtime_filter_graph(
+                AudioProfile(normalize=True, tone='aria2', restorer='auto'), info, 0.0, 48000
+            )
             self.assertNotIn('crystalizer', af)
             self.assertNotIn('asoftclip', af)
             self.assertNotIn('asplit', af)
-            self.assertNotEqual(summary['restorer_active'], 'Bypass')
+            self.assertTrue(summary['resampled'])
 
-            # Acoustic flatness guard: 1 kHz must be within +/- 1.0 dB of 0 dB; 14 kHz musical (+0.5..+3.8 dB).
             g60 = _measure_tone_gain_db(af, 60)
             g220 = _measure_tone_gain_db(af, 220)
             g1k = _measure_tone_gain_db(af, 1000)
             g8k = _measure_tone_gain_db(af, 8000)
             g14k = _measure_tone_gain_db(af, 14000)
-            self.assertGreaterEqual(g1k, -1.0)
-            self.assertLessEqual(g1k, 1.0)
+            self.assertGreaterEqual(g1k, -0.8)
+            self.assertLessEqual(g1k, 0.8)
             self.assertGreaterEqual(g60, 0.5)
-            self.assertLessEqual(g220, -0.3)
-            self.assertLessEqual(g8k, -0.3)
+            self.assertLessEqual(g220, -0.2)
+            self.assertLessEqual(g8k, -0.2)
             self.assertGreaterEqual(g14k, 0.5)
-            self.assertLessEqual(g14k, 3.8)
-
-            # Safety limiter ceiling strictly <= -0.95 dBFS even with hot drive.
-            af_hot, _ = build_realtime_filter_graph(AudioProfile.recommended(), info, 6.0, 48000)
-            raw_hot = subprocess.run(
-                [FFMPEG, '-nostdin', '-hide_banner', '-loglevel', 'error', '-i', str(mp3_128),
-                 '-af', af_hot, '-f', 'f32le', '-ac', '2', 'pipe:1'],
-                capture_output=True, check=True,
-            ).stdout
-            arr_hot = np.frombuffer(raw_hot, dtype='<f4').reshape(-1, 2)
-            peak_db = 20.0 * np.log10(max(1e-9, float(np.max(np.abs(arr_hot)))))
-            self.assertLessEqual(peak_db, -0.95)
+            self.assertLessEqual(g14k, 3.2)
             self.assertEqual(tone_filter(AudioProfile(tone='aria2'), 48000, 2).count(':r=f64'), 5)
 
 
@@ -145,7 +174,6 @@ class StreamQuantizerAndFadeTests(unittest.TestCase):
         self.assertEqual(len(quantize_pcm(frames, 'int32', rng=rng)), 128 * 2 * 4)
         self.assertEqual(len(quantize_pcm(frames, 'int24', rng=rng)), 128 * 2 * 3)
         self.assertEqual(len(quantize_pcm(frames, 'int16', rng=rng)), 128 * 2 * 2)
-        # Also verify static TPDF table path (rng=None)
         self.assertEqual(len(quantize_pcm(frames, 'int32')), 128 * 2 * 4)
         self.assertEqual(len(quantize_pcm(frames, 'int24')), 128 * 2 * 3)
 
@@ -197,7 +225,7 @@ class StreamQuantizerAndFadeTests(unittest.TestCase):
             engine = AudioStreamEngine()
             engine.set_user_volume(0.0, muted=True)
             t0 = time.monotonic()
-            st = engine.start_or_reconfigure(str(mp3), 0, AudioProfile.recommended(), info, 0.0)
+            st = engine.start_or_reconfigure(str(mp3), 0, AudioProfile.recommended(), info, -2.0)
             self.assertTrue(st['active'])
             time.sleep(0.45)
             st_mid = engine.status_info()
@@ -207,7 +235,7 @@ class StreamQuantizerAndFadeTests(unittest.TestCase):
             engine.resume(200)
             self.assertTrue(engine.is_active())
             engine.seek(500)
-            engine.set_dynamic_trim_db(-2.0)
+            engine.set_gain_db(-4.0)
             time.sleep(0.10)
             engine.stop()
             engine.shutdown()

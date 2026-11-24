@@ -1,4 +1,4 @@
-"""Read-only audio stream probe and two-phase EBU R128 loudness index (tiny JSON metadata only)."""
+"""Read-only audio stream probe and fast multi-threaded EBU R128 loudness index (tiny JSON metadata only)."""
 from dataclasses import dataclass
 import hashlib
 import json
@@ -201,13 +201,11 @@ def probe_audio_stream(source_path, track, processes, cancelled):
     has_video = any(s.get('codec_type') == 'video' and not (s.get('disposition') or {}).get('attached_pic') for s in all_streams)
 
     bit_rate = 0
-    for candidate in (audio.get('bit_rate'),):
-        try:
-            if candidate and int(candidate) > 0:
-                bit_rate = int(candidate)
-                break
-        except (TypeError, ValueError):
-            pass
+    try:
+        if audio.get('bit_rate') and int(audio['bit_rate']) > 0:
+            bit_rate = int(audio['bit_rate'])
+    except (TypeError, ValueError):
+        pass
     if not bit_rate and not has_video:
         try:
             if fmt.get('bit_rate') and int(fmt['bit_rate']) > 0:
@@ -252,6 +250,19 @@ def probe_audio_stream(source_path, track, processes, cancelled):
     }
 
 
+def _parse_ebur128_stderr(stderr):
+    i_matches = re.findall(rb'I:\s*(-?\d+(?:\.\d+)?|-inf)\s*LUFS', stderr)
+    p_matches = re.findall(rb'Peak:\s*(-?\d+(?:\.\d+)?|-inf)\s*dBFS', stderr)
+    if not i_matches or not p_matches:
+        return None
+    raw_i, raw_p = i_matches[-1], p_matches[-1]
+    level = -math.inf if raw_i == b'-inf' else float(raw_i)
+    peak = -math.inf if raw_p == b'-inf' else float(raw_p)
+    silent = level == -math.inf or (level <= -70.0 and peak <= -70.0)
+    measured = {'lufs': None if silent else level, 'peak_db': None if silent else peak, 'silent': silent}
+    return measured if valid_measurement(measured) else None
+
+
 def _parse_loudnorm_stderr(stderr):
     blocks = re.findall(rb'\{\s*"input_i".*?\}', stderr, flags=re.DOTALL)
     if not blocks:
@@ -264,16 +275,34 @@ def _parse_loudnorm_stderr(stderr):
 
 
 def measure_quick_loudness(source_path, track, duration, processes, cancelled):
-    """Measure a representative 12s window (~70ms) so playback starts balanced from 0.0s."""
+    """Measure a representative 12s window (~70ms) on long videos/movies."""
     start_s = min(max(0.0, float(duration) * 0.22), 25.0) if float(duration or 0.0) > 16.0 else 0.0
-    cmd = [
-        find_tool('ffmpeg'), '-nostdin', '-hide_banner', '-threads', '2',
-        '-ss', f'{start_s:.2f}', '-t', '12.0',
-        '-i', str(source_path), '-map', f'0:a:{track}', '-vn', '-sn', '-dn',
-        '-af', 'loudnorm=I=-16:TP=-1.5:LRA=50:print_format=json', '-f', 'null', '-',
-    ]
-    _, stderr = run_tool(cmd, processes, cancelled, timeout=15)
-    measured = _parse_loudnorm_stderr(stderr)
+    ffmpeg = find_tool('ffmpeg')
+    _, stderr = run_tool(
+        [
+            ffmpeg, '-nostdin', '-hide_banner', '-threads', '4',
+            '-ss', f'{start_s:.2f}', '-t', '12.0',
+            '-i', str(source_path), '-map', f'0:a:{track}', '-vn', '-sn', '-dn',
+            '-af', 'ebur128=peak=true', '-f', 'null', '-',
+        ],
+        processes,
+        cancelled,
+        timeout=15,
+    )
+    measured = _parse_ebur128_stderr(stderr)
+    if measured is None:
+        _, stderr2 = run_tool(
+            [
+                ffmpeg, '-nostdin', '-hide_banner', '-threads', '2',
+                '-ss', f'{start_s:.2f}', '-t', '12.0',
+                '-i', str(source_path), '-map', f'0:a:{track}', '-vn', '-sn', '-dn',
+                '-af', 'loudnorm=I=-16:TP=-1.5:LRA=50:print_format=json', '-f', 'null', '-',
+            ],
+            processes,
+            cancelled,
+            timeout=15,
+        )
+        measured = _parse_loudnorm_stderr(stderr2)
     if measured is None:
         return None
     measured['provisional'] = True
@@ -290,17 +319,30 @@ def measure_loudness(source, track, cache, processes, cancelled, progress=lambda
             'cache_hit': True,
         }
     progress('Đang đo độ lớn EBU R128 trong RAM…')
+    ffmpeg = find_tool('ffmpeg')
     _, stderr = run_tool(
         [
-            find_tool('ffmpeg'), '-nostdin', '-hide_banner', '-threads', '1',
-            '-filter_threads', '1', '-i', signature['path'], '-map', f'0:a:{track}',
-            '-vn', '-sn', '-dn', '-af',
-            'loudnorm=I=-16:TP=-1.5:LRA=50:print_format=json', '-f', 'null', '-',
+            ffmpeg, '-nostdin', '-hide_banner', '-threads', '4',
+            '-i', signature['path'], '-map', f'0:a:{track}',
+            '-vn', '-sn', '-dn', '-af', 'ebur128=peak=true', '-f', 'null', '-',
         ],
         processes,
         cancelled,
     )
-    measured = _parse_loudnorm_stderr(stderr)
+    measured = _parse_ebur128_stderr(stderr)
+    if measured is None:
+        # Ultra-short clips (<0.4s) may lack ebur128 gated blocks -> fall back to loudnorm.
+        _, stderr2 = run_tool(
+            [
+                ffmpeg, '-nostdin', '-hide_banner', '-threads', '1',
+                '-filter_threads', '1', '-i', signature['path'], '-map', f'0:a:{track}',
+                '-vn', '-sn', '-dn', '-af',
+                'loudnorm=I=-16:TP=-1.5:LRA=50:print_format=json', '-f', 'null', '-',
+            ],
+            processes,
+            cancelled,
+        )
+        measured = _parse_loudnorm_stderr(stderr2)
     if measured is None:
         raise ValueError('Không đo được âm lượng; giữ âm gốc.')
     if source_signature(source) != signature:

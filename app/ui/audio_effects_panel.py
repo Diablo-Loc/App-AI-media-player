@@ -82,15 +82,15 @@ class AudioEffectsPanel(QWidget):
         layout.addWidget(QLabel('Khôi phục chi tiết nhạc nén (128kbps Restorer)'))
         self.restorer = QComboBox()
         for text, key in (
-            ('Tự động (Chỉ lọc bài nén thấp ≤192kbps)', 'auto'),
-            ('Tắt (Giữ nguyên phổ gốc)', 'off'),
+            ('Tắt — Giữ 100% âm sắc gốc (Khuyên dùng)', 'off'),
+            ('Tự động nhẹ (Chỉ lọc MP3/AAC cũ ≤192kbps)', 'auto'),
             ('Tự nhiên (Làm nét & bù dải cao dịu)', 'natural'),
             ('Chi tiết cao (Tối đa độ thoáng 128kbps)', 'vivid'),
         ):
             self.restorer.addItem(text, key)
         self.restorer.setToolTip(
-            'Bù hài âm dải cao >12.5 kHz và làm sắc cạnh xung âm thanh bị nén lossy làm mờ; '
-            'chế độ Tự động tự bỏ qua khi phát file FLAC / Lossless.'
+            'Mặc định Tắt để bảo toàn tuyệt đối chất âm gốc. Bật Tự động nhẹ nếu nghe các file MP3/AAC cũ '
+            'bị tù bí; tự bỏ qua Opus và FLAC/Lossless.'
         )
         self.restorer.setMinimumHeight(34)
         layout.addWidget(self.restorer)
@@ -98,11 +98,11 @@ class AudioEffectsPanel(QWidget):
         layout.addWidget(QLabel('Chất âm (Sound Signature)'))
         self.tone = QComboBox()
         for text, key in (
-            ('Moondrop Aria 2 + Dawn Pro 2 Reference', 'aria2'),
-            ('Nguyên bản (Pure Studio Flat)', 'off'),
+            ('Nguyên bản Tuyệt đối (Bit-Pure · Khuyên dùng)', 'off'),
+            ('Moondrop Aria 2 Subtle Balance', 'aria2'),
             ('Ấm mượt — Nghe lâu (Musical Warm)', 'warm'),
-            ('Không gian 3D tự nhiên (IEM Crossfeed)', 'headphones'),
-            ('Giọng hát trong trẻo (Vocal & Acoustic)', 'vocal_clear'),
+            ('Không gian loa tự nhiên (IEM Crossfeed)', 'headphones'),
+            ('Giọng hát rõ nét (Vocal & Acoustic)', 'vocal_clear'),
             ('Dịu — giảm chói (Legacy)', 'gentle'),
             ('Cân bằng nhẹ (Legacy)', 'balanced'),
             ('Dễ nghe — loa (Legacy)', 'easy'),
@@ -180,7 +180,7 @@ class AudioEffectsPanel(QWidget):
         )
 
     def _apply_recommended(self):
-        self.set_profile(True, 'aria2', 'auto', 'shared')
+        self.set_profile(True, 'off', 'off', 'shared')
         idx = self.level.findData(-16)
         if idx >= 0:
             self.level.setCurrentIndex(idx)

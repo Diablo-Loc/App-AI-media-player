@@ -4,7 +4,7 @@ import math
 import re
 
 PROCESSOR_VERSION = 1
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 TARGET_LUFS = -18.0
 DEFAULT_TARGET_LUFS = -16
 VALID_TARGETS = (-16, -14, -18)
@@ -26,15 +26,13 @@ LOSSLESS_CODECS = frozenset({
 
 TONES = {
     'off': '',
-    # Moondrop Aria 2 + Dawn Pro 2 Reference: 64-bit minimum-phase biquads, 1 kHz = 0.0 dB.
-    'aria2': 'highpass=f=20:poles=2,'
-             'equalizer=f=52:t=q:w=0.75:g=1.8:r=f64,'
-             'equalizer=f=220:t=q:w=1.2:g=-0.8:r=f64,'
-             'equalizer=f=2900:t=q:w=1.3:g=0.5:r=f64,'
-             'equalizer=f=8000:t=q:w=3.0:g=-1.2:r=f64,'
-             'treble=f=13000:t=q:w=0.707:g=1.4:r=f64',
-    'vocal_clear': 'highpass=f=25:poles=2,'
-                   'equalizer=f=190:t=q:w=1.1:g=-0.9:r=f64,'
+    # Optional gentle Moondrop Aria 2 polish (no highpass phase rotation, 1 kHz = 0.0 dB).
+    'aria2': 'equalizer=f=52:t=q:w=0.75:g=1.4:r=f64,'
+             'equalizer=f=220:t=q:w=1.2:g=-0.6:r=f64,'
+             'equalizer=f=2900:t=q:w=1.3:g=0.4:r=f64,'
+             'equalizer=f=8000:t=q:w=3.0:g=-1.0:r=f64,'
+             'treble=f=13000:t=q:w=0.707:g=1.1:r=f64',
+    'vocal_clear': 'equalizer=f=190:t=q:w=1.1:g=-0.9:r=f64,'
                    'equalizer=f=2850:t=q:w=1.1:g=1.1:r=f64,'
                    'equalizer=f=7800:t=q:w=2.5:g=-0.8:r=f64,'
                    'treble=f=12500:t=q:w=0.707:g=1.2:r=f64',
@@ -76,7 +74,8 @@ class AudioProfile:
 
     @classmethod
     def recommended(cls):
-        return cls(normalize=True, tone='aria2', restorer='auto', output_mode='shared')
+        """100% uncolored bit-pure tonal path + EBU R128 mastering loudness & intersample de-clip headroom."""
+        return cls(normalize=True, tone='off', restorer='off', output_mode='shared')
 
     @classmethod
     def from_dict(cls, data):
@@ -161,7 +160,7 @@ def render_filter(profile, decision, sample_rate=48000, channels=2):
 
 
 def resolve_restorer(profile: AudioProfile, source_info: dict | None) -> dict | None:
-    """Select phase-clean 64-bit contour compensation for compressed audio; bypass lossless."""
+    """Select phase-clean 64-bit contour compensation for legacy MP3/AAC; bypass Opus >=96k & lossless."""
     mode = getattr(profile, 'restorer', 'off')
     if mode == 'off':
         return None
@@ -173,10 +172,13 @@ def resolve_restorer(profile: AudioProfile, source_info: dict | None) -> dict | 
         return {'mode': 'Natural', 'sub_db': 0.8, 'mud_db': -0.6, 'pres_db': 0.6, 'air_db': 1.5}
     if mode == 'vivid':
         return {'mode': 'Vivid', 'sub_db': 1.2, 'mud_db': -1.0, 'pres_db': 1.0, 'air_db': 2.4}
-    # Auto mode: polish compressed MP3/AAC <= 192 kbps, strictly bypass lossless & high-bitrate streams.
+
     codec = str((source_info or {}).get('codec_name') or '').lower()
     bit_rate = int((source_info or {}).get('bit_rate') or 0)
     if codec in LOSSLESS_CODECS or codec.startswith('pcm_') or codec.startswith('dsd_'):
+        return None
+    # Opus >= 96 kbps preserves full 20 kHz bandwidth natively.
+    if codec == 'opus' and (bit_rate == 0 or bit_rate >= 96000):
         return None
     kbps = bit_rate / 1000.0 if bit_rate > 0 else 0.0
     if 0 < kbps <= 140.0:
@@ -252,7 +254,7 @@ def build_realtime_filter_graph(
     out_sample_rate: int,
     playback_rate: float = 1.0,
 ) -> tuple[str, dict]:
-    """Assemble phase-clean 64-bit float EQ/restorer + SoXR 28-bit resampling + safety ceiling."""
+    """Assemble unclipped bit-pure float decode path (resampling ONLY when sample rates differ)."""
     out_sr = max(8000, int(out_sample_rate))
     in_sr = int((source_info or {}).get('sample_rate') or out_sr)
     in_channels = int((source_info or {}).get('channels') or 2)
@@ -285,21 +287,15 @@ def build_realtime_filter_graph(
     if tone:
         stages.append(tone)
 
-    effective_gain_db = float(gain_db)
-    if not profile.normalize and (restorer is not None or profile.tone != 'off') and abs(effective_gain_db) < 0.01:
-        effective_gain_db = -0.8
-    if abs(effective_gain_db) >= 0.01:
-        stages.append(f'volume={effective_gain_db:.3f}dB')
-
-    stages.append(f'aresample={out_sr}:resampler=soxr:precision=28')
-    stages.append(
-        f'alimiter=level_in=1:level_out=1:limit={CS43198_LIMIT_LINEAR}:attack=5:release=50:asc=1:level=0'
-    )
+    resampled = in_sr != out_sr
+    if resampled:
+        stages.append(f'aresample={out_sr}:resampler=soxr:precision=28')
 
     summary = {
         'restorer_active': restorer['mode'] if restorer else 'Bypass',
         'tone': profile.tone,
-        'gain_db': effective_gain_db,
+        'gain_db': float(gain_db),
+        'resampled': resampled,
         'out_sample_rate': out_sr,
     }
     return ','.join(stages), summary
