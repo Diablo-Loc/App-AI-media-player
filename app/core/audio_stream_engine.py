@@ -11,10 +11,10 @@ from core.audio_profile import AudioProfile, build_realtime_filter_graph
 
 logger = logging.getLogger(__name__)
 
-# Precomputed 65536-sample TPDF dither table (~256 KB RAM) for fast, zero-allocation quantization.
+# Precomputed 65536-sample 64-bit TPDF dither table (~1 MB RAM) for fast quantization.
 _TPDF_TABLE = (
-    np.random.default_rng(20261124).random(65536, dtype=np.float32)
-    - np.random.default_rng(20261125).random(65536, dtype=np.float32)
+    np.random.default_rng(20261124).random(65536, dtype=np.float64)
+    - np.random.default_rng(20261125).random(65536, dtype=np.float64)
 )
 
 
@@ -39,21 +39,23 @@ def _tpdf_slice(shape, offset: int) -> np.ndarray:
 
 
 def quantize_pcm(
-    samples_f32: np.ndarray,
+    samples: np.ndarray,
     dtype: str,
     rng: np.random.Generator | None = None,
     dither_offset: int = 0,
 ) -> bytes:
-    """Quantize stereo float32 [-1, 1] frames to target DAC format with optional TPDF dither."""
-    if samples_f32.size == 0:
+    """Quantize stereo float64/float32 [-1, 1] frames to target DAC format with 64-bit TPDF dither."""
+    if samples.size == 0:
         return b''
-    arr = np.asarray(samples_f32, dtype=np.float32)
     if dtype == 'float32':
-        return np.clip(arr, -1.0, 1.0).astype('<f4', copy=False).tobytes()
+        arr_f = np.asarray(samples)
+        return np.clip(arr_f, -1.0, 1.0).astype('<f4', copy=False).tobytes()
+
+    arr = np.asarray(samples, dtype=np.float64)
 
     def _dither(lsb_scale: float) -> np.ndarray:
         if rng is not None:
-            return (rng.random(arr.shape, dtype=np.float32) - rng.random(arr.shape, dtype=np.float32)) * lsb_scale
+            return (rng.random(arr.shape, dtype=np.float64) - rng.random(arr.shape, dtype=np.float64)) * lsb_scale
         return _tpdf_slice(arr.shape, dither_offset) * lsb_scale
 
     if dtype == 'int32':
@@ -80,7 +82,7 @@ def apply_micro_fade(
     target_amp: float,
     fade_samples: int,
 ) -> tuple[np.ndarray, float]:
-    """Smoothly ramp amplitude via raised-cosine micro-fade to prevent IEM clicks/pops."""
+    """Smoothly ramp amplitude via raised-cosine micro-fade while preserving float64 precision."""
     out = block.copy()
     if len(out) == 0:
         return out, float(current_amp)
@@ -88,8 +90,9 @@ def apply_micro_fade(
         if abs(target_amp - 1.0) > 1e-6:
             out *= float(target_amp)
         return out, float(target_amp)
+    work_dtype = np.float64 if out.dtype == np.float64 else np.float32
     n = min(len(out), max(1, int(fade_samples)))
-    t = np.linspace(0.0, 1.0, n, dtype=np.float32)
+    t = np.linspace(0.0, 1.0, n, dtype=work_dtype)
     weights = 0.5 - 0.5 * np.cos(np.pi * t)
     ramp = float(current_amp) + (float(target_amp) - float(current_amp)) * weights
     out[:n] *= ramp[:, None]
@@ -99,6 +102,14 @@ def apply_micro_fade(
     else:
         end_amp = float(ramp[-1])
     return out, end_amp
+
+
+def build_release_tail(last_frame: np.ndarray, release_samples: int) -> np.ndarray:
+    """Generate a smooth half-cosine decay from last_frame to exact zero-crossing."""
+    n = max(2, int(release_samples))
+    t = np.linspace(1.0 / n, 1.0, n, dtype=np.float64)
+    envelope = 0.5 * (1.0 + np.cos(np.pi * t))
+    return np.asarray(last_frame, dtype=np.float64).reshape(1, 2) * envelope[:, None]
 
 
 def select_wasapi_device(sd, preferred_name: str = ''):
@@ -252,6 +263,7 @@ class AudioStreamEngine:
                 'fallback_reason': self._fallback_reason,
                 'filter_summary': dict(self._filter_summary),
                 'underflows': self._underflows,
+                'latency_ms': round(self._latency_sec * 1000.0, 1),
             }
 
     def _open_wasapi_stream(self, profile: AudioProfile, source_info: dict | None, preferred_device: str):
@@ -356,13 +368,11 @@ class AudioStreamEngine:
             '-map', f'0:a:{int(track)}',
             '-vn', '-sn', '-dn',
             '-af', filter_graph,
-            '-f', 'f32le', '-ac', '2',
+            '-f', 'f64le', '-ac', '2',
             'pipe:1',
         ])
-        flags = 0
-        if os.name == 'nt':
-            flags = subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS
-        buf_bytes = max(131072, self._chunk_frames_for_rate(out_sr) * 8 * 4)
+        flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
+        buf_bytes = max(262144, self._chunk_frames_for_rate(out_sr) * 2 * 8 * 4)
         return subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -392,10 +402,12 @@ class AudioStreamEngine:
         out_dtype: str,
         cancel_event: threading.Event,
     ):
-        chunk_bytes = self._chunk_frames_for_rate(out_sr) * 2 * 4
+        frame_bytes = 16  # Stereo 64-bit float (2 * 8 bytes)
+        chunk_bytes = self._chunk_frames_for_rate(out_sr) * frame_bytes
         fade_samples = max(1, int(0.012 * out_sr))
         dither_offset = 0
         current_amp = 0.0
+        last_frame = np.zeros(2, dtype=np.float64)
         with self._lock:
             current_gain_lin = self._target_gain_linear
         started = False
@@ -404,15 +416,15 @@ class AudioStreamEngine:
             if stdout is None:
                 return
 
-            # Pre-buffer ~128ms of decoded 64-bit DSP audio in RAM BEFORE starting DAC stream.
+            # Pre-buffer ~128ms of end-to-end 64-bit DSP audio in RAM BEFORE starting DAC stream.
             prebuffer = []
             while len(prebuffer) < self._PREBUFFER_CHUNKS and not cancel_event.is_set():
                 raw = self._read_exact(stdout, chunk_bytes, cancel_event)
                 if not raw:
                     break
-                usable = len(raw) - (len(raw) % 8)
+                usable = len(raw) - (len(raw) % frame_bytes)
                 if usable > 0:
-                    prebuffer.append(np.frombuffer(raw[:usable], dtype='<f4').reshape(-1, 2).copy())
+                    prebuffer.append(np.frombuffer(raw[:usable], dtype='<f8').reshape(-1, 2).copy())
                 if len(raw) < chunk_bytes:
                     break
 
@@ -425,7 +437,7 @@ class AudioStreamEngine:
             started = True
 
             def _emit_chunk(pcm: np.ndarray) -> bool:
-                nonlocal current_amp, current_gain_lin, dither_offset
+                nonlocal current_amp, current_gain_lin, dither_offset, last_frame
                 with self._lock:
                     if cancel_event.is_set() or op_id != self._op_id or self._muted or not self._playing or self._paused:
                         target_amp = 0.0
@@ -433,20 +445,22 @@ class AudioStreamEngine:
                         target_amp = self._user_volume
                     target_gain = self._target_gain_linear
 
-                # Slew mastering gain smoothly at <= 0.6 dB/sec (~0.025 dB/chunk) so volume changes are inaudible.
-                if abs(target_gain - current_gain_lin) > 1e-5:
+                # Slew mastering gain smoothly in 64-bit float at <= 0.6 dB/sec so adjustments are inaudible.
+                if abs(target_gain - current_gain_lin) > 1e-6:
                     max_ratio = 10.0 ** (0.6 * (len(pcm) / float(max(8000, out_sr))) / 20.0)
                     if target_gain > current_gain_lin:
                         next_gain = min(target_gain, current_gain_lin * max_ratio)
                     else:
                         next_gain = max(target_gain, current_gain_lin / max_ratio)
-                    ramp = np.linspace(current_gain_lin, next_gain, len(pcm), dtype=np.float32)[:, None]
+                    ramp = np.linspace(current_gain_lin, next_gain, len(pcm), dtype=np.float64)[:, None]
                     pcm_gained = pcm * ramp
                     current_gain_lin = next_gain
                 else:
                     pcm_gained = pcm * float(current_gain_lin)
 
                 processed, current_amp = apply_micro_fade(pcm_gained, current_amp, target_amp, fade_samples)
+                if len(processed) > 0:
+                    last_frame = processed[-1].copy()
                 raw_bytes = quantize_pcm(processed, out_dtype, rng=None, dither_offset=dither_offset)
                 dither_offset = (dither_offset + pcm.size) % len(_TPDF_TABLE)
                 uf = stream.write(raw_bytes)
@@ -466,9 +480,9 @@ class AudioStreamEngine:
                 raw = self._read_exact(stdout, chunk_bytes, cancel_event)
                 if not raw:
                     break
-                usable = len(raw) - (len(raw) % 8)
+                usable = len(raw) - (len(raw) % frame_bytes)
                 if usable > 0:
-                    pcm = np.frombuffer(raw[:usable], dtype='<f4').reshape(-1, 2).copy()
+                    pcm = np.frombuffer(raw[:usable], dtype='<f8').reshape(-1, 2).copy()
                     if not _emit_chunk(pcm):
                         break
                 if len(raw) < chunk_bytes:
@@ -476,10 +490,10 @@ class AudioStreamEngine:
         except Exception as err:
             logger.debug('AudioStreamEngine writer exited: %s', err)
         finally:
-            # Smooth 12ms fade-out tail if stream started and was paused/stopped cleanly.
-            if started and current_amp > 1e-4:
+            # Smooth zero-crossing cosine release ONLY on natural EOF (skip blocking writes on seek/stop cancel).
+            if started and not cancel_event.is_set() and float(np.max(np.abs(last_frame))) > 1e-5:
                 try:
-                    tail = np.zeros((fade_samples, 2), dtype=np.float32)
+                    tail = build_release_tail(last_frame, max(8, int(0.006 * out_sr)))
                     raw_tail = quantize_pcm(tail, out_dtype, rng=None, dither_offset=dither_offset)
                     stream.write(raw_tail)
                 except Exception:
@@ -620,7 +634,11 @@ class AudioStreamEngine:
                 self._current_amp = 0.0
                 self._out_sr = out_sr
                 self._out_dtype = out_dtype
-                self._latency_sec = 0.10 if actual_mode == 'exclusive' else 0.16
+                raw_lat = getattr(stream, 'latency', None)
+                if isinstance(raw_lat, (int, float)) and not isinstance(raw_lat, bool) and 0.001 <= float(raw_lat) <= 0.5:
+                    self._latency_sec = float(raw_lat)
+                else:
+                    self._latency_sec = 0.10 if actual_mode == 'exclusive' else 0.16
                 self._device_name = dev_name
                 self._actual_mode = actual_mode
                 self._fallback_reason = fallback_reason

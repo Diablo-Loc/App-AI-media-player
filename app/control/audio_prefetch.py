@@ -59,7 +59,7 @@ class NextAudioPrefetch(QObject):
 
     def _enabled(self):
         c = self.controller
-        return not c._closed and c.prefetch_enabled and c.profile.normalize
+        return not c._closed and c.prefetch_enabled and c.profile.enabled
 
     def schedule(self):
         if self._enabled() and self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:

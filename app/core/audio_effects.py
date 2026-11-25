@@ -25,15 +25,25 @@ class AudioPreparationCancelled(Exception):
     pass
 
 
+_TOOL_CACHE: dict[tuple[str, str, str, str], str] = {}
+
+
 def find_tool(name):
     from paths import project_root, asset_dir
+    key = (name, str(project_root()), str(asset_dir('bin')), os.environ.get('PATH', ''))
+    cached = _TOOL_CACHE.get(key)
+    if cached and os.path.isfile(cached):
+        return cached
     executable = name + ('.exe' if os.name == 'nt' else '')
     for directory in (project_root() / 'bin', project_root() / 'app_resources/bin', asset_dir('bin')):
         candidate = directory / executable
         if candidate.is_file():
-            return str(candidate)
+            resolved = str(candidate)
+            _TOOL_CACHE[key] = resolved
+            return resolved
     tool = shutil.which(name)
     if tool:
+        _TOOL_CACHE[key] = tool
         return tool
     raise RuntimeError(f'Không tìm thấy {name}; âm thanh gốc vẫn được giữ.')
 
@@ -45,7 +55,16 @@ def source_signature(path):
 
 
 def cache_key(signature, profile, track):
-    data = {'source': signature, 'profile': profile.as_dict(), 'track': track, 'version': PROCESSOR_VERSION}
+    if (
+        getattr(profile, 'restorer', 'off') == 'off'
+        and getattr(profile, 'output_mode', 'shared') == 'shared'
+        and getattr(profile, 'upsample', 'off') == 'off'
+        and not getattr(profile, 'youtube_loudness', False)
+    ):
+        profile_data = {'normalize': profile.normalize, 'tone': profile.tone}
+    else:
+        profile_data = profile.as_dict()
+    data = {'source': signature, 'profile': profile_data, 'track': track, 'version': PROCESSOR_VERSION}
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode('utf-8')).hexdigest()
 
 

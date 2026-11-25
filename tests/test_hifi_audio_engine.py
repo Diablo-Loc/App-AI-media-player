@@ -24,9 +24,12 @@ from core.audio_profile import (
     tone_filter,
     tone_peak_pad_db,
 )
+from PySide6.QtCore import QUrl
+
 from core.audio_stream_engine import (
     AudioStreamEngine,
     apply_micro_fade,
+    build_release_tail,
     preferred_exclusive_rates,
     quantize_pcm,
 )
@@ -425,6 +428,58 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             pump(30)
             self.assertEqual(ctrl.profile.upsample, 'max_dac')
             self.assertEqual(panel.preset_combo.currentData(), 'custom')
+
+    def test_64bit_f64le_to_int32_preserves_sub_24bit_lsb_precision(self):
+        # A -156 dBFS sine (~1.585e-8) riding on +0.75 is < 0.5 float32 ULP (~2.98e-8)
+        # so float32 collapses 100% of it to flat 0.75, whereas float64 -> int32 preserves ~34 int32 LSB steps!
+        t = np.linspace(0.0, 2.0 * np.pi, 1024, endpoint=False, dtype=np.float64)
+        amp = 10.0 ** (-156.0 / 20.0)
+        delta = amp * np.sin(t)
+        base_f64 = np.column_stack([0.75 + delta, -0.75 - delta]).astype(np.float64)
+        base_f32 = base_f64.astype(np.float32)
+        self.assertEqual(float(np.max(np.abs(base_f32[:, 0] - np.float32(0.75)))), 0.0)
+
+        pcm_i32 = np.frombuffer(quantize_pcm(base_f64, 'int32', rng=None), dtype='<i4').reshape(-1, 2)
+        span = int(np.max(pcm_i32[:, 0]) - np.min(pcm_i32[:, 0]))
+        expected_span = int(round(2.0 * amp * 2147483647.0))
+        self.assertGreater(span, expected_span - 8)
+        self.assertLess(span, expected_span + 8)
+
+        tail = build_release_tail(np.array([0.8, -0.6], dtype=np.float64), 288)
+        self.assertEqual(tail.shape, (288, 2))
+        self.assertEqual(tail.dtype, np.float64)
+        self.assertGreater(float(tail[0, 0]), 0.79)
+        self.assertLess(float(tail[0, 1]), -0.59)
+        self.assertEqual(float(tail[-1, 0]), 0.0)
+        self.assertEqual(float(tail[-1, 1]), 0.0)
+        self.assertTrue(np.all(np.diff(tail[:, 0]) <= 0.0))
+
+    def test_instant_ram_cache_fast_path_spawns_zero_worker_threads_on_replay_or_prefetch(self):
+        with isolated_window() as (window, root):
+            src = root / 'fast_path.mp3'
+            subprocess.run([
+                FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                '-i', 'sine=frequency=440:sample_rate=44100:duration=0.6', '-b:a', '128k', str(src),
+            ], check=True)
+            ctrl = window.audio_effects
+            ctrl.set_profile(True, 'off', 'off', 'shared', 'off', True)
+            window.audio_output.setMuted(True)
+            proc = OwnedProcesses()
+            info = probe_audio_stream(str(src), 0, proc, lambda: False)
+            measure_loudness(str(src), 0, ctrl.loudness_cache, proc, lambda: False, source_info=info)
+
+            # 1st play hits disk loudness cache & populates RAM cache -> 0 workers spawned.
+            with patch('control.audio_effects.AudioAnalysisWorker', side_effect=AssertionError('Must use fast-path')):
+                ctrl.play_source(QUrl.fromLocalFile(str(src)))
+                pump(120)
+                self.assertEqual(ctrl._source_info['sample_rate'], 44100)
+                self.assertGreater(ctrl.stream.status_info()['latency_ms'], 0.0)
+
+                # 2nd play hits pure in-RAM LRU cache -> 0 disk lookups and 0 workers spawned.
+                with patch.object(ctrl.loudness_cache, 'lookup_full', side_effect=AssertionError('Must hit RAM cache')):
+                    ctrl.play_source(QUrl.fromLocalFile(str(src)))
+                    pump(120)
+                    self.assertEqual(ctrl._source_info['codec_name'], 'mp3')
 
 
 if __name__ == '__main__':

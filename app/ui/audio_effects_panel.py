@@ -163,8 +163,8 @@ class AudioEffectsPanel(QWidget):
         self.tone.setMinimumHeight(30)
         layout.addWidget(self.tone)
 
-        self.prefetch_next = QCheckBox('Đo sẵn độ lớn bài kế tiếp (0 MB rác ổ cứng)')
-        self.prefetch_next.setToolTip('Chỉ đo nhanh thông số LUFS bài kế tiếp vào mục lục JSON; không tạo file âm thanh tạm.')
+        self.prefetch_next = QCheckBox('Chuẩn bị sẵn bài kế tiếp trong RAM (0 MB ổ cứng)')
+        self.prefetch_next.setToolTip('Chỉ đo nhanh thông số LUFS/Codec bài kế tiếp vào bộ nhớ; không tạo file âm thanh tạm.')
         self.prefetch_next.setChecked(True)
         self.prefetch_next.setEnabled(False)
         self.prefetch_next.toggled.connect(self.prefetch_changed.emit)
@@ -268,17 +268,18 @@ class AudioEffectsPanel(QWidget):
         level_val = self.level.currentData()
         yt_loud = checked and (level_val == 'youtube')
         norm = checked and not yt_loud
-        self.level.setEnabled(checked)
-        self.prefetch_next.setEnabled(checked)
-        self._sync_preset_combo()
-        self.settings_changed.emit(
-            norm,
-            self.tone.currentData(),
-            self.restorer.currentData(),
-            self.output_mode.currentData(),
-            self.upsample.currentData(),
-            yt_loud,
+        tone_val = self.tone.currentData() or 'off'
+        rest_val = self.restorer.currentData() or 'off'
+        out_val = self.output_mode.currentData() or 'shared'
+        up_val = self.upsample.currentData() or 'off'
+        any_enabled = (
+            norm or yt_loud or tone_val != 'off' or rest_val != 'off'
+            or out_val == 'exclusive' or up_val != 'off'
         )
+        self.level.setEnabled(checked)
+        self.prefetch_next.setEnabled(any_enabled)
+        self._sync_preset_combo()
+        self.settings_changed.emit(norm, tone_val, rest_val, out_val, up_val, yt_loud)
 
     def _apply_recommended(self):
         self.set_profile(True, 'off', 'off', 'shared', 'off', False, target_lufs=-16)
@@ -304,9 +305,13 @@ class AudioEffectsPanel(QWidget):
             w.blockSignals(True)
         yt_loud = bool(youtube_loudness)
         checked = bool(normalize or yt_loud)
+        any_enabled = (
+            checked or tone != 'off' or restorer != 'off'
+            or output_mode == 'exclusive' or upsample != 'off'
+        )
         self.normalize.setChecked(checked)
         self.level.setEnabled(checked)
-        self.prefetch_next.setEnabled(checked)
+        self.prefetch_next.setEnabled(any_enabled)
         if yt_loud:
             idx = self.level.findData('youtube')
             if idx >= 0:

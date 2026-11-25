@@ -1,4 +1,5 @@
 """Zero-disk Studio Hi-Fi audio controller around QMediaPlayer video/timeline."""
+from collections import OrderedDict
 import json
 import logging
 from pathlib import Path
@@ -140,8 +141,32 @@ class LoudnessMeasurementWorker(QThread):
 
     def run(self):
         try:
-            info = probe_audio_stream(self.source, self.track, self.processes, self.isInterruptionRequested)
+            sig = source_signature(self.source)
+            cached = self.cache.lookup_full(sig, self.track)
+            if cached and cached.get('source_info') and cached.get('measurement'):
+                self.result = {
+                    'measurement': cached['measurement'],
+                    'source_info': cached['source_info'],
+                    'cache_hit': True,
+                }
+                return
+            info = cached['source_info'] if (cached and cached.get('source_info')) else probe_audio_stream(
+                self.source, self.track, self.processes, self.isInterruptionRequested
+            )
             if self.isInterruptionRequested():
+                return
+            need_meas = (
+                self.profile.normalize
+                or self.profile.youtube_loudness
+                or self.profile.output_mode == 'exclusive'
+                or self.profile.tone != 'off'
+            )
+            if not need_meas:
+                self.result = {
+                    'measurement': cached['measurement'] if cached else None,
+                    'source_info': info,
+                    'cache_hit': False,
+                }
                 return
             self.result = measure_loudness(
                 self.source,
@@ -166,6 +191,8 @@ class LoudnessMeasurementWorker(QThread):
 
 
 class AudioEffectsController(QObject):
+    _RAM_CACHE_LIMIT = 256
+
     def __init__(self, window, root):
         super().__init__(window)
         self.window = window
@@ -217,6 +244,7 @@ class AudioEffectsController(QObject):
         self._failed_request = None
         self._last_pos_sample = None
         self._last_sync_at = 0.0
+        self._ram_cache: OrderedDict[tuple, dict] = OrderedDict()
 
         self._request_timer = QTimer(self)
         self._request_timer.setSingleShot(True)
@@ -260,9 +288,89 @@ class AudioEffectsController(QObject):
 
     def _purge_legacy_disk_cache(self):
         try:
+            if not self.cache.root.exists():
+                return
+            if (
+                next(self.cache.root.glob('*.mkv'), None) is None
+                and next(self.cache.root.glob('*.part.json'), None) is None
+            ):
+                return
             self.cache.clear_all_owned()
         except OSError:
             pass
+
+    def _ram_cache_key(self, source_path: str, track: int):
+        if not source_path:
+            return None
+        try:
+            sig = source_signature(source_path)
+            return sig, (sig['path'], sig['size'], sig['mtime_ns'], int(track))
+        except OSError:
+            return None
+
+    def _store_ram_cache(self, source_path: str, track: int, source_info: dict | None, measurement: dict | None):
+        parsed = self._ram_cache_key(source_path, track)
+        if parsed is None:
+            return
+        _, key = parsed
+        entry = self._ram_cache.get(key) or {}
+        if source_info is not None:
+            entry['source_info'] = source_info
+        if (
+            measurement is not None
+            and not measurement.get('provisional')
+            and valid_measurement(measurement)
+        ):
+            entry['measurement'] = measurement
+        if not entry:
+            return
+        self._ram_cache[key] = entry
+        self._ram_cache.move_to_end(key)
+        while len(self._ram_cache) > self._RAM_CACHE_LIMIT:
+            self._ram_cache.popitem(last=False)
+
+    def _try_instant_cache_hit(self, local_path: str, track: int) -> bool:
+        parsed = self._ram_cache_key(local_path, track)
+        if parsed is None:
+            return False
+        sig, key = parsed
+        entry = self._ram_cache.get(key)
+        if entry is not None:
+            self._ram_cache.move_to_end(key)
+        else:
+            disk = self.loudness_cache.lookup_full(sig, track)
+            if disk and disk.get('source_info') is not None:
+                entry = {
+                    'source_info': disk['source_info'],
+                    'measurement': disk.get('measurement'),
+                }
+                self._ram_cache[key] = entry
+                self._ram_cache.move_to_end(key)
+                while len(self._ram_cache) > self._RAM_CACHE_LIMIT:
+                    self._ram_cache.popitem(last=False)
+        if not entry or entry.get('source_info') is None:
+            return False
+        need_meas = (
+            self.profile.normalize
+            or self.profile.youtube_loudness
+            or self.profile.output_mode == 'exclusive'
+            or self.profile.tone != 'off'
+        )
+        meas = entry.get('measurement')
+        if need_meas and (meas is None or not valid_measurement(meas)):
+            return False
+
+        self._generation += 1
+        self._pending = False
+        self._request_timer.stop()
+        self.prefetch.invalidate(stop=True)
+        if self.worker is not None:
+            self.worker.stop()
+        self._source_info = entry['source_info']
+        self._measurement = meas
+        self._start_or_reconfigure_stream()
+        self.prefetch.schedule()
+        return True
 
     def _pause_smtc_for_exclusive(self):
         manager = getattr(self.window, 'media_manager', None)
@@ -568,7 +676,8 @@ class AudioEffectsController(QObject):
         self._sync_qt_audio_routing()
         if self._use_stream_engine():
             self.volume_control.set_gain(0.0, False)
-            self._queue_latest()
+            if not self._try_instant_cache_hit(self._original.toLocalFile(), self._track):
+                self._queue_latest()
         else:
             self._apply_qt_normalization(ramp=False)
             self._update_signal_path()
@@ -582,7 +691,8 @@ class AudioEffectsController(QObject):
             self._measurement = None
             self._source_info = None
             if self._use_stream_engine():
-                self._queue_latest()
+                if not self._try_instant_cache_hit(self._original.toLocalFile(), self._track):
+                    self._queue_latest()
 
     def _prepare(self):
         if self._closed:
@@ -620,6 +730,7 @@ class AudioEffectsController(QObject):
         self._source_info = source_info
         if cached_meas is not None:
             self._measurement = cached_meas
+        self._store_ram_cache(self._original.toLocalFile(), self._track, source_info, cached_meas)
         self._start_or_reconfigure_stream()
 
     def _on_quick_measured(self, generation, quick_meas):
@@ -691,6 +802,13 @@ class AudioEffectsController(QObject):
         if self._closed:
             return
         if getattr(worker, 'prefetch', False):
+            if worker.result and not worker.isInterruptionRequested():
+                self._store_ram_cache(
+                    worker.source,
+                    worker.track,
+                    worker.result.get('source_info'),
+                    worker.result.get('measurement'),
+                )
             self.prefetch.finished(worker)
             if self._pending:
                 self._request_timer.start(0)
@@ -704,6 +822,7 @@ class AudioEffectsController(QObject):
             meas = worker.result.get('measurement')
             if meas is not None and valid_measurement(meas):
                 self._measurement = meas
+            self._store_ram_cache(worker.source, worker.track, info, meas)
             if self._use_stream_engine():
                 if not self.stream.is_active() and self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                     self._start_or_reconfigure_stream()
@@ -848,7 +967,9 @@ class AudioEffectsController(QObject):
                     sr_tag = 'SoXR 33-bit'
                 else:
                     sr_tag = 'Bit-Pure Native'
-                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}'
+                lat = st.get('latency_ms')
+                lat_tag = f' · {lat:g} ms' if isinstance(lat, (int, float)) and lat > 0 else ''
+                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}{lat_tag}'
             else:
                 mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
                 out_text = f'{mode_label} · Bit-Pure (Chờ phát)'

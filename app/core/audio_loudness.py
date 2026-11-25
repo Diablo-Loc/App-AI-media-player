@@ -119,6 +119,7 @@ class LoudnessCache:
                 continue
             try:
                 record = json.loads(path.read_text(encoding='utf-8'))
+                prof = record.get('profile')
                 if (
                     not isinstance(record, dict)
                     or record.get('owner') != OWNER_MARKER
@@ -126,7 +127,13 @@ class LoudnessCache:
                     or record.get('source') != signature
                     or record.get('version') != 1
                     or record.get('track') != track
-                    or record.get('profile') != {'normalize': normalize, 'tone': 'off'}
+                    or not isinstance(prof, dict)
+                    or prof.get('normalize') is not normalize
+                    or prof.get('tone') != 'off'
+                    or prof.get('restorer', 'off') != 'off'
+                    or prof.get('output_mode', 'shared') != 'shared'
+                    or prof.get('upsample', 'off') != 'off'
+                    or prof.get('youtube_loudness', False) is not False
                 ):
                     continue
                 gain = record.get('gain', {})
@@ -166,10 +173,14 @@ class LoudnessCache:
             if not isinstance(old, dict) or old.get('owner') != MEASUREMENT_OWNER or old.get('key') != key:
                 raise ValueError('Unowned loudness cache target')
         atomic_bytes(target, json.dumps(record).encode('utf-8'))
+        candidates = [
+            path for path in self.root.glob('*.json')
+            if not path.is_symlink() and re.fullmatch(r'[0-9a-f]{64}\.json', path.name)
+        ]
+        if len(candidates) <= self.limit:
+            return
         owned = []
-        for path in self.root.glob('*.json'):
-            if path.is_symlink() or not re.fullmatch(r'[0-9a-f]{64}\.json', path.name):
-                continue
+        for path in candidates:
             try:
                 data = json.loads(path.read_text(encoding='utf-8'))
                 if isinstance(data, dict) and data.get('owner') == MEASUREMENT_OWNER and data.get('key') == path.stem:
@@ -185,7 +196,10 @@ def probe_audio_stream(source_path, track, processes, cancelled):
     """Inspect source audio codec, sample rate, channels, bitrate, and duration (read-only)."""
     ffprobe = find_tool('ffprobe')
     stdout, _ = run_tool(
-        [ffprobe, '-v', 'error', '-show_streams', '-show_format', '-of', 'json', str(source_path)],
+        [
+            ffprobe, '-v', 'error', '-probesize', '262144', '-analyzeduration', '500000',
+            '-show_streams', '-show_format', '-of', 'json', str(source_path),
+        ],
         processes,
         cancelled,
         timeout=8,
