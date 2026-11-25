@@ -5,7 +5,7 @@ import math
 import re
 
 PROCESSOR_VERSION = 1
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 TARGET_LUFS = -18.0
 DEFAULT_TARGET_LUFS = -16
 VALID_TARGETS = (-16, -14, -18)
@@ -130,6 +130,7 @@ class AudioProfile:
     eq_bass_db: float = 0.0
     eq_treble_db: float = 0.0
     eq_crossfeed: int = 0
+    output_device: str = ''
 
     @property
     def enabled(self):
@@ -141,6 +142,7 @@ class AudioProfile:
             or self.output_mode == 'exclusive'
             or self.upsample != 'off'
             or self.eq_enabled
+            or bool(self.output_device)
         )
 
     @property
@@ -195,6 +197,8 @@ class AudioProfile:
         except (TypeError, ValueError):
             eq_crossfeed = 0
 
+        output_device = str(data.get('output_device') or '').strip()[:160]
+
         return cls(
             normalize=normalize,
             tone=tone if isinstance(tone, str) and tone in TONES else 'off',
@@ -209,6 +213,7 @@ class AudioProfile:
             eq_bass_db=_clamp_float('eq_bass_db', 0.0, -6.0, 8.0),
             eq_treble_db=_clamp_float('eq_treble_db', 0.0, -6.0, 8.0),
             eq_crossfeed=eq_crossfeed,
+            output_device=output_device,
         )
 
     def as_dict(self):
@@ -226,6 +231,7 @@ class AudioProfile:
             'eq_bass_db': self.eq_bass_db,
             'eq_treble_db': self.eq_treble_db,
             'eq_crossfeed': self.eq_crossfeed,
+            'output_device': self.output_device,
         }
 
 
@@ -506,6 +512,8 @@ def preset_profile(preset_key: str) -> tuple[AudioProfile, int | None]:
 
 def detect_preset(profile: AudioProfile, target_lufs: int = -16) -> str:
     """Identify which quick preset matches the current profile & target LUFS, or 'custom'."""
+    if not profile.enabled:
+        return 'bypass'
     if getattr(profile, 'eq_enabled', False):
         return 'custom'
     base = replace(
@@ -517,9 +525,10 @@ def detect_preset(profile: AudioProfile, target_lufs: int = -16) -> str:
         eq_bass_db=0.0,
         eq_treble_db=0.0,
         eq_crossfeed=0,
+        output_device='',
     )
     if not base.enabled:
-        return 'bypass'
+        return 'custom'
     if (
         base.youtube_loudness
         and not base.normalize

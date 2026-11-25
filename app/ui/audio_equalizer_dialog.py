@@ -1,5 +1,7 @@
-"""Studio 64-bit 10-band Parametric/Graphic Equalizer with live curve, shelves & APO import/export."""
+"""Studio 64-bit 10-band Parametric/Graphic Equalizer with live curve, shelves, A/B compare & APO .txt I/O."""
+from dataclasses import replace
 import math
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal, QPointF
 from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen, QBrush
@@ -8,6 +10,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QInputDialog,
@@ -32,6 +35,7 @@ from core.audio_profile import (
     normalize_eq_bands,
     parse_apo_text,
 )
+from core.subtitle_persistence import atomic_bytes
 from ui.design_system import DIALOG_STYLE
 
 
@@ -151,7 +155,7 @@ class StudioEqualizerDialog(QDialog):
         super().__init__(parent)
         self.setModal(False)
         self.setWindowTitle('BoTube Studio Equalizer · 64-bit Float')
-        self.resize(728, 492)
+        self.resize(780, 504)
         self.setStyleSheet(DIALOG_STYLE + '''
             QDialog { background: #101722; color: #EDF3FA; font-family: 'Segoe UI'; }
             QSlider::groove:vertical { width: 5px; background: #263344; border-radius: 2px; }
@@ -164,10 +168,14 @@ class StudioEqualizerDialog(QDialog):
             QSlider::handle:horizontal { background: #EDF3FA; border: 2px solid #77E0BE;
                 width: 12px; height: 12px; margin: -4px 0; border-radius: 7px; }
             QFrame#eqStripFrame { background: #151C26; border: 1px solid #223042; border-radius: 10px; }
+            QPushButton#abCompareBtn { background: #262218; color: #F2D184; border: 1px solid #594825; font-weight: 600; }
+            QPushButton#abCompareBtn:hover { background: #332C1D; }
+            QPushButton#abCompareBtn[abActive="true"] { background: #F2C96B; color: #0D1118; border-color: #F2C96B; }
         ''')
 
         self._user_presets: dict[str, dict] = {}
         self._syncing = False
+        self._ab_holding = False
         self._emit_timer = QTimer(self)
         self._emit_timer.setSingleShot(True)
         self._emit_timer.setInterval(140)
@@ -192,10 +200,11 @@ class StudioEqualizerDialog(QDialog):
 
         self.btn_save_preset = QPushButton('Lưu mẫu…')
         self.btn_delete_preset = QPushButton('Xóa')
-        self.btn_paste_apo = QPushButton('Dán APO')
-        self.btn_copy_apo = QPushButton('Chép APO')
+        self.btn_ab = QPushButton('Giữ: Đọ âm Gốc (A/B)')
+        self.btn_ab.setObjectName('abCompareBtn')
+        self.btn_ab.setToolTip('Nhấn giữ để nghe âm gốc (tắt EQ tức thì); nhả ra để bật lại 10 dải EQ.')
         self.btn_reset = QPushButton('0 dB')
-        for btn in (self.btn_save_preset, self.btn_delete_preset, self.btn_paste_apo, self.btn_copy_apo, self.btn_reset):
+        for btn in (self.btn_save_preset, self.btn_delete_preset, self.btn_ab, self.btn_reset):
             btn.setMinimumHeight(30)
             hdr.addWidget(btn)
         root.addLayout(hdr)
@@ -247,9 +256,19 @@ class StudioEqualizerDialog(QDialog):
         self.crossfeed_slider, self.crossfeed_lbl = self._make_horiz_knob(bot_layout, 'Loa 30°', 0, 100, '%', scale=1.0)
         root.addWidget(bot)
 
-        self.lbl_info = QLabel('Xử lý tức thì trong RAM (64-bit Float) · Không chạm file nhạc gốc · Không ghi ổ cứng')
+        footer_row = QHBoxLayout()
+        footer_row.setSpacing(6)
+        self.lbl_info = QLabel('Xử lý tức thì trong RAM (64-bit Float) · Không chạm file nhạc gốc')
         self.lbl_info.setStyleSheet('color: #77E0BE; font-size: 11px;')
-        root.addWidget(self.lbl_info)
+        footer_row.addWidget(self.lbl_info, stretch=1)
+        self.btn_open_txt = QPushButton('Mở .txt…')
+        self.btn_save_txt = QPushButton('Lưu .txt…')
+        self.btn_paste_apo = QPushButton('Dán APO')
+        self.btn_copy_apo = QPushButton('Chép APO')
+        for btn in (self.btn_open_txt, self.btn_save_txt, self.btn_paste_apo, self.btn_copy_apo):
+            btn.setMinimumHeight(28)
+            footer_row.addWidget(btn)
+        root.addLayout(footer_row)
 
         self._rebuild_curve_combo()
         self._connect_signals()
@@ -306,6 +325,10 @@ class StudioEqualizerDialog(QDialog):
         self.curve_combo.currentIndexChanged.connect(self._on_curve_selected)
         self.btn_save_preset.clicked.connect(self.save_user_preset_prompt)
         self.btn_delete_preset.clicked.connect(self.delete_selected_user_preset)
+        self.btn_ab.pressed.connect(self.start_ab_compare)
+        self.btn_ab.released.connect(self.stop_ab_compare)
+        self.btn_open_txt.clicked.connect(self.open_apo_file_dialog)
+        self.btn_save_txt.clicked.connect(self.save_apo_file_dialog)
         self.btn_paste_apo.clicked.connect(self.paste_apo_from_clipboard)
         self.btn_copy_apo.clicked.connect(self.copy_apo_to_clipboard)
         self.btn_reset.clicked.connect(self.reset_flat)
@@ -431,7 +454,7 @@ class StudioEqualizerDialog(QDialog):
             self._rebuild_curve_combo()
         self._syncing = True
         try:
-            self.enable_cb.setChecked(bool(profile.eq_enabled))
+            self.enable_cb.setChecked(True if self._ab_holding else bool(profile.eq_enabled))
             self.auto_preamp_cb.setChecked(bool(profile.eq_auto_preamp))
             self.preamp_slider.setValue(int(round(float(profile.eq_preamp_db) * 10)))
             for sld, g in zip(self.band_sliders, normalize_eq_bands(profile.eq_bands)):
@@ -506,6 +529,75 @@ class StudioEqualizerDialog(QDialog):
         cb = QApplication.clipboard()
         self.apply_apo_text(cb.text() if cb is not None else '')
 
+    def start_ab_compare(self):
+        if self._ab_holding or not self.enable_cb.isChecked():
+            return
+        self._ab_holding = True
+        self.btn_ab.setProperty('abActive', True)
+        self.btn_ab.style().unpolish(self.btn_ab)
+        self.btn_ab.style().polish(self.btn_ab)
+        self.btn_ab.setText('Đang nghe Gốc (Nhả để bật EQ)')
+        self.lbl_info.setText('ĐANG NGHE ÂM GỐC (BYPASS EQ) — Nhả chuột để bật lại 10 dải EQ!')
+        self._emit_timer.stop()
+        cur = self.current_eq_dict()
+        self.canvas.set_profile(replace(AudioProfile.from_dict(cur), eq_enabled=False))
+        cur['eq_enabled'] = False
+        self.eq_changed.emit(cur)
+
+    def stop_ab_compare(self):
+        if not self._ab_holding:
+            return
+        self._ab_holding = False
+        self._syncing = True
+        try:
+            self.enable_cb.setChecked(True)
+        finally:
+            self._syncing = False
+        self.btn_ab.setProperty('abActive', False)
+        self.btn_ab.style().unpolish(self.btn_ab)
+        self.btn_ab.style().polish(self.btn_ab)
+        self.btn_ab.setText('Giữ: Đọ âm Gốc (A/B)')
+        self.lbl_info.setText('Xử lý tức thì trong RAM (64-bit Float) · Không chạm file nhạc gốc')
+        self._refresh_readouts()
+        self._emit_timer.stop()
+        self.eq_changed.emit(self.current_eq_dict())
+
+    def import_apo_file(self, path) -> bool:
+        try:
+            text = Path(path).read_text(encoding='utf-8-sig')
+        except OSError:
+            self.lbl_info.setText('Không đọc được file Equalizer APO (.txt).')
+            return False
+        ok = self.apply_apo_text(text)
+        if ok:
+            self.lbl_info.setText(f'Đã nạp preset từ {Path(path).name}!')
+        return ok
+
+    def export_apo_file(self, path) -> bool:
+        try:
+            prof = AudioProfile.from_dict(self.current_eq_dict())
+            target = Path(path)
+            atomic_bytes(target, (export_apo_text(prof) + '\n').encode('utf-8'))
+            self.lbl_info.setText(f'Đã lưu preset Equalizer APO ra {target.name}!')
+            return True
+        except OSError:
+            self.lbl_info.setText('Không ghi được file preset Equalizer APO.')
+            return False
+
+    def open_apo_file_dialog(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, 'Mở file cấu hình Equalizer APO (.txt)', '', 'Equalizer APO (*.txt);;All Files (*)'
+        )
+        if path:
+            self.import_apo_file(path)
+
+    def save_apo_file_dialog(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, 'Lưu cấu hình Equalizer APO (.txt)', 'botube-eq.txt', 'Equalizer APO (*.txt);;All Files (*)'
+        )
+        if path:
+            self.export_apo_file(path)
+
     def reset_flat(self):
         self._syncing = True
         try:
@@ -522,6 +614,11 @@ class StudioEqualizerDialog(QDialog):
         self._emit_now()
         self.lbl_info.setText('Đã đưa toàn bộ 10 dải EQ & hiệu ứng về 0.0 dB.')
 
+    def hideEvent(self, event):
+        self.stop_ab_compare()
+        super().hideEvent(event)
+
     def closeEvent(self, event):
+        self.stop_ab_compare()
         self.flush_pending()
         super().closeEvent(event)

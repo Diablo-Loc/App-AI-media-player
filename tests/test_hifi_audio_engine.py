@@ -1,4 +1,5 @@
 """Verification suite for BoTube Studio Hi-Fi Real-Time Audio Engine (Bit-Pure & Null-Test Proven)."""
+from dataclasses import replace
 import json
 import os
 from pathlib import Path
@@ -571,6 +572,124 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             pump(40)
             self.assertTrue(ctrl.profile.eq_enabled)
             self.assertAlmostEqual(ctrl.profile.eq_bands[0], 6.2, places=1)
+
+    def test_output_device_pinning_unplugged_fallback_and_per_device_hotplug_memory(self):
+        import sounddevice as sd
+        studio_prof, lufs = preset_profile('studio_dawn_aria2')
+        pinned = replace(studio_prof, output_device='Headphones (DAWN PRO2)')
+        self.assertTrue(pinned.enabled)
+        self.assertEqual(detect_preset(pinned, lufs), 'studio_dawn_aria2')
+        self.assertEqual(detect_preset(AudioProfile(output_device='Headphones (DAWN PRO2)')), 'custom')
+
+        class FakeWasapi:
+            def __init__(self, exclusive=False):
+                self.exclusive = exclusive
+
+        with patch('sounddevice.WasapiSettings', FakeWasapi), \
+             patch('sounddevice.query_hostapis', return_value=[{'name': 'Windows WASAPI', 'devices': [0], 'default_output_device': 0}]), \
+             patch('sounddevice.query_devices', return_value={'name': 'Speakers (Realtek(R) Audio)', 'max_output_channels': 2, 'default_samplerate': 48000.0}), \
+             patch('sounddevice.RawOutputStream') as mock_stream:
+            def _open(**kwargs):
+                if kwargs['extra_settings'].exclusive:
+                    raise sd.PortAudioError('Exclusive rejected', -9996)
+                return mock_stream.return_value
+            mock_stream.side_effect = _open
+            engine = AudioStreamEngine()
+            with tempfile.TemporaryDirectory() as td:
+                wav = Path(td) / 'pin.wav'
+                subprocess.run([FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                                '-i', 'sine=f=440:r=48000:d=0.4', str(wav)], check=True)
+                info = engine.start_or_reconfigure(
+                    str(wav), 0, replace(pinned, output_mode='shared'),
+                    {'codec_name': 'pcm_s16le', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 1536000},
+                    0.0,
+                )
+                self.assertIn('Chưa cắm "Headphones (DAWN PRO2)"', info['fallback_reason'])
+                engine.shutdown()
+
+        # Per-device memory auto-switches on hotplug between Space Travel 2 Ultra & Dawn Pro 2
+        with isolated_window() as (window, root):
+            ctrl = window.audio_effects
+            state = {
+                'devs': ['Speakers (Realtek(R) Audio)', 'Headphones (SPACE TRAVEL 2 ULTRA)'],
+                'default': 'Headphones (SPACE TRAVEL 2 ULTRA)',
+            }
+            ctrl._last_device_key = state['default']
+            with patch.object(ctrl, '_available_device_names', side_effect=lambda: list(state['devs'])), \
+                 patch.object(ctrl, '_system_default_device_name', side_effect=lambda: state['default']), \
+                 patch.object(ctrl.stream, 'refresh_devices', side_effect=lambda: list(state['devs'])), \
+                 patch('control.audio_effects.QMediaDevices.audioOutputs', return_value=[]):
+                idx = ctrl.panel.preset_combo.findData('walkman_vivid')
+                ctrl.panel.preset_combo.setCurrentIndex(idx)
+                pump(40)
+                self.assertIn('Headphones (SPACE TRAVEL 2 ULTRA)', ctrl.device_profiles)
+                self.assertEqual(ctrl.target_lufs, -14)
+
+                # Plug in Dawn Pro 2 -> auto-applies studio_dawn_aria2 (-16 LUFS Exclusive Hi-Res)
+                state['devs'].append('Headphones (DAWN PRO2)')
+                state['default'] = 'Headphones (DAWN PRO2)'
+                ctrl._handle_device_change()
+                pump(40)
+                self.assertEqual(ctrl.profile.output_mode, 'exclusive')
+                self.assertEqual(ctrl.profile.upsample, 'hires_sync')
+                self.assertEqual(ctrl.profile.tone, 'studio_aria2')
+                self.assertEqual(ctrl.target_lufs, -16)
+
+                # Customize 10-band EQ on Dawn Pro 2
+                ctrl.set_custom_eq({'eq_enabled': True, 'eq_bands': (4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0)})
+                pump(30)
+
+                # Unplug Dawn Pro 2 -> restores Space Travel 2 Ultra profile cleanly
+                state['devs'].remove('Headphones (DAWN PRO2)')
+                state['default'] = 'Headphones (SPACE TRAVEL 2 ULTRA)'
+                ctrl._handle_device_change()
+                pump(40)
+                self.assertEqual(ctrl.profile.tone, 'walkman_vivid')
+                self.assertFalse(ctrl.profile.eq_enabled)
+                self.assertEqual(ctrl.target_lufs, -14)
+
+                # Plug Dawn Pro 2 back in -> restores custom 10-band EQ + Exclusive Hi-Res
+                state['devs'].append('Headphones (DAWN PRO2)')
+                state['default'] = 'Headphones (DAWN PRO2)'
+                ctrl._handle_device_change()
+                pump(40)
+                self.assertTrue(ctrl.profile.eq_enabled)
+                self.assertAlmostEqual(ctrl.profile.eq_bands[0], 4.0, places=1)
+                self.assertEqual(ctrl.profile.output_mode, 'exclusive')
+
+    def test_equalizer_ab_hold_compare_and_apo_txt_file_import_export(self):
+        with isolated_window() as (window, root):
+            ctrl = window.audio_effects
+            dlg = ctrl.open_equalizer()
+            dlg.curve_combo.setCurrentIndex(dlg.curve_combo.findData('aria2_harman'))
+            pump(40)
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 2.5, places=1)
+
+            # Hold A/B compare bypasses EQ cleanly without losing slider positions
+            dlg.start_ab_compare()
+            pump(30)
+            self.assertFalse(ctrl.profile.eq_enabled)
+            self.assertEqual(dlg.band_sliders[0].value(), 25)
+
+            # Release A/B restores active 10-band EQ
+            dlg.stop_ab_compare()
+            pump(30)
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 2.5, places=1)
+
+            # Export and import .txt APO preset file (zero .mkv audio files written)
+            txt_path = root / 'aria2_harman.txt'
+            self.assertTrue(dlg.export_apo_file(txt_path))
+            self.assertTrue(txt_path.is_file())
+            dlg.reset_flat()
+            pump(30)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 0.0, places=1)
+            self.assertTrue(dlg.import_apo_file(txt_path))
+            pump(30)
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 2.5, places=1)
+            self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
 
 
 if __name__ == '__main__':

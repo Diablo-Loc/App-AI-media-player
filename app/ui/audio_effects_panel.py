@@ -22,12 +22,15 @@ class AudioEffectsPanel(QWidget):
     level_changed = Signal(int)
     prefetch_changed = Signal(bool)
     open_eq_requested = Signal()
+    output_device_changed = Signal(str)
+    per_device_changed = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName('audioEffectsPanel')
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFixedWidth(388)
+        self._output_device = ''
         self._eq_state = {
             'eq_enabled': False,
             'eq_bands': FLAT_EQ_BANDS,
@@ -86,18 +89,42 @@ class AudioEffectsPanel(QWidget):
         self.preset_combo.setMinimumHeight(30)
         layout.addWidget(self.preset_combo)
 
-        layout.addWidget(QLabel('Chế độ đầu ra (DAC / Tai nghe)'))
+        layout.addWidget(QLabel('Thiết bị xuất âm (DAC / Tai nghe)'))
+        self.device_combo = QComboBox()
+        self.device_combo.addItem('Theo mặc định Windows (Tự động)', '')
+        self.device_combo.view().setMinimumWidth(340)
+        self.device_combo.setToolTip(
+            'Ghim thẳng USB DAC (như Dawn Pro 2) để dùng WASAPI Exclusive độc lập với âm thanh trình duyệt/Windows.'
+        )
+        self.device_combo.setMinimumHeight(29)
+        layout.addWidget(self.device_combo)
+
+        self.per_device_cb = QCheckBox('Tự nhớ cấu hình riêng cho từng tai nghe / DAC')
+        self.per_device_cb.setChecked(True)
+        self.per_device_cb.setToolTip(
+            'Tự chuyển sang preset & EQ tương ứng khi cắm USB DAC Dawn Pro 2 hoặc chuyển sang loa / Bluetooth.'
+        )
+        layout.addWidget(self.per_device_cb)
+
+        dac_hdr = QHBoxLayout()
+        dac_hdr.setSpacing(8)
+        dac_hdr.addWidget(QLabel('Chế độ đầu ra'), stretch=1)
+        dac_hdr.addWidget(QLabel('Tần số Hi-Res (SoXR)'), stretch=1)
+        layout.addLayout(dac_hdr)
+
+        dac_row = QHBoxLayout()
+        dac_row.setSpacing(8)
         self.output_mode = QComboBox()
         self.output_mode.addItem('Tiêu chuẩn — WASAPI Shared (Nghe chung mọi app)', 'shared')
         self.output_mode.addItem('Độc quyền DAC — WASAPI Exclusive (Tối đa chất âm)', 'exclusive')
+        self.output_mode.view().setMinimumWidth(340)
         self.output_mode.setToolTip(
             'Shared: nghe chung cùng Chrome/Discord. Exclusive: khóa thẳng USB DAC (như Dawn Pro 2) '
             'để bỏ qua bộ trộn Windows; tự chuyển về Shared nếu thiết bị Bluetooth không hỗ trợ.'
         )
-        self.output_mode.setMinimumHeight(30)
-        layout.addWidget(self.output_mode)
+        self.output_mode.setMinimumHeight(29)
+        dac_row.addWidget(self.output_mode, stretch=1)
 
-        layout.addWidget(QLabel('Nâng tần số lấy mẫu (SoXR 33-bit Hi-Res)'))
         self.upsample = QComboBox()
         for text, key in (
             ('Tần số gốc (Bit-Pure Native)', 'off'),
@@ -105,13 +132,15 @@ class AudioEffectsPanel(QWidget):
             ('Tối đa chip DAC (352.8 / 384 kHz · SoXR 33-bit)', 'max_dac'),
         ):
             self.upsample.addItem(text, key)
+        self.upsample.view().setMinimumWidth(340)
         self.upsample.setToolTip(
             'Hoạt động tối đa khi bật WASAPI Exclusive trên USB DAC như Dawn Pro 2: '
             'dùng bộ lọc SoXR 33-bit nâng tần số 4×/8× để bỏ qua lọc thô bên trong chip DAC. '
             'Chế độ Shared đi theo tần số Windows Mixer.'
         )
-        self.upsample.setMinimumHeight(30)
-        layout.addWidget(self.upsample)
+        self.upsample.setMinimumHeight(29)
+        dac_row.addWidget(self.upsample, stretch=1)
+        layout.addLayout(dac_row)
 
         self.normalize = QCheckBox('Cân bằng âm lượng (EBU R128 / YouTube)')
         self.normalize.setToolTip(
@@ -234,6 +263,8 @@ class AudioEffectsPanel(QWidget):
         layout.addLayout(btn_row)
 
         self.preset_combo.currentIndexChanged.connect(self._on_preset_selected)
+        self.device_combo.currentIndexChanged.connect(self._on_device_selected)
+        self.per_device_cb.toggled.connect(self.per_device_changed.emit)
         self.normalize.toggled.connect(self._emit_settings)
         self.level.currentIndexChanged.connect(self._on_level_changed)
         self.tone.currentIndexChanged.connect(self._emit_settings)
@@ -242,6 +273,41 @@ class AudioEffectsPanel(QWidget):
         self.upsample.currentIndexChanged.connect(self._emit_settings)
         self.btn_recommended.clicked.connect(self._apply_recommended)
         self.reset.clicked.connect(self._reset)
+
+    def _on_device_selected(self, *_):
+        self._output_device = str(self.device_combo.currentData() or '')
+        self._sync_preset_combo()
+        self.output_device_changed.emit(self._output_device)
+
+    def set_output_devices(self, devices: list[str], selected_device: str = ''):
+        sel = (selected_device or '').strip()
+        self._output_device = sel
+        self.device_combo.blockSignals(True)
+        self.device_combo.clear()
+        self.device_combo.addItem('Theo mặc định Windows (Tự động)', '')
+        seen = set()
+        for dev in devices or ():
+            clean = str(dev or '').strip()
+            if clean and clean.lower() not in seen:
+                seen.add(clean.lower())
+                self.device_combo.addItem(clean, clean)
+        if sel and sel.lower() not in seen:
+            self.device_combo.addItem(f'{sel} (Đang rút — tự nhận khi cắm)', sel)
+        idx = self.device_combo.findData(sel)
+        if idx < 0 and sel:
+            for i in range(self.device_combo.count()):
+                data = str(self.device_combo.itemData(i) or '')
+                if data and data.lower() == sel.lower():
+                    idx = i
+                    break
+        self.device_combo.setCurrentIndex(max(0, idx))
+        self.device_combo.blockSignals(False)
+        self._sync_preset_combo()
+
+    def set_per_device_memory(self, enabled: bool):
+        self.per_device_cb.blockSignals(True)
+        self.per_device_cb.setChecked(bool(enabled))
+        self.per_device_cb.blockSignals(False)
 
     def _request_open_eq(self):
         self.hide()
@@ -275,6 +341,7 @@ class AudioEffectsPanel(QWidget):
             output_mode=self.output_mode.currentData() or 'shared',
             upsample=self.upsample.currentData() or 'off',
             youtube_loudness=yt_loud,
+            output_device=self._output_device,
             **self._eq_state,
         )
         key = detect_preset(prof, self._current_target_lufs())
@@ -321,7 +388,8 @@ class AudioEffectsPanel(QWidget):
         up_val = self.upsample.currentData() or 'off'
         any_enabled = (
             norm or yt_loud or tone_val != 'off' or rest_val != 'off'
-            or out_val == 'exclusive' or up_val != 'off' or bool(self._eq_state.get('eq_enabled'))
+            or out_val == 'exclusive' or up_val != 'off'
+            or bool(self._eq_state.get('eq_enabled')) or bool(self._output_device)
         )
         self.level.setEnabled(checked)
         self.prefetch_next.setEnabled(any_enabled)
@@ -336,7 +404,8 @@ class AudioEffectsPanel(QWidget):
     def _reset(self):
         eq_state = dict(self._eq_state)
         eq_state['eq_enabled'] = False
-        self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state)
+        self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state, output_device='')
+        self.output_device_changed.emit('')
         self._emit_settings()
 
     def set_profile(
@@ -349,10 +418,21 @@ class AudioEffectsPanel(QWidget):
         youtube_loudness=False,
         target_lufs=None,
         eq_state=None,
+        output_device=None,
     ):
-        widgets = (self.preset_combo, self.normalize, self.level, self.tone, self.restorer, self.output_mode, self.upsample)
+        widgets = (
+            self.preset_combo, self.device_combo, self.normalize, self.level,
+            self.tone, self.restorer, self.output_mode, self.upsample,
+        )
         for w in widgets:
             w.blockSignals(True)
+        if output_device is not None:
+            self._output_device = str(output_device or '').strip()
+            idx_d = self.device_combo.findData(self._output_device)
+            if idx_d < 0 and self._output_device:
+                self.device_combo.addItem(f'{self._output_device} (Đang rút — tự nhận khi cắm)', self._output_device)
+                idx_d = self.device_combo.findData(self._output_device)
+            self.device_combo.setCurrentIndex(max(0, idx_d))
         if isinstance(eq_state, dict):
             for k in ('eq_enabled', 'eq_bands', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
                 if k in eq_state:
@@ -362,7 +442,7 @@ class AudioEffectsPanel(QWidget):
         any_enabled = (
             checked or tone != 'off' or restorer != 'off'
             or output_mode == 'exclusive' or upsample != 'off'
-            or bool(self._eq_state.get('eq_enabled'))
+            or bool(self._eq_state.get('eq_enabled')) or bool(self._output_device)
         )
         self.normalize.setChecked(checked)
         self.level.setEnabled(checked)

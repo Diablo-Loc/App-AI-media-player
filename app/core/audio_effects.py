@@ -61,6 +61,7 @@ def cache_key(signature, profile, track):
         and getattr(profile, 'upsample', 'off') == 'off'
         and not getattr(profile, 'youtube_loudness', False)
         and not getattr(profile, 'eq_enabled', False)
+        and not getattr(profile, 'output_device', '')
     ):
         profile_data = {'normalize': profile.normalize, 'tone': profile.tone}
     else:

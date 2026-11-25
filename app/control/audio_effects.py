@@ -16,6 +16,7 @@ from core.audio_profile import (
     compute_mastering_gain_db,
     custom_eq_peak_boost_db,
     effective_eq_preamp_db,
+    preset_profile,
     resolve_restorer,
     tone_peak_pad_db,
 )
@@ -34,7 +35,12 @@ from core.audio_loudness import (
     DEFAULT_TARGET,
     TARGETS,
 )
-from core.audio_stream_engine import AudioStreamEngine, is_stream_engine_available
+from core.audio_stream_engine import (
+    AudioStreamEngine,
+    _device_matches,
+    is_stream_engine_available,
+    list_wasapi_output_devices,
+)
 from core.subtitle_persistence import atomic_bytes
 from control.audio_volume import AudioVolumeControl
 from control.audio_prefetch import NextAudioPrefetch
@@ -208,6 +214,8 @@ class AudioEffectsController(QObject):
         self.settings_path = Path(root) / 'audio-effects.json'
         self.target_lufs = DEFAULT_TARGET
         self.prefetch_enabled = True
+        self.per_device_memory = True
+        self.device_profiles = {}
         self.user_eq_presets = {}
         self.eq_dialog = None
         self.profile = self._load_profile()
@@ -230,7 +238,12 @@ class AudioEffectsController(QObject):
         )
         self.stream.set_user_volume(self.volume(), window.audio_output.isMuted())
 
+        initial_avail = self._available_device_names()
+        self._last_device_key = self._effective_device_key(initial_avail)
+
         self.panel = AudioEffectsPanel(window)
+        self.panel.set_output_devices(initial_avail, self.profile.output_device)
+        self.panel.set_per_device_memory(self.per_device_memory)
         self.panel.set_profile(
             self.profile.normalize,
             self.profile.tone,
@@ -240,10 +253,13 @@ class AudioEffectsController(QObject):
             self.profile.youtube_loudness,
             target_lufs=self.target_lufs,
             eq_state=self.profile.as_dict(),
+            output_device=self.profile.output_device,
         )
         self.panel.set_target(self.target_lufs)
         self.panel.level_changed.connect(self.set_target)
         self.panel.open_eq_requested.connect(self.open_equalizer)
+        self.panel.output_device_changed.connect(self.set_output_device)
+        self.panel.per_device_changed.connect(self.set_per_device_memory)
 
         self.worker = None
         self._pending = False
@@ -286,6 +302,9 @@ class AudioEffectsController(QObject):
 
         if hasattr(window, 'audio_devices') and hasattr(window.audio_devices, 'audioOutputsChanged'):
             window.audio_devices.audioOutputsChanged.connect(lambda: self._device_timer.start())
+        else:
+            self._qt_devices = QMediaDevices(self)
+            self._qt_devices.audioOutputsChanged.connect(lambda: self._device_timer.start())
 
         self.panel.settings_changed.connect(self.set_profile)
         window.playback_bar.btn_audio.clicked.connect(self.toggle_panel)
@@ -404,11 +423,17 @@ class AudioEffectsController(QObject):
                 self.target_lufs = int(data['target_lufs'])
             if isinstance(data, dict) and isinstance(data.get('prefetch_next'), bool):
                 self.prefetch_enabled = data['prefetch_next']
+            if isinstance(data, dict) and isinstance(data.get('per_device_memory'), bool):
+                self.per_device_memory = data['per_device_memory']
+            if isinstance(data, dict) and isinstance(data.get('device_profiles'), dict):
+                self.device_profiles = {
+                    str(k): dict(v) for k, v in data['device_profiles'].items() if isinstance(k, str) and isinstance(v, dict)
+                }
             if isinstance(data, dict) and isinstance(data.get('user_eq_presets'), dict):
                 self.user_eq_presets = dict(data['user_eq_presets'])
             if (
                 isinstance(data, dict)
-                and data.get('schema_version') not in (4, SCHEMA_VERSION)
+                and data.get('schema_version') not in (4, 5, SCHEMA_VERSION)
                 and data.get('tone') == 'aria2'
                 and data.get('restorer') == 'auto'
             ):
@@ -423,12 +448,68 @@ class AudioEffectsController(QObject):
             schema_version=SCHEMA_VERSION,
             target_lufs=self.target_lufs,
             prefetch_next=self.prefetch_enabled,
+            per_device_memory=self.per_device_memory,
+            device_profiles=self.device_profiles,
             user_eq_presets=self.user_eq_presets,
         )
         try:
             atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
         except OSError:
             self.panel.set_status('Đã đổi cho phiên này; chưa lưu được tùy chọn.')
+
+    def _available_device_names(self) -> list[str]:
+        names = []
+        seen = set()
+        raw = []
+        if self._stream_available:
+            raw.extend(list_wasapi_output_devices())
+        try:
+            for dev in QMediaDevices.audioOutputs():
+                raw.append(dev.description())
+        except Exception:
+            pass
+        for item in raw:
+            clean = str(item or '').strip()
+            if clean and clean.lower() not in seen:
+                seen.add(clean.lower())
+                names.append(clean)
+        return names
+
+    @staticmethod
+    def _system_default_device_name() -> str:
+        try:
+            return str(QMediaDevices.defaultAudioOutput().description() or '').strip()
+        except Exception:
+            return ''
+
+    def _effective_device_key(self, available: list[str] | None = None) -> str:
+        avail = available if available is not None else self._available_device_names()
+        pin = str(self.profile.output_device or '').strip()
+        if pin:
+            for name in avail:
+                if _device_matches(name, pin):
+                    return name
+        return self._system_default_device_name()
+
+    def _find_device_profile(self, dev_key: str) -> dict | None:
+        if not dev_key:
+            return None
+        if dev_key in self.device_profiles:
+            return self.device_profiles[dev_key]
+        for key, val in self.device_profiles.items():
+            if _device_matches(key, dev_key):
+                return val
+        return None
+
+    def _record_current_device_profile(self, dev_key: str | None = None):
+        if not self.per_device_memory:
+            return
+        key = dev_key or self._last_device_key or self._effective_device_key()
+        if not key:
+            return
+        snap = dict(self.profile.as_dict(), target_lufs=self.target_lufs)
+        snap.pop('output_device', None)
+        self.device_profiles[key] = snap
 
     @property
     def switching(self):
@@ -504,8 +585,46 @@ class AudioEffectsController(QObject):
             return
         self.target_lufs = target
         self.panel.set_target(target)
+        self._record_current_device_profile()
         self._save_profile()
         self._refresh_gain_live()
+
+    def set_per_device_memory(self, enabled: bool):
+        if self._closed:
+            return
+        self.per_device_memory = enabled is True
+        self.panel.set_per_device_memory(self.per_device_memory)
+        if self.per_device_memory:
+            self._record_current_device_profile()
+        self._save_profile()
+
+    def set_output_device(self, device_name: str):
+        if self._closed:
+            return
+        clean = str(device_name or '').strip()[:160]
+        if clean == self.profile.output_device:
+            return
+        avail = self._available_device_names()
+        new_key = clean or self._system_default_device_name()
+        for name in avail:
+            if clean and _device_matches(name, clean):
+                new_key = name
+                break
+        next_prof = replace(self.profile, output_device=clean)
+        if self.per_device_memory and new_key:
+            saved = self._find_device_profile(new_key)
+            if isinstance(saved, dict):
+                if saved.get('target_lufs') in TARGETS:
+                    self.target_lufs = int(saved['target_lufs'])
+                    self.panel.set_target(self.target_lufs)
+                next_prof = AudioProfile.from_dict({**saved, 'output_device': clean})
+            elif clean and 'DAWN PRO' in clean.upper():
+                studio_prof, studio_lufs = preset_profile('studio_dawn_aria2')
+                self.target_lufs = int(studio_lufs or DEFAULT_TARGET)
+                self.panel.set_target(self.target_lufs)
+                next_prof = replace(studio_prof, output_device=clean)
+            self._last_device_key = new_key
+        self._apply_profile_change(next_prof, save_to_device=True)
 
     def _resolve_current_gain(self):
         pad_db = tone_peak_pad_db(self.profile)
@@ -670,7 +789,7 @@ class AudioEffectsController(QObject):
             merged['eq_enabled'] = False
         self._apply_profile_change(AudioProfile.from_dict(merged))
 
-    def _apply_profile_change(self, profile: AudioProfile):
+    def _apply_profile_change(self, profile: AudioProfile, save_to_device: bool = True):
         if profile == self.profile:
             return
         old = self.profile
@@ -685,9 +804,12 @@ class AudioEffectsController(QObject):
             profile.youtube_loudness,
             target_lufs=self.target_lufs,
             eq_state=profile.as_dict(),
+            output_device=profile.output_device,
         )
         if self.eq_dialog is not None:
             self.eq_dialog.set_state(profile)
+        if save_to_device and profile.enabled:
+            self._record_current_device_profile()
         self._save_profile()
         self._update_button()
         self.prefetch.refresh()
@@ -715,6 +837,7 @@ class AudioEffectsController(QObject):
             or old.restorer != profile.restorer
             or old.output_mode != profile.output_mode
             or old.upsample != profile.upsample
+            or old.output_device != profile.output_device
             or eq_filter_changed
             or not self.stream.is_active()
         )
@@ -1007,10 +1130,64 @@ class AudioEffectsController(QObject):
             self.stream.seek(self.player.position())
 
     def _handle_device_change(self):
-        if self._closed or not self._use_stream_engine():
+        if self._closed:
             return
-        if self._source_info is not None:
+        was_active = self.stream.is_active()
+        avail = []
+        seen = set()
+        raw = []
+        if self._stream_available:
+            raw.extend(self.stream.refresh_devices())
+        try:
+            for dev in QMediaDevices.audioOutputs():
+                raw.append(dev.description())
+        except Exception:
+            pass
+        for item in raw:
+            clean = str(item or '').strip()
+            if clean and clean.lower() not in seen:
+                seen.add(clean.lower())
+                avail.append(clean)
+        self.panel.set_output_devices(avail, self.profile.output_device)
+
+        new_key = self._effective_device_key(avail)
+        if self.per_device_memory and new_key and new_key != self._last_device_key:
+            saved = self._find_device_profile(new_key)
+            pinned = self.profile.output_device
+            had_saved = isinstance(saved, dict)
+            if had_saved:
+                if saved.get('target_lufs') in TARGETS:
+                    self.target_lufs = int(saved['target_lufs'])
+                    self.panel.set_target(self.target_lufs)
+                next_prof = AudioProfile.from_dict({**saved, 'output_device': pinned})
+            elif 'DAWN PRO' in new_key.upper():
+                studio_prof, studio_lufs = preset_profile('studio_dawn_aria2')
+                self.target_lufs = int(studio_lufs or DEFAULT_TARGET)
+                self.panel.set_target(self.target_lufs)
+                next_prof = replace(studio_prof, output_device=pinned)
+            elif self.profile.output_mode == 'exclusive' or self.profile.tone in ('studio_aria2', 'aria2'):
+                self.target_lufs = DEFAULT_TARGET
+                self.panel.set_target(self.target_lufs)
+                next_prof = replace(AudioProfile.recommended(), output_device=pinned)
+            else:
+                next_prof = self.profile
+
+            self._last_device_key = new_key
+            if next_prof != self.profile:
+                self._apply_profile_change(next_prof, save_to_device=(not had_saved))
+                return
+            if not had_saved and self.profile.enabled:
+                self._record_current_device_profile(new_key)
+                self._save_profile()
+        elif new_key:
+            self._last_device_key = new_key
+
+        if not self._use_stream_engine():
+            return
+        if (was_active or self.player.playbackState() == QMediaPlayer.PlaybackState.PlayingState) and self._source_info is not None:
             self._start_or_reconfigure_stream()
+        else:
+            self._update_signal_path()
 
     def _update_signal_path(self):
         info = self._source_info
@@ -1075,7 +1252,8 @@ class AudioEffectsController(QObject):
                 out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}{lat_tag}'
             else:
                 mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
-                out_text = f'{mode_label} · Bit-Pure (Chờ phát)'
+                dev_label = self.profile.output_device or 'Mặc định Windows'
+                out_text = f'{dev_label} · {mode_label} · Bit-Pure (Chờ phát)'
 
         self.panel.set_signal_path(src_text, dsp_text, out_text)
 

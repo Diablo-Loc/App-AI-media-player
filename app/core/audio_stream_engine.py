@@ -112,6 +112,38 @@ def build_release_tail(last_frame: np.ndarray, release_samples: int) -> np.ndarr
     return np.asarray(last_frame, dtype=np.float64).reshape(1, 2) * envelope[:, None]
 
 
+def _device_matches(actual_name: str, requested_name: str) -> bool:
+    """Return True when actual WASAPI endpoint name matches requested/pinned device."""
+    req = (requested_name or '').strip().lower()
+    act = (actual_name or '').strip().lower()
+    if not req or not act:
+        return False
+    return act == req or req in act or act in req
+
+
+def list_wasapi_output_devices() -> list[str]:
+    """Return available stereo+ WASAPI output endpoint names in host order."""
+    try:
+        import sounddevice as sd
+        hostapis = sd.query_hostapis()
+        wasapi = next((h for h in hostapis if 'WASAPI' in h['name']), None)
+        if wasapi is None:
+            return []
+        names = []
+        seen = set()
+        for dev_idx in wasapi['devices']:
+            info = sd.query_devices(dev_idx)
+            if info.get('max_output_channels', 0) >= 2:
+                name = str(info.get('name') or '').strip()
+                key = name.lower()
+                if name and key not in seen:
+                    seen.add(key)
+                    names.append(name)
+        return names
+    except Exception:
+        return []
+
+
 def select_wasapi_device(sd, preferred_name: str = ''):
     """Locate the WASAPI output device matching Qt's active device description."""
     hostapis = sd.query_hostapis()
@@ -266,11 +298,36 @@ class AudioStreamEngine:
                 'latency_ms': round(self._latency_sec * 1000.0, 1),
             }
 
+    def refresh_devices(self) -> list[str]:
+        """Re-enumerate PortAudio WASAPI endpoints safely after USB DAC or Bluetooth hotplug."""
+        self._stop_active_worker(release_exclusive=True)
+        try:
+            import sounddevice as sd
+            term = getattr(sd, '_terminate', None)
+            init = getattr(sd, '_initialize', None)
+            with self._lock:
+                if (
+                    callable(term)
+                    and callable(init)
+                    and type(term).__module__ != 'unittest.mock'
+                    and type(init).__module__ != 'unittest.mock'
+                ):
+                    term()
+                    init()
+        except Exception:
+            pass
+        return list_wasapi_output_devices()
+
     def _open_wasapi_stream(self, profile: AudioProfile, source_info: dict | None, preferred_device: str):
         import sounddevice as sd
 
-        dev_idx, dev_info = select_wasapi_device(sd, preferred_device)
+        explicit_pin = str(getattr(profile, 'output_device', '') or '').strip()
+        target_pref = explicit_pin or preferred_device
+        dev_idx, dev_info = select_wasapi_device(sd, target_pref)
         dev_name = str(dev_info['name'])
+        pin_missing_note = ''
+        if explicit_pin and not _device_matches(dev_name, explicit_pin):
+            pin_missing_note = f'Chưa cắm "{explicit_pin}" → Tạm phát qua {dev_name}'
         dev_sr = int(round(float(dev_info.get('default_samplerate') or 48000)))
         source_sr = int((source_info or {}).get('sample_rate') or dev_sr)
 
@@ -300,7 +357,7 @@ class AudioStreamEngine:
                             latency=0.10,
                             extra_settings=sd.WasapiSettings(exclusive=True),
                         )
-                        return stream, dev_name, sr, dtype, 'exclusive', ''
+                        return stream, dev_name, sr, dtype, 'exclusive', pin_missing_note
                     except Exception:
                         if stream is not None:
                             try:
@@ -316,7 +373,7 @@ class AudioStreamEngine:
                     self._on_after_exclusive()
                 except Exception:
                     pass
-            fallback_reason = 'Thiết bị không hỗ trợ Exclusive hoặc đang bận → Hi-Fi Shared'
+            fallback_reason = pin_missing_note or 'Thiết bị không hỗ trợ Exclusive hoặc đang bận → Hi-Fi Shared'
         else:
             with self._lock:
                 release_excl = self._exclusive_held
@@ -326,7 +383,7 @@ class AudioStreamEngine:
                     self._on_after_exclusive()
                 except Exception:
                     pass
-            fallback_reason = ''
+            fallback_reason = pin_missing_note
 
         for sr in (dev_sr, 48000, 44100):
             stream = None
