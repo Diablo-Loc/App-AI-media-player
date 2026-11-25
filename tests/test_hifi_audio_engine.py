@@ -1,4 +1,5 @@
 """Verification suite for BoTube Studio Hi-Fi Real-Time Audio Engine (Bit-Pure & Null-Test Proven)."""
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -18,7 +19,13 @@ from core.audio_profile import (
     atempo_chain,
     build_realtime_filter_graph,
     compute_mastering_gain_db,
+    custom_eq_filter,
+    custom_eq_peak_boost_db,
     detect_preset,
+    effective_eq_preamp_db,
+    evaluate_eq_response_db,
+    export_apo_text,
+    parse_apo_text,
     preset_profile,
     resolve_restorer,
     tone_filter,
@@ -480,6 +487,90 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                     ctrl.play_source(QUrl.fromLocalFile(str(src)))
                     pump(120)
                     self.assertEqual(ctrl._source_info['codec_name'], 'mp3')
+
+    def test_10band_custom_eq_biquad_accuracy_auto_preamp_and_apo_roundtrip(self):
+        # Flat 10-band EQ emits empty filter string (bit-pure path).
+        self.assertEqual(custom_eq_filter(AudioProfile(eq_enabled=True)), '')
+
+        prof = AudioProfile(
+            eq_enabled=True,
+            eq_bands=(0.0, 4.5, 0.0, 0.0, 0.0, -3.0, 0.0, 0.0, 0.0, 3.5),
+            eq_bass_db=2.0,
+            eq_treble_db=0.0,
+            eq_preamp_db=0.0,
+            eq_auto_preamp=True,
+        )
+        af, summary = build_realtime_filter_graph(
+            prof, {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 960000}, 0.0, 48000
+        )
+        self.assertTrue(summary['custom_eq_active'])
+        test_freqs = [62, 250, 1000, 4000, 14000]
+        predicted = evaluate_eq_response_db(prof, test_freqs, 48000.0)
+        for freq, pred_db in zip(test_freqs, predicted):
+            actual_db = _measure_tone_gain_db(af, freq, 48000)
+            self.assertLess(abs(actual_db - pred_db), 0.12)
+
+        # Auto Preamp prevents +8 dB bass boost from clipping DAC on hot +0.5 dBTP tracks.
+        hot_eq = AudioProfile(
+            eq_enabled=True,
+            eq_bands=(8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+            eq_auto_preamp=True,
+        )
+        boost = custom_eq_peak_boost_db(hot_eq)
+        self.assertGreaterEqual(boost, 7.8)
+        self.assertAlmostEqual(effective_eq_preamp_db(hot_eq), -boost, places=2)
+        gain_hot, _ = compute_mastering_gain_db(
+            {'lufs': -15.0, 'peak_db': 0.5}, -14, normalize=True, tone_pad_db=tone_peak_pad_db(hot_eq)
+        )
+        self.assertLessEqual(gain_hot + boost + 0.5, CS43198_CEILING_DB + 0.02)
+
+        # Equalizer APO round-trip + arbitrary AutoEQ GraphicEQ interpolation.
+        apo = export_apo_text(prof)
+        parsed = parse_apo_text(apo)
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed['eq_bands'], prof.eq_bands)
+        autoeq = 'Preamp: -4.2 dB\nGraphicEQ: 20 3.0; 100 1.5; 1000 0.0; 4000 -2.0; 16000 2.0'
+        parsed_auto = parse_apo_text(autoeq)
+        self.assertEqual(parsed_auto['eq_preamp_db'], -4.2)
+        self.assertAlmostEqual(parsed_auto['eq_bands'][5], 0.0, places=2)
+        self.assertAlmostEqual(parsed_auto['eq_bands'][7], -2.0, places=2)
+        self.assertAlmostEqual(parsed_auto['eq_bands'][9], 2.0, places=2)
+
+    def test_equalizer_dialog_presets_user_save_bypass_preservation_and_zero_disk(self):
+        with isolated_window() as (window, root):
+            ctrl = window.audio_effects
+            dlg = ctrl.open_equalizer()
+            self.assertIsNotNone(dlg)
+            self.assertLessEqual(ctrl.panel.sizeHint().height(), 860)
+
+            idx = dlg.curve_combo.findData('v_shape')
+            dlg.curve_combo.setCurrentIndex(idx)
+            pump(40)
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 4.2, places=1)
+            self.assertEqual(ctrl.panel.preset_combo.currentData(), 'custom')
+
+            dlg.band_sliders[0].setValue(62)
+            dlg.flush_pending()
+            pump(40)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 6.2, places=1)
+            self.assertTrue(dlg.save_user_preset('Tai nghe của tôi'))
+            self.assertIn('Tai nghe của tôi', ctrl.user_eq_presets)
+
+            saved_cfg = json.loads(ctrl.settings_path.read_text(encoding='utf-8'))
+            self.assertIn('Tai nghe của tôi', saved_cfg['user_eq_presets'])
+            self.assertAlmostEqual(saved_cfg['eq_bands'][0], 6.2, places=1)
+            self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
+
+            # Bypass turns eq_enabled OFF while preserving user's 6.2 dB band setting!
+            ctrl.panel._reset()
+            pump(40)
+            self.assertFalse(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 6.2, places=1)
+            dlg.enable_cb.setChecked(True)
+            pump(40)
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertAlmostEqual(ctrl.profile.eq_bands[0], 6.2, places=1)
 
 
 if __name__ == '__main__':

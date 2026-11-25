@@ -60,6 +60,7 @@ def cache_key(signature, profile, track):
         and getattr(profile, 'output_mode', 'shared') == 'shared'
         and getattr(profile, 'upsample', 'off') == 'off'
         and not getattr(profile, 'youtube_loudness', False)
+        and not getattr(profile, 'eq_enabled', False)
     ):
         profile_data = {'normalize': profile.normalize, 'tone': profile.tone}
     else:

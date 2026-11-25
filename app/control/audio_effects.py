@@ -1,5 +1,6 @@
 """Zero-disk Studio Hi-Fi audio controller around QMediaPlayer video/timeline."""
 from collections import OrderedDict
+from dataclasses import replace
 import json
 import logging
 from pathlib import Path
@@ -11,7 +12,10 @@ from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer
 from core.audio_profile import (
     AudioProfile,
     SCHEMA_VERSION,
+    TONE_PEAK_PAD_DB,
     compute_mastering_gain_db,
+    custom_eq_peak_boost_db,
+    effective_eq_preamp_db,
     resolve_restorer,
     tone_peak_pad_db,
 )
@@ -83,6 +87,7 @@ class AudioAnalysisWorker(QThread):
                 and not self.profile.youtube_loudness
                 and self.profile.output_mode != 'exclusive'
                 and self.profile.tone == 'off'
+                and not self.profile.eq_enabled
             ):
                 # Unnormalized Shared Bit-Pure/Restorer mode only needs stream metadata!
                 self.result = {
@@ -160,6 +165,7 @@ class LoudnessMeasurementWorker(QThread):
                 or self.profile.youtube_loudness
                 or self.profile.output_mode == 'exclusive'
                 or self.profile.tone != 'off'
+                or self.profile.eq_enabled
             )
             if not need_meas:
                 self.result = {
@@ -202,6 +208,8 @@ class AudioEffectsController(QObject):
         self.settings_path = Path(root) / 'audio-effects.json'
         self.target_lufs = DEFAULT_TARGET
         self.prefetch_enabled = True
+        self.user_eq_presets = {}
+        self.eq_dialog = None
         self.profile = self._load_profile()
         self._stream_available = is_stream_engine_available()
         self._purge_legacy_disk_cache()
@@ -231,9 +239,11 @@ class AudioEffectsController(QObject):
             self.profile.upsample,
             self.profile.youtube_loudness,
             target_lufs=self.target_lufs,
+            eq_state=self.profile.as_dict(),
         )
         self.panel.set_target(self.target_lufs)
         self.panel.level_changed.connect(self.set_target)
+        self.panel.open_eq_requested.connect(self.open_equalizer)
 
         self.worker = None
         self._pending = False
@@ -355,6 +365,7 @@ class AudioEffectsController(QObject):
             or self.profile.youtube_loudness
             or self.profile.output_mode == 'exclusive'
             or self.profile.tone != 'off'
+            or self.profile.eq_enabled
         )
         meas = entry.get('measurement')
         if need_meas and (meas is None or not valid_measurement(meas)):
@@ -393,9 +404,11 @@ class AudioEffectsController(QObject):
                 self.target_lufs = int(data['target_lufs'])
             if isinstance(data, dict) and isinstance(data.get('prefetch_next'), bool):
                 self.prefetch_enabled = data['prefetch_next']
+            if isinstance(data, dict) and isinstance(data.get('user_eq_presets'), dict):
+                self.user_eq_presets = dict(data['user_eq_presets'])
             if (
                 isinstance(data, dict)
-                and data.get('schema_version') != SCHEMA_VERSION
+                and data.get('schema_version') not in (4, SCHEMA_VERSION)
                 and data.get('tone') == 'aria2'
                 and data.get('restorer') == 'auto'
             ):
@@ -410,6 +423,7 @@ class AudioEffectsController(QObject):
             schema_version=SCHEMA_VERSION,
             target_lufs=self.target_lufs,
             prefetch_next=self.prefetch_enabled,
+            user_eq_presets=self.user_eq_presets,
         )
         try:
             atomic_bytes(self.settings_path, json.dumps(data).encode('utf-8'))
@@ -495,6 +509,16 @@ class AudioEffectsController(QObject):
 
     def _resolve_current_gain(self):
         pad_db = tone_peak_pad_db(self.profile)
+        preamp_offset = 0.0
+        if self.profile.eq_enabled:
+            if self.profile.eq_auto_preamp:
+                if self.profile.normalize or self.profile.youtube_loudness:
+                    preamp_offset = min(0.0, float(self.profile.eq_preamp_db))
+                else:
+                    preamp_offset = effective_eq_preamp_db(self.profile)
+            else:
+                preamp_offset = float(self.profile.eq_preamp_db)
+
         if self._measurement is not None:
             return compute_mastering_gain_db(
                 self._measurement,
@@ -503,11 +527,12 @@ class AudioEffectsController(QObject):
                 exclusive=(self.profile.output_mode == 'exclusive'),
                 youtube_loudness=self.profile.youtube_loudness,
                 tone_pad_db=pad_db,
+                preamp_offset_db=preamp_offset,
             )
         if self.profile.normalize:
-            return round(-max(1.5, pad_db), 3), False
+            return round(-max(1.5, pad_db) + min(0.0, float(self.profile.eq_preamp_db)), 3), False
         if self.profile.youtube_loudness:
-            return round(-max(1.0, pad_db), 3), False
+            return round(-max(1.0, pad_db) + min(0.0, float(self.profile.eq_preamp_db)), 3), False
         return compute_mastering_gain_db(
             None,
             self.target_lufs,
@@ -515,6 +540,7 @@ class AudioEffectsController(QObject):
             exclusive=(self.profile.output_mode == 'exclusive'),
             youtube_loudness=False,
             tone_pad_db=pad_db,
+            preamp_offset_db=preamp_offset,
         )
 
     def _refresh_gain_live(self):
@@ -574,6 +600,44 @@ class AudioEffectsController(QObject):
             return f'Đang phát Studio Hi-Res {st["sample_rate"] / 1000.0:g} kHz (0 MB ổ cứng)'
         return 'Đang phát Studio Hi-Fi (0 MB ổ cứng)'
 
+    def open_equalizer(self):
+        if self._closed:
+            return None
+        if self.eq_dialog is None:
+            from ui.audio_equalizer_dialog import StudioEqualizerDialog
+            dlg = StudioEqualizerDialog(self.window)
+            dlg.eq_changed.connect(self.set_custom_eq)
+            dlg.user_presets_changed.connect(self._set_user_eq_presets)
+            self.eq_dialog = dlg
+        self.eq_dialog.set_state(self.profile, self.user_eq_presets)
+        if hasattr(self.window, 'frameGeometry'):
+            screen = self.window.screen()
+            if screen is not None:
+                avail = screen.availableGeometry()
+                center = self.window.frameGeometry().center()
+                x = max(avail.left() + 8, min(center.x() - self.eq_dialog.width() // 2, avail.right() - self.eq_dialog.width() - 8))
+                y = max(avail.top() + 8, min(center.y() - self.eq_dialog.height() // 2, avail.bottom() - self.eq_dialog.height() - 8))
+                self.eq_dialog.move(x, y)
+        self.eq_dialog.show()
+        self.eq_dialog.raise_()
+        self.eq_dialog.activateWindow()
+        return self.eq_dialog
+
+    def _set_user_eq_presets(self, presets: dict):
+        if self._closed or not isinstance(presets, dict):
+            return
+        self.user_eq_presets = dict(presets)
+        self._save_profile()
+
+    def set_custom_eq(self, eq_data: dict):
+        if self._closed or not isinstance(eq_data, dict):
+            return
+        merged = dict(self.profile.as_dict())
+        for k in ('eq_enabled', 'eq_bands', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
+            if k in eq_data:
+                merged[k] = eq_data[k]
+        self._apply_profile_change(AudioProfile.from_dict(merged))
+
     def set_profile(
         self,
         normalize,
@@ -585,7 +649,16 @@ class AudioEffectsController(QObject):
     ):
         if self._closed:
             return
-        profile = AudioProfile.from_dict({
+        merged = dict(self.profile.as_dict())
+        is_bypass = (
+            not normalize
+            and not youtube_loudness
+            and tone == 'off'
+            and restorer == 'off'
+            and output_mode == 'shared'
+            and upsample == 'off'
+        )
+        merged.update({
             'normalize': normalize,
             'tone': tone,
             'restorer': restorer,
@@ -593,6 +666,11 @@ class AudioEffectsController(QObject):
             'upsample': upsample,
             'youtube_loudness': youtube_loudness,
         })
+        if is_bypass:
+            merged['eq_enabled'] = False
+        self._apply_profile_change(AudioProfile.from_dict(merged))
+
+    def _apply_profile_change(self, profile: AudioProfile):
         if profile == self.profile:
             return
         old = self.profile
@@ -606,7 +684,10 @@ class AudioEffectsController(QObject):
             profile.upsample,
             profile.youtube_loudness,
             target_lufs=self.target_lufs,
+            eq_state=profile.as_dict(),
         )
+        if self.eq_dialog is not None:
+            self.eq_dialog.set_state(profile)
         self._save_profile()
         self._update_button()
         self.prefetch.refresh()
@@ -620,15 +701,31 @@ class AudioEffectsController(QObject):
             self._update_signal_path()
             return
 
+        eq_filter_changed = (old.eq_enabled != profile.eq_enabled) or (
+            profile.eq_enabled
+            and (
+                old.eq_bands != profile.eq_bands
+                or abs(old.eq_bass_db - profile.eq_bass_db) >= 0.05
+                or abs(old.eq_treble_db - profile.eq_treble_db) >= 0.05
+                or old.eq_crossfeed != profile.eq_crossfeed
+            )
+        )
         need_restart = (
             old.tone != profile.tone
             or old.restorer != profile.restorer
             or old.output_mode != profile.output_mode
             or old.upsample != profile.upsample
+            or eq_filter_changed
             or not self.stream.is_active()
         )
-        need_measure = profile.normalize or profile.youtube_loudness
-        if not need_restart and (old.normalize != profile.normalize or old.youtube_loudness != profile.youtube_loudness):
+        need_measure = (
+            profile.normalize
+            or profile.youtube_loudness
+            or profile.output_mode == 'exclusive'
+            or profile.tone != 'off'
+            or profile.eq_enabled
+        )
+        if not need_restart:
             if need_measure and self._measurement is None:
                 self._queue_latest()
             else:
@@ -642,7 +739,8 @@ class AudioEffectsController(QObject):
             if need_measure and self._measurement is None:
                 self._queue_latest()
         else:
-            self._queue_latest()
+            if not self._try_instant_cache_hit(self._original.toLocalFile(), self._track):
+                self._queue_latest()
 
     def _queue_latest(self):
         self._generation += 1
@@ -946,6 +1044,11 @@ class AudioEffectsController(QObject):
                     'headphones': 'IEM Crossfeed',
                 }
                 parts.append(tone_labels.get(self.profile.tone, f'EQ {self.profile.tone}'))
+            if self.profile.eq_enabled:
+                eq_tag = 'EQ 10 dải'
+                if self.profile.eq_crossfeed > 0:
+                    eq_tag += f' · Crossfeed {self.profile.eq_crossfeed}%'
+                parts.append(eq_tag)
             if self.profile.youtube_loudness:
                 parts.append(f'YouTube −14 LUFS ({self._applied_gain_db:+.1f} dB)')
             elif self.profile.normalize:
@@ -987,6 +1090,10 @@ class AudioEffectsController(QObject):
         self.stream.shutdown()
         self.prefetch.shutdown()
         self.panel.hide()
+        if self.eq_dialog is not None:
+            self.eq_dialog.close()
+            self.eq_dialog.deleteLater()
+            self.eq_dialog = None
         self.volume_control.shutdown()
         if self.worker is not None:
             self.worker.stop()

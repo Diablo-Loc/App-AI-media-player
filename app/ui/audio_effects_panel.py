@@ -12,20 +12,31 @@ from PySide6.QtWidgets import (
     QFrame,
 )
 
-from core.audio_profile import AudioProfile, detect_preset, preset_profile
+from core.audio_profile import AudioProfile, FLAT_EQ_BANDS, detect_preset, preset_profile
 from ui.design_system import DIALOG_STYLE
+from ui.icons import button_icon, ACCENT, TEXT
 
 
 class AudioEffectsPanel(QWidget):
     settings_changed = Signal(bool, str, str, str, str, bool)
     level_changed = Signal(int)
     prefetch_changed = Signal(bool)
+    open_eq_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName('audioEffectsPanel')
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setFixedWidth(388)
+        self._eq_state = {
+            'eq_enabled': False,
+            'eq_bands': FLAT_EQ_BANDS,
+            'eq_preamp_db': 0.0,
+            'eq_auto_preamp': True,
+            'eq_bass_db': 0.0,
+            'eq_treble_db': 0.0,
+            'eq_crossfeed': 0,
+        }
         self.setStyleSheet(DIALOG_STYLE + '''
             QWidget#audioEffectsPanel { background: #151C26; color: #EDF3FA;
                 border: 1px solid #273445; border-radius: 12px;
@@ -43,10 +54,14 @@ class AudioEffectsPanel(QWidget):
             QPushButton#recommendedBtn { background: #1D3530; color: #77E0BE; border: 1px solid #2D5A4E;
                 border-radius: 8px; font-weight: 600; padding: 6px 10px; }
             QPushButton#recommendedBtn:hover { background: #24433D; }
+            QPushButton#openEqBtn { background: #1B2431; color: #EDF3FA; border: 1px solid #2E3F54;
+                border-radius: 8px; font-weight: 600; padding: 5px 10px; text-align: left; }
+            QPushButton#openEqBtn:hover { background: #243142; border-color: #46607E; }
+            QPushButton#openEqBtn[eqActive="true"] { background: #18322C; color: #77E0BE; border-color: #2D5A4E; }
         ''')
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
-        layout.setSpacing(6)
+        layout.setContentsMargins(16, 10, 16, 10)
+        layout.setSpacing(5)
 
         title = QLabel('Âm thanh · Studio Engine')
         title.setStyleSheet('font-size: 16px; font-weight: 600;')
@@ -163,6 +178,17 @@ class AudioEffectsPanel(QWidget):
         self.tone.setMinimumHeight(30)
         layout.addWidget(self.tone)
 
+        self.btn_open_eq = QPushButton('Bàn chỉnh Equalizer 10 dải (Tắt)')
+        self.btn_open_eq.setObjectName('openEqBtn')
+        self.btn_open_eq.setMinimumHeight(30)
+        self.btn_open_eq.setToolTip(
+            'Mở bàn chỉnh Equalizer 10 dải (31 Hz–16 kHz), Preamp bảo vệ DAC, Bass/Treble, '
+            'Crossfeed và dán preset Equalizer APO.'
+        )
+        button_icon(self.btn_open_eq, 'sliders-horizontal', color=TEXT, size=15, icon_only=False)
+        self.btn_open_eq.clicked.connect(self._request_open_eq)
+        layout.addWidget(self.btn_open_eq)
+
         self.prefetch_next = QCheckBox('Chuẩn bị sẵn bài kế tiếp trong RAM (0 MB ổ cứng)')
         self.prefetch_next.setToolTip('Chỉ đo nhanh thông số LUFS/Codec bài kế tiếp vào bộ nhớ; không tạo file âm thanh tạm.')
         self.prefetch_next.setChecked(True)
@@ -217,6 +243,22 @@ class AudioEffectsPanel(QWidget):
         self.btn_recommended.clicked.connect(self._apply_recommended)
         self.reset.clicked.connect(self._reset)
 
+    def _request_open_eq(self):
+        self.hide()
+        self.open_eq_requested.emit()
+
+    def _refresh_eq_button(self):
+        active = bool(self._eq_state.get('eq_enabled'))
+        self.btn_open_eq.setProperty('eqActive', active)
+        self.btn_open_eq.style().unpolish(self.btn_open_eq)
+        self.btn_open_eq.style().polish(self.btn_open_eq)
+        if active:
+            self.btn_open_eq.setText('Bàn chỉnh Equalizer 10 dải (Đang bật · 64-bit)')
+            button_icon(self.btn_open_eq, 'sliders-horizontal', color=ACCENT, size=15, icon_only=False)
+        else:
+            self.btn_open_eq.setText('Bàn chỉnh Equalizer 10 dải (Tắt)')
+            button_icon(self.btn_open_eq, 'sliders-horizontal', color=TEXT, size=15, icon_only=False)
+
     def _current_target_lufs(self) -> int:
         val = self.level.currentData()
         return int(val) if isinstance(val, int) else -14
@@ -233,6 +275,7 @@ class AudioEffectsPanel(QWidget):
             output_mode=self.output_mode.currentData() or 'shared',
             upsample=self.upsample.currentData() or 'off',
             youtube_loudness=yt_loud,
+            **self._eq_state,
         )
         key = detect_preset(prof, self._current_target_lufs())
         self.preset_combo.blockSignals(True)
@@ -244,6 +287,9 @@ class AudioEffectsPanel(QWidget):
         if key == 'custom' or not key:
             return
         prof, lufs = preset_profile(key)
+        eq_state = dict(self._eq_state)
+        if key == 'bypass':
+            eq_state['eq_enabled'] = False
         self.set_profile(
             prof.normalize,
             prof.tone,
@@ -252,6 +298,7 @@ class AudioEffectsPanel(QWidget):
             prof.upsample,
             prof.youtube_loudness,
             target_lufs=lufs,
+            eq_state=eq_state,
         )
         if isinstance(lufs, int) and key != 'youtube':
             self.level_changed.emit(int(lufs))
@@ -274,7 +321,7 @@ class AudioEffectsPanel(QWidget):
         up_val = self.upsample.currentData() or 'off'
         any_enabled = (
             norm or yt_loud or tone_val != 'off' or rest_val != 'off'
-            or out_val == 'exclusive' or up_val != 'off'
+            or out_val == 'exclusive' or up_val != 'off' or bool(self._eq_state.get('eq_enabled'))
         )
         self.level.setEnabled(checked)
         self.prefetch_next.setEnabled(any_enabled)
@@ -287,7 +334,9 @@ class AudioEffectsPanel(QWidget):
         self._emit_settings()
 
     def _reset(self):
-        self.set_profile(False, 'off', 'off', 'shared', 'off', False)
+        eq_state = dict(self._eq_state)
+        eq_state['eq_enabled'] = False
+        self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state)
         self._emit_settings()
 
     def set_profile(
@@ -299,15 +348,21 @@ class AudioEffectsPanel(QWidget):
         upsample='off',
         youtube_loudness=False,
         target_lufs=None,
+        eq_state=None,
     ):
         widgets = (self.preset_combo, self.normalize, self.level, self.tone, self.restorer, self.output_mode, self.upsample)
         for w in widgets:
             w.blockSignals(True)
+        if isinstance(eq_state, dict):
+            for k in ('eq_enabled', 'eq_bands', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
+                if k in eq_state:
+                    self._eq_state[k] = eq_state[k]
         yt_loud = bool(youtube_loudness)
         checked = bool(normalize or yt_loud)
         any_enabled = (
             checked or tone != 'off' or restorer != 'off'
             or output_mode == 'exclusive' or upsample != 'off'
+            or bool(self._eq_state.get('eq_enabled'))
         )
         self.normalize.setChecked(checked)
         self.level.setEnabled(checked)
@@ -330,6 +385,7 @@ class AudioEffectsPanel(QWidget):
         self.upsample.setCurrentIndex(max(0, self.upsample.findData(upsample)))
         for w in widgets:
             w.blockSignals(False)
+        self._refresh_eq_button()
         self._sync_preset_combo()
 
     def set_prefetch(self, enabled):
