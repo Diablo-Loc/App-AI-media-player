@@ -5,7 +5,7 @@ import math
 import re
 
 PROCESSOR_VERSION = 1
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 TARGET_LUFS = -18.0
 DEFAULT_TARGET_LUFS = -16
 VALID_TARGETS = (-16, -14, -18)
@@ -21,7 +21,19 @@ UPSAMPLE_MODES = ('off', 'hires_sync', 'max_dac')
 DAC_PHASES = ('linear', 'minimum')
 PEQ_KINDS = ('PK', 'LS', 'HS')
 MAX_PEQ_FILTERS = 16
-PRESET_ORDER = ('studio_dawn_aria2', 'dac_bitperfect', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass')
+PRESET_ORDER = ('master_hifi', 'studio_dawn_aria2', 'dac_bitperfect', 'bit_pure', 'youtube', 'walkman_vivid', 'bypass')
+
+USB_DAC_DEVICE_TOKENS = (
+    'dawn', 'moondrop', 'cs431', 'es90', 'ak44', 'fiio', 'ifi', 'topping',
+    'smsl', 'chord', 'shanling', 'hiby', 'cayin', 'questyle', 'hidizs',
+    'tanchjim', 'truthear', 'qudelix', 'usb dac', 'hires',
+)
+
+
+def is_external_usb_dac(device_name: str = '') -> bool:
+    """Return True when endpoint matches a dedicated audiophile USB DAC (e.g. Moondrop Dawn Pro 2)."""
+    clean = str(device_name or '').strip().lower()
+    return bool(clean and any(tok in clean for tok in USB_DAC_DEVICE_TOKENS))
 
 EQ_FREQS = (31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000)
 EQ_LABELS = ('31', '62', '125', '250', '500', '1k', '2k', '4k', '8k', '16k')
@@ -131,6 +143,13 @@ LOSSLESS_CODECS = frozenset({
 
 TONES = {
     'off': '',
+    # Unified Master Hi-Fi curve: tactile sub-bass + mud cleanup + Aria 2 & speaker balance + airy top + 30-deg studio soundstage.
+    'master_hifi': 'equalizer=f=48:t=q:w=0.72:g=1.8:r=f64,'
+                   'equalizer=f=215:t=q:w=1.25:g=-0.8:r=f64,'
+                   'equalizer=f=2750:t=q:w=1.35:g=0.6:r=f64,'
+                   'equalizer=f=3750:t=q:w=2.2:g=-0.8:r=f64,'
+                   'equalizer=f=7850:t=q:w=3.2:g=-1.0:r=f64,'
+                   'treble=f=13200:t=q:w=0.707:g=1.5:r=f64',
     # Dawn Pro 2 + Aria 2 Lab Reference + 30-degree Studio Monitor Room (1 kHz ~ 0.0 dB).
     'studio_aria2': 'equalizer=f=38:t=q:w=0.707:g=1.6:r=f64,'
                     'equalizer=f=205:t=q:w=1.2:g=-0.8:r=f64,'
@@ -175,6 +194,7 @@ TONE_PREAMP_DB = {
 }
 
 TONE_PEAK_PAD_DB = {
+    'master_hifi': 1.8,
     'aria2': 1.4,
     'studio_aria2': 1.6,
     'walkman_vivid': 2.0,
@@ -229,9 +249,14 @@ class AudioProfile:
         )
 
     @classmethod
-    def recommended(cls):
+    def bit_pure(cls):
         """100% uncolored bit-pure tonal path + EBU R128 mastering loudness & intersample de-clip headroom."""
         return cls(normalize=True, tone='off', restorer='off', output_mode='shared')
+
+    @classmethod
+    def recommended(cls):
+        """Unified adaptive Master Hi-Fi profile: rich tactile contour, auto lossy recovery, 0-clip headroom."""
+        return cls(normalize=True, tone='master_hifi', restorer='auto', output_mode='shared')
 
     @classmethod
     def preset_profile(cls, preset_key: str) -> tuple['AudioProfile', int | None]:
@@ -602,7 +627,7 @@ def tone_peak_pad_db(profile: AudioProfile, source_info: dict | None = None) -> 
     rest = resolve_restorer(profile, source_info)
     rest_pad = 0.0
     if rest is not None:
-        scale = 0.45 if getattr(profile, 'tone', 'off') in ('aria2', 'studio_aria2', 'walkman_vivid') else 1.0
+        scale = 0.45 if getattr(profile, 'tone', 'off') in ('aria2', 'studio_aria2', 'walkman_vivid', 'master_hifi') else 1.0
         rest_pad = round(
             max(0.0, float(rest.get('sub_db', 0.0)), float(rest.get('pres_db', 0.0)), float(rest.get('air_db', 0.0)))
             * scale,
@@ -654,8 +679,28 @@ def resolve_profile_gain_db(
     )
 
 
+def adaptive_master_profile(device_name: str = '') -> tuple[AudioProfile, int]:
+    """Return hardware-adaptive Master Hi-Fi preset (USB DAC Exclusive 192k MinPhase vs Shared 32-bit)."""
+    if is_external_usb_dac(device_name):
+        return (
+            AudioProfile(
+                normalize=True,
+                tone='master_hifi',
+                restorer='auto',
+                output_mode='exclusive',
+                upsample='hires_sync',
+                dac_phase='minimum',
+                youtube_loudness=False,
+            ),
+            -14,
+        )
+    return AudioProfile.recommended(), -14
+
+
 def preset_profile(preset_key: str) -> tuple[AudioProfile, int | None]:
     """Return (AudioProfile, target_lufs_or_none) for a named studio/streaming quick preset."""
+    if preset_key == 'master_hifi':
+        return AudioProfile.recommended(), -14
     if preset_key == 'studio_dawn_aria2':
         return (
             AudioProfile(
@@ -693,7 +738,7 @@ def preset_profile(preset_key: str) -> tuple[AudioProfile, int | None]:
             -14,
         )
     if preset_key == 'bit_pure':
-        return AudioProfile.recommended(), -16
+        return AudioProfile.bit_pure(), -16
     if preset_key == 'walkman_vivid':
         return (
             AudioProfile(
@@ -708,14 +753,32 @@ def preset_profile(preset_key: str) -> tuple[AudioProfile, int | None]:
         )
     if preset_key == 'bypass':
         return AudioProfile(), None
-    return AudioProfile.recommended(), -16
+    return AudioProfile.recommended(), -14
 
 
 def detect_preset(profile: AudioProfile, target_lufs: int = -16) -> str:
     """Identify which quick preset matches the current profile & target LUFS, or 'custom'."""
     if not profile.enabled:
         return 'bypass'
-    if getattr(profile, 'eq_enabled', False) or getattr(profile, 'dac_phase', 'linear') != 'linear':
+    if getattr(profile, 'eq_enabled', False):
+        return 'custom'
+    if (
+        int(target_lufs) == -14
+        and profile.normalize
+        and not profile.youtube_loudness
+        and profile.tone == 'master_hifi'
+        and profile.restorer == 'auto'
+        and (
+            (profile.output_mode == 'shared' and profile.upsample == 'off' and getattr(profile, 'dac_phase', 'linear') == 'linear')
+            or (
+                profile.output_mode == 'exclusive'
+                and profile.upsample == 'hires_sync'
+                and getattr(profile, 'dac_phase', 'linear') in ('linear', 'minimum')
+            )
+        )
+    ):
+        return 'master_hifi'
+    if getattr(profile, 'dac_phase', 'linear') != 'linear':
         return 'custom'
     base = replace(
         profile,
@@ -741,7 +804,7 @@ def detect_preset(profile: AudioProfile, target_lufs: int = -16) -> str:
         and base.upsample == 'off'
     ):
         return 'youtube'
-    if base == AudioProfile.recommended() and int(target_lufs) == -16:
+    if base == AudioProfile.bit_pure() and int(target_lufs) == -16:
         return 'bit_pure'
     for key in ('studio_dawn_aria2', 'dac_bitperfect', 'walkman_vivid'):
         expected_prof, expected_lufs = preset_profile(key)
@@ -807,6 +870,8 @@ def tone_filter(profile, sample_rate=48000, channels=2):
         parts.append('crossfeed=strength=0.08:range=0.25:slope=0.5:level_in=1:level_out=1:block_size=0')
     elif profile.tone == 'studio_aria2' and channels == 2 and sample_rate >= 32000:
         parts.append('crossfeed=strength=0.06:range=0.30:slope=0.5:level_in=1:level_out=1:block_size=0')
+    elif profile.tone == 'master_hifi' and channels == 2 and sample_rate >= 32000:
+        parts.append('crossfeed=strength=0.05:range=0.30:slope=0.5:level_in=1:level_out=1:block_size=0')
     return ','.join(part for part in parts if part)
 
 
@@ -1022,7 +1087,7 @@ def build_realtime_filter_graph(
     eq_sr = out_sr if oversampling else in_sr
     restorer = resolve_restorer(profile, source_info)
     if restorer is not None:
-        scale = 0.45 if profile.tone in ('aria2', 'studio_aria2', 'walkman_vivid') else 1.0
+        scale = 0.45 if profile.tone in ('aria2', 'studio_aria2', 'walkman_vivid', 'master_hifi') else 1.0
         nyquist_cap = max(1000, int(min(max(8000, in_sr), eq_sr) * 0.44))
         f_sub = min(58, nyquist_cap)
         f_mud = min(235, nyquist_cap)

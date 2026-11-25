@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
 from control.worker_lifecycle import OwnedProcesses
 from core.audio_benchmark import render_audition_pair, run_audio_benchmark
 from core.audio_effects import source_signature
-from core.audio_profile import AudioProfile, preset_profile
+from core.audio_profile import AudioProfile, adaptive_master_profile, preset_profile
 from core.audio_stream_engine import select_wasapi_device
 from ui.design_system import FORM_STYLE
 from ui.icons import ACCENT, INK, MUTED, TEXT, button_icon
@@ -889,6 +889,7 @@ class AudioBenchmarkPage(QWidget):
         self.mode_combo = QComboBox()
         for text, key in (
             ('Cấu hình đang dùng', 'current'),
+            ('Chuẩn Hi-Fi (Hợp nhất)', 'master_hifi'),
             ('Dawn Pro 2 · Aria 2', 'studio_dawn_aria2'),
             ('DAC Rời · Bit-Perfect', 'dac_bitperfect'),
             ('Nguyên bản', 'bit_pure'),
@@ -1249,6 +1250,8 @@ class AudioBenchmarkPage(QWidget):
         key = self.mode_combo.currentData()
         if key == 'current' or not key:
             return self.controller.profile, int(self.controller.target_lufs)
+        if key == 'master_hifi':
+            return adaptive_master_profile(self.controller._effective_device_key())
         prof, lufs = preset_profile(str(key))
         return prof, int(lufs if isinstance(lufs, int) else self.controller.target_lufs)
 

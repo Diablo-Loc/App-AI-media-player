@@ -14,9 +14,11 @@ from core.audio_profile import (
     AudioProfile,
     SCHEMA_VERSION,
     TONE_PEAK_PAD_DB,
+    adaptive_master_profile,
     compute_mastering_gain_db,
     custom_eq_peak_boost_db,
     effective_eq_preamp_db,
+    is_external_usb_dac,
     preset_profile,
     normalize_peq_filters,
     resolve_profile_gain_db,
@@ -221,6 +223,7 @@ class AudioEffectsController(QObject):
         self.device_profiles = {}
         self.user_eq_presets = {}
         self.eq_dialog = None
+        self._migrated_v7 = False
         self.profile = self._load_profile()
         self._stream_available = is_stream_engine_available()
         self._purge_legacy_disk_cache()
@@ -266,10 +269,15 @@ class AudioEffectsController(QObject):
         self.panel.output_device_changed.connect(self.set_output_device)
         self.panel.per_device_changed.connect(self.set_per_device_memory)
         self.panel.dac_phase_changed.connect(self.set_dac_phase)
+        self.panel.recommended_requested.connect(self.apply_unified_master_preset)
 
         self.benchmark_page = None
         self.btn_settings_benchmark = None
+        self.settings_studio = None
         self._install_benchmark_tab()
+        if self._migrated_v7:
+            self._migrated_v7 = False
+            self._save_profile()
 
         self.worker = None
         self._pending = False
@@ -425,9 +433,12 @@ class AudioEffectsController(QObject):
             manager.restart()
 
     def _load_profile(self):
+        dev_name = self._system_default_device_name()
         try:
             if not self.settings_path.exists():
-                return AudioProfile.recommended()
+                prof, lufs = adaptive_master_profile(dev_name)
+                self.target_lufs = int(lufs)
+                return prof
             data = json.loads(self.settings_path.read_text(encoding='utf-8'))
             if isinstance(data, dict) and data.get('target_lufs') in TARGETS:
                 self.target_lufs = int(data['target_lufs'])
@@ -441,16 +452,44 @@ class AudioEffectsController(QObject):
                 }
             if isinstance(data, dict) and isinstance(data.get('user_eq_presets'), dict):
                 self.user_eq_presets = dict(data['user_eq_presets'])
-            if (
-                isinstance(data, dict)
-                and data.get('schema_version') not in (4, 5, SCHEMA_VERSION)
-                and data.get('tone') == 'aria2'
-                and data.get('restorer') == 'auto'
-            ):
-                return AudioProfile.recommended()
+
+            schema = data.get('schema_version') if isinstance(data, dict) else None
+            if isinstance(data, dict) and schema != SCHEMA_VERSION:
+                changed = False
+                for dev_k, snap in list(self.device_profiles.items()):
+                    if (
+                        not snap.get('eq_enabled')
+                        and snap.get('tone', 'off') == 'off'
+                        and snap.get('restorer', 'off') == 'off'
+                        and snap.get('normalize') is True
+                        and not snap.get('youtube_loudness')
+                    ):
+                        m_prof, m_lufs = adaptive_master_profile(dev_k)
+                        upgraded = dict(m_prof.as_dict(), target_lufs=int(m_lufs))
+                        upgraded.pop('output_device', None)
+                        self.device_profiles[dev_k] = upgraded
+                        changed = True
+                is_legacy_auto = (schema not in (4, 5, 6, SCHEMA_VERSION) and data.get('tone') == 'aria2' and data.get('restorer') == 'auto')
+                is_uncustomized_flat = (
+                    not data.get('eq_enabled')
+                    and data.get('tone', 'off') == 'off'
+                    and data.get('restorer', 'off') == 'off'
+                    and data.get('normalize') is True
+                    and not data.get('youtube_loudness')
+                )
+                if is_legacy_auto or is_uncustomized_flat:
+                    pin = str(data.get('output_device') or '').strip()
+                    m_prof, m_lufs = adaptive_master_profile(pin or dev_name)
+                    self.target_lufs = int(m_lufs)
+                    self._migrated_v7 = True
+                    return replace(m_prof, output_device=pin)
+                if changed:
+                    self._migrated_v7 = True
             return AudioProfile.from_dict(data)
         except (OSError, ValueError):
-            return AudioProfile.recommended()
+            prof, lufs = adaptive_master_profile(dev_name)
+            self.target_lufs = int(lufs)
+            return prof
 
     def _save_profile(self):
         data = dict(
@@ -600,6 +639,8 @@ class AudioEffectsController(QObject):
         self._record_current_device_profile()
         self._save_profile()
         self._refresh_gain_live()
+        if getattr(self, 'settings_studio', None) is not None:
+            self.settings_studio.sync_from_controller()
 
     def set_per_device_memory(self, enabled: bool):
         if self._closed:
@@ -630,13 +671,34 @@ class AudioEffectsController(QObject):
                     self.target_lufs = int(saved['target_lufs'])
                     self.panel.set_target(self.target_lufs)
                 next_prof = AudioProfile.from_dict({**saved, 'output_device': clean})
-            elif clean and 'DAWN PRO' in clean.upper():
-                studio_prof, studio_lufs = preset_profile('studio_dawn_aria2')
-                self.target_lufs = int(studio_lufs or DEFAULT_TARGET)
+            elif clean and is_external_usb_dac(new_key):
+                studio_prof, studio_lufs = adaptive_master_profile(new_key)
+                self.target_lufs = int(studio_lufs)
                 self.panel.set_target(self.target_lufs)
                 next_prof = replace(studio_prof, output_device=clean)
             self._last_device_key = new_key
         self._apply_profile_change(next_prof, save_to_device=True)
+
+    def apply_unified_master_preset(self):
+        """Apply the adaptive Master Hi-Fi preset tailored for the current hardware endpoint."""
+        if self._closed:
+            return
+        dev_key = self._effective_device_key()
+        prof, lufs = adaptive_master_profile(dev_key)
+        merged = dict(self.profile.as_dict())
+        merged.update({
+            'normalize': prof.normalize,
+            'tone': prof.tone,
+            'restorer': prof.restorer,
+            'output_mode': prof.output_mode,
+            'upsample': prof.upsample,
+            'dac_phase': prof.dac_phase,
+            'youtube_loudness': False,
+            'eq_enabled': False,
+        })
+        self.target_lufs = int(lufs)
+        self.panel.set_target(self.target_lufs)
+        self._apply_profile_change(AudioProfile.from_dict(merged), save_to_device=True)
 
     def _resolve_current_gain(self):
         return resolve_profile_gain_db(
@@ -748,29 +810,9 @@ class AudioEffectsController(QObject):
         self.benchmark_page.back_requested.connect(self.close_benchmark_tab)
         stack.addWidget(self.benchmark_page)
 
-        row_wrap = QWidget(settings_page)
-        v_lay = QVBoxLayout(row_wrap)
-        v_lay.setContentsMargins(0, 0, 0, 0)
-        h_lay = QHBoxLayout()
-        lbl = QLabel('Kiểm định âm:')
-        lbl.setFixedWidth(120)
-        lbl.setStyleSheet('color: white; font-weight: bold;')
-        self.btn_settings_benchmark = QPushButton('Mở tab Đo kiểm · Đối chiếu âm thanh')
-        button_icon(self.btn_settings_benchmark, 'sliders-horizontal', 'Đo kiểm âm thanh', color=TEXT, size=15, icon_only=False)
-        self.btn_settings_benchmark.setMinimumHeight(38)
-        self.btn_settings_benchmark.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_settings_benchmark.clicked.connect(lambda: self.open_benchmark_tab(auto_run=True))
-        h_lay.addWidget(lbl)
-        h_lay.addWidget(self.btn_settings_benchmark)
-        help_lbl = QLabel('Đo phổ tần số, đỉnh dBTP và đối chiếu file gốc với cấu hình xử lý.')
-        help_lbl.setWordWrap(True)
-        help_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
-        help_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        help_lbl.setStyleSheet('color: #9AAABC; font-size: 12px; margin-left: 125px;')
-        v_lay.addLayout(h_lay)
-        v_lay.addWidget(help_lbl)
-        settings_page.content_layout.insertWidget(0, row_wrap)
-        settings_page.btn_audio_benchmark = self.btn_settings_benchmark
+        from ui.settings_studio_view import install_settings_studio_view
+        self.settings_studio = install_settings_studio_view(self)
+        self.btn_settings_benchmark = getattr(settings_page, 'btn_audio_benchmark', None)
 
     def open_benchmark_tab(self, auto_run: bool = True):
         if self._closed or self.benchmark_page is None:
@@ -878,6 +920,8 @@ class AudioEffectsController(QObject):
         )
         if self.eq_dialog is not None:
             self.eq_dialog.set_state(profile)
+        if getattr(self, 'settings_studio', None) is not None:
+            self.settings_studio.sync_from_controller()
         if save_to_device and profile.enabled:
             self._record_current_device_profile()
         self._save_profile()
@@ -1232,15 +1276,16 @@ class AudioEffectsController(QObject):
                     self.target_lufs = int(saved['target_lufs'])
                     self.panel.set_target(self.target_lufs)
                 next_prof = AudioProfile.from_dict({**saved, 'output_device': pinned})
-            elif 'DAWN PRO' in new_key.upper():
-                studio_prof, studio_lufs = preset_profile('studio_dawn_aria2')
-                self.target_lufs = int(studio_lufs or DEFAULT_TARGET)
+            elif is_external_usb_dac(new_key):
+                studio_prof, studio_lufs = adaptive_master_profile(new_key)
+                self.target_lufs = int(studio_lufs)
                 self.panel.set_target(self.target_lufs)
                 next_prof = replace(studio_prof, output_device=pinned)
-            elif self.profile.output_mode == 'exclusive' or self.profile.tone in ('studio_aria2', 'aria2'):
-                self.target_lufs = DEFAULT_TARGET
+            elif self.profile.output_mode == 'exclusive' or self.profile.tone in ('master_hifi', 'studio_aria2', 'aria2'):
+                shared_prof, shared_lufs = adaptive_master_profile(new_key)
+                self.target_lufs = int(shared_lufs)
                 self.panel.set_target(self.target_lufs)
-                next_prof = replace(AudioProfile.recommended(), output_device=pinned)
+                next_prof = replace(shared_prof, output_device=pinned)
             else:
                 next_prof = self.profile
 
@@ -1290,6 +1335,7 @@ class AudioEffectsController(QObject):
                 detail_parts.append('Restorer Bypass')
             if self.profile.tone != 'off':
                 tone_short = {
+                    'master_hifi': 'Hi-Fi',
                     'studio_aria2': 'Aria 2',
                     'studio_room': 'Loa 30°',
                     'walkman_vivid': 'Sống động',
@@ -1299,6 +1345,7 @@ class AudioEffectsController(QObject):
                     'headphones': 'Crossfeed',
                 }
                 tone_labels = {
+                    'master_hifi': 'Master Hi-Fi + Studio 30°',
                     'studio_aria2': 'Aria 2 Lab + Studio 30°',
                     'studio_room': 'Studio Monitor 30°',
                     'walkman_vivid': 'Walkman/Poweramp EQ',
@@ -1369,6 +1416,8 @@ class AudioEffectsController(QObject):
 
         detail_tip = f'Nguồn: {src_detail}\nXử lý: {dsp_detail}\nĐầu ra: {out_detail}'
         self.panel.set_signal_path(src_text, dsp_text, out_text, tooltip=detail_tip)
+        if getattr(self, 'settings_studio', None) is not None:
+            self.settings_studio.sync_from_controller()
 
     def shutdown(self):
         if self._closed:

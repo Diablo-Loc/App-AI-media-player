@@ -27,6 +27,7 @@ class AudioEffectsPanel(QWidget):
     output_device_changed = Signal(str)
     per_device_changed = Signal(bool)
     dac_phase_changed = Signal(str)
+    recommended_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
@@ -117,6 +118,7 @@ class AudioEffectsPanel(QWidget):
         # Primary 3 clean horizontal rows
         self.preset_combo = QComboBox()
         for text, key in (
+            ('Chuẩn Hi-Fi (Hợp nhất)', 'master_hifi'),
             ('Dawn Pro 2 · Aria 2', 'studio_dawn_aria2'),
             ('DAC Rời · Bit-Perfect', 'dac_bitperfect'),
             ('YouTube', 'youtube'),
@@ -143,6 +145,7 @@ class AudioEffectsPanel(QWidget):
         self.tone = QComboBox()
         for text, key in (
             ('Tự nhiên', 'off'),
+            ('Chuẩn Hi-Fi · Hợp nhất', 'master_hifi'),
             ('Aria 2 · Phòng thu', 'studio_aria2'),
             ('Loa kiểm âm 30°', 'studio_room'),
             ('Sống động', 'walkman_vivid'),
@@ -431,6 +434,8 @@ class AudioEffectsPanel(QWidget):
         if isinstance(lufs, int) and key != 'youtube':
             self.level_changed.emit(int(lufs))
         self._emit_settings()
+        if key == 'master_hifi':
+            self.recommended_requested.emit()
 
     def _on_level_changed(self, *_):
         val = self.level.currentData()
@@ -458,10 +463,11 @@ class AudioEffectsPanel(QWidget):
         self.settings_changed.emit(norm, tone_val, rest_val, out_val, up_val, yt_loud)
 
     def _apply_recommended(self):
-        self.set_profile(True, 'off', 'off', 'shared', 'off', False, target_lufs=-16, dac_phase='linear')
+        self.set_profile(True, 'master_hifi', 'auto', 'shared', 'off', False, target_lufs=-14, dac_phase='linear')
         self.dac_phase_changed.emit('linear')
-        self.level_changed.emit(-16)
+        self.level_changed.emit(-14)
         self._emit_settings()
+        self.recommended_requested.emit()
 
     def _reset(self):
         eq_state = dict(self._eq_state)

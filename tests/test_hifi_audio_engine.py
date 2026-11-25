@@ -18,6 +18,7 @@ from core.audio_loudness import probe_audio_stream, measure_loudness
 from core.audio_profile import (
     AudioProfile,
     CS43198_CEILING_DB,
+    adaptive_master_profile,
     atempo_chain,
     build_realtime_filter_graph,
     build_upsample_stage,
@@ -72,9 +73,28 @@ class StudioDspPolicyTests(unittest.TestCase):
         for ext in ('.flac', '.m4a', '.opus', '.ogg', '.aac', '.webm', '.mp3', '.mp4', '.mkv', '.wav'):
             self.assertIn(ext, SUPPORTED_EXTS)
 
-    def test_recommended_default_is_bit_pure_uncolored_with_loudness(self):
-        prof = AudioProfile.recommended()
-        self.assertEqual(prof, AudioProfile(normalize=True, tone='off', restorer='off', output_mode='shared'))
+    def test_recommended_default_is_adaptive_master_hifi_and_bit_pure_preserved(self):
+        bp = AudioProfile.bit_pure()
+        self.assertEqual(bp, AudioProfile(normalize=True, tone='off', restorer='off', output_mode='shared'))
+        self.assertEqual(detect_preset(bp, -16), 'bit_pure')
+
+        rec = AudioProfile.recommended()
+        self.assertEqual(rec, AudioProfile(normalize=True, tone='master_hifi', restorer='auto', output_mode='shared'))
+        self.assertEqual(detect_preset(rec, -14), 'master_hifi')
+
+        shared_prof, shared_lufs = adaptive_master_profile('Speakers (Realtek(R) Audio)')
+        self.assertEqual((shared_prof, shared_lufs), (rec, -14))
+        bt_prof, bt_lufs = adaptive_master_profile('Headphones (SPACE TRAVEL 2 ULTRA)')
+        self.assertEqual((bt_prof, bt_lufs), (rec, -14))
+
+        dac_prof, dac_lufs = adaptive_master_profile('Headphones (DAWN PRO2)')
+        self.assertEqual(dac_prof.output_mode, 'exclusive')
+        self.assertEqual(dac_prof.upsample, 'hires_sync')
+        self.assertEqual(dac_prof.dac_phase, 'minimum')
+        self.assertEqual(dac_prof.tone, 'master_hifi')
+        self.assertEqual(dac_prof.restorer, 'auto')
+        self.assertEqual(dac_lufs, -14)
+        self.assertEqual(detect_preset(dac_prof, dac_lufs), 'master_hifi')
 
     def test_bit_pure_null_test_proves_zero_coloration_and_unclips_intersample_overs(self):
         # Multi-tone signal peaking at +1.9 dBTP (~1.245 float amplitude) simulating hot lossy peaks.
@@ -92,7 +112,7 @@ class StudioDspPolicyTests(unittest.TestCase):
         stereo_f64 = np.column_stack([sig, sig]).astype('<f8')
 
         info = {'codec_name': 'opus', 'sample_rate': sr, 'channels': 2, 'bit_rate': 128000}
-        af, summary = build_realtime_filter_graph(AudioProfile.recommended(), info, -5.0, sr)
+        af, summary = build_realtime_filter_graph(AudioProfile.bit_pure(), info, -5.0, sr)
         self.assertFalse(summary['resampled'])
         self.assertEqual(summary['restorer_active'], 'Bypass')
 
@@ -248,7 +268,7 @@ class StudioDspPolicyTests(unittest.TestCase):
         self.assertEqual(summary['soxr_precision'], 33)
         self.assertLess(af.index('aresample=192000:resampler=soxr:precision=33'), af.index('crossfeed='))
 
-        bit_pure_192, _ = build_realtime_filter_graph(AudioProfile.recommended(), info, 0.0, 192000)
+        bit_pure_192, _ = build_realtime_filter_graph(AudioProfile.bit_pure(), info, 0.0, 192000)
         for freq in (40, 1000, 14000):
             expr = f'0.125*sin(2*PI*{freq}*t)|0.125*sin(2*PI*{freq}*t)'
             raw = subprocess.run(
@@ -359,7 +379,7 @@ class StreamQuantizerAndFadeTests(unittest.TestCase):
             engine = AudioStreamEngine()
             engine.set_user_volume(0.0, muted=True)
             t0 = time.monotonic()
-            st = engine.start_or_reconfigure(str(mp3), 0, AudioProfile.recommended(), info, -2.0)
+            st = engine.start_or_reconfigure(str(mp3), 0, AudioProfile.bit_pure(), info, -2.0)
             self.assertTrue(st['active'])
             time.sleep(0.45)
             st_mid = engine.status_info()
@@ -406,7 +426,9 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             self.assertFalse((legacy_dir / f'{fake_key}.mkv').exists())
             self.assertTrue(foreign.exists())
 
-            self.assertEqual(ctrl.profile, AudioProfile.recommended())
+            expected_init, expected_init_lufs = adaptive_master_profile(ctrl._effective_device_key())
+            self.assertEqual(ctrl.profile, expected_init)
+            self.assertEqual(ctrl.target_lufs, expected_init_lufs)
             self.assertIs(window.media_player.player.audioOutput(), window.audio_output)
 
             proc = OwnedProcesses()
@@ -426,12 +448,14 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             # Quick presets & screen-fit geometry check
             panel = ctrl.panel
             self.assertLessEqual(panel.sizeHint().height(), 860)
-            for key in ('studio_dawn_aria2', 'dac_bitperfect', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass'):
+            for key in ('master_hifi', 'studio_dawn_aria2', 'dac_bitperfect', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass'):
                 idx = panel.preset_combo.findData(key)
                 self.assertGreaterEqual(idx, 0)
                 panel.preset_combo.setCurrentIndex(idx)
                 pump(30)
-                expected_prof, expected_lufs = preset_profile(key)
+                expected_prof, expected_lufs = (
+                    adaptive_master_profile(ctrl._effective_device_key()) if key == 'master_hifi' else preset_profile(key)
+                )
                 self.assertEqual(ctrl.profile, expected_prof)
                 self.assertEqual(detect_preset(ctrl.profile, ctrl.target_lufs), key)
                 if isinstance(expected_lufs, int) and key != 'youtube':
@@ -648,15 +672,16 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 self.assertIn('Headphones (SPACE TRAVEL 2 ULTRA)', ctrl.device_profiles)
                 self.assertEqual(ctrl.target_lufs, -14)
 
-                # Plug in Dawn Pro 2 -> auto-applies studio_dawn_aria2 (-16 LUFS Exclusive Hi-Res)
+                # Plug in Dawn Pro 2 -> auto-applies adaptive Master Hi-Fi (Exclusive Hi-Res MinPhase -14 LUFS)
                 state['devs'].append('Headphones (DAWN PRO2)')
                 state['default'] = 'Headphones (DAWN PRO2)'
                 ctrl._handle_device_change()
                 pump(40)
                 self.assertEqual(ctrl.profile.output_mode, 'exclusive')
                 self.assertEqual(ctrl.profile.upsample, 'hires_sync')
-                self.assertEqual(ctrl.profile.tone, 'studio_aria2')
-                self.assertEqual(ctrl.target_lufs, -16)
+                self.assertEqual(ctrl.profile.dac_phase, 'minimum')
+                self.assertEqual(ctrl.profile.tone, 'master_hifi')
+                self.assertEqual(ctrl.target_lufs, -14)
 
                 # Customize 10-band EQ on Dawn Pro 2
                 ctrl.set_custom_eq({'eq_enabled': True, 'eq_bands': (4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0)})
@@ -745,7 +770,7 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 '-c:a', 'pcm_f32le', str(hot_wav),
             ], check=True)
 
-            pure_res = run_audio_benchmark(str(hot_wav), AudioProfile.recommended(), -16)
+            pure_res = run_audio_benchmark(str(hot_wav), AudioProfile.bit_pure(), -16)
             self.assertGreater(pure_res['orig_tp_db'], 1.0)
             self.assertGreater(pure_res['orig_clips'], 0)
             self.assertLessEqual(pure_res['proc_tp_db'], -0.95)
@@ -846,7 +871,8 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 '-c:a', 'pcm_s16le', str(quiet_wav),
             ], check=True)
             for test_prof, test_lufs in (
-                (AudioProfile.recommended(), -16),
+                (AudioProfile.bit_pure(), -16),
+                preset_profile('master_hifi'),
                 preset_profile('studio_dawn_aria2'),
                 preset_profile('walkman_vivid'),
             ):
@@ -858,15 +884,15 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 self.assertEqual(q_res['verdict']['listener_summary']['overall_tone'], 'good')
 
             # Lab suite LRU cache returns identical metrics & avoids re-running FFmpeg;
-            # Full-song climax over-peak in cached_measurement flags Bypass & credits Recommended cleanly.
+            # Full-song climax over-peak in cached_measurement flags Bypass & credits Bit-Pure cleanly.
             climax_meas = {'lufs': -13.4, 'peak_db': 1.3, 'silent': False}
             bypass_climax = run_audio_benchmark(str(quiet_wav), AudioProfile(), -16, cached_measurement=climax_meas)
             self.assertIn('CAO TRÀO', bypass_climax['verdict']['listener_summary']['overall_tag'])
-            fixed_climax = run_audio_benchmark(str(quiet_wav), AudioProfile.recommended(), -16, cached_measurement=climax_meas)
+            fixed_climax = run_audio_benchmark(str(quiet_wav), AudioProfile.bit_pure(), -16, cached_measurement=climax_meas)
             self.assertEqual(fixed_climax['verdict']['listener_summary']['overall_tag'], 'SẠCH HƠN BẢN GỐC')
             self.assertEqual(fixed_climax['verdict']['listener_summary']['pillars'][0]['verdict'], 'Tốt hơn gốc')
             t_hit0 = time.perf_counter()
-            fixed_climax_2 = run_audio_benchmark(str(quiet_wav), AudioProfile.recommended(), -16, cached_measurement=climax_meas)
+            fixed_climax_2 = run_audio_benchmark(str(quiet_wav), AudioProfile.bit_pure(), -16, cached_measurement=climax_meas)
             self.assertLess(time.perf_counter() - t_hit0, 2.0)
             self.assertEqual(fixed_climax_2['lab_transfer_db'], fixed_climax['lab_transfer_db'])
 
@@ -1070,6 +1096,92 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             self.assertEqual(len(ctrl.profile.eq_peq_filters), 6)
             self.assertAlmostEqual(ctrl.profile.eq_peq_filters[4][1], 7950.0, places=1)
             self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
+
+    def test_settings_studio_ui_cards_sync_and_no_clipping(self):
+        from PySide6.QtWidgets import QLabel as _QLabel, QLineEdit as _QLineEdit, QMessageBox as _QMessageBox
+        from ui import pages as _pages_pkg  # noqa: F401
+        from ui.pages import settings as _settings_mod
+
+        with isolated_window() as (window, root):
+            ctrl = window.audio_effects
+            page = window.settings_page
+            studio = ctrl.settings_studio
+            self.assertIsNotNone(studio)
+
+            # Switch sidebar cleanly to Settings (index 4)
+            window.sidebar.setCurrentRow(4)
+            window.handle_sidebar_click(window.sidebar.item(4))
+            window.show()
+            pump(60)
+
+            self.assertTrue(studio.audio_card.isVisible())
+            self.assertTrue(studio.asr_card.isVisible())
+            self.assertTrue(studio.translation_card.isVisible())
+
+            # Volume slider <-> VolumeSettings.spin two-way sync
+            studio.volume_slider.setValue(72)
+            pump(30)
+            self.assertEqual(page.volume_percent.value(), 72)
+            self.assertAlmostEqual(ctrl.volume(), 0.72, places=2)
+            page.volume_percent.setValue(44)
+            pump(30)
+            self.assertEqual(studio.volume_slider.value(), 44)
+
+            # Settings preset combo <-> AudioEffectsController & optimal button
+            studio.preset_combo.setCurrentIndex(studio.preset_combo.findData('bit_pure'))
+            pump(30)
+            self.assertEqual(ctrl.profile, AudioProfile.bit_pure())
+            self.assertEqual(ctrl.target_lufs, -16)
+
+            studio.btn_optimal_preset.click()
+            pump(30)
+            self.assertEqual(ctrl.profile.tone, 'master_hifi')
+            self.assertEqual(ctrl.target_lufs, -14)
+            self.assertEqual(studio.preset_combo.currentData(), 'master_hifi')
+
+            # API Key reveal toggle + dynamic provider portal link
+            page.combo_online_ai.setCurrentText('Google Gemini')
+            pump(20)
+            self.assertTrue(page.api_key_input.isEnabled())
+            self.assertIn('aistudio.google.com', studio.lbl_provider_link.text())
+            self.assertEqual(page.api_key_input.echoMode(), _QLineEdit.EchoMode.Password)
+            studio.btn_toggle_api_key.click()
+            self.assertEqual(page.api_key_input.echoMode(), _QLineEdit.EchoMode.Normal)
+            studio.btn_toggle_api_key.click()
+            self.assertEqual(page.api_key_input.echoMode(), _QLineEdit.EchoMode.Password)
+
+            page.combo_online_ai.setCurrentText('Local Default')
+            pump(20)
+            self.assertFalse(page.api_key_input.isEnabled())
+            self.assertIn('NLLB-200', studio.lbl_provider_link.text())
+
+            # Dialogue content mode disables Genius token + reveal button cleanly
+            page.combo_content_mode.setCurrentIndex(page.combo_content_mode.findData('dialogue'))
+            pump(20)
+            self.assertFalse(page.genius_key_input.isEnabled())
+            self.assertFalse(studio.btn_toggle_genius_key.isEnabled())
+            page.combo_content_mode.setCurrentIndex(page.combo_content_mode.findData('lyrics'))
+            pump(20)
+            self.assertTrue(studio.btn_toggle_genius_key.isEnabled())
+
+            # Zero label clipping across desktop & compact widths
+            for size in ((1280, 820), (1120, 760), (860, 560)):
+                window.resize(*size)
+                pump(50)
+                for lbl in page.findChildren(_QLabel):
+                    if not lbl.isVisible() or lbl.width() <= 0 or not lbl.text():
+                        continue
+                    self.assertGreaterEqual(lbl.height() + 1, lbl.minimumSizeHint().height(), f'Clipped minHint: {lbl.text()}')
+                    if lbl.wordWrap() and lbl.hasHeightForWidth():
+                        hfw = lbl.heightForWidth(lbl.width())
+                        if hfw > 0:
+                            self.assertGreaterEqual(lbl.height() + 1, hfw, f'Clipped wrapped: {lbl.text()}')
+
+            # Reset still works cleanly through original owner
+            with patch.object(_settings_mod.QMessageBox, 'question', return_value=_QMessageBox.StandardButton.Yes), \
+                 patch.object(_settings_mod.QMessageBox, 'information'):
+                page.reset_to_defaults()
+            self.assertEqual(page.volume_percent.value(), 50)
 
 
 if __name__ == '__main__':
