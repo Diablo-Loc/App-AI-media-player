@@ -812,6 +812,8 @@ class AudioEffectsController(QObject):
 
         from ui.settings_studio_view import install_settings_studio_view
         self.settings_studio = install_settings_studio_view(self)
+        from ui.download_studio_view import install_download_studio_view
+        self.download_studio = install_download_studio_view(self.window)
         self.btn_settings_benchmark = getattr(settings_page, 'btn_audio_benchmark', None)
 
     def open_benchmark_tab(self, auto_run: bool = True):
