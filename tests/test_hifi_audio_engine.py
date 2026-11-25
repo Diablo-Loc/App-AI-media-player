@@ -12,6 +12,7 @@ from unittest.mock import patch
 import numpy as np
 import psutil
 
+from tools.ui_preview import isolated_window, pump
 from core.audio_effects import find_tool
 from core.audio_loudness import probe_audio_stream, measure_loudness
 from core.audio_profile import (
@@ -19,6 +20,7 @@ from core.audio_profile import (
     CS43198_CEILING_DB,
     atempo_chain,
     build_realtime_filter_graph,
+    build_upsample_stage,
     compute_mastering_gain_db,
     custom_eq_filter,
     custom_eq_peak_boost_db,
@@ -26,6 +28,7 @@ from core.audio_profile import (
     effective_eq_preamp_db,
     evaluate_eq_response_db,
     export_apo_text,
+    normalize_peq_filters,
     parse_apo_text,
     preset_profile,
     resolve_restorer,
@@ -33,6 +36,7 @@ from core.audio_profile import (
     tone_peak_pad_db,
 )
 from PySide6.QtCore import QUrl
+import PySide6.QtMultimedia  # noqa: F401 - keep QtMultimedia C++ extension in sys.modules across isolated_window()
 
 from core.audio_stream_engine import (
     AudioStreamEngine,
@@ -40,10 +44,12 @@ from core.audio_stream_engine import (
     build_release_tail,
     preferred_exclusive_rates,
     quantize_pcm,
+    _tpdf_slice,
 )
+from core.audio_benchmark import compute_k_weighted_db, render_audition_pair, run_audio_benchmark
+from core.audio_profile import resolve_profile_gain_db
 from core.media_library import SUPPORTED_EXTS
 from control.worker_lifecycle import OwnedProcesses
-from tools.ui_preview import isolated_window, pump
 
 ROOT = Path(__file__).resolve().parents[1]
 FFMPEG = find_tool('ffmpeg')
@@ -420,7 +426,7 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             # Quick presets & screen-fit geometry check
             panel = ctrl.panel
             self.assertLessEqual(panel.sizeHint().height(), 860)
-            for key in ('studio_dawn_aria2', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass'):
+            for key in ('studio_dawn_aria2', 'dac_bitperfect', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass'):
                 idx = panel.preset_combo.findData(key)
                 self.assertGreaterEqual(idx, 0)
                 panel.preset_combo.setCurrentIndex(idx)
@@ -542,7 +548,24 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             ctrl = window.audio_effects
             dlg = ctrl.open_equalizer()
             self.assertIsNotNone(dlg)
-            self.assertLessEqual(ctrl.panel.sizeHint().height(), 860)
+            panel = ctrl.panel
+            self.assertTrue(panel.advanced_box.isHidden())
+            self.assertLessEqual(panel.sizeHint().height(), 340)
+            panel._toggle_advanced()
+            pump(20)
+            self.assertFalse(panel.advanced_box.isHidden())
+            self.assertLessEqual(panel.sizeHint().height(), 620)
+            panel._toggle_advanced()
+            self.assertTrue(panel.advanced_box.isHidden())
+
+            # Zero "AI slop" marketing slogans in visible combos, buttons, and APO menu
+            for combo in (panel.preset_combo, panel.tone, panel.restorer, panel.level, dlg.curve_combo):
+                for idx_c in range(combo.count()):
+                    txt = combo.itemText(idx_c)
+                    for slop in ('0 MB ổ cứng', 'Khuyên dùng', '★'):
+                        self.assertNotIn(slop, txt)
+            self.assertIsNotNone(dlg.btn_apo_menu.menu())
+            self.assertEqual(len(dlg.btn_apo_menu.menu().actions()), 5)
 
             idx = dlg.curve_combo.findData('v_shape')
             dlg.curve_combo.setCurrentIndex(idx)
@@ -689,6 +712,363 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             pump(30)
             self.assertTrue(ctrl.profile.eq_enabled)
             self.assertAlmostEqual(ctrl.profile.eq_bands[0], 2.5, places=1)
+            self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
+
+    def test_prime_decorrelated_dither_restorer_headroom_and_benchmark_tab(self):
+        # 1. Prime-length stereo TPDF dither is decorrelated across L/R and non-periodic at 65536 frames
+        d0 = _tpdf_slice((8192, 2), 0)
+        d_wrap = _tpdf_slice((8192, 2), 65536)
+        lr_corr = float(np.corrcoef(d0[:, 0], d0[:, 1])[0, 1])
+        self.assertLess(abs(lr_corr), 0.035)
+        self.assertGreater(float(np.max(np.abs(d0 - d_wrap))), 0.1)
+
+        # 2. Restorer headroom pad protects legacy 128k MP3 without penalizing bypassed FLAC/Opus
+        flac_info = {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 950000}
+        mp3_info = {'codec_name': 'mp3', 'sample_rate': 44100, 'channels': 2, 'bit_rate': 128000}
+        rest_prof = AudioProfile(normalize=True, restorer='auto')
+        self.assertEqual(tone_peak_pad_db(rest_prof, flac_info), 0.0)
+        self.assertGreater(tone_peak_pad_db(rest_prof, mp3_info), 1.5)
+        g_flac, _ = resolve_profile_gain_db(rest_prof, {'lufs': -14.0, 'peak_db': -1.0}, -14, source_info=flac_info)
+        g_mp3, _ = resolve_profile_gain_db(rest_prof, {'lufs': -14.0, 'peak_db': -1.0}, -14, source_info=mp3_info)
+        self.assertEqual(g_flac, 0.0)
+        self.assertLess(g_mp3, -1.5)
+
+        # 3. Scientific benchmark proves bit-pure intersample protection and flags unguarded clipping
+        with isolated_window() as (window, root):
+            hot_wav = root / 'hot_clip.wav'
+            subprocess.run([
+                FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                '-i', (
+                    'aevalsrc=0.44*sin(2*PI*60*t)+0.36*sin(2*PI*250*t)+0.28*sin(2*PI*1000*t)'
+                    '+0.22*sin(2*PI*4000*t)+0.16*sin(2*PI*12000*t):s=48000:c=stereo:d=1.2'
+                ),
+                '-c:a', 'pcm_f32le', str(hot_wav),
+            ], check=True)
+
+            pure_res = run_audio_benchmark(str(hot_wav), AudioProfile.recommended(), -16)
+            self.assertGreater(pure_res['orig_tp_db'], 1.0)
+            self.assertGreater(pure_res['orig_clips'], 0)
+            self.assertLessEqual(pure_res['proc_tp_db'], -0.95)
+            self.assertEqual(pure_res['proc_clips'], 0)
+            self.assertLess(pure_res['tonal_rms_db'], 0.08)
+            self.assertLess(abs(pure_res['dr_delta_db']), 0.08)
+            self.assertLess(pure_res['null_residual_db'], -135.0)
+            self.assertIn('BIT-PURE', pure_res['verdict']['badge'])
+            ls_pure = pure_res['verdict']['listener_summary']
+            self.assertEqual(ls_pure['overall_tag'], 'SẠCH HƠN BẢN GỐC')
+            self.assertEqual(ls_pure['overall_tone'], 'good')
+            self.assertEqual(ls_pure['pillars'][0]['verdict'], 'Tốt hơn gốc')
+            self.assertEqual(ls_pure['pillars'][2]['verdict'], 'Nguyên bản 1:1')
+            self.assertLess(pure_res['thdn_db'], -130.0)
+            self.assertLess(pure_res['imd_db'], -125.0)
+            self.assertLess(pure_res['crosstalk_db'], -130.0)
+            self.assertLess(max(abs(v) for v in pure_res['lab_transfer_db']), 0.05)
+            self.assertLess(max(abs(p) for p in pure_res['lab_phase_deg']), 0.5)
+            self.assertEqual(len(pure_res['comparison_rows']), 8)
+            self.assertEqual(len(pure_res['ref_thd_fft_db']), len(pure_res['thd_fft_freqs']))
+            for row in pure_res['comparison_rows']:
+                self.assertNotIn('Lý tưởng số', row['orig'])
+                self.assertNotIn('0.00000%', row['proc'])
+
+            studio_prof, studio_lufs = preset_profile('studio_dawn_aria2')
+            studio_res = run_audio_benchmark(str(hot_wav), studio_prof, int(studio_lufs or -16))
+            self.assertGreater(studio_res['crosstalk_db'], -35.0)
+            self.assertLess(studio_res['crosstalk_db'], -12.0)
+            self.assertEqual(studio_res['out_sr'], 192000)
+            self.assertEqual(studio_res['out_dtype'], 'int32')
+            self.assertLess(studio_res['thdn_db'], -130.0)
+            self.assertEqual(studio_res['verdict']['badge'], 'CHUẨN HI-RES STUDIO')
+            self.assertNotIn('186.', studio_res['verdict']['headline'])
+            self.assertNotIn('STREAMING', studio_res['verdict']['badge'])
+            self.assertEqual(studio_res['noise_floor_label'], '< -144 dBFS')
+            self.assertIn('SẠCH ĐỈNH HƠN', studio_res['verdict']['listener_summary']['overall_tag'])
+
+            # Gain-matched RAM A/B audition equalizes K-weighted loudness within <= 0.15 dB without clipping
+            pair = render_audition_pair(
+                str(hot_wav),
+                studio_prof,
+                studio_res['source_info'],
+                float(studio_res['exact_gain_db']),
+                0.0,
+                1.0,
+                play_sr=48000,
+            )
+            self.assertEqual(pair['sample_rate'], 48000)
+            self.assertGreater(abs(pair['delta_loudness_db']), 2.0)
+            matched_k_orig = compute_k_weighted_db(pair['orig_f32'].astype(np.float64) * pair['match_orig_lin'], 48000)
+            matched_k_proc = compute_k_weighted_db(pair['proc_f32'].astype(np.float64) * pair['match_proc_lin'], 48000)
+            self.assertLessEqual(abs(matched_k_orig - matched_k_proc), 0.15)
+            self.assertLessEqual(float(np.max(np.abs(pair['orig_f32'])) * pair['match_orig_lin']), 0.97)
+            self.assertLessEqual(float(np.max(np.abs(pair['proc_f32'])) * pair['match_proc_lin']), 0.97)
+
+            # DAC Bit-Perfect Exclusive preserves native 96 kHz sample rate & 0 dB flat pass-through
+            hires_wav = root / 'hires_96k.wav'
+            subprocess.run([
+                FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                '-i', (
+                    'aevalsrc=0.25*sin(2*PI*1000*t)+0.18*sin(2*PI*5000*t)+0.15*sin(2*PI*36000*t)'
+                    ':s=96000:c=stereo:d=1.0'
+                ),
+                '-c:a', 'pcm_s24le', str(hires_wav),
+            ], check=True)
+            bp_prof, _ = preset_profile('dac_bitperfect')
+            bp_res = run_audio_benchmark(str(hires_wav), bp_prof, -16)
+            self.assertEqual(bp_res['in_sr'], 96000)
+            self.assertEqual(bp_res['out_sr'], 96000)
+            self.assertEqual(bp_res['out_dtype'], 'int32')
+            self.assertFalse(bp_res['filter_summary']['resampled'])
+            self.assertGreaterEqual(bp_res['source_cutoff_hz'], 34000)
+            self.assertEqual(bp_res['gain_db'], 0.0)
+            self.assertEqual(bp_res['verdict']['badge'], 'ĐẠT CHUẨN BIT-PURE')
+            self.assertEqual(bp_res['verdict']['listener_summary']['overall_tag'], 'TRUNG THỰC NHƯ GỐC')
+
+            heavy_eq_prof = AudioProfile(
+                normalize=False,
+                eq_enabled=True,
+                eq_auto_preamp=True,
+                eq_bands=(12.0, 10.0, 8.0, 6.0, -4.0, -4.0, 6.0, 8.0, 10.0, 12.0),
+            )
+            heavy_res = run_audio_benchmark(str(hot_wav), heavy_eq_prof, -16)
+            self.assertEqual(heavy_res['verdict']['badge'], 'CẦN LƯU Ý')
+            self.assertTrue(any(f['level'] == 'warn' for f in heavy_res['verdict']['findings']))
+            self.assertEqual(heavy_res['proc_clips'], 0)
+            self.assertEqual(heavy_res['verdict']['listener_summary']['overall_tone'], 'warn')
+            self.assertIn('QUÁ ĐÀ', heavy_res['verdict']['listener_summary']['overall_tag'])
+
+            # Quiet 44.1 kHz track boosted by +5+ dB ReplayGain never false-clips the synthetic AES17 lab suite
+            quiet_wav = root / 'quiet_44k.wav'
+            subprocess.run([
+                FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                '-i', (
+                    'aevalsrc=0.05*sin(2*PI*220*t)+0.04*sin(2*PI*1000*t)+0.03*sin(2*PI*4000*t)'
+                    ':s=44100:c=stereo:d=1.2'
+                ),
+                '-c:a', 'pcm_s16le', str(quiet_wav),
+            ], check=True)
+            for test_prof, test_lufs in (
+                (AudioProfile.recommended(), -16),
+                preset_profile('studio_dawn_aria2'),
+                preset_profile('walkman_vivid'),
+            ):
+                q_res = run_audio_benchmark(str(quiet_wav), test_prof, int(test_lufs or -16))
+                self.assertGreater(q_res['gain_db'], 4.0)
+                self.assertLess(q_res['thdn_db'], -130.0)
+                self.assertLess(q_res['imd_db'], -125.0)
+                self.assertEqual(q_res['comparison_rows'][7]['status'], 'Tuyến tính')
+                self.assertEqual(q_res['verdict']['listener_summary']['overall_tone'], 'good')
+
+            # Lab suite LRU cache returns identical metrics & avoids re-running FFmpeg;
+            # Full-song climax over-peak in cached_measurement flags Bypass & credits Recommended cleanly.
+            climax_meas = {'lufs': -13.4, 'peak_db': 1.3, 'silent': False}
+            bypass_climax = run_audio_benchmark(str(quiet_wav), AudioProfile(), -16, cached_measurement=climax_meas)
+            self.assertIn('CAO TRÀO', bypass_climax['verdict']['listener_summary']['overall_tag'])
+            fixed_climax = run_audio_benchmark(str(quiet_wav), AudioProfile.recommended(), -16, cached_measurement=climax_meas)
+            self.assertEqual(fixed_climax['verdict']['listener_summary']['overall_tag'], 'SẠCH HƠN BẢN GỐC')
+            self.assertEqual(fixed_climax['verdict']['listener_summary']['pillars'][0]['verdict'], 'Tốt hơn gốc')
+            t_hit0 = time.perf_counter()
+            fixed_climax_2 = run_audio_benchmark(str(quiet_wav), AudioProfile.recommended(), -16, cached_measurement=climax_meas)
+            self.assertLess(time.perf_counter() - t_hit0, 2.0)
+            self.assertEqual(fixed_climax_2['lab_transfer_db'], fixed_climax['lab_transfer_db'])
+
+            # 4. Settings button opens Benchmark tab, populates non-expert A/B + 4 charts/table, prevents clipping
+            ctrl = window.audio_effects
+            self.assertTrue(hasattr(window.settings_page, 'btn_audio_benchmark'))
+            window.settings_page.btn_audio_benchmark.click()
+            pump(40)
+            self.assertIs(window.content_stack.currentWidget(), ctrl.benchmark_page)
+            ctrl.benchmark_page.mode_combo.setCurrentIndex(ctrl.benchmark_page.mode_combo.findData('studio_dawn_aria2'))
+            ctrl.benchmark_page.set_source_file(str(hot_wav), auto_run=False)
+            ctrl.benchmark_page.run_benchmark()
+            for _ in range(80):
+                pump(50)
+                if ctrl.benchmark_page._last_result is not None and ctrl.benchmark_page.btn_run.isEnabled():
+                    break
+            self.assertIsNotNone(ctrl.benchmark_page._last_result)
+            self.assertEqual(ctrl.benchmark_page.lbl_verdict_badge.text(), 'CHUẨN HI-RES STUDIO')
+            self.assertIn('SẠCH ĐỈNH HƠN', ctrl.benchmark_page.lbl_plain_badge.text())
+            self.assertTrue(ctrl.benchmark_page.btn_audition_toggle.isEnabled())
+            self.assertNotIn('186.', ctrl.benchmark_page.lbl_spec_footer.text())
+            self.assertTrue(ctrl.benchmark_page.copy_report_to_clipboard())
+
+            # Test muted live A/B audition start, branch switch, and clean stop on Back
+            window.audio_output.setMuted(True)
+            ctrl.benchmark_page.toggle_audition()
+            for _ in range(60):
+                pump(50)
+                if ctrl.benchmark_page._audition.is_playing():
+                    break
+            self.assertTrue(ctrl.benchmark_page._audition.is_playing())
+            ctrl.benchmark_page.btn_ab_orig.click()
+            pump(40)
+            self.assertTrue(ctrl.benchmark_page.btn_ab_orig.isChecked())
+            self.assertEqual(ctrl.benchmark_page._audition._branch, 'orig')
+            ctrl.benchmark_page.btn_ab_proc.click()
+            pump(40)
+            self.assertEqual(ctrl.benchmark_page._audition._branch, 'proc')
+
+            from PySide6.QtWidgets import QLabel as _QLabel
+            window.show()
+            for size in ((1120, 760), (860, 560)):
+                window.resize(*size)
+                pump(60)
+                for lbl in ctrl.benchmark_page.findChildren(_QLabel):
+                    if not lbl.isVisible() or lbl.width() <= 0 or not lbl.text():
+                        continue
+                    self.assertGreaterEqual(lbl.height() + 1, lbl.minimumSizeHint().height(), f'Clipped minHint on {lbl.text()}')
+                    if lbl.wordWrap() and lbl.hasHeightForWidth():
+                        hfw = lbl.heightForWidth(lbl.width())
+                        if hfw > 0:
+                            self.assertGreaterEqual(lbl.height() + 1, hfw, f'Wrapped text clipped on {lbl.text()}')
+
+            dlg = ctrl.open_equalizer()
+            pump(40)
+            for lbl in dlg.findChildren(_QLabel):
+                if lbl.isVisible() and lbl.width() > 0:
+                    self.assertGreaterEqual(lbl.height() + 1, lbl.minimumSizeHint().height())
+            for sld, v_lbl in zip(dlg.band_sliders, dlg.band_labels):
+                self.assertLessEqual(v_lbl.geometry().bottom(), sld.geometry().top())
+                for f_lbl in dlg.findChildren(_QLabel):
+                    if f_lbl.text() in ('31', '62', '125') and abs(f_lbl.geometry().center().x() - sld.geometry().center().x()) < 25:
+                        self.assertLessEqual(sld.geometry().bottom(), f_lbl.geometry().top())
+
+            ctrl.benchmark_page.cb_show_orig.click()
+            ctrl.benchmark_page.cb_show_orig.click()
+            ctrl.benchmark_page.cb_show_proc.click()
+            ctrl.benchmark_page.cb_show_proc.click()
+            for chart_btn in (
+                ctrl.benchmark_page.btn_view_transfer,
+                ctrl.benchmark_page.btn_view_peaks,
+                ctrl.benchmark_page.btn_view_thd,
+                ctrl.benchmark_page.btn_view_spec,
+            ):
+                chart_btn.click()
+                pump(20)
+            ctrl.benchmark_page.btn_back.click()
+            pump(40)
+            self.assertFalse(ctrl.benchmark_page._audition.is_playing())
+            self.assertIs(window.content_stack.currentWidget(), window.settings_page)
+            self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
+
+    def test_parametric_peq_exact_biquads_apo_roundtrip_and_hashability(self):
+        squiglink_apo = (
+            'Preamp: -2.4 dB\n'
+            'Filter 1: ON LSC Fc 95 Hz Gain 2.2 dB Q 0.707\n'
+            'Filter 2: ON PK Fc 210 Hz Gain -1.4 dB Q 1.300\n'
+            'Filter 3: ON PK Fc 3350 Hz Gain -2.1 dB Q 2.400\n'
+            'Filter 4: ON PK Fc 7950 Hz Gain -4.5 dB Q 4.200\n'
+            'Filter 5: OFF PK Fc 5000 Hz Gain 8.0 dB Q 1.000\n'
+            'Filter 6: ON HSC Fc 12800 Hz Gain 1.8 dB Q 0.707\n'
+            'Filter 7: ON PK Fc 520 Hz Gain 1.2 dB BW Oct 1.0\n'
+        )
+        parsed = parse_apo_text(squiglink_apo)
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed['eq_preamp_db'], -2.4)
+        peq = parsed['eq_peq_filters']
+        self.assertEqual(len(peq), 6)
+        self.assertEqual(peq[0], ('LS', 95.0, 2.2, 0.707))
+        self.assertEqual(peq[3], ('PK', 7950.0, -4.5, 4.2))
+        self.assertEqual(peq[4], ('HS', 12800.0, 1.8, 0.707))
+        self.assertAlmostEqual(peq[5][3], 1.414, places=2)
+
+        prof = AudioProfile.from_dict(parsed)
+        self.assertIsInstance(hash(prof), int)
+        self.assertTrue(prof.custom_eq_active)
+
+        af, summary = build_realtime_filter_graph(
+            prof, {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 960000}, 0.0, 48000
+        )
+        self.assertEqual(summary['peq_count'], 6)
+        test_freqs = [95, 210, 1000, 3350, 7950, 12800]
+        predicted = evaluate_eq_response_db(prof, test_freqs, 48000.0)
+        for freq, pred_db in zip(test_freqs, predicted):
+            actual_db = _measure_tone_gain_db(af, freq, 48000)
+            self.assertLess(abs(actual_db - pred_db), 0.12, f'Mismatch at {freq} Hz: {actual_db} vs {pred_db}')
+        # Verify sharp Q=4.2 notch at 7950 Hz hits real depth
+        self.assertLess(_measure_tone_gain_db(af, 7950, 48000), -3.8)
+
+        # Auto Preamp protects narrow high-Q boosts and APO export -> import round-trips losslessly
+        peak_peq = AudioProfile(eq_enabled=True, eq_peq_filters=normalize_peq_filters([('PK', 3456.0, 7.5, 5.0)]))
+        self.assertGreaterEqual(custom_eq_peak_boost_db(peak_peq), 7.3)
+        self.assertAlmostEqual(effective_eq_preamp_db(peak_peq), -custom_eq_peak_boost_db(peak_peq), places=2)
+        exported = export_apo_text(prof)
+        self.assertIn('Filter 4: ON PK Fc 7950 Hz Gain -4.50 dB Q 4.200', exported)
+        re_parsed = parse_apo_text(exported)
+        self.assertEqual(re_parsed['eq_peq_filters'], prof.eq_peq_filters)
+
+    def test_minimum_phase_dac_oversampler_and_peq_dialog_integration(self):
+        # 1. Verify zero pre-ringing (< -100 dB pre-onset) vs linear SoXR sinc (~ -19 dB)
+        imp = np.zeros((8192, 2), dtype=np.float64)
+        imp[1024, 0] = 0.25
+        for phase, expect_low_prering in (('linear', False), ('minimum', True)):
+            up_stage = build_upsample_stage(48000, 192000, dac_phase=phase)
+            raw = subprocess.run([
+                FFMPEG, '-nostdin', '-hide_banner', '-loglevel', 'error',
+                '-f', 'f64le', '-ar', '48000', '-ac', '2', '-i', 'pipe:0',
+                '-af', f'aformat=sample_fmts=dblp,{up_stage}',
+                '-f', 'f64le', '-ac', '2', 'pipe:1',
+            ], input=imp.astype('<f8').tobytes(), capture_output=True, check=True).stdout
+            ir = np.frombuffer(raw, dtype='<f8').reshape(-1, 2)[:, 0] * (4.0 * 48000 / 192000)
+            onset = 1024 * 4
+            pre_db = 10.0 * np.log10(max(1e-32, float(np.sum(ir[:onset - 1] ** 2))))
+            if expect_low_prering:
+                self.assertLess(pre_db, -100.0)
+            else:
+                self.assertGreater(pre_db, -30.0)
+
+        with isolated_window() as (window, root):
+            ctrl = window.audio_effects
+            panel = ctrl.panel
+
+            for sr_in, expect_sr in ((48000, 192000), (44100, 176400)):
+                wav_p = root / f'tone_{sr_in}.wav'
+                subprocess.run([
+                    FFMPEG, '-y', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                    '-i', f'aevalsrc=0.25*sin(2*PI*1000*t)+0.15*sin(2*PI*12000*t):s={sr_in}:c=stereo:d=0.9',
+                    '-c:a', 'pcm_s24le', str(wav_p),
+                ], check=True)
+                min_prof = AudioProfile(normalize=False, output_mode='exclusive', upsample='hires_sync', dac_phase='minimum')
+                res = run_audio_benchmark(str(wav_p), min_prof, -16)
+                self.assertEqual(res['out_sr'], expect_sr)
+                self.assertEqual(res['filter_summary']['dac_phase'], 'minimum')
+                self.assertLess(res['tonal_rms_db'], 0.08)
+                self.assertLess(res['thdn_db'], -130.0)
+                self.assertEqual(res['verdict']['badge'], 'ĐẠT CHUẨN BIT-PURE')
+                self.assertGreater(abs(res['lab_phase_deg'][-8]), 5.0)
+
+            # UI Panel -> Controller persistence for dac_phase
+            idx_min = panel.dac_phase.findData('minimum')
+            self.assertGreaterEqual(idx_min, 0)
+            panel.dac_phase.setCurrentIndex(idx_min)
+            pump(40)
+            self.assertEqual(ctrl.profile.dac_phase, 'minimum')
+            saved_cfg = json.loads(ctrl.settings_path.read_text(encoding='utf-8'))
+            self.assertEqual(saved_cfg['dac_phase'], 'minimum')
+
+            # Equalizer PEQ mode, preset, file I/O & DPI geometry check
+            dlg = ctrl.open_equalizer()
+            dlg.curve_combo.setCurrentIndex(dlg.curve_combo.findData('peq:aria2_squiglink'))
+            pump(40)
+            self.assertEqual(dlg._eq_mode, 'peq')
+            self.assertTrue(ctrl.profile.eq_enabled)
+            self.assertEqual(len(ctrl.profile.eq_peq_filters), 6)
+            self.assertIn('PEQ 6 dải', panel.btn_open_eq.text())
+
+            from PySide6.QtWidgets import QLabel as _QLabel
+            dlg.show()
+            pump(40)
+            for lbl in dlg.findChildren(_QLabel):
+                if lbl.isVisible() and lbl.width() > 0:
+                    self.assertGreaterEqual(lbl.height() + 1, lbl.minimumSizeHint().height())
+
+            peq_txt = root / 'aria2_peq.txt'
+            self.assertTrue(dlg.export_apo_file(peq_txt))
+            dlg.reset_flat()
+            pump(30)
+            self.assertEqual(ctrl.profile.eq_peq_filters, ())
+            self.assertTrue(dlg.import_apo_file(peq_txt))
+            pump(30)
+            self.assertEqual(len(ctrl.profile.eq_peq_filters), 6)
+            self.assertAlmostEqual(ctrl.profile.eq_peq_filters[4][1], 7950.0, places=1)
             self.assertEqual(list(ctrl.cache.root.glob('*.mkv')), [])
 
 

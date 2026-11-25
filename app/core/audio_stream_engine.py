@@ -11,10 +11,12 @@ from core.audio_profile import AudioProfile, build_realtime_filter_graph
 
 logger = logging.getLogger(__name__)
 
-# Precomputed 65536-sample 64-bit TPDF dither table (~1 MB RAM) for fast quantization.
+# Prime-length 64-bit TPDF dither table (~2.0 MB RAM) with prime L/R decorrelation stride.
+_TPDF_LEN = 262147
+_TPDF_R_STRIDE = 131071
 _TPDF_TABLE = (
-    np.random.default_rng(20261124).random(65536, dtype=np.float64)
-    - np.random.default_rng(20261125).random(65536, dtype=np.float64)
+    np.random.default_rng(20261124).random(_TPDF_LEN, dtype=np.float64)
+    - np.random.default_rng(20261125).random(_TPDF_LEN, dtype=np.float64)
 )
 
 
@@ -28,14 +30,22 @@ def is_stream_engine_available():
         return False
 
 
+def _tpdf_slice_1d(start: int, length: int) -> np.ndarray:
+    s = start % _TPDF_LEN
+    if s + length <= _TPDF_LEN:
+        return _TPDF_TABLE[s:s + length]
+    idx = (np.arange(length, dtype=np.int64) + s) % _TPDF_LEN
+    return _TPDF_TABLE[idx]
+
+
 def _tpdf_slice(shape, offset: int) -> np.ndarray:
+    if len(shape) == 2 and int(shape[1]) == 2:
+        n = int(shape[0])
+        left = _tpdf_slice_1d(offset, n)
+        right = _tpdf_slice_1d(offset + _TPDF_R_STRIDE, n)
+        return np.column_stack((left, right))
     total = int(shape[0]) * int(shape[1])
-    tbl_len = len(_TPDF_TABLE)
-    start = offset % tbl_len
-    if start + total <= tbl_len:
-        return _TPDF_TABLE[start:start + total].reshape(shape)
-    idx = (np.arange(total, dtype=np.int64) + start) % tbl_len
-    return _TPDF_TABLE[idx].reshape(shape)
+    return _tpdf_slice_1d(offset, total).reshape(shape)
 
 
 def quantize_pcm(
@@ -519,7 +529,7 @@ class AudioStreamEngine:
                 if len(processed) > 0:
                     last_frame = processed[-1].copy()
                 raw_bytes = quantize_pcm(processed, out_dtype, rng=None, dither_offset=dither_offset)
-                dither_offset = (dither_offset + pcm.size) % len(_TPDF_TABLE)
+                dither_offset = (dither_offset + len(pcm)) % _TPDF_LEN
                 uf = stream.write(raw_bytes)
                 with self._lock:
                     self._current_amp = current_amp
@@ -634,7 +644,12 @@ class AudioStreamEngine:
     ) -> dict:
         """Start or seamlessly reconfigure the in-RAM DSP + C-blocking WASAPI pipeline."""
         effective_gain_db = float(gain_db)
-        if not profile.normalize and (profile.tone != 'off' or profile.restorer != 'off') and abs(effective_gain_db) < 0.01:
+        if (
+            not profile.normalize
+            and source_info is None
+            and (profile.tone not in ('off', 'studio_room') or profile.restorer in ('natural', 'vivid'))
+            and abs(effective_gain_db) < 0.01
+        ):
             effective_gain_db = -0.8
         clamped_gain = max(-24.0, min(12.0, effective_gain_db))
 

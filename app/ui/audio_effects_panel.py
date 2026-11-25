@@ -1,4 +1,4 @@
-"""Studio Hi-Fi audio controls, A/B switch, and real-time Signal Path card."""
+"""Minimalist audio controls popover with progressive disclosure and compact signal path."""
 from PySide6.QtCore import Qt, Signal, QPoint
 from PySide6.QtWidgets import (
     QWidget,
@@ -10,11 +10,12 @@ from PySide6.QtWidgets import (
     QPushButton,
     QProgressBar,
     QFrame,
+    QSizePolicy,
 )
 
-from core.audio_profile import AudioProfile, FLAT_EQ_BANDS, detect_preset, preset_profile
+from core.audio_profile import AudioProfile, FLAT_EQ_BANDS, detect_preset, normalize_peq_filters, preset_profile
 from ui.design_system import DIALOG_STYLE
-from ui.icons import button_icon, ACCENT, TEXT
+from ui.icons import button_icon, ACCENT, MUTED, TEXT
 
 
 class AudioEffectsPanel(QWidget):
@@ -22,18 +23,22 @@ class AudioEffectsPanel(QWidget):
     level_changed = Signal(int)
     prefetch_changed = Signal(bool)
     open_eq_requested = Signal()
+    open_benchmark_requested = Signal()
     output_device_changed = Signal(str)
     per_device_changed = Signal(bool)
+    dac_phase_changed = Signal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName('audioEffectsPanel')
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setFixedWidth(388)
+        self.setFixedWidth(356)
+        self._anchor_button = None
         self._output_device = ''
         self._eq_state = {
             'eq_enabled': False,
             'eq_bands': FLAT_EQ_BANDS,
+            'eq_peq_filters': (),
             'eq_preamp_db': 0.0,
             'eq_auto_preamp': True,
             'eq_bass_db': 0.0,
@@ -45,222 +50,241 @@ class AudioEffectsPanel(QWidget):
                 border: 1px solid #273445; border-radius: 12px;
                 font-family: 'Segoe UI'; font-size: 13px; }
             QLabel, QCheckBox { color: #EDF3FA; background: transparent; border: none; }
-            QCheckBox { spacing: 8px; }
+            QLabel#panelTitle { font-size: 15px; font-weight: 600; color: #EDF3FA; }
+            QLabel#panelStatus { font-size: 11px; color: #8FA2B7; }
+            QLabel#formLabel { font-size: 12px; color: #9AAABC; }
+            QCheckBox { spacing: 8px; font-size: 12px; color: #B8C7D6; }
             QCheckBox::indicator { width: 15px; height: 15px; border: 1px solid #526173;
                 border-radius: 4px; background: #101722; }
             QCheckBox::indicator:checked { background: #77E0BE; border-color: #77E0BE; }
             QCheckBox:disabled { color: #657585; }
             QCheckBox::indicator:disabled { background: #273445; border-color: #354351; }
-            QProgressBar { border: none; background: #273445; }
+            QComboBox { padding: 4px 8px; }
+            QProgressBar { border: none; background: #202B38; border-radius: 1px; }
             QProgressBar::chunk { background: #77E0BE; }
-            QFrame#signalPathCard { background: #0E141D; border: 1px solid #223042; border-radius: 8px; }
-            QPushButton#recommendedBtn { background: #1D3530; color: #77E0BE; border: 1px solid #2D5A4E;
-                border-radius: 8px; font-weight: 600; padding: 6px 10px; }
-            QPushButton#recommendedBtn:hover { background: #24433D; }
-            QPushButton#openEqBtn { background: #1B2431; color: #EDF3FA; border: 1px solid #2E3F54;
-                border-radius: 8px; font-weight: 600; padding: 5px 10px; text-align: left; }
-            QPushButton#openEqBtn:hover { background: #243142; border-color: #46607E; }
-            QPushButton#openEqBtn[eqActive="true"] { background: #18322C; color: #77E0BE; border-color: #2D5A4E; }
+            QPushButton#headerIconBtn { background: transparent; border: none; border-radius: 7px; padding: 4px; }
+            QPushButton#headerIconBtn:hover { background: #232F40; }
+            QPushButton#openEqBtn { background: #1B2431; color: #EDF3FA; border: 1px solid #273445;
+                border-radius: 8px; font-weight: 600; font-size: 12px; padding: 6px 10px; text-align: left; }
+            QPushButton#openEqBtn:hover { background: #243142; border-color: #405267; }
+            QPushButton#openEqBtn[eqActive="true"] { background: #162B26; color: #77E0BE; border-color: #2D5A4E; }
+            QFrame#signalPathCard { background: #0F151E; border: 1px solid #1E2A3A; border-radius: 8px; }
+            QLabel#signalDot { border-radius: 3px; background: #526173; }
+            QLabel#signalDot[active="true"] { background: #77E0BE; }
+            QLabel#signalPathText { color: #9AAABC; font-size: 11px; }
+            QPushButton#advancedToggleBtn { background: transparent; border: none; color: #8FA2B7;
+                font-size: 12px; font-weight: 500; text-align: left; padding: 2px 0; }
+            QPushButton#advancedToggleBtn:hover { color: #EDF3FA; }
+            QFrame#advancedDivider { background: #202B38; max-height: 1px; border: none; }
         ''')
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 10, 16, 10)
-        layout.setSpacing(5)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(10)
 
-        title = QLabel('Âm thanh · Studio Engine')
-        title.setStyleSheet('font-size: 16px; font-weight: 600;')
-        layout.addWidget(title)
+        # Clean header: Title + subtle state + 2 icon buttons
+        hdr = QHBoxLayout()
+        hdr.setSpacing(6)
+        title = QLabel('Âm thanh')
+        title.setObjectName('panelTitle')
+        hdr.addWidget(title)
 
-        layout.addWidget(QLabel('Chế độ nghe chuẩn (Quick Preset)'))
-        self.preset_combo = QComboBox()
-        for text, key in (
-            ('★ Dawn Pro 2 + Aria 2 · Phòng thu Hi-Res', 'studio_dawn_aria2'),
-            ('Chuẩn YouTube gốc (YouTube / YT Music)', 'youtube'),
-            ('Nguyên bản Tuyệt đối (Bit-Pure · Khuyên dùng)', 'bit_pure'),
-            ('Sống động Cuốn hút (Sony Walkman / Poweramp)', 'walkman_vivid'),
-            ('Tắt xử lý — Âm thanh gốc mặc định', 'bypass'),
-            ('Tùy chỉnh riêng (Custom)', 'custom'),
-        ):
-            self.preset_combo.addItem(text, key)
-        self.preset_combo.setToolTip(
-            'Chọn nhanh cấu hình nghe chuẩn phòng thu hoặc streaming phổ biến.\n'
-            'Mẹo tải chuẩn YouTube: ở trang Tải xuống chọn "Original (Giữ nguồn)" hoặc "High (Opus)" '
-            'để giữ luồng Opus 48 kHz gốc y hệt YouTube.'
-        )
-        self.preset_combo.setMinimumHeight(30)
-        layout.addWidget(self.preset_combo)
+        self.status = QLabel('Nguyên bản')
+        self.status.setObjectName('panelStatus')
+        self.status.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        hdr.addWidget(self.status, stretch=1)
 
-        layout.addWidget(QLabel('Thiết bị xuất âm (DAC / Tai nghe)'))
-        self.device_combo = QComboBox()
-        self.device_combo.addItem('Theo mặc định Windows (Tự động)', '')
-        self.device_combo.view().setMinimumWidth(340)
-        self.device_combo.setToolTip(
-            'Ghim thẳng USB DAC (như Dawn Pro 2) để dùng WASAPI Exclusive độc lập với âm thanh trình duyệt/Windows.'
-        )
-        self.device_combo.setMinimumHeight(29)
-        layout.addWidget(self.device_combo)
+        self.btn_recommended = QPushButton()
+        self.btn_recommended.setObjectName('headerIconBtn')
+        self.btn_recommended.setFixedSize(28, 28)
+        button_icon(self.btn_recommended, 'sparkles', 'Cấu hình khuyên dùng', color=ACCENT, size=15, icon_only=True)
+        hdr.addWidget(self.btn_recommended)
 
-        self.per_device_cb = QCheckBox('Tự nhớ cấu hình riêng cho từng tai nghe / DAC')
-        self.per_device_cb.setChecked(True)
-        self.per_device_cb.setToolTip(
-            'Tự chuyển sang preset & EQ tương ứng khi cắm USB DAC Dawn Pro 2 hoặc chuyển sang loa / Bluetooth.'
-        )
-        layout.addWidget(self.per_device_cb)
-
-        dac_hdr = QHBoxLayout()
-        dac_hdr.setSpacing(8)
-        dac_hdr.addWidget(QLabel('Chế độ đầu ra'), stretch=1)
-        dac_hdr.addWidget(QLabel('Tần số Hi-Res (SoXR)'), stretch=1)
-        layout.addLayout(dac_hdr)
-
-        dac_row = QHBoxLayout()
-        dac_row.setSpacing(8)
-        self.output_mode = QComboBox()
-        self.output_mode.addItem('Tiêu chuẩn — WASAPI Shared (Nghe chung mọi app)', 'shared')
-        self.output_mode.addItem('Độc quyền DAC — WASAPI Exclusive (Tối đa chất âm)', 'exclusive')
-        self.output_mode.view().setMinimumWidth(340)
-        self.output_mode.setToolTip(
-            'Shared: nghe chung cùng Chrome/Discord. Exclusive: khóa thẳng USB DAC (như Dawn Pro 2) '
-            'để bỏ qua bộ trộn Windows; tự chuyển về Shared nếu thiết bị Bluetooth không hỗ trợ.'
-        )
-        self.output_mode.setMinimumHeight(29)
-        dac_row.addWidget(self.output_mode, stretch=1)
-
-        self.upsample = QComboBox()
-        for text, key in (
-            ('Tần số gốc (Bit-Pure Native)', 'off'),
-            ('Hi-Res 4× Đồng bộ (176.4 / 192 kHz · SoXR 33-bit)', 'hires_sync'),
-            ('Tối đa chip DAC (352.8 / 384 kHz · SoXR 33-bit)', 'max_dac'),
-        ):
-            self.upsample.addItem(text, key)
-        self.upsample.view().setMinimumWidth(340)
-        self.upsample.setToolTip(
-            'Hoạt động tối đa khi bật WASAPI Exclusive trên USB DAC như Dawn Pro 2: '
-            'dùng bộ lọc SoXR 33-bit nâng tần số 4×/8× để bỏ qua lọc thô bên trong chip DAC. '
-            'Chế độ Shared đi theo tần số Windows Mixer.'
-        )
-        self.upsample.setMinimumHeight(29)
-        dac_row.addWidget(self.upsample, stretch=1)
-        layout.addLayout(dac_row)
-
-        self.normalize = QCheckBox('Cân bằng âm lượng (EBU R128 / YouTube)')
-        self.normalize.setToolTip(
-            'Xử lý 64-bit Float trong RAM kèm bảo vệ đỉnh CS43198, '
-            'giúp đồng đều âm lượng hoặc giữ đúng luật giảm âm −14 LUFS của YouTube.'
-        )
-        layout.addWidget(self.normalize)
-
-        layout.addWidget(QLabel('Luật cân bằng âm lượng'))
-        self.level = QComboBox()
-        self.level.addItem('Chuẩn Audiophile (−16 LUFS · Khuyên dùng)', -16)
-        self.level.addItem('Sôi động (−14 LUFS · Walkman / Streaming)', -14)
-        self.level.addItem('Thuần khiết (−18 LUFS · Dải động tối đa)', -18)
-        self.level.addItem('Chuẩn YouTube gốc (−14 LUFS · Chỉ giảm bài to)', 'youtube')
-        self.level.setMinimumHeight(30)
-        self.level.setEnabled(False)
-        layout.addWidget(self.level)
-
-        layout.addWidget(QLabel('Khôi phục chi tiết nhạc nén (128kbps Restorer)'))
-        self.restorer = QComboBox()
-        for text, key in (
-            ('Tắt — Giữ 100% âm sắc gốc (Khuyên dùng)', 'off'),
-            ('Tự động nhẹ (Chỉ lọc MP3/AAC cũ ≤192kbps)', 'auto'),
-            ('Tự nhiên (Làm nét & bù dải cao dịu)', 'natural'),
-            ('Chi tiết cao (Tối đa độ thoáng 128kbps)', 'vivid'),
-        ):
-            self.restorer.addItem(text, key)
-        self.restorer.setToolTip(
-            'Mặc định Tắt để bảo toàn tuyệt đối chất âm gốc. Bật Tự động nhẹ nếu nghe các file MP3/AAC cũ '
-            'bị tù bí; tự bỏ qua Opus và FLAC/Lossless.'
-        )
-        self.restorer.setMinimumHeight(30)
-        layout.addWidget(self.restorer)
-
-        layout.addWidget(QLabel('Chất âm (Sound Signature)'))
-        self.tone = QComboBox()
-        for text, key in (
-            ('Nguyên bản Tuyệt đối (Bit-Pure · 0 dB)', 'off'),
-            ('Phòng thu Hi-Res · Dawn Pro 2 + Aria 2', 'studio_aria2'),
-            ('Không gian Loa Kiểm Âm 30° (Không EQ)', 'studio_room'),
-            ('Sống động — Sony Walkman / Poweramp', 'walkman_vivid'),
-            ('Moondrop Aria 2 Subtle Balance', 'aria2'),
-            ('Giọng hát rõ nét (Vocal & Acoustic)', 'vocal_clear'),
-            ('Ấm mượt — Nghe lâu (Musical Warm)', 'warm'),
-            ('Không gian tai nghe nhẹ (IEM Crossfeed)', 'headphones'),
-            ('Dịu — giảm chói (Legacy)', 'gentle'),
-            ('Cân bằng nhẹ (Legacy)', 'balanced'),
-            ('Dễ nghe — loa (Legacy)', 'easy'),
-            ('Dễ nghe — tai nghe (Legacy)', 'easy_headphones'),
-        ):
-            self.tone.addItem(text, key)
-        self.tone.setItemData(
-            self.tone.findData('studio_aria2'),
-            'Cân chỉnh Lab Reference 64-bit riêng cho Moondrop Aria 2 trên Dawn Pro 2 kết hợp Crossfeed '
-            'loa kiểm âm 30° (giọng hát giữa 0.0 dB, mở rộng không gian sân khấu).',
-            Qt.ItemDataRole.ToolTipRole,
-        )
-        self.tone.setItemData(
-            self.tone.findData('aria2'),
-            'Tinh chỉnh 64-bit tối ưu riêng cho Moondrop Aria 2: thêm độ sâu sub-bass, tách lớp vocal '
-            'và làm êm đỉnh cộng hưởng 8 kHz.',
-            Qt.ItemDataRole.ToolTipRole,
-        )
-        self.tone.setMinimumHeight(30)
-        layout.addWidget(self.tone)
-
-        self.btn_open_eq = QPushButton('Bàn chỉnh Equalizer 10 dải (Tắt)')
-        self.btn_open_eq.setObjectName('openEqBtn')
-        self.btn_open_eq.setMinimumHeight(30)
-        self.btn_open_eq.setToolTip(
-            'Mở bàn chỉnh Equalizer 10 dải (31 Hz–16 kHz), Preamp bảo vệ DAC, Bass/Treble, '
-            'Crossfeed và dán preset Equalizer APO.'
-        )
-        button_icon(self.btn_open_eq, 'sliders-horizontal', color=TEXT, size=15, icon_only=False)
-        self.btn_open_eq.clicked.connect(self._request_open_eq)
-        layout.addWidget(self.btn_open_eq)
-
-        self.prefetch_next = QCheckBox('Chuẩn bị sẵn bài kế tiếp trong RAM (0 MB ổ cứng)')
-        self.prefetch_next.setToolTip('Chỉ đo nhanh thông số LUFS/Codec bài kế tiếp vào bộ nhớ; không tạo file âm thanh tạm.')
-        self.prefetch_next.setChecked(True)
-        self.prefetch_next.setEnabled(False)
-        self.prefetch_next.toggled.connect(self.prefetch_changed.emit)
-        layout.addWidget(self.prefetch_next)
-
-        card = QFrame()
-        card.setObjectName('signalPathCard')
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(10, 6, 10, 6)
-        card_layout.setSpacing(2)
-        card_title = QLabel('Signal Path (Thời gian thực trong RAM)')
-        card_title.setStyleSheet('color: #77E0BE; font-size: 11px; font-weight: 600;')
-        card_layout.addWidget(card_title)
-        self.signal_path = QLabel('Nguồn: —\nDSP: Đang dùng âm thanh gốc (Bypass)\nĐầu ra: Hệ thống mặc định')
-        self.signal_path.setWordWrap(True)
-        self.signal_path.setStyleSheet('color: #B4C2D1; font-size: 11px; line-height: 1.3;')
-        card_layout.addWidget(self.signal_path)
-        layout.addWidget(card)
+        self.reset = QPushButton()
+        self.reset.setObjectName('headerIconBtn')
+        self.reset.setFixedSize(28, 28)
+        button_icon(self.reset, 'rotate-ccw', 'Tắt xử lý (âm thanh gốc)', color=MUTED, size=15, icon_only=True)
+        hdr.addWidget(self.reset)
+        layout.addLayout(hdr)
 
         self.busy = QProgressBar()
         self.busy.setRange(0, 0)
-        self.busy.setFixedHeight(4)
+        self.busy.setFixedHeight(2)
         self.busy.setTextVisible(False)
         self.busy.hide()
         layout.addWidget(self.busy)
 
-        self.status = QLabel('Đang dùng âm thanh gốc')
-        self.status.setWordWrap(True)
-        self.status.setStyleSheet('font-size: 12px; color: #9AAABC;')
-        layout.addWidget(self.status)
+        # Primary 3 clean horizontal rows
+        self.preset_combo = QComboBox()
+        for text, key in (
+            ('Dawn Pro 2 · Aria 2', 'studio_dawn_aria2'),
+            ('DAC Rời · Bit-Perfect', 'dac_bitperfect'),
+            ('YouTube', 'youtube'),
+            ('Nguyên bản', 'bit_pure'),
+            ('Sống động', 'walkman_vivid'),
+            ('Tắt', 'bypass'),
+            ('Tùy chỉnh', 'custom'),
+        ):
+            self.preset_combo.addItem(text, key)
+        self.preset_combo.setToolTip(
+            'Chọn nhanh cấu hình nghe.\n'
+            'Mẹo YouTube: ở trang Tải xuống chọn Original hoặc Opus để giữ nguyên luồng âm thanh.'
+        )
+        self._form_row(layout, 'Chế độ', self.preset_combo)
 
-        btn_row = QHBoxLayout()
-        btn_row.setSpacing(8)
-        self.btn_recommended = QPushButton('Chuẩn khuyên dùng')
-        self.btn_recommended.setObjectName('recommendedBtn')
-        self.btn_recommended.setMinimumHeight(32)
-        self.reset = QPushButton('Trở về âm thanh gốc')
-        self.reset.setMinimumHeight(32)
-        btn_row.addWidget(self.btn_recommended)
-        btn_row.addWidget(self.reset)
-        layout.addLayout(btn_row)
+        self.device_combo = QComboBox()
+        self.device_combo.addItem('Mặc định hệ thống', '')
+        self.device_combo.view().setMinimumWidth(290)
+        self.device_combo.setToolTip(
+            'Chọn trực tiếp USB DAC (như Dawn Pro 2) để phát độc lập với âm thanh hệ thống.'
+        )
+        self._form_row(layout, 'Thiết bị', self.device_combo)
+
+        self.tone = QComboBox()
+        for text, key in (
+            ('Tự nhiên', 'off'),
+            ('Aria 2 · Phòng thu', 'studio_aria2'),
+            ('Loa kiểm âm 30°', 'studio_room'),
+            ('Sống động', 'walkman_vivid'),
+            ('Aria 2 · Cân bằng', 'aria2'),
+            ('Rõ giọng hát', 'vocal_clear'),
+            ('Ấm mượt', 'warm'),
+            ('Tai nghe', 'headphones'),
+            ('Dịu nhẹ', 'gentle'),
+            ('Cân bằng', 'balanced'),
+            ('Dễ nghe (Loa)', 'easy'),
+            ('Dễ nghe (Tai nghe)', 'easy_headphones'),
+        ):
+            self.tone.addItem(text, key)
+        self.tone.setItemData(
+            self.tone.findData('studio_aria2'),
+            'Tinh chỉnh tham chiếu cho Moondrop Aria 2 kèm không gian loa kiểm âm 30°.',
+            Qt.ItemDataRole.ToolTipRole,
+        )
+        self.tone.setItemData(
+            self.tone.findData('aria2'),
+            'Tinh chỉnh cân bằng nhẹ cho Moondrop Aria 2.',
+            Qt.ItemDataRole.ToolTipRole,
+        )
+        self._form_row(layout, 'Âm sắc', self.tone)
+
+        # Clean Equalizer trigger button
+        self.btn_open_eq = QPushButton('Equalizer')
+        self.btn_open_eq.setObjectName('openEqBtn')
+        self.btn_open_eq.setFixedHeight(34)
+        self.btn_open_eq.setToolTip('Mở Equalizer 10 dải, Preamp và Crossfeed.')
+        button_icon(self.btn_open_eq, 'sliders-horizontal', color=TEXT, size=15, icon_only=False)
+        self.btn_open_eq.clicked.connect(self._request_open_eq)
+        layout.addWidget(self.btn_open_eq)
+
+        # Minimal single-strip signal path badge (full technical detail in tooltip)
+        card = QFrame()
+        card.setObjectName('signalPathCard')
+        card_layout = QHBoxLayout(card)
+        card_layout.setContentsMargins(10, 7, 10, 7)
+        card_layout.setSpacing(8)
+        self.signal_dot = QLabel()
+        self.signal_dot.setObjectName('signalDot')
+        self.signal_dot.setFixedSize(6, 6)
+        self.signal_path = QLabel('Mặc định hệ thống')
+        self.signal_path.setObjectName('signalPathText')
+        self.signal_path.setWordWrap(True)
+        self.signal_path.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.signal_path.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        card_layout.addWidget(self.signal_dot)
+        card_layout.addWidget(self.signal_path, stretch=1)
+        layout.addWidget(card)
+
+        # Collapsible Advanced disclosure (collapsed by default)
+        self.btn_advanced = QPushButton('Tùy chọn nâng cao  ▾')
+        self.btn_advanced.setObjectName('advancedToggleBtn')
+        self.btn_advanced.clicked.connect(self._toggle_advanced)
+        layout.addWidget(self.btn_advanced)
+
+        self.advanced_box = QWidget()
+        adv_layout = QVBoxLayout(self.advanced_box)
+        adv_layout.setContentsMargins(0, 2, 0, 0)
+        adv_layout.setSpacing(8)
+
+        div = QFrame()
+        div.setObjectName('advancedDivider')
+        div.setFrameShape(QFrame.Shape.HLine)
+        adv_layout.addWidget(div)
+
+        self.output_mode = QComboBox()
+        self.output_mode.addItem('Chia sẻ (Shared)', 'shared')
+        self.output_mode.addItem('Độc quyền (Exclusive)', 'exclusive')
+        self.output_mode.setToolTip(
+            'Shared: nghe chung với ứng dụng khác. Exclusive: đi thẳng vào USB DAC bỏ qua bộ trộn Windows.'
+        )
+        self._form_row(adv_layout, 'Đầu ra', self.output_mode)
+
+        self.upsample = QComboBox()
+        for text, key in (
+            ('Tần số gốc', 'off'),
+            ('176.4 / 192 kHz', 'hires_sync'),
+            ('352.8 / 384 kHz', 'max_dac'),
+        ):
+            self.upsample.addItem(text, key)
+        self.upsample.setToolTip('Nâng mẫu SoXR 33-bit đồng bộ khi dùng WASAPI Exclusive trên USB DAC.')
+        self._form_row(adv_layout, 'Lấy mẫu', self.upsample)
+
+        self.dac_phase = QComboBox()
+        self.dac_phase.addItem('Tuyến tính (Linear)', 'linear')
+        self.dac_phase.addItem('Tối thiểu (Minimum)', 'minimum')
+        self.dac_phase.setToolTip(
+            'Tuyến tính: SoXR 33-bit không xoay pha. Tối thiểu: lọc trễ pha cực tiểu loại bỏ hoàn toàn pre-ringing khi nâng mẫu.'
+        )
+        self._form_row(adv_layout, 'Pha DAC', self.dac_phase)
+
+        norm_wrap = QWidget()
+        norm_row = QHBoxLayout(norm_wrap)
+        norm_row.setContentsMargins(0, 0, 0, 0)
+        norm_row.setSpacing(8)
+        self.normalize = QCheckBox('')
+        self.normalize.setToolTip('Bật cân bằng âm lượng tự động theo chuẩn LUFS.')
+        self.level = QComboBox()
+        self.level.addItem('−16 LUFS (Chuẩn)', -16)
+        self.level.addItem('−14 LUFS (To rõ)', -14)
+        self.level.addItem('−18 LUFS (Tự nhiên)', -18)
+        self.level.addItem('YouTube (−14 LUFS)', 'youtube')
+        self.level.setFixedHeight(32)
+        self.level.setEnabled(False)
+        norm_row.addWidget(self.normalize)
+        norm_row.addWidget(self.level, stretch=1)
+        self._form_row(adv_layout, 'Âm lượng', norm_wrap)
+
+        self.restorer = QComboBox()
+        for text, key in (
+            ('Tắt', 'off'),
+            ('Tự động', 'auto'),
+            ('Nhẹ', 'natural'),
+            ('Rõ nét', 'vivid'),
+        ):
+            self.restorer.addItem(text, key)
+        self.restorer.setToolTip('Bù dải cao dịu nhẹ cho nhạc MP3/AAC cũ; tự bỏ qua Opus và Lossless.')
+        self._form_row(adv_layout, 'Nhạc nén', self.restorer)
+
+        self.per_device_cb = QCheckBox('Nhớ riêng từng thiết bị')
+        self.per_device_cb.setChecked(True)
+        self.per_device_cb.setToolTip('Tự chuyển cấu hình & EQ khi cắm DAC hoặc đổi tai nghe/loa.')
+        adv_layout.addWidget(self.per_device_cb)
+
+        self.prefetch_next = QCheckBox('Đo trước bài kế tiếp')
+        self.prefetch_next.setToolTip('Đo nhanh LUFS bài tiếp theo trong RAM để chuyển bài tức thì.')
+        self.prefetch_next.setChecked(True)
+        self.prefetch_next.setEnabled(False)
+        self.prefetch_next.toggled.connect(self.prefetch_changed.emit)
+        adv_layout.addWidget(self.prefetch_next)
+
+        self.btn_open_benchmark = QPushButton('Đo kiểm chất âm…')
+        self.btn_open_benchmark.setFixedHeight(30)
+        self.btn_open_benchmark.setToolTip('Mở tab đo phổ tần số và so sánh file gốc với cấu hình hiện tại.')
+        self.btn_open_benchmark.clicked.connect(self._request_open_benchmark)
+        adv_layout.addWidget(self.btn_open_benchmark)
+
+        self.advanced_box.hide()
+        layout.addWidget(self.advanced_box)
 
         self.preset_combo.currentIndexChanged.connect(self._on_preset_selected)
         self.device_combo.currentIndexChanged.connect(self._on_device_selected)
@@ -271,8 +295,34 @@ class AudioEffectsPanel(QWidget):
         self.restorer.currentIndexChanged.connect(self._emit_settings)
         self.output_mode.currentIndexChanged.connect(self._emit_settings)
         self.upsample.currentIndexChanged.connect(self._emit_settings)
+        self.dac_phase.currentIndexChanged.connect(self._on_dac_phase_selected)
         self.btn_recommended.clicked.connect(self._apply_recommended)
         self.reset.clicked.connect(self._reset)
+
+    def _on_dac_phase_selected(self, *_):
+        self._sync_preset_combo()
+        self.dac_phase_changed.emit(str(self.dac_phase.currentData() or 'linear'))
+
+    def _form_row(self, parent_layout, label_text: str, widget: QWidget):
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        lbl = QLabel(label_text)
+        lbl.setObjectName('formLabel')
+        lbl.setFixedWidth(78)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        if isinstance(widget, QComboBox):
+            widget.setFixedHeight(32)
+        row.addWidget(lbl)
+        row.addWidget(widget, stretch=1)
+        parent_layout.addLayout(row)
+
+    def _toggle_advanced(self):
+        opening = self.advanced_box.isHidden()
+        self.advanced_box.setVisible(opening)
+        self.btn_advanced.setText('Tùy chọn nâng cao  ▴' if opening else 'Tùy chọn nâng cao  ▾')
+        self.adjustSize()
+        if self.isVisible() and self._anchor_button is not None:
+            self.open_at(self._anchor_button)
 
     def _on_device_selected(self, *_):
         self._output_device = str(self.device_combo.currentData() or '')
@@ -284,7 +334,7 @@ class AudioEffectsPanel(QWidget):
         self._output_device = sel
         self.device_combo.blockSignals(True)
         self.device_combo.clear()
-        self.device_combo.addItem('Theo mặc định Windows (Tự động)', '')
+        self.device_combo.addItem('Mặc định hệ thống', '')
         seen = set()
         for dev in devices or ():
             clean = str(dev or '').strip()
@@ -292,7 +342,7 @@ class AudioEffectsPanel(QWidget):
                 seen.add(clean.lower())
                 self.device_combo.addItem(clean, clean)
         if sel and sel.lower() not in seen:
-            self.device_combo.addItem(f'{sel} (Đang rút — tự nhận khi cắm)', sel)
+            self.device_combo.addItem(f'{sel} (Chưa cắm)', sel)
         idx = self.device_combo.findData(sel)
         if idx < 0 and sel:
             for i in range(self.device_combo.count()):
@@ -313,16 +363,24 @@ class AudioEffectsPanel(QWidget):
         self.hide()
         self.open_eq_requested.emit()
 
+    def _request_open_benchmark(self):
+        self.hide()
+        self.open_benchmark_requested.emit()
+
     def _refresh_eq_button(self):
         active = bool(self._eq_state.get('eq_enabled'))
+        peq = normalize_peq_filters(self._eq_state.get('eq_peq_filters'))
         self.btn_open_eq.setProperty('eqActive', active)
         self.btn_open_eq.style().unpolish(self.btn_open_eq)
         self.btn_open_eq.style().polish(self.btn_open_eq)
-        if active:
-            self.btn_open_eq.setText('Bàn chỉnh Equalizer 10 dải (Đang bật · 64-bit)')
+        if active and peq:
+            self.btn_open_eq.setText(f'Equalizer  ·  PEQ {len(peq)} dải')
+            button_icon(self.btn_open_eq, 'sliders-horizontal', color=ACCENT, size=15, icon_only=False)
+        elif active:
+            self.btn_open_eq.setText('Equalizer  ·  Đang bật')
             button_icon(self.btn_open_eq, 'sliders-horizontal', color=ACCENT, size=15, icon_only=False)
         else:
-            self.btn_open_eq.setText('Bàn chỉnh Equalizer 10 dải (Tắt)')
+            self.btn_open_eq.setText('Equalizer')
             button_icon(self.btn_open_eq, 'sliders-horizontal', color=TEXT, size=15, icon_only=False)
 
     def _current_target_lufs(self) -> int:
@@ -342,6 +400,7 @@ class AudioEffectsPanel(QWidget):
             upsample=self.upsample.currentData() or 'off',
             youtube_loudness=yt_loud,
             output_device=self._output_device,
+            dac_phase=str(self.dac_phase.currentData() or 'linear'),
             **self._eq_state,
         )
         key = detect_preset(prof, self._current_target_lufs())
@@ -366,7 +425,9 @@ class AudioEffectsPanel(QWidget):
             prof.youtube_loudness,
             target_lufs=lufs,
             eq_state=eq_state,
+            dac_phase=prof.dac_phase,
         )
+        self.dac_phase_changed.emit(prof.dac_phase)
         if isinstance(lufs, int) and key != 'youtube':
             self.level_changed.emit(int(lufs))
         self._emit_settings()
@@ -397,14 +458,16 @@ class AudioEffectsPanel(QWidget):
         self.settings_changed.emit(norm, tone_val, rest_val, out_val, up_val, yt_loud)
 
     def _apply_recommended(self):
-        self.set_profile(True, 'off', 'off', 'shared', 'off', False, target_lufs=-16)
+        self.set_profile(True, 'off', 'off', 'shared', 'off', False, target_lufs=-16, dac_phase='linear')
+        self.dac_phase_changed.emit('linear')
         self.level_changed.emit(-16)
         self._emit_settings()
 
     def _reset(self):
         eq_state = dict(self._eq_state)
         eq_state['eq_enabled'] = False
-        self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state, output_device='')
+        self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state, output_device='', dac_phase='linear')
+        self.dac_phase_changed.emit('linear')
         self.output_device_changed.emit('')
         self._emit_settings()
 
@@ -419,10 +482,11 @@ class AudioEffectsPanel(QWidget):
         target_lufs=None,
         eq_state=None,
         output_device=None,
+        dac_phase=None,
     ):
         widgets = (
             self.preset_combo, self.device_combo, self.normalize, self.level,
-            self.tone, self.restorer, self.output_mode, self.upsample,
+            self.tone, self.restorer, self.output_mode, self.upsample, self.dac_phase,
         )
         for w in widgets:
             w.blockSignals(True)
@@ -430,13 +494,16 @@ class AudioEffectsPanel(QWidget):
             self._output_device = str(output_device or '').strip()
             idx_d = self.device_combo.findData(self._output_device)
             if idx_d < 0 and self._output_device:
-                self.device_combo.addItem(f'{self._output_device} (Đang rút — tự nhận khi cắm)', self._output_device)
+                self.device_combo.addItem(f'{self._output_device} (Chưa cắm)', self._output_device)
                 idx_d = self.device_combo.findData(self._output_device)
             self.device_combo.setCurrentIndex(max(0, idx_d))
         if isinstance(eq_state, dict):
-            for k in ('eq_enabled', 'eq_bands', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
+            for k in ('eq_enabled', 'eq_bands', 'eq_peq_filters', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
                 if k in eq_state:
                     self._eq_state[k] = eq_state[k]
+        if dac_phase is not None:
+            phase_val = 'minimum' if dac_phase == 'minimum' else 'linear'
+            self.dac_phase.setCurrentIndex(max(0, self.dac_phase.findData(phase_val)))
         yt_loud = bool(youtube_loudness)
         checked = bool(normalize or yt_loud)
         any_enabled = (
@@ -480,14 +547,20 @@ class AudioEffectsPanel(QWidget):
         self.level.blockSignals(False)
         self._sync_preset_combo()
 
-    def set_signal_path(self, source_text: str, dsp_text: str, output_text: str):
-        self.signal_path.setText(f'Nguồn: {source_text}\nDSP: {dsp_text}\nĐầu ra: {output_text}')
+    def set_signal_path(self, source_text: str, dsp_text: str, output_text: str, tooltip: str = ''):
+        self.signal_path.setText(f'{source_text}  ›  {dsp_text}  ›  {output_text}')
+        self.signal_path.setToolTip(tooltip or f'Nguồn: {source_text}\nXử lý: {dsp_text}\nĐầu ra: {output_text}')
+        is_active = dsp_text not in ('Nguyên gốc', 'Tắt', 'Bypass')
+        self.signal_dot.setProperty('active', bool(is_active))
+        self.signal_dot.style().unpolish(self.signal_dot)
+        self.signal_dot.style().polish(self.signal_dot)
 
     def set_status(self, text, busy=False):
         self.status.setText(text)
         self.busy.setVisible(busy)
 
     def open_at(self, button):
+        self._anchor_button = button
         self.adjustSize()
         height = self.layout().totalHeightForWidth(self.width())
         if height >= 0:

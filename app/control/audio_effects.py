@@ -6,8 +6,9 @@ import logging
 from pathlib import Path
 import time
 
-from PySide6.QtCore import QObject, QThread, QTimer, Signal, QUrl
+from PySide6.QtCore import QObject, QThread, QTimer, Signal, QUrl, Qt
 from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 from core.audio_profile import (
     AudioProfile,
@@ -17,6 +18,8 @@ from core.audio_profile import (
     custom_eq_peak_boost_db,
     effective_eq_preamp_db,
     preset_profile,
+    normalize_peq_filters,
+    resolve_profile_gain_db,
     resolve_restorer,
     tone_peak_pad_db,
 )
@@ -105,7 +108,7 @@ class AudioAnalysisWorker(QThread):
 
             if self.profile.normalize or self.profile.youtube_loudness:
                 duration = float(source_info.get('duration') or 0.0)
-                if duration > 600.0:
+                if duration > 240.0:
                     quick = measure_quick_loudness(
                         self.source, source_info['track'], duration, self.processes, self.isInterruptionRequested
                     )
@@ -254,12 +257,19 @@ class AudioEffectsController(QObject):
             target_lufs=self.target_lufs,
             eq_state=self.profile.as_dict(),
             output_device=self.profile.output_device,
+            dac_phase=self.profile.dac_phase,
         )
         self.panel.set_target(self.target_lufs)
         self.panel.level_changed.connect(self.set_target)
         self.panel.open_eq_requested.connect(self.open_equalizer)
+        self.panel.open_benchmark_requested.connect(self.open_benchmark_tab)
         self.panel.output_device_changed.connect(self.set_output_device)
         self.panel.per_device_changed.connect(self.set_per_device_memory)
+        self.panel.dac_phase_changed.connect(self.set_dac_phase)
+
+        self.benchmark_page = None
+        self.btn_settings_benchmark = None
+        self._install_benchmark_tab()
 
         self.worker = None
         self._pending = False
@@ -540,6 +550,8 @@ class AudioEffectsController(QObject):
 
     def _sync_qt_audio_routing(self):
         """Detach QMediaPlayer audioOutput when RAM WASAPI engine owns output (prevents double audio)."""
+        if not hasattr(self.player, 'audioOutput') or not hasattr(self.player, 'setAudioOutput'):
+            return
         if self._use_stream_engine():
             if self.player.audioOutput() is not None:
                 self.player.setAudioOutput(None)
@@ -627,39 +639,11 @@ class AudioEffectsController(QObject):
         self._apply_profile_change(next_prof, save_to_device=True)
 
     def _resolve_current_gain(self):
-        pad_db = tone_peak_pad_db(self.profile)
-        preamp_offset = 0.0
-        if self.profile.eq_enabled:
-            if self.profile.eq_auto_preamp:
-                if self.profile.normalize or self.profile.youtube_loudness:
-                    preamp_offset = min(0.0, float(self.profile.eq_preamp_db))
-                else:
-                    preamp_offset = effective_eq_preamp_db(self.profile)
-            else:
-                preamp_offset = float(self.profile.eq_preamp_db)
-
-        if self._measurement is not None:
-            return compute_mastering_gain_db(
-                self._measurement,
-                self.target_lufs,
-                self.profile.normalize,
-                exclusive=(self.profile.output_mode == 'exclusive'),
-                youtube_loudness=self.profile.youtube_loudness,
-                tone_pad_db=pad_db,
-                preamp_offset_db=preamp_offset,
-            )
-        if self.profile.normalize:
-            return round(-max(1.5, pad_db) + min(0.0, float(self.profile.eq_preamp_db)), 3), False
-        if self.profile.youtube_loudness:
-            return round(-max(1.0, pad_db) + min(0.0, float(self.profile.eq_preamp_db)), 3), False
-        return compute_mastering_gain_db(
-            None,
+        return resolve_profile_gain_db(
+            self.profile,
+            self._measurement,
             self.target_lufs,
-            False,
-            exclusive=(self.profile.output_mode == 'exclusive'),
-            youtube_loudness=False,
-            tone_pad_db=pad_db,
-            preamp_offset_db=preamp_offset,
+            source_info=self._source_info,
         )
 
     def _refresh_gain_live(self):
@@ -709,15 +693,27 @@ class AudioEffectsController(QObject):
         button = self.window.playback_bar.btn_audio
         button.setProperty('audioEnabled', self.profile.enabled)
         button_icon(button, 'sliders-horizontal', color=ACCENT if self.profile.enabled else TEXT)
-        button.setToolTip('Âm thanh — Studio Engine đang bật' if self.profile.enabled else 'Âm thanh — nguyên bản')
+        button.setToolTip('Âm thanh · Đang bật' if self.profile.enabled else 'Âm thanh')
 
     def _active_status_text(self, info=None) -> str:
         if self.profile.youtube_loudness:
-            return 'Đang phát Chuẩn YouTube gốc (0 MB ổ cứng · Gợi ý tải: Original / Opus)'
+            return 'YouTube'
         st = info if isinstance(info, dict) else self.stream.status_info()
+        if (
+            st.get('output_mode') == 'exclusive'
+            and not self.profile.normalize
+            and not self.profile.youtube_loudness
+            and self.profile.tone == 'off'
+            and self.profile.upsample == 'off'
+            and not self.profile.eq_enabled
+        ):
+            sr = int(st.get('sample_rate') or 0)
+            return f'Bit-Perfect {sr / 1000.0:g} kHz' if sr > 0 else 'Bit-Perfect'
         if self.profile.upsample != 'off' and int(st.get('sample_rate') or 0) >= 88200:
-            return f'Đang phát Studio Hi-Res {st["sample_rate"] / 1000.0:g} kHz (0 MB ổ cứng)'
-        return 'Đang phát Studio Hi-Fi (0 MB ổ cứng)'
+            return f'Hi-Res {st["sample_rate"] / 1000.0:g} kHz'
+        if st.get('output_mode') == 'exclusive':
+            return 'Exclusive'
+        return 'Đang bật'
 
     def open_equalizer(self):
         if self._closed:
@@ -742,17 +738,90 @@ class AudioEffectsController(QObject):
         self.eq_dialog.activateWindow()
         return self.eq_dialog
 
+    def _install_benchmark_tab(self):
+        stack = getattr(self.window, 'content_stack', None)
+        settings_page = getattr(self.window, 'settings_page', None)
+        if stack is None or settings_page is None:
+            return
+        from ui.audio_benchmark_page import AudioBenchmarkPage
+        self.benchmark_page = AudioBenchmarkPage(self, self.window)
+        self.benchmark_page.back_requested.connect(self.close_benchmark_tab)
+        stack.addWidget(self.benchmark_page)
+
+        row_wrap = QWidget(settings_page)
+        v_lay = QVBoxLayout(row_wrap)
+        v_lay.setContentsMargins(0, 0, 0, 0)
+        h_lay = QHBoxLayout()
+        lbl = QLabel('Kiểm định âm:')
+        lbl.setFixedWidth(120)
+        lbl.setStyleSheet('color: white; font-weight: bold;')
+        self.btn_settings_benchmark = QPushButton('Mở tab Đo kiểm · Đối chiếu âm thanh')
+        button_icon(self.btn_settings_benchmark, 'sliders-horizontal', 'Đo kiểm âm thanh', color=TEXT, size=15, icon_only=False)
+        self.btn_settings_benchmark.setMinimumHeight(38)
+        self.btn_settings_benchmark.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_settings_benchmark.clicked.connect(lambda: self.open_benchmark_tab(auto_run=True))
+        h_lay.addWidget(lbl)
+        h_lay.addWidget(self.btn_settings_benchmark)
+        help_lbl = QLabel('Đo phổ tần số, đỉnh dBTP và đối chiếu file gốc với cấu hình xử lý.')
+        help_lbl.setWordWrap(True)
+        help_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        help_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        help_lbl.setStyleSheet('color: #9AAABC; font-size: 12px; margin-left: 125px;')
+        v_lay.addLayout(h_lay)
+        v_lay.addWidget(help_lbl)
+        settings_page.content_layout.insertWidget(0, row_wrap)
+        settings_page.btn_audio_benchmark = self.btn_settings_benchmark
+
+    def open_benchmark_tab(self, auto_run: bool = True):
+        if self._closed or self.benchmark_page is None:
+            return None
+        stack = getattr(self.window, 'content_stack', None)
+        if stack is None:
+            return None
+        if hasattr(self.window, 'top_toolbar_container'):
+            self.window.top_toolbar_container.hide()
+        if hasattr(self.window, 'sidebar'):
+            self.window.sidebar.blockSignals(True)
+            try:
+                if self.window.sidebar.count() > 4:
+                    self.window.sidebar.setCurrentRow(4)
+            finally:
+                self.window.sidebar.blockSignals(False)
+        stack.setCurrentWidget(self.benchmark_page)
+        has_src = self.benchmark_page.sync_default_source()
+        if auto_run and has_src:
+            self.benchmark_page.run_benchmark()
+        return self.benchmark_page
+
+    def close_benchmark_tab(self):
+        if self._closed:
+            return
+        stack = getattr(self.window, 'content_stack', None)
+        settings_page = getattr(self.window, 'settings_page', None)
+        if stack is not None and settings_page is not None:
+            stack.setCurrentWidget(settings_page)
+        if hasattr(self.window, 'top_toolbar_container'):
+            self.window.top_toolbar_container.hide()
+
     def _set_user_eq_presets(self, presets: dict):
         if self._closed or not isinstance(presets, dict):
             return
         self.user_eq_presets = dict(presets)
         self._save_profile()
 
+    def set_dac_phase(self, phase: str):
+        if self._closed:
+            return
+        clean = 'minimum' if phase == 'minimum' else 'linear'
+        if clean == getattr(self.profile, 'dac_phase', 'linear'):
+            return
+        self._apply_profile_change(replace(self.profile, dac_phase=clean))
+
     def set_custom_eq(self, eq_data: dict):
         if self._closed or not isinstance(eq_data, dict):
             return
         merged = dict(self.profile.as_dict())
-        for k in ('eq_enabled', 'eq_bands', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
+        for k in ('eq_enabled', 'eq_bands', 'eq_peq_filters', 'eq_preamp_db', 'eq_auto_preamp', 'eq_bass_db', 'eq_treble_db', 'eq_crossfeed'):
             if k in eq_data:
                 merged[k] = eq_data[k]
         self._apply_profile_change(AudioProfile.from_dict(merged))
@@ -805,6 +874,7 @@ class AudioEffectsController(QObject):
             target_lufs=self.target_lufs,
             eq_state=profile.as_dict(),
             output_device=profile.output_device,
+            dac_phase=profile.dac_phase,
         )
         if self.eq_dialog is not None:
             self.eq_dialog.set_state(profile)
@@ -819,7 +889,7 @@ class AudioEffectsController(QObject):
             self.stream.stop()
             self._sync_timer.stop()
             self._apply_qt_normalization(ramp=True)
-            self.panel.set_status('Đang dùng âm thanh gốc (Bypass)')
+            self.panel.set_status('Tắt')
             self._update_signal_path()
             return
 
@@ -827,6 +897,7 @@ class AudioEffectsController(QObject):
             profile.eq_enabled
             and (
                 old.eq_bands != profile.eq_bands
+                or old.eq_peq_filters != profile.eq_peq_filters
                 or abs(old.eq_bass_db - profile.eq_bass_db) >= 0.05
                 or abs(old.eq_treble_db - profile.eq_treble_db) >= 0.05
                 or old.eq_crossfeed != profile.eq_crossfeed
@@ -837,6 +908,7 @@ class AudioEffectsController(QObject):
             or old.restorer != profile.restorer
             or old.output_mode != profile.output_mode
             or old.upsample != profile.upsample
+            or old.dac_phase != profile.dac_phase
             or old.output_device != profile.output_device
             or eq_filter_changed
             or not self.stream.is_active()
@@ -928,7 +1000,7 @@ class AudioEffectsController(QObject):
         request = (source_path, self.profile, self._track)
         if request == self._failed_request:
             return
-        self.panel.set_status('Đang phân tích luồng âm thanh trong RAM…', busy=True)
+        self.panel.set_status('Đang đo âm lượng…', busy=True)
         worker = AudioAnalysisWorker(
             source_path,
             self.profile,
@@ -998,7 +1070,7 @@ class AudioEffectsController(QObject):
             if info.get('fallback_reason'):
                 self.panel.set_status(info['fallback_reason'])
             elif not self.stream.is_active() and paused:
-                self.panel.set_status('Sẵn sàng phát Studio Hi-Fi')
+                self.panel.set_status('Sẵn sàng')
             else:
                 self.panel.set_status(self._active_status_text(info))
         except Exception as err:
@@ -1008,7 +1080,7 @@ class AudioEffectsController(QObject):
             if self.player.audioOutput() is not self.window.audio_output:
                 self.player.setAudioOutput(self.window.audio_output)
             self._apply_qt_normalization(ramp=False)
-            self.panel.set_status('Thiết bị bận; tự động phát qua luồng Qt chuẩn.')
+            self.panel.set_status('Thiết bị bận · Dùng mặc định')
         self._update_signal_path()
 
     def _progress(self, text):
@@ -1195,22 +1267,37 @@ class AudioEffectsController(QObject):
             codec = str(info.get('codec_name') or '?').upper()
             sr_khz = info['sample_rate'] / 1000.0
             kbps = int(round((info.get('bit_rate') or 0) / 1000.0))
-            rate_str = f'{kbps} kbps' if kbps > 0 else 'Lossless / VBR'
-            src_text = f'{codec} · {rate_str} · {sr_khz:g} kHz'
+            rate_str = f'{kbps} kbps' if kbps > 0 else 'Lossless'
+            src_text = f'{codec} {sr_khz:g} kHz'
+            src_detail = f'{codec} · {rate_str} · {sr_khz:g} kHz'
         else:
-            src_text = 'Đang chờ bài phát' if not self._original.isLocalFile() else 'Đang nhận dạng…'
+            src_text = 'Chưa phát' if not self._original.isLocalFile() else 'Đang đọc…'
+            src_detail = src_text
 
         if not self.profile.enabled:
-            dsp_text = 'Bypass (Âm thanh gốc 100%)'
-            out_text = 'Qt Multimedia mặc định'
+            dsp_text = 'Nguyên gốc'
+            dsp_detail = 'Nguyên gốc (Bypass)'
+            out_text = 'Mặc định'
+            out_detail = 'Mặc định hệ thống'
         else:
-            parts = ['64-bit Float']
+            short_parts = ['64-bit']
+            detail_parts = ['64-bit Float']
             rest = resolve_restorer(self.profile, info)
             if rest is not None:
-                parts.append(f'Restorer {rest["mode"]}')
+                short_parts.append('Restorer')
+                detail_parts.append(f'Restorer {rest["mode"]}')
             elif self.profile.restorer == 'auto' and info:
-                parts.append('Restorer Bypass (Nguồn cao)')
+                detail_parts.append('Restorer Bypass')
             if self.profile.tone != 'off':
+                tone_short = {
+                    'studio_aria2': 'Aria 2',
+                    'studio_room': 'Loa 30°',
+                    'walkman_vivid': 'Sống động',
+                    'aria2': 'Aria 2',
+                    'vocal_clear': 'Vocal',
+                    'warm': 'Ấm',
+                    'headphones': 'Crossfeed',
+                }
                 tone_labels = {
                     'studio_aria2': 'Aria 2 Lab + Studio 30°',
                     'studio_room': 'Studio Monitor 30°',
@@ -1220,42 +1307,68 @@ class AudioEffectsController(QObject):
                     'warm': 'Warm',
                     'headphones': 'IEM Crossfeed',
                 }
-                parts.append(tone_labels.get(self.profile.tone, f'EQ {self.profile.tone}'))
+                short_parts.append(tone_short.get(self.profile.tone, self.profile.tone))
+                detail_parts.append(tone_labels.get(self.profile.tone, f'EQ {self.profile.tone}'))
             if self.profile.eq_enabled:
-                eq_tag = 'EQ 10 dải'
+                peq_list = normalize_peq_filters(getattr(self.profile, 'eq_peq_filters', ()))
+                if peq_list:
+                    short_parts.append(f'PEQ {len(peq_list)}')
+                    eq_tag = f'PEQ {len(peq_list)} dải'
+                else:
+                    short_parts.append('EQ')
+                    eq_tag = 'EQ 10 dải'
                 if self.profile.eq_crossfeed > 0:
                     eq_tag += f' · Crossfeed {self.profile.eq_crossfeed}%'
-                parts.append(eq_tag)
+                detail_parts.append(eq_tag)
             if self.profile.youtube_loudness:
-                parts.append(f'YouTube −14 LUFS ({self._applied_gain_db:+.1f} dB)')
+                short_parts.append(f'{self._applied_gain_db:+.1f} dB')
+                detail_parts.append(f'YouTube −14 LUFS ({self._applied_gain_db:+.1f} dB)')
             elif self.profile.normalize:
-                parts.append(f'{self.target_lufs} LUFS ({self._applied_gain_db:+.1f} dB)')
-            dsp_text = ' · '.join(parts)
+                short_parts.append(f'{self._applied_gain_db:+.1f} dB')
+                detail_parts.append(f'{self.target_lufs} LUFS ({self._applied_gain_db:+.1f} dB)')
+            elif abs(self._applied_gain_db) >= 0.05:
+                short_parts.append(f'{self._applied_gain_db:+.1f} dB')
+                detail_parts.append(f'Headroom {self._applied_gain_db:+.1f} dB')
+            elif (
+                self.profile.output_mode == 'exclusive'
+                and self.profile.tone == 'off'
+                and self.profile.upsample == 'off'
+                and not self.profile.eq_enabled
+            ):
+                detail_parts.append('Bit-Perfect 0 dB')
+            dsp_text = ' · '.join(short_parts)
+            dsp_detail = ' · '.join(detail_parts)
 
             st = self.stream.status_info()
             if st.get('active'):
-                mode_label = 'WASAPI Exclusive' if st['output_mode'] == 'exclusive' else 'WASAPI Shared'
+                mode_short = 'Exclusive' if st['output_mode'] == 'exclusive' else 'Shared'
+                mode_label = f'WASAPI {mode_short}'
                 if st['output_mode'] == 'shared_fallback':
                     mode_label = 'WASAPI Shared (Fallback)'
                 bits = {'float32': '32-bit Float', 'int32': '32-bit', 'int24': '24-bit', 'int16': '16-bit'}.get(
                     st['dtype'], st['dtype']
                 )
                 resampled = st.get('filter_summary', {}).get('resampled', False)
+                phase_tag = 'Min-Phase' if getattr(self.profile, 'dac_phase', 'linear') == 'minimum' else 'SoXR 33-bit'
                 if resampled and int(st.get('sample_rate') or 0) >= 88200:
-                    sr_tag = 'SoXR 33-bit Hi-Res'
+                    sr_tag = f'{phase_tag} Hi-Res'
                 elif resampled:
                     sr_tag = 'SoXR 33-bit'
                 else:
                     sr_tag = 'Bit-Pure Native'
                 lat = st.get('latency_ms')
                 lat_tag = f' · {lat:g} ms' if isinstance(lat, (int, float)) and lat > 0 else ''
-                out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}{lat_tag}'
+                out_text = f'{mode_short} {st["sample_rate"] / 1000.0:g} kHz'
+                out_detail = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}{lat_tag}'
             else:
-                mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
-                dev_label = self.profile.output_device or 'Mặc định Windows'
-                out_text = f'{dev_label} · {mode_label} · Bit-Pure (Chờ phát)'
+                mode_short = 'Exclusive' if self.profile.output_mode == 'exclusive' else 'Shared'
+                mode_label = f'WASAPI {mode_short}'
+                dev_label = self.profile.output_device or 'Mặc định hệ thống'
+                out_text = self.profile.output_device or mode_short
+                out_detail = f'{dev_label} · {mode_label}'
 
-        self.panel.set_signal_path(src_text, dsp_text, out_text)
+        detail_tip = f'Nguồn: {src_detail}\nXử lý: {dsp_detail}\nĐầu ra: {out_detail}'
+        self.panel.set_signal_path(src_text, dsp_text, out_text, tooltip=detail_tip)
 
     def shutdown(self):
         if self._closed:
@@ -1268,6 +1381,8 @@ class AudioEffectsController(QObject):
         self.stream.shutdown()
         self.prefetch.shutdown()
         self.panel.hide()
+        if self.benchmark_page is not None:
+            self.benchmark_page.shutdown()
         if self.eq_dialog is not None:
             self.eq_dialog.close()
             self.eq_dialog.deleteLater()
