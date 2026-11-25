@@ -4,7 +4,7 @@ import math
 import re
 
 PROCESSOR_VERSION = 1
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 TARGET_LUFS = -18.0
 DEFAULT_TARGET_LUFS = -16
 VALID_TARGETS = (-16, -14, -18)
@@ -16,6 +16,8 @@ MAX_BOOST_DB = 12.0
 
 OUTPUT_MODES = ('shared', 'exclusive')
 RESTORER_MODES = ('off', 'auto', 'natural', 'vivid')
+UPSAMPLE_MODES = ('off', 'hires_sync', 'max_dac')
+PRESET_ORDER = ('studio_dawn_aria2', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass')
 
 LOSSLESS_CODECS = frozenset({
     'flac', 'alac', 'wavpack', 'ape', 'tak', 'tta',
@@ -26,6 +28,20 @@ LOSSLESS_CODECS = frozenset({
 
 TONES = {
     'off': '',
+    # Dawn Pro 2 + Aria 2 Lab Reference + 30-degree Studio Monitor Room (1 kHz ~ 0.0 dB).
+    'studio_aria2': 'equalizer=f=38:t=q:w=0.707:g=1.6:r=f64,'
+                    'equalizer=f=205:t=q:w=1.2:g=-0.8:r=f64,'
+                    'equalizer=f=3350:t=q:w=1.5:g=-1.2:r=f64,'
+                    'equalizer=f=7800:t=q:w=3.0:g=-1.0:r=f64,'
+                    'treble=f=13500:t=q:w=0.707:g=1.2:r=f64',
+    # Pure 30-degree nearfield studio monitor crossfeed (0 dB tonal alteration).
+    'studio_room': '',
+    # Sony Walkman / Poweramp vivid contour (0 dB unity around 1 kHz).
+    'walkman_vivid': 'equalizer=f=55:t=q:w=0.75:g=2.0:r=f64,'
+                     'equalizer=f=230:t=q:w=1.2:g=-0.9:r=f64,'
+                     'equalizer=f=2750:t=q:w=1.3:g=0.8:r=f64,'
+                     'equalizer=f=7600:t=q:w=2.8:g=-0.9:r=f64,'
+                     'treble=f=13000:t=q:w=0.707:g=1.7:r=f64',
     # Optional gentle Moondrop Aria 2 polish (no highpass phase rotation, 1 kHz = 0.0 dB).
     'aria2': 'equalizer=f=52:t=q:w=0.75:g=1.4:r=f64,'
              'equalizer=f=220:t=q:w=1.2:g=-0.6:r=f64,'
@@ -55,6 +71,13 @@ TONE_PREAMP_DB = {
     'easy_headphones': -1.5,
 }
 
+TONE_PEAK_PAD_DB = {
+    'aria2': 1.4,
+    'studio_aria2': 1.6,
+    'walkman_vivid': 2.0,
+    'vocal_clear': 1.2,
+}
+
 
 @dataclass(frozen=True)
 class AudioProfile:
@@ -62,14 +85,18 @@ class AudioProfile:
     tone: str = 'off'
     restorer: str = 'off'
     output_mode: str = 'shared'
+    upsample: str = 'off'
+    youtube_loudness: bool = False
 
     @property
     def enabled(self):
         return (
             self.normalize
+            or self.youtube_loudness
             or self.tone != 'off'
             or self.restorer != 'off'
             or self.output_mode == 'exclusive'
+            or self.upsample != 'off'
         )
 
     @classmethod
@@ -78,17 +105,30 @@ class AudioProfile:
         return cls(normalize=True, tone='off', restorer='off', output_mode='shared')
 
     @classmethod
+    def preset_profile(cls, preset_key: str) -> tuple['AudioProfile', int | None]:
+        return preset_profile(preset_key)
+
+    @classmethod
+    def detect_preset(cls, profile: 'AudioProfile', target_lufs: int = -16) -> str:
+        return detect_preset(profile, target_lufs)
+
+    @classmethod
     def from_dict(cls, data):
         if not isinstance(data, dict):
             return cls()
         tone = data.get('tone', 'off')
         restorer = data.get('restorer', 'off')
         output_mode = data.get('output_mode', 'shared')
+        upsample = data.get('upsample', 'off')
+        youtube_loudness = data.get('youtube_loudness') is True
+        normalize = False if youtube_loudness else (data.get('normalize') is True)
         return cls(
-            normalize=data.get('normalize') is True,
+            normalize=normalize,
             tone=tone if isinstance(tone, str) and tone in TONES else 'off',
             restorer=restorer if isinstance(restorer, str) and restorer in RESTORER_MODES else 'off',
             output_mode=output_mode if isinstance(output_mode, str) and output_mode in OUTPUT_MODES else 'shared',
+            upsample=upsample if isinstance(upsample, str) and upsample in UPSAMPLE_MODES else 'off',
+            youtube_loudness=youtube_loudness,
         )
 
     def as_dict(self):
@@ -97,7 +137,81 @@ class AudioProfile:
             'tone': self.tone,
             'restorer': self.restorer,
             'output_mode': self.output_mode,
+            'upsample': self.upsample,
+            'youtube_loudness': self.youtube_loudness,
         }
+
+
+def tone_peak_pad_db(profile: AudioProfile) -> float:
+    """Return protective true-peak headroom pad (dB) for positive EQ shelves."""
+    return float(TONE_PEAK_PAD_DB.get(getattr(profile, 'tone', 'off'), 0.0))
+
+
+def preset_profile(preset_key: str) -> tuple[AudioProfile, int | None]:
+    """Return (AudioProfile, target_lufs_or_none) for a named studio/streaming quick preset."""
+    if preset_key == 'studio_dawn_aria2':
+        return (
+            AudioProfile(
+                normalize=True,
+                tone='studio_aria2',
+                restorer='auto',
+                output_mode='exclusive',
+                upsample='hires_sync',
+                youtube_loudness=False,
+            ),
+            -16,
+        )
+    if preset_key == 'youtube':
+        return (
+            AudioProfile(
+                normalize=False,
+                tone='off',
+                restorer='off',
+                output_mode='shared',
+                upsample='off',
+                youtube_loudness=True,
+            ),
+            -14,
+        )
+    if preset_key == 'bit_pure':
+        return AudioProfile.recommended(), -16
+    if preset_key == 'walkman_vivid':
+        return (
+            AudioProfile(
+                normalize=True,
+                tone='walkman_vivid',
+                restorer='auto',
+                output_mode='shared',
+                upsample='off',
+                youtube_loudness=False,
+            ),
+            -14,
+        )
+    if preset_key == 'bypass':
+        return AudioProfile(), None
+    return AudioProfile.recommended(), -16
+
+
+def detect_preset(profile: AudioProfile, target_lufs: int = -16) -> str:
+    """Identify which quick preset matches the current profile & target LUFS, or 'custom'."""
+    if not profile.enabled:
+        return 'bypass'
+    if (
+        profile.youtube_loudness
+        and not profile.normalize
+        and profile.tone == 'off'
+        and profile.restorer == 'off'
+        and profile.output_mode == 'shared'
+        and profile.upsample == 'off'
+    ):
+        return 'youtube'
+    if profile == AudioProfile.recommended() and int(target_lufs) == -16:
+        return 'bit_pure'
+    for key in ('studio_dawn_aria2', 'walkman_vivid'):
+        expected_prof, expected_lufs = preset_profile(key)
+        if profile == expected_prof and (expected_lufs is None or int(target_lufs) == int(expected_lufs)):
+            return key
+    return 'custom'
 
 
 @dataclass(frozen=True)
@@ -137,6 +251,10 @@ def choose_gain(measurement, profile):
 
 def tone_filter(profile, sample_rate=48000, channels=2):
     """Return FFmpeg biquad/crossfeed chain for the selected tone signature."""
+    if profile.tone == 'studio_room':
+        if channels == 2 and sample_rate >= 32000:
+            return 'crossfeed=strength=0.07:range=0.32:slope=0.5:level_in=1:level_out=1:block_size=0'
+        return ''
     raw_tone = TONES.get(profile.tone, '')
     if not raw_tone:
         return ''
@@ -151,6 +269,8 @@ def tone_filter(profile, sample_rate=48000, channels=2):
     parts.append(filters)
     if profile.tone == 'headphones' and channels == 2 and sample_rate >= 8000:
         parts.append('crossfeed=strength=0.08:range=0.25:slope=0.5:level_in=1:level_out=1:block_size=0')
+    elif profile.tone == 'studio_aria2' and channels == 2 and sample_rate >= 32000:
+        parts.append('crossfeed=strength=0.06:range=0.30:slope=0.5:level_in=1:level_out=1:block_size=0')
     return ','.join(part for part in parts if part)
 
 
@@ -196,9 +316,13 @@ def compute_mastering_gain_db(
     normalize: bool,
     exclusive: bool = False,
     headroom_pad_db: float = 0.0,
+    youtube_loudness: bool = False,
+    tone_pad_db: float = 0.0,
 ) -> tuple[float, bool]:
-    """ReplayGain 2.0 / Roon pure linear gain preserving 100% transient dynamics and CS43198 headroom."""
-    ceiling = CS43198_EXCLUSIVE_CEILING_DB if exclusive else CS43198_CEILING_DB
+    """ReplayGain 2.0 / YouTube -14 LUFS attenuation law + CS43198 intersample peak protection."""
+    base_ceiling = CS43198_EXCLUSIVE_CEILING_DB if exclusive else CS43198_CEILING_DB
+    pad = max(0.0, float(tone_pad_db))
+    effective_ceiling = base_ceiling - pad
     lufs = None
     peak_db = None
     if isinstance(measurement, dict):
@@ -209,20 +333,32 @@ def compute_mastering_gain_db(
         if isinstance(raw_peak, (int, float)) and not isinstance(raw_peak, bool) and math.isfinite(raw_peak):
             peak_db = float(raw_peak)
 
+    if youtube_loudness:
+        if lufs is None or lufs <= -70.0:
+            return 0.0, False
+        desired = max(-24.0, min(0.0, -14.0 - lufs))
+        if peak_db is not None:
+            actual = min(desired, effective_ceiling - peak_db)
+        else:
+            actual = desired
+        return round(actual, 3), actual < desired - 0.05
+
     if normalize:
         if lufs is None or lufs <= -70.0:
             return 0.0, False
         desired = max(-24.0, min(MAX_BOOST_DB, float(target_lufs) - lufs))
         if peak_db is not None:
-            actual = min(desired, ceiling - peak_db)
+            actual = min(desired, effective_ceiling - peak_db)
         else:
-            actual = min(desired, 4.0)
+            actual = min(desired, 4.0 - pad)
         return round(actual, 3), actual < desired - 0.05
 
-    if peak_db is not None and peak_db > ceiling:
-        return round(max(-2.5, ceiling - peak_db), 3), False
+    if peak_db is not None and peak_db > effective_ceiling:
+        return round(max(-4.5, effective_ceiling - peak_db), 3), False
     if headroom_pad_db < 0:
         return round(float(headroom_pad_db), 3), False
+    if pad > 0 and measurement is None:
+        return round(-max(1.0 if exclusive else 0.0, pad), 3), False
     if exclusive and measurement is None:
         return -1.0, False
     return 0.0, False
@@ -254,7 +390,7 @@ def build_realtime_filter_graph(
     out_sample_rate: int,
     playback_rate: float = 1.0,
 ) -> tuple[str, dict]:
-    """Assemble unclipped bit-pure float decode path (resampling ONLY when sample rates differ)."""
+    """Assemble 64-bit float DSP graph with SoXR 33-bit oversampling before EQ to avoid Nyquist cramping."""
     out_sr = max(8000, int(out_sample_rate))
     in_sr = int((source_info or {}).get('sample_rate') or out_sr)
     in_channels = int((source_info or {}).get('channels') or 2)
@@ -268,10 +404,16 @@ def build_realtime_filter_graph(
     if tempo:
         stages.append(tempo)
 
+    resampled = in_sr != out_sr
+    oversampling = resampled and out_sr > in_sr
+    if oversampling:
+        stages.append(f'aresample={out_sr}:resampler=soxr:precision=33')
+
+    eq_sr = out_sr if oversampling else in_sr
     restorer = resolve_restorer(profile, source_info)
     if restorer is not None:
-        scale = 0.45 if profile.tone == 'aria2' else 1.0
-        nyquist_cap = max(1000, int(min(max(8000, in_sr), out_sr) * 0.44))
+        scale = 0.45 if profile.tone in ('aria2', 'studio_aria2', 'walkman_vivid') else 1.0
+        nyquist_cap = max(1000, int(min(max(8000, in_sr), eq_sr) * 0.44))
         f_sub = min(58, nyquist_cap)
         f_mud = min(235, nyquist_cap)
         f_pres = min(4200, nyquist_cap)
@@ -283,19 +425,20 @@ def build_realtime_filter_graph(
             f'treble=f={f_air}:t=q:w=0.707:g={restorer["air_db"] * scale:.2f}:r=f64'
         )
 
-    tone = tone_filter(profile, sample_rate=out_sr, channels=2)
+    tone = tone_filter(profile, sample_rate=eq_sr, channels=2)
     if tone:
         stages.append(tone)
 
-    resampled = in_sr != out_sr
-    if resampled:
-        stages.append(f'aresample={out_sr}:resampler=soxr:precision=28')
+    if resampled and not oversampling:
+        stages.append(f'aresample={out_sr}:resampler=soxr:precision=33')
 
     summary = {
         'restorer_active': restorer['mode'] if restorer else 'Bypass',
         'tone': profile.tone,
         'gain_db': float(gain_db),
         'resampled': resampled,
+        'soxr_precision': 33 if resampled else 0,
+        'upsample': getattr(profile, 'upsample', 'off'),
         'out_sample_rate': out_sr,
     }
     return ','.join(stages), summary

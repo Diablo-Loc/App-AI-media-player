@@ -134,11 +134,42 @@ def select_wasapi_device(sd, preferred_name: str = ''):
     return idx, sd.query_devices(idx)
 
 
+def preferred_exclusive_rates(source_sr: int, dev_sr: int, upsample: str = 'off') -> list[int]:
+    """Return ordered candidate WASAPI Exclusive sample rates for synchronous oversampling or native mode."""
+    src = int(source_sr or 0)
+    dev = int(dev_sr or 48000)
+    is_44k_family = (src > 0 and src % 44100 == 0)
+
+    if upsample == 'hires_sync':
+        if is_44k_family:
+            candidates = [max(src, 176400), 88200, 192000, 96000, src, dev, 48000, 44100]
+        else:
+            candidates = [max(src, 192000), 96000, 176400, 88200, src, dev, 48000, 44100]
+    elif upsample == 'max_dac':
+        if is_44k_family:
+            candidates = [352800, 384000, 176400, 192000, 88200, 96000, src, dev, 48000, 44100]
+        else:
+            candidates = [384000, 352800, 192000, 176400, 96000, 88200, src, dev, 48000, 44100]
+    else:
+        candidates = [src, dev, 48000, 44100, 96000, 88200, 192000, 176400]
+
+    rates = []
+    for r in candidates:
+        if 44100 <= r <= 384000 and r not in rates:
+            rates.append(r)
+    return rates
+
+
 class AudioStreamEngine:
     """Zero-disk FFmpeg 64-bit DSP pipe feeding C-blocking WASAPI Shared or Exclusive."""
 
     _CHUNK_FRAMES = 2048
     _PREBUFFER_CHUNKS = 3  # ~128 ms pre-buffered before starting hardware DAC stream
+
+    @classmethod
+    def _chunk_frames_for_rate(cls, out_sr: int) -> int:
+        scale = max(1, int(round(max(8000, int(out_sr)) / 48000.0)))
+        return cls._CHUNK_FRAMES * scale
 
     def __init__(self, on_before_exclusive=None, on_after_exclusive=None):
         self._lock = threading.RLock()
@@ -242,10 +273,7 @@ class AudioStreamEngine:
                 except Exception:
                     pass
 
-            rates = []
-            for r in (source_sr, dev_sr, 48000, 44100, 96000, 88200, 192000):
-                if 44100 <= r <= 384000 and r not in rates:
-                    rates.append(r)
+            rates = preferred_exclusive_rates(source_sr, dev_sr, profile.upsample)
             for sr in rates:
                 for dtype in ('int32', 'int24', 'float32', 'int16'):
                     stream = None
@@ -311,7 +339,14 @@ class AudioStreamEngine:
 
         raise RuntimeError('Không mở được thiết bị đầu ra WASAPI.')
 
-    def _spawn_ffmpeg(self, source_path: str, start_ms: int, track: int, filter_graph: str) -> subprocess.Popen:
+    def _spawn_ffmpeg(
+        self,
+        source_path: str,
+        start_ms: int,
+        track: int,
+        filter_graph: str,
+        out_sr: int = 48000,
+    ) -> subprocess.Popen:
         ffmpeg = find_tool('ffmpeg')
         cmd = [ffmpeg, '-nostdin', '-hide_banner', '-loglevel', 'error', '-threads', '2']
         if start_ms > 20:
@@ -327,11 +362,12 @@ class AudioStreamEngine:
         flags = 0
         if os.name == 'nt':
             flags = subprocess.CREATE_NO_WINDOW | subprocess.BELOW_NORMAL_PRIORITY_CLASS
+        buf_bytes = max(131072, self._chunk_frames_for_rate(out_sr) * 8 * 4)
         return subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
-            bufsize=131072,
+            bufsize=buf_bytes,
             creationflags=flags,
         )
 
@@ -356,7 +392,7 @@ class AudioStreamEngine:
         out_dtype: str,
         cancel_event: threading.Event,
     ):
-        chunk_bytes = self._CHUNK_FRAMES * 2 * 4
+        chunk_bytes = self._chunk_frames_for_rate(out_sr) * 2 * 4
         fade_samples = max(1, int(0.012 * out_sr))
         dither_offset = 0
         current_amp = 0.0
@@ -563,7 +599,7 @@ class AudioStreamEngine:
             out_sr,
             playback_rate=max(0.25, min(4.0, float(playback_rate or 1.0))),
         )
-        proc = self._spawn_ffmpeg(str(source_path), max(0, int(start_ms)), int(track), filter_graph)
+        proc = self._spawn_ffmpeg(str(source_path), max(0, int(start_ms)), int(track), filter_graph, out_sr=out_sr)
         cancel_event = threading.Event()
         thread = threading.Thread(
             target=self._writer_loop,

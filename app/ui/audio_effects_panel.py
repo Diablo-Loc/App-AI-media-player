@@ -12,11 +12,12 @@ from PySide6.QtWidgets import (
     QFrame,
 )
 
+from core.audio_profile import AudioProfile, detect_preset, preset_profile
 from ui.design_system import DIALOG_STYLE
 
 
 class AudioEffectsPanel(QWidget):
-    settings_changed = Signal(bool, str, str, str)
+    settings_changed = Signal(bool, str, str, str, str, bool)
     level_changed = Signal(int)
     prefetch_changed = Signal(bool)
 
@@ -24,14 +25,14 @@ class AudioEffectsPanel(QWidget):
         super().__init__(parent, Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.setObjectName('audioEffectsPanel')
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.setFixedWidth(372)
+        self.setFixedWidth(388)
         self.setStyleSheet(DIALOG_STYLE + '''
             QWidget#audioEffectsPanel { background: #151C26; color: #EDF3FA;
                 border: 1px solid #273445; border-radius: 12px;
                 font-family: 'Segoe UI'; font-size: 13px; }
             QLabel, QCheckBox { color: #EDF3FA; background: transparent; border: none; }
-            QCheckBox { spacing: 9px; }
-            QCheckBox::indicator { width: 16px; height: 16px; border: 1px solid #526173;
+            QCheckBox { spacing: 8px; }
+            QCheckBox::indicator { width: 15px; height: 15px; border: 1px solid #526173;
                 border-radius: 4px; background: #101722; }
             QCheckBox::indicator:checked { background: #77E0BE; border-color: #77E0BE; }
             QCheckBox:disabled { color: #657585; }
@@ -44,12 +45,31 @@ class AudioEffectsPanel(QWidget):
             QPushButton#recommendedBtn:hover { background: #24433D; }
         ''')
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(10)
+        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setSpacing(6)
 
         title = QLabel('Âm thanh · Studio Engine')
-        title.setStyleSheet('font-size: 17px; font-weight: 600;')
+        title.setStyleSheet('font-size: 16px; font-weight: 600;')
         layout.addWidget(title)
+
+        layout.addWidget(QLabel('Chế độ nghe chuẩn (Quick Preset)'))
+        self.preset_combo = QComboBox()
+        for text, key in (
+            ('★ Dawn Pro 2 + Aria 2 · Phòng thu Hi-Res', 'studio_dawn_aria2'),
+            ('Chuẩn YouTube gốc (YouTube / YT Music)', 'youtube'),
+            ('Nguyên bản Tuyệt đối (Bit-Pure · Khuyên dùng)', 'bit_pure'),
+            ('Sống động Cuốn hút (Sony Walkman / Poweramp)', 'walkman_vivid'),
+            ('Tắt xử lý — Âm thanh gốc mặc định', 'bypass'),
+            ('Tùy chỉnh riêng (Custom)', 'custom'),
+        ):
+            self.preset_combo.addItem(text, key)
+        self.preset_combo.setToolTip(
+            'Chọn nhanh cấu hình nghe chuẩn phòng thu hoặc streaming phổ biến.\n'
+            'Mẹo tải chuẩn YouTube: ở trang Tải xuống chọn "Original (Giữ nguồn)" hoặc "High (Opus)" '
+            'để giữ luồng Opus 48 kHz gốc y hệt YouTube.'
+        )
+        self.preset_combo.setMinimumHeight(30)
+        layout.addWidget(self.preset_combo)
 
         layout.addWidget(QLabel('Chế độ đầu ra (DAC / Tai nghe)'))
         self.output_mode = QComboBox()
@@ -59,24 +79,40 @@ class AudioEffectsPanel(QWidget):
             'Shared: nghe chung cùng Chrome/Discord. Exclusive: khóa thẳng USB DAC (như Dawn Pro 2) '
             'để bỏ qua bộ trộn Windows; tự chuyển về Shared nếu thiết bị Bluetooth không hỗ trợ.'
         )
-        self.output_mode.setMinimumHeight(34)
+        self.output_mode.setMinimumHeight(30)
         layout.addWidget(self.output_mode)
 
-        self.normalize = QCheckBox('Cân bằng âm lượng Mastering (EBU R128)')
+        layout.addWidget(QLabel('Nâng tần số lấy mẫu (SoXR 33-bit Hi-Res)'))
+        self.upsample = QComboBox()
+        for text, key in (
+            ('Tần số gốc (Bit-Pure Native)', 'off'),
+            ('Hi-Res 4× Đồng bộ (176.4 / 192 kHz · SoXR 33-bit)', 'hires_sync'),
+            ('Tối đa chip DAC (352.8 / 384 kHz · SoXR 33-bit)', 'max_dac'),
+        ):
+            self.upsample.addItem(text, key)
+        self.upsample.setToolTip(
+            'Hoạt động tối đa khi bật WASAPI Exclusive trên USB DAC như Dawn Pro 2: '
+            'dùng bộ lọc SoXR 33-bit nâng tần số 4×/8× để bỏ qua lọc thô bên trong chip DAC. '
+            'Chế độ Shared đi theo tần số Windows Mixer.'
+        )
+        self.upsample.setMinimumHeight(30)
+        layout.addWidget(self.upsample)
+
+        self.normalize = QCheckBox('Cân bằng âm lượng (EBU R128 / YouTube)')
         self.normalize.setToolTip(
-            'Xử lý 64-bit Float trong RAM kèm bộ giữ đỉnh -1.5 dBTP bảo vệ chip CS43198, '
-            'giúp mọi bài đều âm lượng mà không bóp độ động.'
+            'Xử lý 64-bit Float trong RAM kèm bảo vệ đỉnh CS43198, '
+            'giúp đồng đều âm lượng hoặc giữ đúng luật giảm âm −14 LUFS của YouTube.'
         )
         layout.addWidget(self.normalize)
 
-        layout.addWidget(QLabel('Mức cân bằng'))
+        layout.addWidget(QLabel('Luật cân bằng âm lượng'))
         self.level = QComboBox()
         self.level.addItem('Chuẩn Audiophile (−16 LUFS · Khuyên dùng)', -16)
-        self.level.addItem('Sôi động (−14 LUFS · Pop / EDM)', -14)
+        self.level.addItem('Sôi động (−14 LUFS · Walkman / Streaming)', -14)
         self.level.addItem('Thuần khiết (−18 LUFS · Dải động tối đa)', -18)
-        self.level.setMinimumHeight(34)
+        self.level.addItem('Chuẩn YouTube gốc (−14 LUFS · Chỉ giảm bài to)', 'youtube')
+        self.level.setMinimumHeight(30)
         self.level.setEnabled(False)
-        self.level.currentIndexChanged.connect(lambda _: self.level_changed.emit(self.level.currentData()))
         layout.addWidget(self.level)
 
         layout.addWidget(QLabel('Khôi phục chi tiết nhạc nén (128kbps Restorer)'))
@@ -92,17 +128,20 @@ class AudioEffectsPanel(QWidget):
             'Mặc định Tắt để bảo toàn tuyệt đối chất âm gốc. Bật Tự động nhẹ nếu nghe các file MP3/AAC cũ '
             'bị tù bí; tự bỏ qua Opus và FLAC/Lossless.'
         )
-        self.restorer.setMinimumHeight(34)
+        self.restorer.setMinimumHeight(30)
         layout.addWidget(self.restorer)
 
         layout.addWidget(QLabel('Chất âm (Sound Signature)'))
         self.tone = QComboBox()
         for text, key in (
-            ('Nguyên bản Tuyệt đối (Bit-Pure · Khuyên dùng)', 'off'),
+            ('Nguyên bản Tuyệt đối (Bit-Pure · 0 dB)', 'off'),
+            ('Phòng thu Hi-Res · Dawn Pro 2 + Aria 2', 'studio_aria2'),
+            ('Không gian Loa Kiểm Âm 30° (Không EQ)', 'studio_room'),
+            ('Sống động — Sony Walkman / Poweramp', 'walkman_vivid'),
             ('Moondrop Aria 2 Subtle Balance', 'aria2'),
-            ('Ấm mượt — Nghe lâu (Musical Warm)', 'warm'),
-            ('Không gian loa tự nhiên (IEM Crossfeed)', 'headphones'),
             ('Giọng hát rõ nét (Vocal & Acoustic)', 'vocal_clear'),
+            ('Ấm mượt — Nghe lâu (Musical Warm)', 'warm'),
+            ('Không gian tai nghe nhẹ (IEM Crossfeed)', 'headphones'),
             ('Dịu — giảm chói (Legacy)', 'gentle'),
             ('Cân bằng nhẹ (Legacy)', 'balanced'),
             ('Dễ nghe — loa (Legacy)', 'easy'),
@@ -110,12 +149,18 @@ class AudioEffectsPanel(QWidget):
         ):
             self.tone.addItem(text, key)
         self.tone.setItemData(
+            self.tone.findData('studio_aria2'),
+            'Cân chỉnh Lab Reference 64-bit riêng cho Moondrop Aria 2 trên Dawn Pro 2 kết hợp Crossfeed '
+            'loa kiểm âm 30° (giọng hát giữa 0.0 dB, mở rộng không gian sân khấu).',
+            Qt.ItemDataRole.ToolTipRole,
+        )
+        self.tone.setItemData(
             self.tone.findData('aria2'),
             'Tinh chỉnh 64-bit tối ưu riêng cho Moondrop Aria 2: thêm độ sâu sub-bass, tách lớp vocal '
             'và làm êm đỉnh cộng hưởng 8 kHz.',
             Qt.ItemDataRole.ToolTipRole,
         )
-        self.tone.setMinimumHeight(34)
+        self.tone.setMinimumHeight(30)
         layout.addWidget(self.tone)
 
         self.prefetch_next = QCheckBox('Đo sẵn độ lớn bài kế tiếp (0 MB rác ổ cứng)')
@@ -128,14 +173,14 @@ class AudioEffectsPanel(QWidget):
         card = QFrame()
         card.setObjectName('signalPathCard')
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(10, 8, 10, 8)
+        card_layout.setContentsMargins(10, 6, 10, 6)
         card_layout.setSpacing(2)
         card_title = QLabel('Signal Path (Thời gian thực trong RAM)')
         card_title.setStyleSheet('color: #77E0BE; font-size: 11px; font-weight: 600;')
         card_layout.addWidget(card_title)
         self.signal_path = QLabel('Nguồn: —\nDSP: Đang dùng âm thanh gốc (Bypass)\nĐầu ra: Hệ thống mặc định')
         self.signal_path.setWordWrap(True)
-        self.signal_path.setStyleSheet('color: #B4C2D1; font-size: 11px; line-height: 1.35;')
+        self.signal_path.setStyleSheet('color: #B4C2D1; font-size: 11px; line-height: 1.3;')
         card_layout.addWidget(self.signal_path)
         layout.addWidget(card)
 
@@ -155,53 +200,132 @@ class AudioEffectsPanel(QWidget):
         btn_row.setSpacing(8)
         self.btn_recommended = QPushButton('Chuẩn khuyên dùng')
         self.btn_recommended.setObjectName('recommendedBtn')
-        self.btn_recommended.setMinimumHeight(34)
+        self.btn_recommended.setMinimumHeight(32)
         self.reset = QPushButton('Trở về âm thanh gốc')
-        self.reset.setMinimumHeight(34)
+        self.reset.setMinimumHeight(32)
         btn_row.addWidget(self.btn_recommended)
         btn_row.addWidget(self.reset)
         layout.addLayout(btn_row)
 
+        self.preset_combo.currentIndexChanged.connect(self._on_preset_selected)
         self.normalize.toggled.connect(self._emit_settings)
+        self.level.currentIndexChanged.connect(self._on_level_changed)
         self.tone.currentIndexChanged.connect(self._emit_settings)
         self.restorer.currentIndexChanged.connect(self._emit_settings)
         self.output_mode.currentIndexChanged.connect(self._emit_settings)
+        self.upsample.currentIndexChanged.connect(self._emit_settings)
         self.btn_recommended.clicked.connect(self._apply_recommended)
         self.reset.clicked.connect(self._reset)
 
+    def _current_target_lufs(self) -> int:
+        val = self.level.currentData()
+        return int(val) if isinstance(val, int) else -14
+
+    def _sync_preset_combo(self):
+        checked = self.normalize.isChecked()
+        level_val = self.level.currentData()
+        yt_loud = checked and (level_val == 'youtube')
+        norm = checked and not yt_loud
+        prof = AudioProfile(
+            normalize=norm,
+            tone=self.tone.currentData() or 'off',
+            restorer=self.restorer.currentData() or 'off',
+            output_mode=self.output_mode.currentData() or 'shared',
+            upsample=self.upsample.currentData() or 'off',
+            youtube_loudness=yt_loud,
+        )
+        key = detect_preset(prof, self._current_target_lufs())
+        self.preset_combo.blockSignals(True)
+        self.preset_combo.setCurrentIndex(max(0, self.preset_combo.findData(key)))
+        self.preset_combo.blockSignals(False)
+
+    def _on_preset_selected(self, *_):
+        key = self.preset_combo.currentData()
+        if key == 'custom' or not key:
+            return
+        prof, lufs = preset_profile(key)
+        self.set_profile(
+            prof.normalize,
+            prof.tone,
+            prof.restorer,
+            prof.output_mode,
+            prof.upsample,
+            prof.youtube_loudness,
+            target_lufs=lufs,
+        )
+        if isinstance(lufs, int) and key != 'youtube':
+            self.level_changed.emit(int(lufs))
+        self._emit_settings()
+
+    def _on_level_changed(self, *_):
+        val = self.level.currentData()
+        if isinstance(val, int):
+            self.level_changed.emit(int(val))
+        self._emit_settings()
+
     def _emit_settings(self, *_):
-        self.level.setEnabled(self.normalize.isChecked())
-        self.prefetch_next.setEnabled(self.normalize.isChecked())
+        checked = self.normalize.isChecked()
+        level_val = self.level.currentData()
+        yt_loud = checked and (level_val == 'youtube')
+        norm = checked and not yt_loud
+        self.level.setEnabled(checked)
+        self.prefetch_next.setEnabled(checked)
+        self._sync_preset_combo()
         self.settings_changed.emit(
-            self.normalize.isChecked(),
+            norm,
             self.tone.currentData(),
             self.restorer.currentData(),
             self.output_mode.currentData(),
+            self.upsample.currentData(),
+            yt_loud,
         )
 
     def _apply_recommended(self):
-        self.set_profile(True, 'off', 'off', 'shared')
-        idx = self.level.findData(-16)
-        if idx >= 0:
-            self.level.setCurrentIndex(idx)
+        self.set_profile(True, 'off', 'off', 'shared', 'off', False, target_lufs=-16)
+        self.level_changed.emit(-16)
         self._emit_settings()
 
     def _reset(self):
-        self.set_profile(False, 'off', 'off', 'shared')
+        self.set_profile(False, 'off', 'off', 'shared', 'off', False)
         self._emit_settings()
 
-    def set_profile(self, normalize, tone, restorer='off', output_mode='shared'):
-        widgets = (self.normalize, self.tone, self.restorer, self.output_mode)
+    def set_profile(
+        self,
+        normalize,
+        tone,
+        restorer='off',
+        output_mode='shared',
+        upsample='off',
+        youtube_loudness=False,
+        target_lufs=None,
+    ):
+        widgets = (self.preset_combo, self.normalize, self.level, self.tone, self.restorer, self.output_mode, self.upsample)
         for w in widgets:
             w.blockSignals(True)
-        self.normalize.setChecked(bool(normalize))
-        self.level.setEnabled(bool(normalize))
-        self.prefetch_next.setEnabled(bool(normalize))
+        yt_loud = bool(youtube_loudness)
+        checked = bool(normalize or yt_loud)
+        self.normalize.setChecked(checked)
+        self.level.setEnabled(checked)
+        self.prefetch_next.setEnabled(checked)
+        if yt_loud:
+            idx = self.level.findData('youtube')
+            if idx >= 0:
+                self.level.setCurrentIndex(idx)
+        elif isinstance(target_lufs, int):
+            idx = self.level.findData(int(target_lufs))
+            if idx >= 0:
+                self.level.setCurrentIndex(idx)
+        elif self.level.currentData() == 'youtube':
+            idx = self.level.findData(-16)
+            if idx >= 0:
+                self.level.setCurrentIndex(idx)
         self.tone.setCurrentIndex(max(0, self.tone.findData(tone)))
         self.restorer.setCurrentIndex(max(0, self.restorer.findData(restorer)))
         self.output_mode.setCurrentIndex(max(0, self.output_mode.findData(output_mode)))
+        self.upsample.setCurrentIndex(max(0, self.upsample.findData(upsample)))
         for w in widgets:
             w.blockSignals(False)
+        self._sync_preset_combo()
 
     def set_prefetch(self, enabled):
         self.prefetch_next.blockSignals(True)
@@ -210,8 +334,10 @@ class AudioEffectsPanel(QWidget):
 
     def set_target(self, target):
         self.level.blockSignals(True)
-        self.level.setCurrentIndex(max(0, self.level.findData(target)))
+        if self.level.currentData() != 'youtube':
+            self.level.setCurrentIndex(max(0, self.level.findData(target)))
         self.level.blockSignals(False)
+        self._sync_preset_combo()
 
     def set_signal_path(self, source_text: str, dsp_text: str, output_text: str):
         self.signal_path.setText(f'Nguồn: {source_text}\nDSP: {dsp_text}\nĐầu ra: {output_text}')

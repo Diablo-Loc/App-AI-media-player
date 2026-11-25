@@ -18,10 +18,18 @@ from core.audio_profile import (
     atempo_chain,
     build_realtime_filter_graph,
     compute_mastering_gain_db,
+    detect_preset,
+    preset_profile,
     resolve_restorer,
     tone_filter,
+    tone_peak_pad_db,
 )
-from core.audio_stream_engine import AudioStreamEngine, apply_micro_fade, quantize_pcm
+from core.audio_stream_engine import (
+    AudioStreamEngine,
+    apply_micro_fade,
+    preferred_exclusive_rates,
+    quantize_pcm,
+)
 from core.media_library import SUPPORTED_EXTS
 from control.worker_lifecycle import OwnedProcesses
 from tools.ui_preview import isolated_window, pump
@@ -165,6 +173,115 @@ class StudioDspPolicyTests(unittest.TestCase):
             self.assertLessEqual(g14k, 3.2)
             self.assertEqual(tone_filter(AudioProfile(tone='aria2'), 48000, 2).count(':r=f64'), 5)
 
+    def test_youtube_loudness_law_and_null_coloration(self):
+        # Loud track (> -14 LUFS): attenuated to -14 LUFS without altering quiet/dynamic tracks.
+        g_loud, lim_loud = compute_mastering_gain_db(
+            {'lufs': -8.0, 'peak_db': 1.5}, -16, normalize=False, youtube_loudness=True
+        )
+        self.assertAlmostEqual(g_loud, -6.0, places=3)
+        self.assertFalse(lim_loud)
+
+        # Quiet dynamic track (<= -14 LUFS): untouched at 0.0 dB.
+        g_quiet, lim_quiet = compute_mastering_gain_db(
+            {'lufs': -19.0, 'peak_db': -4.0}, -16, normalize=False, youtube_loudness=True
+        )
+        self.assertEqual(g_quiet, 0.0)
+        self.assertFalse(lim_quiet)
+
+        # Quiet track with hot intersample transient (+0.8 dBTP): padded cleanly below -1.0 dBTP.
+        g_hot, lim_hot = compute_mastering_gain_db(
+            {'lufs': -15.0, 'peak_db': 0.8}, -16, normalize=False, youtube_loudness=True
+        )
+        self.assertAlmostEqual(g_hot, CS43198_CEILING_DB - 0.8, places=3)
+        self.assertTrue(lim_hot)
+
+        # Null test on exact YouTube preset with 48 kHz Opus proves 0.0000 dB tonal coloration.
+        yt_prof, _ = preset_profile('youtube')
+        sr = 48000
+        t = np.arange(int(sr * 0.2), dtype=np.float64) / sr
+        sig = 0.25 * np.sin(2 * np.pi * 440.0 * t) + 0.15 * np.sin(2 * np.pi * 6000.0 * t)
+        stereo_f64 = np.column_stack([sig, sig]).astype('<f8')
+        info = {'codec_name': 'opus', 'sample_rate': sr, 'channels': 2, 'bit_rate': 128000}
+        af, summary = build_realtime_filter_graph(yt_prof, info, -2.5, sr)
+        self.assertFalse(summary['resampled'])
+        raw_out = subprocess.run(
+            [FFMPEG, '-nostdin', '-hide_banner', '-loglevel', 'error',
+             '-f', 'f64le', '-ar', str(sr), '-ac', '2', '-i', 'pipe:0',
+             '-af', af, '-f', 'f32le', '-ac', '2', 'pipe:1'],
+            input=stereo_f64.tobytes(),
+            capture_output=True,
+            check=True,
+        ).stdout
+        residual = np.max(np.abs(np.frombuffer(raw_out, dtype='<f4').reshape(-1, 2).astype(np.float64) - stereo_f64))
+        self.assertLess(20.0 * np.log10(max(1e-18, float(residual))), -135.0)
+
+    def test_soxr_33bit_synchronous_oversampling_and_chunk_scaling(self):
+        self.assertEqual(preferred_exclusive_rates(44100, 48000, 'hires_sync')[0], 176400)
+        self.assertEqual(preferred_exclusive_rates(48000, 48000, 'hires_sync')[0], 192000)
+        self.assertEqual(preferred_exclusive_rates(44100, 48000, 'max_dac')[0], 352800)
+        self.assertEqual(preferred_exclusive_rates(48000, 48000, 'max_dac')[0], 384000)
+        self.assertEqual(AudioStreamEngine._chunk_frames_for_rate(48000), 2048)
+        self.assertEqual(AudioStreamEngine._chunk_frames_for_rate(192000), 8192)
+        self.assertEqual(AudioStreamEngine._chunk_frames_for_rate(384000), 16384)
+
+        studio_prof, _ = preset_profile('studio_dawn_aria2')
+        info = {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 960000}
+        af, summary = build_realtime_filter_graph(studio_prof, info, -2.0, 192000)
+        self.assertTrue(summary['resampled'])
+        self.assertEqual(summary['soxr_precision'], 33)
+        self.assertLess(af.index('aresample=192000:resampler=soxr:precision=33'), af.index('crossfeed='))
+
+        bit_pure_192, _ = build_realtime_filter_graph(AudioProfile.recommended(), info, 0.0, 192000)
+        for freq in (40, 1000, 14000):
+            expr = f'0.125*sin(2*PI*{freq}*t)|0.125*sin(2*PI*{freq}*t)'
+            raw = subprocess.run(
+                [FFMPEG, '-nostdin', '-hide_banner', '-loglevel', 'error', '-f', 'lavfi',
+                 '-i', f'aevalsrc={expr}:s=48000:d=0.35', '-af', bit_pure_192,
+                 '-f', 'f32le', '-ac', '2', 'pipe:1'],
+                capture_output=True, check=True,
+            ).stdout
+            arr = np.frombuffer(raw, dtype='<f4').reshape(-1, 2)[9600:-9600, 0]
+            gain_db = 20.0 * np.log10(np.sqrt(np.mean(arr ** 2)) / (0.125 / np.sqrt(2.0)))
+            self.assertLess(abs(gain_db), 0.05)
+
+    def test_studio_aria2_and_walkman_vivid_signatures(self):
+        studio_af, _ = build_realtime_filter_graph(
+            AudioProfile(normalize=True, tone='studio_aria2', output_mode='exclusive', upsample='hires_sync'),
+            {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 1000000},
+            0.0,
+            48000,
+        )
+        self.assertNotIn('crystalizer', studio_af)
+        self.assertNotIn('asoftclip', studio_af)
+        self.assertIn('crossfeed=', studio_af)
+        self.assertGreater(_measure_tone_gain_db(studio_af, 40, 48000), 0.8)
+        self.assertLess(abs(_measure_tone_gain_db(studio_af, 1000, 48000)), 0.4)
+        self.assertLess(_measure_tone_gain_db(studio_af, 3350, 48000), -0.5)
+        self.assertGreater(_measure_tone_gain_db(studio_af, 14000, 48000), 0.4)
+
+        room_af = tone_filter(AudioProfile(tone='studio_room'), 48000, 2)
+        self.assertLess(abs(_measure_tone_gain_db(room_af, 1000, 48000)), 0.05)
+
+        walkman_af, _ = build_realtime_filter_graph(
+            AudioProfile(normalize=True, tone='walkman_vivid'),
+            {'codec_name': 'flac', 'sample_rate': 48000, 'channels': 2, 'bit_rate': 1000000},
+            0.0,
+            48000,
+        )
+        self.assertGreater(_measure_tone_gain_db(walkman_af, 55, 48000), 1.0)
+        self.assertLess(_measure_tone_gain_db(walkman_af, 230, 48000), -0.5)
+        self.assertLess(abs(_measure_tone_gain_db(walkman_af, 1000, 48000)), 0.4)
+        self.assertGreater(_measure_tone_gain_db(walkman_af, 2750, 48000), 0.3)
+        self.assertLess(_measure_tone_gain_db(walkman_af, 7600, 48000), -0.4)
+        self.assertGreater(_measure_tone_gain_db(walkman_af, 14000, 48000), 0.9)
+
+        pad = tone_peak_pad_db(AudioProfile(tone='walkman_vivid'))
+        g_hot, lim = compute_mastering_gain_db(
+            {'lufs': -15.0, 'peak_db': 0.5}, -14, normalize=True, tone_pad_db=pad
+        )
+        self.assertAlmostEqual(g_hot, CS43198_CEILING_DB - pad - 0.5, places=3)
+        self.assertTrue(lim)
+
 
 class StreamQuantizerAndFadeTests(unittest.TestCase):
     def test_tpdf_dither_quantizers_exact_byte_sizes(self):
@@ -288,6 +405,26 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             pump(50)
             self.assertFalse(ctrl.profile.enabled)
             self.assertIs(window.media_player.player.audioOutput(), window.audio_output)
+
+            # Quick presets & screen-fit geometry check
+            panel = ctrl.panel
+            self.assertLessEqual(panel.sizeHint().height(), 860)
+            for key in ('studio_dawn_aria2', 'youtube', 'bit_pure', 'walkman_vivid', 'bypass'):
+                idx = panel.preset_combo.findData(key)
+                self.assertGreaterEqual(idx, 0)
+                panel.preset_combo.setCurrentIndex(idx)
+                pump(30)
+                expected_prof, expected_lufs = preset_profile(key)
+                self.assertEqual(ctrl.profile, expected_prof)
+                self.assertEqual(detect_preset(ctrl.profile, ctrl.target_lufs), key)
+                if isinstance(expected_lufs, int) and key != 'youtube':
+                    self.assertEqual(ctrl.target_lufs, expected_lufs)
+
+            # Changing any single knob flips Quick Preset cleanly to Custom
+            panel.upsample.setCurrentIndex(panel.upsample.findData('max_dac'))
+            pump(30)
+            self.assertEqual(ctrl.profile.upsample, 'max_dac')
+            self.assertEqual(panel.preset_combo.currentData(), 'custom')
 
 
 if __name__ == '__main__':

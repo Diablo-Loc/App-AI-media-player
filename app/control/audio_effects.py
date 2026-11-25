@@ -12,6 +12,7 @@ from core.audio_profile import (
     SCHEMA_VERSION,
     compute_mastering_gain_db,
     resolve_restorer,
+    tone_peak_pad_db,
 )
 from core.audio_effects import (
     AudioPlaybackCache,
@@ -76,8 +77,13 @@ class AudioAnalysisWorker(QThread):
                     'cache_hit': True,
                 }
                 return
-            if not self.profile.normalize and self.profile.output_mode != 'exclusive':
-                # Unnormalized Shared mode only needs stream metadata for restorer/SoXR!
+            if (
+                not self.profile.normalize
+                and not self.profile.youtube_loudness
+                and self.profile.output_mode != 'exclusive'
+                and self.profile.tone == 'off'
+            ):
+                # Unnormalized Shared Bit-Pure/Restorer mode only needs stream metadata!
                 self.result = {
                     'measurement': None,
                     'source_info': source_info,
@@ -85,7 +91,7 @@ class AudioAnalysisWorker(QThread):
                 }
                 return
 
-            if self.profile.normalize:
+            if self.profile.normalize or self.profile.youtube_loudness:
                 duration = float(source_info.get('duration') or 0.0)
                 if duration > 600.0:
                     quick = measure_quick_loudness(
@@ -191,7 +197,13 @@ class AudioEffectsController(QObject):
 
         self.panel = AudioEffectsPanel(window)
         self.panel.set_profile(
-            self.profile.normalize, self.profile.tone, self.profile.restorer, self.profile.output_mode
+            self.profile.normalize,
+            self.profile.tone,
+            self.profile.restorer,
+            self.profile.output_mode,
+            self.profile.upsample,
+            self.profile.youtube_loudness,
+            target_lufs=self.target_lufs,
         )
         self.panel.set_target(self.target_lufs)
         self.panel.level_changed.connect(self.set_target)
@@ -374,20 +386,27 @@ class AudioEffectsController(QObject):
         self._refresh_gain_live()
 
     def _resolve_current_gain(self):
+        pad_db = tone_peak_pad_db(self.profile)
         if self._measurement is not None:
             return compute_mastering_gain_db(
                 self._measurement,
                 self.target_lufs,
                 self.profile.normalize,
                 exclusive=(self.profile.output_mode == 'exclusive'),
+                youtube_loudness=self.profile.youtube_loudness,
+                tone_pad_db=pad_db,
             )
         if self.profile.normalize:
-            return -1.5, False
+            return round(-max(1.5, pad_db), 3), False
+        if self.profile.youtube_loudness:
+            return round(-max(1.0, pad_db), 3), False
         return compute_mastering_gain_db(
             None,
             self.target_lufs,
             False,
             exclusive=(self.profile.output_mode == 'exclusive'),
+            youtube_loudness=False,
+            tone_pad_db=pad_db,
         )
 
     def _refresh_gain_live(self):
@@ -404,16 +423,18 @@ class AudioEffectsController(QObject):
         self._update_signal_path()
 
     def _apply_qt_normalization(self, ramp=True):
-        if self._closed or not self.profile.normalize or self._measurement is None:
+        if self._closed or (not self.profile.normalize and not self.profile.youtube_loudness) or self._measurement is None:
             self.volume_control.set_gain(0.0, ramp)
             return
+        target = -14 if self.profile.youtube_loudness else self.target_lufs
         decision = native_gain(
             self._measurement['lufs'],
             self._measurement['peak_db'],
-            self.target_lufs,
+            target,
             self.volume(),
         )
-        self.volume_control.set_gain(decision.gain_db, ramp)
+        gain_db = min(0.0, decision.gain_db) if self.profile.youtube_loudness else decision.gain_db
+        self.volume_control.set_gain(gain_db, ramp)
 
     def _refresh_subtitles(self, position=None):
         overlay = getattr(self.window, 'sub_layer', None)
@@ -437,7 +458,23 @@ class AudioEffectsController(QObject):
         button_icon(button, 'sliders-horizontal', color=ACCENT if self.profile.enabled else TEXT)
         button.setToolTip('Âm thanh — Studio Engine đang bật' if self.profile.enabled else 'Âm thanh — nguyên bản')
 
-    def set_profile(self, normalize, tone, restorer='off', output_mode='shared'):
+    def _active_status_text(self, info=None) -> str:
+        if self.profile.youtube_loudness:
+            return 'Đang phát Chuẩn YouTube gốc (0 MB ổ cứng · Gợi ý tải: Original / Opus)'
+        st = info if isinstance(info, dict) else self.stream.status_info()
+        if self.profile.upsample != 'off' and int(st.get('sample_rate') or 0) >= 88200:
+            return f'Đang phát Studio Hi-Res {st["sample_rate"] / 1000.0:g} kHz (0 MB ổ cứng)'
+        return 'Đang phát Studio Hi-Fi (0 MB ổ cứng)'
+
+    def set_profile(
+        self,
+        normalize,
+        tone,
+        restorer='off',
+        output_mode='shared',
+        upsample='off',
+        youtube_loudness=False,
+    ):
         if self._closed:
             return
         profile = AudioProfile.from_dict({
@@ -445,13 +482,23 @@ class AudioEffectsController(QObject):
             'tone': tone,
             'restorer': restorer,
             'output_mode': output_mode,
+            'upsample': upsample,
+            'youtube_loudness': youtube_loudness,
         })
         if profile == self.profile:
             return
         old = self.profile
         self.profile = profile
         self._failed_request = None
-        self.panel.set_profile(profile.normalize, profile.tone, profile.restorer, profile.output_mode)
+        self.panel.set_profile(
+            profile.normalize,
+            profile.tone,
+            profile.restorer,
+            profile.output_mode,
+            profile.upsample,
+            profile.youtube_loudness,
+            target_lufs=self.target_lufs,
+        )
         self._save_profile()
         self._update_button()
         self.prefetch.refresh()
@@ -469,18 +516,22 @@ class AudioEffectsController(QObject):
             old.tone != profile.tone
             or old.restorer != profile.restorer
             or old.output_mode != profile.output_mode
+            or old.upsample != profile.upsample
             or not self.stream.is_active()
         )
-        if not need_restart and old.normalize != profile.normalize:
-            if profile.normalize and self._measurement is None:
+        need_measure = profile.normalize or profile.youtube_loudness
+        if not need_restart and (old.normalize != profile.normalize or old.youtube_loudness != profile.youtube_loudness):
+            if need_measure and self._measurement is None:
                 self._queue_latest()
             else:
                 self._refresh_gain_live()
+                if self.stream.is_active():
+                    self.panel.set_status(self._active_status_text())
             return
 
         if self._source_info is not None:
             self._start_or_reconfigure_stream()
-            if profile.normalize and self._measurement is None:
+            if need_measure and self._measurement is None:
                 self._queue_latest()
         else:
             self._queue_latest()
@@ -617,7 +668,7 @@ class AudioEffectsController(QObject):
             elif not self.stream.is_active() and paused:
                 self.panel.set_status('Sẵn sàng phát Studio Hi-Fi')
             else:
-                self.panel.set_status('Đang phát Studio Hi-Fi (0 MB ổ cứng)')
+                self.panel.set_status(self._active_status_text(info))
         except Exception as err:
             logger.warning('Real-time WASAPI stream fallback to Qt native: %s', err)
             self.stream.stop()
@@ -658,7 +709,7 @@ class AudioEffectsController(QObject):
                     self._start_or_reconfigure_stream()
                 else:
                     self._refresh_gain_live()
-                    self.panel.set_status('Đang phát Studio Hi-Fi (0 MB ổ cứng)')
+                    self.panel.set_status(self._active_status_text())
         elif current and worker.error:
             self._failed_request = (worker.source, worker.requested_profile, worker.track)
             if not self.stream.is_active() and self._use_stream_engine():
@@ -766,8 +817,19 @@ class AudioEffectsController(QObject):
             elif self.profile.restorer == 'auto' and info:
                 parts.append('Restorer Bypass (Nguồn cao)')
             if self.profile.tone != 'off':
-                parts.append('Aria 2 PEQ' if self.profile.tone == 'aria2' else f'EQ {self.profile.tone}')
-            if self.profile.normalize:
+                tone_labels = {
+                    'studio_aria2': 'Aria 2 Lab + Studio 30°',
+                    'studio_room': 'Studio Monitor 30°',
+                    'walkman_vivid': 'Walkman/Poweramp EQ',
+                    'aria2': 'Aria 2 PEQ',
+                    'vocal_clear': 'Vocal Clear',
+                    'warm': 'Warm',
+                    'headphones': 'IEM Crossfeed',
+                }
+                parts.append(tone_labels.get(self.profile.tone, f'EQ {self.profile.tone}'))
+            if self.profile.youtube_loudness:
+                parts.append(f'YouTube −14 LUFS ({self._applied_gain_db:+.1f} dB)')
+            elif self.profile.normalize:
                 parts.append(f'{self.target_lufs} LUFS ({self._applied_gain_db:+.1f} dB)')
             dsp_text = ' · '.join(parts)
 
@@ -779,7 +841,13 @@ class AudioEffectsController(QObject):
                 bits = {'float32': '32-bit Float', 'int32': '32-bit', 'int24': '24-bit', 'int16': '16-bit'}.get(
                     st['dtype'], st['dtype']
                 )
-                sr_tag = 'SoXR 28-bit' if st.get('filter_summary', {}).get('resampled', True) else 'Bit-Pure Native'
+                resampled = st.get('filter_summary', {}).get('resampled', False)
+                if resampled and int(st.get('sample_rate') or 0) >= 88200:
+                    sr_tag = 'SoXR 33-bit Hi-Res'
+                elif resampled:
+                    sr_tag = 'SoXR 33-bit'
+                else:
+                    sr_tag = 'Bit-Pure Native'
                 out_text = f'{st["device_name"]} · {mode_label} · {bits}/{st["sample_rate"] / 1000.0:g} kHz · {sr_tag}'
             else:
                 mode_label = 'WASAPI Exclusive' if self.profile.output_mode == 'exclusive' else 'WASAPI Shared'
