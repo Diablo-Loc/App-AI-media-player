@@ -747,9 +747,10 @@ class AudioStreamEngine:
         with self._lock:
             if not self._playing or self._paused:
                 return
+            paused_pos_ms = float(self.position_ms())
             self._op_id += 1
             self._paused = True
-            self._start_ms = float(self.position_ms())
+            self._start_ms = paused_pos_ms
             self._played_frames = 0
             self._last_write_mono = 0.0
         self._stop_active_worker(release_exclusive=True)

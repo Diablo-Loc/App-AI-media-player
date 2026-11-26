@@ -639,6 +639,14 @@ class BugFixesIntegrationTests(unittest.TestCase):
             self.assertFalse(mw.ai_progress_bar.isHidden())
             self.assertIn("Đã huỷ", mw.ai_progress_bar.lbl_status.text())
 
+            # 3. Silent track-switch cancel while running hides the bar cleanly, and stale progress signals after stop do not reopen it
+            mw.ai_progress_bar.start_job("📝 Đang chạy bài A...")
+            ctrl.cancel_current_job(show_notice=False)
+            self.assertTrue(mw.ai_progress_bar.isHidden())
+            ai.is_running = lambda: False
+            ctrl._on_ai_progress(45)
+            self.assertTrue(mw.ai_progress_bar.isHidden())
+
             mw.ai_progress_bar.reset_idle()
         APPLICATION.processEvents()
 
@@ -909,6 +917,41 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         ok2, info2, _ = verify_synced_cues_against_audio(cues, "dummy.wav", prefetched_probe=probe_real_intro)
         self.assertFalse(ok2)
         self.assertEqual(info2["reason"], "onset_mismatch")
+
+    def test_pause_clock_has_zero_latency_jump_and_cover_query_variants_clean(self):
+        from core.audio_stream_engine import AudioStreamEngine
+        from pipeline.fast_lyrics import _lrclib_query_variants
+        from pipeline import lyric_timing as timing
+
+        eng = AudioStreamEngine()
+        eng._playing = True
+        eng._paused = False
+        eng._out_sr = 48000
+        eng._latency_sec = 0.16
+        eng._start_ms = 10000.0
+        eng._played_frames = 48000 * 2  # 2.00s written - 0.16s latency = 1.84s audible -> 11840ms
+        eng._last_write_mono = 0.0
+        before_pause = eng.position_ms()
+        self.assertEqual(before_pause, 11840)
+        eng.pause()
+        after_pause = eng.position_ms()
+        # Must NOT jump forward by +160ms on pause!
+        self.assertEqual(after_pause, 11840)
+
+        # Cover title strips '【歌ってみた】' and builds clean fallback without 'covered by ...'
+        v = _lrclib_query_variants("【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！")
+        self.assertEqual(v[1], "Tell Your World – kz")
+
+        # High-confidence onset word snaps cleanly even when a trailing unstressed word has prob=0.10
+        cues = [{"start": 10.0, "end": 12.2, "text": "See the light"}]
+        cand = {0: [
+            {"start": 10.72, "end": 11.1, "word": "See ", "probability": 0.92},
+            {"start": 11.1, "end": 11.3, "word": "the ", "probability": 0.10},
+            {"start": 11.3, "end": 12.2, "word": "light", "probability": 0.88},
+        ]}
+        aligned, changed = timing.apply_onsets(cues, cand)
+        self.assertEqual(changed, [0])
+        self.assertAlmostEqual(aligned[0]["start"], 10.67, places=2)
 
 
 if __name__ == "__main__":

@@ -33,18 +33,21 @@ def apply_onsets(cues, candidates, duration=None):
             spans = [(float(w["start"]), float(w["end"])) for w in words]
         except (KeyError, TypeError, ValueError):
             continue
+        mean_prob = sum(probabilities) / len(probabilities)
+        min_allowed = .06 if probabilities[0] >= .65 else .15
+        mean_allowed = .62 if probabilities[0] >= .65 else .75
         if (not all(math.isfinite(v) for pair in spans for v in pair)
                 or any(a > b for a, b in spans)
                 or any(a[0] > b[0] or a[1] > b[1] for a, b in zip(spans, spans[1:]))
                 or not all(math.isfinite(p) and 0 <= p <= 1 for p in probabilities)
-                or probabilities[0] < .5 or min(probabilities) < .15
-                or sum(probabilities) / len(probabilities) < .75):
+                or probabilities[0] < .5 or min(probabilities) < min_allowed
+                or mean_prob < mean_allowed):
             continue
         # Reject stretched/shortened readings, instrumental jumps and tiny cues.
         # The candidate may correct an early onset, not shorten an audible tail.
         span = cue["end"] - cue["start"]
         delay = start - (cue["start"] + ONSET_LEAD)
-        limit = min(1.0, span * .25)
+        limit = min(1.0, span * (.38 if probabilities[0] >= .75 else .25))
         following = cues[index + 1]["start"] if index + 1 < len(cues) else float("inf")
         if (.04 <= delay <= limit and abs(end - cue["end"]) <= 1.5
                 and start - ONSET_LEAD < min(cue["end"], following) - .16

@@ -254,6 +254,8 @@ class AppController(QObject):
 
     @Slot(int)
     def _on_ai_progress(self, percent: int):
+        if hasattr(self.ai, "is_running") and not self.ai.is_running():
+            return
         active_id = getattr(self.ai, "_current_media_id", self.current_media_id)
         if active_id is not None and active_id != self.current_media_id:
             return
@@ -263,6 +265,8 @@ class AppController(QObject):
 
     @Slot(str, str)
     def _on_ai_status(self, media_id, message):
+        if hasattr(self.ai, "is_running") and not self.ai.is_running():
+            return
         if media_id == self.current_media_id:
             bar = getattr(self.window, "ai_progress_bar", None)
             if bar is not None:
@@ -330,7 +334,7 @@ class AppController(QObject):
         self.ai.cancel()
         if show_notice and was_running:
             self._fail_ai_progress("⛔ Đã huỷ tạo phụ đề AI", hide_delay_ms=2500)
-        elif not was_running:
+        else:
             self._reset_ai_progress()
 
     # =========================================================

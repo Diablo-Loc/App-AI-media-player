@@ -65,7 +65,8 @@ _VERSION_PENALTY_MARKERS = (
 _TITLE_BRACKET_RE = re.compile(r"[【\[]([^】\]]*)[】\]]|\(([^)]*)\)|（([^）]*)）")
 _NOISE_TITLE_WORDS = frozenset({
     "official", "mv", "pv", "music", "video", "lyric", "lyrics", "audio",
-    "4k", "hd", "fhd", "uhd", "hq", "visualizer", "amv", "full", "ver",
+    "4k", "8k", "hd", "fhd", "qhd", "uhd", "hq", "2160p", "1440p", "1080p", "720p", "480p",
+    "60fps", "30fps", "creditless", "ncop", "nced", "visualizer", "amv", "full", "ver",
     "version", "sub", "vietsub", "engsub", "karaoke", "ost", "op", "ed",
     "theme", "song", "feat", "ft", "prod", "topic",
 })
@@ -450,8 +451,12 @@ def _clean_query_title(raw_title: str) -> str:
 
     def _strip_noise_bracket(match: re.Match) -> str:
         inner = next((g for g in match.groups() if g is not None), "")
-        words = set(re.findall(r"[a-z0-9]+", inner.casefold()))
-        if words and (words & _NOISE_TITLE_WORDS or "music video" in inner.casefold()):
+        low_inner = inner.casefold().strip()
+        words = set(re.findall(r"[a-z0-9]+", low_inner))
+        if (
+            (words and (words & _NOISE_TITLE_WORDS or "music video" in low_inner))
+            or low_inner in {"歌ってみた", "ってみた", "cover", "mv", "pv", "公式"}
+        ):
             return " "
         return match.group(0)
 
@@ -570,21 +575,32 @@ def _bilingual_script_fallback(cleaned_title: str) -> str:
     return ""
 
 
+_COVER_SUFFIX_RE = re.compile(
+    r"\s*(?:[-–—|/｜]\s*)?(?:covered\s+by|cover\s+by|vocal\s*[:：])\s+.+$",
+    re.IGNORECASE,
+)
+
+
 def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
-    """Build at most two clean search queries (handles anime/YouTube/Japanese/bilingual templates)."""
+    """Build at most two clean search queries (handles anime/YouTube/Japanese/cover/bilingual templates)."""
     primary = _clean_query_title(raw_title)
     variants: list[str] = []
     if primary and len(_compact_alnum(primary)) >= 2:
-        cleaned_quotes = re.sub(r"[「」『』]", " ", primary)
+        cleaned_quotes = re.sub(r"[「」『』【】]", " ", primary)
         cleaned_quotes = re.sub(r"\s+", " ", cleaned_quotes).strip()
         variants.append(cleaned_quotes or primary)
-    m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
-    if m:
-        extracted = next((g for g in m.groups() if g is not None), "").strip(" -|｜\"'「」『』")
-        extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
-        if extracted and len(_compact_alnum(extracted)) >= 2 and extracted not in variants:
-            variants.append(extracted)
-    if len(variants) < 2 and primary:
+    # Strip 'covered by ...' credit tail for fallback lookup (raw_title still keeps 'cover' penalty for safety!)
+    cover_stripped = _COVER_SUFFIX_RE.sub("", variants[0] if variants else primary).strip(" -–—|｜")
+    if cover_stripped and cover_stripped != (variants[0] if variants else "") and len(_compact_alnum(cover_stripped)) >= 2:
+        variants.append(cover_stripped)
+    if len(variants) < 2:
+        m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
+        if m:
+            extracted = next((g for g in m.groups() if g is not None), "").strip(" -|｜\"'「」『』")
+            extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
+            if extracted and len(_compact_alnum(extracted)) >= 2 and extracted not in variants:
+                variants.append(extracted)
+    if len(variants) < 2 and variants:
         bilingual = _bilingual_script_fallback(variants[0])
         if bilingual and bilingual not in variants:
             variants.append(bilingual)
