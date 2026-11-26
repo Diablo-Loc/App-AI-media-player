@@ -1291,7 +1291,7 @@ def _language_consensus_probe(model, audio_path, segments, current_language,
 
 
 def audit_primary_intro(model, audio_path, segments, language, language_probability,
-                        cancel_cb=None):
+                        cancel_cb=None, prefetched_probe=None):
     """Audit only the problematic intro while preserving the normal full-song path.
 
     A second full-song decode is allowed only when a long instrumental intro and
@@ -1308,7 +1308,7 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
         "language_rerun": False,
     }
     try:
-        probe = _intro_speech_probe(audio_path)
+        probe = prefetched_probe if prefetched_probe is not None else _intro_speech_probe(audio_path)
     except Exception as error:
         report["error"] = str(error)
         return original, language, report

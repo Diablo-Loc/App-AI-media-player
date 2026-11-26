@@ -435,6 +435,103 @@ class BugFixesIntegrationTests(unittest.TestCase):
             self.assertEqual(len(arr), 32000)
             self.assertAlmostEqual(float(arr.max()), 0.0)
 
+    def test_anime_youtube_lrclib_query_variants(self):
+        from pipeline.fast_lyrics import _lrclib_query_variants
+
+        v1 = _lrclib_query_variants("NTE Akane Rin EP - Morning Star and the Sea")
+        self.assertIn("Morning Star and the Sea", v1)
+        v2 = _lrclib_query_variants("Goblin Slayer Season 2 - Ending Full - -Kasumi no Mukou e- by Yuki Nakashima")
+        self.assertIn("Kasumi no Mukou e", v2)
+
+    def test_audit_primary_intro_reuses_prefetched_probe_without_second_vad_call(self):
+        import numpy as np
+        from pipeline import asr_intro_guard
+
+        probe = {
+            "waveform": np.zeros(16000 * 20, dtype=np.float32),
+            "speech": [(3.0, 15.0)],
+            "confirmed_speech": [(3.0, 15.0)],
+        }
+        seg = SimpleNamespace(
+            start=3.2, end=8.0, text="Opening lyric",
+            words=[SimpleNamespace(start=3.2, end=8.0, word="Opening lyric", probability=0.95)],
+            avg_logprob=-0.2, no_speech_prob=0.05, compression_ratio=1.1,
+        )
+        with mock.patch.object(asr_intro_guard, "_intro_speech_probe", side_effect=AssertionError("Must reuse prefetched_probe!")):
+            out, lang, rep = asr_intro_guard.audit_primary_intro(
+                model=None,
+                audio_path="unused.wav",
+                segments=[seg],
+                language="en",
+                language_probability=0.99,
+                prefetched_probe=probe,
+            )
+        self.assertEqual(len(out), 1)
+        self.assertEqual(lang, "en")
+
+    def test_consume_segments_streams_live_progress_and_cancels_immediately(self):
+        from ai.pipeline import _consume_segments_with_progress
+
+        events = []
+
+        def fake_gen():
+            for i in range(1, 6):
+                yield SimpleNamespace(start=float(i * 10 - 10), end=float(i * 10), text=f"Line {i}")
+
+        segs = _consume_segments_with_progress(
+            fake_gen(), wav_duration=100.0, progress_cb=lambda p, m: events.append((p, m)), cancel_cb=lambda: False
+        )
+        self.assertEqual(len(segs), 5)
+        self.assertGreaterEqual(len(events), 1)
+        self.assertGreaterEqual(events[0][0], 30)
+        self.assertIn("Nhận diện lời", events[0][1])
+
+        # Immediate mid-stream cancel check
+        seen = 0
+
+        def cancelling_gen():
+            nonlocal seen
+            for i in range(1, 10):
+                seen += 1
+                yield SimpleNamespace(start=float(i), end=float(i + 1), text=f"L{i}")
+
+        with self.assertRaises(RuntimeError):
+            _consume_segments_with_progress(
+                cancelling_gen(), wav_duration=20.0, progress_cb=None, cancel_cb=lambda: seen >= 2
+            )
+        self.assertEqual(seen, 2)
+
+    def test_ai_progress_bar_widget_lifecycle_and_cancel_signal(self):
+        from tools.ui_preview import APPLICATION
+        from ui.ai_progress_bar import AIProgressBar
+
+        bar = AIProgressBar()
+        self.addCleanup(bar.deleteLater)
+        self.addCleanup(bar.shutdown)
+        self.assertTrue(bar.isHidden())
+
+        cancelled = []
+        bar.cancel_requested.connect(lambda: cancelled.append(True))
+
+        bar.start_job("🎧 Trích xuất audio...")
+        self.assertFalse(bar.isHidden())
+        self.assertFalse(bar.btn_cancel.isHidden())
+
+        bar.update_progress(45, "📝 Nhận diện lời: 01:15 / 03:00 · 15 câu")
+        self.assertEqual(bar.progress_bar.value(), 45)
+        self.assertEqual(bar.lbl_percent.text(), "45%")
+        self.assertIn("01:15", bar.lbl_status.text())
+
+        bar.btn_cancel.click()
+        self.assertEqual(cancelled, [True])
+
+        bar.finish_job("✨ Phụ đề sẵn sàng (30 câu)", hide_delay_ms=5000)
+        self.assertEqual(bar.progress_bar.value(), 100)
+        self.assertTrue(bar.btn_cancel.isHidden())
+        bar.reset_idle()
+        self.assertTrue(bar.isHidden())
+        APPLICATION.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main()

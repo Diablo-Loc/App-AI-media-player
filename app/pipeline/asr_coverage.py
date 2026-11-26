@@ -668,9 +668,27 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
     _check_cancel(cancel_cb)
     waveform = _load_pcm16_fast(audio_path)
     _check_cancel(cancel_cb)
-    # Local bundled Silero model. Reuse intro-guard default VAD when whole clip <= 60s.
+    # Local bundled Silero model. Reuse intro-guard 0..60s default VAD and only scan tail >60s.
     if prefetched_speech is not None and duration <= 60.0:
         speech = list(prefetched_speech)
+    elif prefetched_speech is not None and duration > 60.0 and len(waveform) > int(58.0 * SAMPLE_RATE):
+        from faster_whisper.vad import get_speech_timestamps
+        tail_offset = 58.0
+        tail_wave = waveform[int(tail_offset * SAMPLE_RATE):]
+        tail_spans = [
+            (tail_offset + span["start"] / SAMPLE_RATE, tail_offset + span["end"] / SAMPLE_RATE)
+            for span in get_speech_timestamps(tail_wave)
+            if tail_offset + span["end"] / SAMPLE_RATE > 60.0
+        ]
+        # Splice cleanly at 60s without duplicating or splitting overlapping spans
+        head_spans = [(s, min(e, 60.0)) for s, e in prefetched_speech if s < 60.0]
+        merged_spans = sorted(head_spans + [(max(60.0, s), e) for s, e in tail_spans], key=lambda x: x[0])
+        speech = []
+        for s, e in merged_spans:
+            if speech and s <= speech[-1][1] + 0.05:
+                speech[-1] = (speech[-1][0], max(speech[-1][1], e))
+            elif e > s:
+                speech.append((s, e))
     else:
         from faster_whisper.vad import get_speech_timestamps
         speech = [(span["start"] / SAMPLE_RATE, span["end"] / SAMPLE_RATE)

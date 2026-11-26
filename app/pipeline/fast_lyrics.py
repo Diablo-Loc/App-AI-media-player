@@ -326,11 +326,11 @@ def find_sidecar_subtitle(media_path: str | Path, media_duration: Optional[float
     return None
 
 
-def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[float] = None) -> Optional[dict]:
-    """Extract an embedded text subtitle track from MKV/MP4/WebM containers (< 0.4s)."""
+def probe_video_duration_and_embedded(media_path: str | Path) -> tuple[Optional[float], Optional[dict]]:
+    """Single combined ffprobe call for video containers (0 ffprobe calls for audio-only)."""
     path = Path(media_path)
     if path.suffix.lower() not in _VIDEO_CONTAINERS or not path.is_file():
-        return None
+        return None, None
 
     try:
         from core.audio_effects import find_tool
@@ -339,26 +339,34 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
     except Exception:
         ffprobe, ffmpeg = "ffprobe", "ffmpeg"
 
+    media_duration = None
+    streams = []
     try:
         probe = subprocess.run(
             [
                 ffprobe, "-v", "error",
-                "-select_streams", "s",
-                "-show_entries", "stream=index,codec_name:stream_disposition=default,forced:stream_tags=language,title",
+                "-show_entries", "format=duration:stream=index,codec_type,codec_name:stream_disposition=default,forced:stream_tags=language,title",
                 "-of", "json",
                 str(path),
             ],
             capture_output=True,
             text=True,
-            timeout=2.5,
+            timeout=2.2,
             creationflags=_no_window_flags(),
         )
-        if probe.returncode != 0 or not probe.stdout.strip():
-            return None
-        payload = json.loads(probe.stdout)
-        streams = payload.get("streams") or []
+        if probe.returncode == 0 and probe.stdout.strip():
+            payload = json.loads(probe.stdout)
+            raw_dur = (payload.get("format") or {}).get("duration")
+            if raw_dur is not None:
+                val = float(raw_dur)
+                if math.isfinite(val) and val > 0:
+                    media_duration = val
+            streams = [
+                st for st in (payload.get("streams") or [])
+                if str(st.get("codec_type") or "").lower() == "subtitle"
+            ]
     except Exception:
-        return None
+        return None, None
 
     candidates = []
     for st in streams:
@@ -376,7 +384,7 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
         candidates.append((0 if is_default else 1, int(st.get("index", 0)), tags))
 
     if not candidates:
-        return None
+        return media_duration, None
 
     candidates.sort(key=lambda item: (item[0], item[1]))
     from ui.subs_ui.subtitle_io import parse_srt_text
@@ -391,7 +399,7 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
                     "-f", "srt", "pipe:1",
                 ],
                 capture_output=True,
-                timeout=4.0,
+                timeout=3.5,
                 creationflags=_no_window_flags(),
             )
             if ext.returncode != 0 or not ext.stdout:
@@ -402,7 +410,7 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
                 full_text = "\n".join(c["text"] for c in cues)
                 tag_lang = str(tags.get("language") or "").lower()[:2]
                 detected = detect_text_language(full_text, fallback=tag_lang or "en")
-                return {
+                return media_duration, {
                     "source": "embedded_sub",
                     "stream_index": stream_index,
                     "cues": cues,
@@ -410,7 +418,13 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
                 }
         except Exception:
             continue
-    return None
+    return media_duration, None
+
+
+def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[float] = None) -> Optional[dict]:
+    """Extract an embedded text subtitle track from MKV/MP4/WebM containers (< 0.4s)."""
+    _, hit = probe_video_duration_and_embedded(media_path)
+    return hit
 
 
 def _clean_query_title(raw_title: str) -> str:
@@ -508,6 +522,69 @@ def _script_compatible(raw_title: str, cues_text: str) -> bool:
     return lyric_cjk >= 8 and lyric_cjk * 3 >= lyric_latin
 
 
+_ANIME_TRACK_EXTRACT_RE = re.compile(
+    r"(?:-\s*-([^-\n]{2,80}?)-(?:\s+by\b|$)|"
+    r"\b(?:EP|OST|Opening(?:\s+Full)?|Ending(?:\s+Full)?|Full\s+(?:Opening|Ending)|OP\d*|ED\d*|Theme)\s*[-:｜|]\s*(.+)$)",
+    re.IGNORECASE,
+)
+
+
+def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
+    """Build at most two clean search queries (handles anime/YouTube title templates)."""
+    primary = _clean_query_title(raw_title)
+    variants: list[str] = []
+    if primary and len(_compact_alnum(primary)) >= 2:
+        variants.append(primary)
+    m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
+    if m:
+        extracted = (m.group(1) or m.group(2) or "").strip(" -|｜\"'「」『』")
+        extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
+        if extracted and len(_compact_alnum(extracted)) >= 3 and extracted not in variants:
+            variants.append(extracted)
+    return tuple(variants[:2])
+
+
+def fetch_lrclib_items(
+    song_title_raw: str,
+    *,
+    timeout: float = 2.2,
+    http_get=None,
+) -> tuple[list[dict], str, str]:
+    """Pure HTTP lookup against LRCLIB (designed to run in parallel with FFmpeg WAV extraction).
+
+    Returns (items, effective_query_used, status_reason).
+    """
+    variants = _lrclib_query_variants(song_title_raw)
+    if not variants:
+        return [], "", "empty_query"
+
+    getter = http_get
+    if getter is None:
+        import requests
+        getter = requests.get
+
+    last_reason = "no_results"
+    for query in variants:
+        try:
+            resp = getter(
+                _LRCLIB_SEARCH_URL,
+                params={"q": query},
+                headers={"User-Agent": _LRCLIB_USER_AGENT, "Accept": "application/json"},
+                timeout=timeout,
+            )
+            status = getattr(resp, "status_code", 200)
+            if status != 200:
+                last_reason = f"http_{status}"
+                continue
+            items = resp.json()
+            if isinstance(items, list) and items:
+                return items, query, "ok"
+            last_reason = "no_results"
+        except Exception as err:
+            return [], query, f"request_error:{type(err).__name__}"
+    return [], variants[0], last_reason
+
+
 def verify_synced_cues_against_audio(
     cues: list[dict],
     wav_path: str | Path,
@@ -515,38 +592,40 @@ def verify_synced_cues_against_audio(
     max_onset_diff_s: float = 1.25,
     min_voiced_ratio: float = 0.55,
     vad_probe_fn: Optional[Callable[[str | Path], Optional[dict]]] = None,
-) -> tuple[bool, dict[str, Any]]:
+    prefetched_probe: Optional[dict] = None,
+) -> tuple[bool, dict[str, Any], Optional[dict]]:
     """Cross-check synced lyric timestamps against actual audio vocals using bundled Silero VAD.
 
-    Prevents the classic "same duration, shifted MV intro" trap (e.g. +3s studio logo
-    and -3s early fade yields 0.0s duration diff while every line is 3s out of sync).
+    Returns (verified_ok, diagnostic_info, probe_dict) so callers can reuse `probe_dict`
+    directly inside `audit_primary_intro` without ever running Silero VAD twice.
     """
     info: dict[str, Any] = {"verified": False}
     if not cues or len(cues) < 3:
         info["reason"] = "too_few_cues"
-        return False, info
+        return False, info, prefetched_probe
 
-    try:
-        if vad_probe_fn is not None:
-            probe = vad_probe_fn(wav_path)
-        else:
-            from pipeline.asr_intro_guard import _intro_speech_probe
-            probe = _intro_speech_probe(wav_path)
-    except Exception as err:
-        info["reason"] = f"vad_error:{type(err).__name__}"
-        return False, info
+    probe = prefetched_probe
+    if probe is None:
+        try:
+            if vad_probe_fn is not None:
+                probe = vad_probe_fn(wav_path)
+            else:
+                from pipeline.asr_intro_guard import _intro_speech_probe
+                probe = _intro_speech_probe(wav_path)
+        except Exception as err:
+            info["reason"] = f"vad_error:{type(err).__name__}"
+            return False, info, None
 
     if not probe:
         info["reason"] = "no_probe"
-        return False, info
+        return False, info, None
 
     speech = probe.get("speech") or []
     confirmed = probe.get("confirmed_speech") or speech
     if not speech:
         info["reason"] = "no_speech_detected"
-        return False, info
+        return False, info, probe
 
-    # Find first meaningful vocal onset (>= 0.35s island) in the probed first 60s.
     first_vad = None
     for s, e in sorted(confirmed):
         if e - s >= 0.35:
@@ -559,13 +638,12 @@ def verify_synced_cues_against_audio(
                 break
     if first_vad is None:
         info["reason"] = "no_sustained_vocal"
-        return False, info
+        return False, info, probe
 
-    # First cue inside the probed 60s window
     probed_cues = [c for c in cues if float(c["start"]) < 58.0]
     if not probed_cues:
         info["reason"] = "no_cues_in_probe_window"
-        return False, info
+        return False, info, probe
 
     first_lrc = float(probed_cues[0]["start"])
     onset_diff = abs(first_lrc - first_vad)
@@ -575,9 +653,8 @@ def verify_synced_cues_against_audio(
 
     if onset_diff > max_onset_diff_s:
         info["reason"] = "onset_mismatch"
-        return False, info
+        return False, info, probe
 
-    # Verify voiced overlap across the first up to 6 cues in the probed window.
     sample = probed_cues[:6]
     voiced_hits = 0
     for cue in sample:
@@ -591,34 +668,24 @@ def verify_synced_cues_against_audio(
 
     if ratio < min_voiced_ratio:
         info["reason"] = "low_voiced_overlap"
-        return False, info
+        return False, info, probe
 
     info["verified"] = True
     info["reason"] = "ok"
-    return True, info
+    return True, info, probe
 
 
-def lookup_lrclib(
+def evaluate_lrclib_items(
     song_title_raw: str,
-    media_duration: Optional[float] = None,
+    items: list[dict],
     *,
+    effective_query: str = "",
+    fetch_reason: str = "ok",
+    media_duration: Optional[float] = None,
     wav_path: Optional[str | Path] = None,
-    timeout: float = 4.0,
-    http_get=None,
     vad_probe_fn=None,
 ) -> dict[str, Any]:
-    """Query LRCLIB.net with zero API keys and strict dual verification.
-
-    Returns a dict:
-        {
-            "synced_cues": list[dict] | None,
-            "plain_lyrics": str | None,
-            "language": str | None,
-            "track_name": str,
-            "artist_name": str,
-            "verification": dict,
-        }
-    """
+    """Score & dual-verify prefetched LRCLIB items (reuses single VAD probe if invoked)."""
     result: dict[str, Any] = {
         "synced_cues": None,
         "plain_lyrics": None,
@@ -626,40 +693,23 @@ def lookup_lrclib(
         "track_name": "",
         "artist_name": "",
         "verification": {},
+        "vad_probe": None,
     }
-    query = _clean_query_title(song_title_raw)
-    if not query or len(_compact_alnum(query)) < 2:
+    if not items:
+        result["verification"] = {"reason": fetch_reason}
         return result
 
-    getter = http_get
-    if getter is None:
-        import requests
-        getter = requests.get
-
-    try:
-        resp = getter(
-            _LRCLIB_SEARCH_URL,
-            params={"q": query},
-            headers={"User-Agent": _LRCLIB_USER_AGENT, "Accept": "application/json"},
-            timeout=timeout,
-        )
-        status = getattr(resp, "status_code", 200)
-        if status != 200:
-            result["verification"] = {"reason": f"http_{status}"}
-            return result
-        items = resp.json()
-        if not isinstance(items, list) or not items:
-            result["verification"] = {"reason": "no_results"}
-            return result
-    except Exception as err:
-        result["verification"] = {"reason": f"request_error:{type(err).__name__}"}
-        return result
-
+    match_title = effective_query or song_title_raw
     scored = []
     for item in items[:12]:
         if not isinstance(item, dict) or item.get("instrumental"):
             continue
-        score, dur_diff = _score_lrclib_candidate(song_title_raw, item, media_duration)
+        s1, d1 = _score_lrclib_candidate(song_title_raw, item, media_duration)
+        if match_title != song_title_raw:
+            s2, d2 = _score_lrclib_candidate(match_title, item, media_duration)
+            score, dur_diff = (s2, d2) if s2 > s1 else (s1, d1)
+        else:
+            score, dur_diff = s1, d1
         scored.append((score, dur_diff, item))
 
     if not scored:
@@ -675,7 +725,6 @@ def lookup_lrclib(
         reverse=True,
     )
 
-    # First collect the best clean plain_lyrics reference (even if duration doesn't match for sync!)
     for score, dur_diff, item in scored:
         if score < 0.35:
             break
@@ -689,7 +738,7 @@ def lookup_lrclib(
             result["artist_name"] = str(item.get("artistName") or "")
             break
 
-    # Now evaluate synced candidates with strict dual verification.
+    cached_probe = None
     for score, dur_diff, item in scored[:3]:
         synced_raw = str(item.get("syncedLyrics") or "").strip()
         if not synced_raw:
@@ -713,7 +762,13 @@ def lookup_lrclib(
             result["verification"] = {"reason": "script_mismatch"}
             continue
         if wav_path is not None:
-            ok, vad_info = verify_synced_cues_against_audio(cues, wav_path, vad_probe_fn=vad_probe_fn)
+            ok, vad_info, cached_probe = verify_synced_cues_against_audio(
+                cues,
+                wav_path,
+                vad_probe_fn=vad_probe_fn,
+                prefetched_probe=cached_probe,
+            )
+            result["vad_probe"] = cached_probe
             vad_info["score"] = round(score, 3)
             vad_info["duration_diff"] = round(dur_diff, 2)
             result["verification"] = vad_info
@@ -736,3 +791,29 @@ def lookup_lrclib(
         return result
 
     return result
+
+
+def lookup_lrclib(
+    song_title_raw: str,
+    media_duration: Optional[float] = None,
+    *,
+    wav_path: Optional[str | Path] = None,
+    timeout: float = 2.2,
+    http_get=None,
+    vad_probe_fn=None,
+) -> dict[str, Any]:
+    """Query LRCLIB.net with zero API keys and strict dual verification."""
+    items, effective_query, reason = fetch_lrclib_items(
+        song_title_raw,
+        timeout=timeout,
+        http_get=http_get,
+    )
+    return evaluate_lrclib_items(
+        song_title_raw,
+        items,
+        effective_query=effective_query,
+        fetch_reason=reason,
+        media_duration=media_duration,
+        wav_path=wav_path,
+        vad_probe_fn=vad_probe_fn,
+    )

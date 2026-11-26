@@ -109,7 +109,7 @@ def _align_window(model, tokenizer, audio, left, right, tokens, ranges):
             for a, b in ranges]
 
 
-def align_lyric_onsets(model, audio_path, language, cues, cancel_cb=None, budget_s=15.0):
+def align_lyric_onsets(model, audio_path, language, cues, cancel_cb=None, budget_s=15.0, progress_cb=None):
     """One bounded local alignment pass; failure/cap keeps unprocessed cue times."""
     report = dict(changed=0, windows=0, errors=0, capped=False, seconds=0.0)
     tick = time.monotonic()
@@ -134,12 +134,17 @@ def align_lyric_onsets(model, audio_path, language, cues, cancel_cb=None, budget
                     or audio.getframerate() != rate or audio.getcomptype() != "NONE"):
                 raise ValueError("Unexpected intermediate audio format")
             duration = audio.getnframes() / rate
-            for left, right, indices, tokens, ranges in _windows(cues, tokenizer, duration):
+            planned = list(_windows(cues, tokenizer, duration))
+            total_windows = max(1, len(planned))
+            for idx_w, (left, right, indices, tokens, ranges) in enumerate(planned, start=1):
                 check_cancel()
                 if time.monotonic() - tick >= budget_s:
                     report["capped"] = True
                     break
                 report["windows"] += 1
+                if progress_cb:
+                    pct = 58 + int((idx_w / float(total_windows)) * 10)
+                    progress_cb(pct, f"⏱ Căn mốc lời hát ({idx_w}/{total_windows})...")
                 try:
                     words = _align_window(model, tokenizer, audio, left, right, tokens, ranges)
                     if len(words) != len(indices):

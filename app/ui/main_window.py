@@ -189,8 +189,11 @@ class MainWindow(QMainWindow):
         self._sub_clock_timer.timeout.connect(self._tick_subtitle_clock)
         self.media_player.player.positionChanged.connect(self._on_player_position_for_sub)
         
-        # --- 3. SETUP CONTROLS (PlaybackBar) ---
+        # --- 3. SETUP CONTROLS (PlaybackBar & AI Progress Strip) ---
         self.playback_bar = PlaybackBar(self)
+        from ui.ai_progress_bar import AIProgressBar
+        self.ai_progress_bar = AIProgressBar(self)
+        self.ai_progress_bar.cancel_requested.connect(self._on_ai_cancel_clicked)
 
         # --- 4. SETUP SETTINGS PANEL ---
         self.subsettings_panel = SettingsPanel(self) # Đổi tên thống nhất là settings_panel
@@ -437,6 +440,8 @@ class MainWindow(QMainWindow):
                 self._sidebar_timer.stop()
             if hasattr(self, "_sub_clock_timer") and self._sub_clock_timer:
                 self._sub_clock_timer.stop()
+            if hasattr(self, "ai_progress_bar") and self.ai_progress_bar:
+                self.ai_progress_bar.shutdown()
 
             if hasattr(self, '_folder_scan_queue'):
                 self._folder_scan_queue.shutdown()
@@ -681,12 +686,13 @@ class MainWindow(QMainWindow):
         self.main_area_layout.addWidget(self.browser_widget, 0, 0)
         self.main_area_layout.addWidget(self.video_container, 0, 0)
 
-        # Thêm Main Area và Playback Bar vào Root
+        # Thêm Main Area, Playback Bar và Thanh tiến trình AI (ẩn khi rảnh) vào Root
         self.root_layout.addWidget(self.main_area)
         self.root_layout.addWidget(self.playback_bar)
+        self.root_layout.addWidget(self.ai_progress_bar)
 
         self._overlay_input_guard = OverlayInputGuard(self, self.sub_layer, (
-            self.playback_bar, self.sidebar_container, self.vol_popup,
+            self.playback_bar, self.ai_progress_bar, self.sidebar_container, self.vol_popup,
             self.subsettings_panel, self.playback_bar.info_popup,
         ))
 
@@ -815,6 +821,11 @@ class MainWindow(QMainWindow):
                 timer.stop()
             return
         sub.update_position(self.authoritative_subtitle_position_ms())
+
+    def _on_ai_cancel_clicked(self):
+        ctrl = getattr(self, 'app_controller', None)
+        if ctrl is not None and hasattr(ctrl, 'cancel_current_job'):
+            ctrl.cancel_current_job()
 
     def handle_media_status(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
@@ -1402,6 +1413,8 @@ class MainWindow(QMainWindow):
             self.sidebar.show()
             self.update_video_location("large")
             self.playback_bar.show()
+            if hasattr(self, "ai_progress_bar") and self.ai_progress_bar._state != "idle":
+                self.ai_progress_bar.show()
             self.setCursor(Qt.ArrowCursor)
             self.playback_bar.update_fullscreen_icon(False)
             self.mouse_hide_timer.stop()
@@ -1419,6 +1432,8 @@ class MainWindow(QMainWindow):
     def show_controls(self):
         if self.playback_bar.isHidden():
             self.playback_bar.show()
+            if hasattr(self, "ai_progress_bar") and self.ai_progress_bar._state != "idle":
+                self.ai_progress_bar.show()
             self.setCursor(Qt.CursorShape.ArrowCursor)
             
             # [SỬA] Gọi hàm đồng bộ thay vì set cứng
@@ -1436,6 +1451,8 @@ class MainWindow(QMainWindow):
             return
             
         self.playback_bar.hide()
+        if hasattr(self, "ai_progress_bar") and self.ai_progress_bar.isVisible():
+            self.ai_progress_bar.hide()
         self.setCursor(Qt.CursorShape.BlankCursor)
         self.mouse_hide_timer.stop() 
         

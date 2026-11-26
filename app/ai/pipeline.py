@@ -60,6 +60,38 @@ def _check_cancel(cancel_cb):
 def _report(progress_cb, percent: int, msg: str):
     if progress_cb:
         progress_cb(percent, msg)
+
+
+def _fmt_mmss(seconds: float) -> str:
+    total = max(0, int(seconds))
+    m, s = divmod(total, 60)
+    return f"{m:02d}:{s:02d}"
+
+
+def _consume_segments_with_progress(segments_generator, wav_duration, progress_cb, cancel_cb):
+    """Stream Whisper segments with live 30%..50% progress & immediate cancel responsiveness."""
+    segments_list = []
+    monotonic = getattr(time, "monotonic", None)
+    last_emit = 0.0
+    for seg in segments_generator:
+        _check_cancel(cancel_cb)
+        segments_list.append(seg)
+        if progress_cb:
+            now = monotonic() if callable(monotonic) else (last_emit + 0.35)
+            if now - last_emit >= 0.35:
+                last_emit = now
+                seg_end = float(getattr(seg, "end", 0.0) or 0.0)
+                if wav_duration and wav_duration > 0:
+                    ratio = min(1.0, max(0.0, seg_end / wav_duration))
+                    pct = 30 + int(ratio * 20)
+                    _report(
+                        progress_cb,
+                        pct,
+                        f"📝 Nhận diện lời: {_fmt_mmss(seg_end)} / {_fmt_mmss(wav_duration)} · {len(segments_list)} câu",
+                    )
+                else:
+                    _report(progress_cb, 38, f"📝 Nhận diện lời: {len(segments_list)} câu...")
+    return segments_list
         
 # Hàm làm sạch tên file
 def sanitize_filename(name):
@@ -131,27 +163,28 @@ def run_ai_pipeline(
 
     temp_wav_path = None
     lrclib_reference_lyric = None
+    lrc_vad_probe = None
+    wav_duration = None
     used_fast_lyrics = False
     final_segments = None
     detected_lang = "en"
     coverage = {}
     try:
         # ============================================================
-        # 0️⃣ FAST-PATH PRE-ASR WATERFALL (Sidecar / Embedded / LRCLIB)
+        # 0️⃣ FAST-PATH PRE-ASR WATERFALL (Sidecar / Embedded / Parallel LRCLIB)
         # ============================================================
         if fast_lyrics_enabled:
             from pipeline.fast_lyrics import (
-                extract_embedded_subtitle,
                 find_sidecar_subtitle,
-                lookup_lrclib,
-                probe_media_duration,
+                probe_video_duration_and_embedded,
             )
             _report(progress_cb, 4, "⚡ Kiểm tra phụ đề có sẵn...")
             _check_cancel(cancel_cb)
-            media_duration = probe_media_duration(input_path)
+            # Single ffprobe only for video containers; 0 ffprobe for audio-only files!
+            media_duration, embedded_hit = probe_video_duration_and_embedded(input_path)
             local_hit = find_sidecar_subtitle(input_path, media_duration=media_duration)
             if local_hit is None:
-                local_hit = extract_embedded_subtitle(input_path, media_duration=media_duration)
+                local_hit = embedded_hit
             if local_hit is not None:
                 final_segments = local_hit["cues"]
                 detected_lang = local_hit["language"]
@@ -164,28 +197,55 @@ def run_ai_pipeline(
 
         if not used_fast_lyrics:
             # ============================================================
-            # 1️⃣ EXTRACT AUDIO (DÙNG TEMP FILE MANAGER)
+            # 1️⃣ EXTRACT AUDIO SONG SONG VỚI TRA CỨU LRCLIB (0 ms độ trễ mạng!)
             # ============================================================
-            _report(progress_cb, 6, "🎧 Trích xuất audio")
+            should_query_lrclib = bool(fast_lyrics_enabled and not dialogue and is_connected())
+            _report(
+                progress_cb,
+                8,
+                "🎧 Trích xuất audio & tra cứu LRCLIB song song..." if should_query_lrclib else "🎧 Trích xuất audio...",
+            )
             _check_cancel(cancel_cb)
 
             temp_wav_path = TempFileManager.create_unique_path()
-            success = extract_audio(str(input_path), str(temp_wav_path))
+            lrc_fetch_result = ([], "", "skipped")
+
+            if should_query_lrclib:
+                from concurrent.futures import ThreadPoolExecutor
+                from pipeline.fast_lyrics import fetch_lrclib_items
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    fut_extract = pool.submit(extract_audio, str(input_path), str(temp_wav_path))
+                    fut_lrclib = pool.submit(fetch_lrclib_items, song_title_raw, timeout=2.2)
+                    success = fut_extract.result()
+                    try:
+                        lrc_fetch_result = fut_lrclib.result(timeout=2.5)
+                    except Exception:
+                        lrc_fetch_result = ([], "", "timeout")
+            else:
+                success = extract_audio(str(input_path), str(temp_wav_path))
+
             if not success:
                 raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
 
-            # Tầng 2 Fast-Path: LRCLIB xác thực kép (Metadata + Thời lượng <=2s + Silero VAD onset/overlap)
-            if fast_lyrics_enabled and not dialogue and is_connected():
-                from pipeline.fast_lyrics import lookup_lrclib, probe_media_duration
-                _report(progress_cb, 10, "🌐 Tìm & xác thực lời chuẩn LRCLIB...")
+            from pipeline.fast_lyrics import probe_media_duration
+            wav_duration = probe_media_duration(temp_wav_path)
+
+            # Đánh giá kết quả LRCLIB (nếu đã lấy được ứng viên) — xác thực kép Silero VAD
+            lrc_items, lrc_eff_query, lrc_reason = lrc_fetch_result
+            if should_query_lrclib and lrc_items:
+                from pipeline.fast_lyrics import evaluate_lrclib_items
+                _report(progress_cb, 12, "🔎 Xác thực mốc giọng hát LRCLIB...")
                 _check_cancel(cancel_cb)
-                wav_duration = probe_media_duration(temp_wav_path)
-                lrc_res = lookup_lrclib(
+                lrc_res = evaluate_lrclib_items(
                     song_title_raw,
+                    lrc_items,
+                    effective_query=lrc_eff_query,
+                    fetch_reason=lrc_reason,
                     media_duration=wav_duration,
                     wav_path=temp_wav_path,
                 )
                 lrclib_reference_lyric = lrc_res.get("plain_lyrics")
+                lrc_vad_probe = lrc_res.get("vad_probe")
                 if lrc_res.get("synced_cues"):
                     final_segments = lrc_res["synced_cues"]
                     detected_lang = lrc_res.get("language") or "en"
@@ -285,13 +345,17 @@ def run_ai_pipeline(
                     )
                 detected_lang = info.language
                 print(f"📡 Ngôn ngữ phát hiện: {detected_lang} ({info.language_probability*100:.1f}%)")
-                segments_list = list(segments_generator)
+                _report(progress_cb, 30, f"📝 Nhận diện lời ({detected_lang.upper()})...")
+                segments_list = _consume_segments_with_progress(
+                    segments_generator, wav_duration, progress_cb, cancel_cb
+                )
                 language_probability = getattr(info, "language_probability", 0.0)
 
             except Exception as e:
                 # Xử lý lỗi tràn VRAM
                 if "cuda" in str(e).lower():
                     print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
+                    _report(progress_cb, 26, "⚠️ Tràn VRAM, chuyển sang CPU...")
                     del model
                     torch.cuda.empty_cache()
                     model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
@@ -304,7 +368,9 @@ def run_ai_pipeline(
                             str(temp_wav_path), **transcription_options())
                     else:
                         segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
-                    segments_list = list(segments_generator)
+                    segments_list = _consume_segments_with_progress(
+                        segments_generator, wav_duration, progress_cb, cancel_cb
+                    )
                     detected_lang = fallback_info.language
                     language_probability = getattr(fallback_info, "language_probability", 0.0)
                 else:
@@ -315,6 +381,7 @@ def run_ai_pipeline(
             # intro can trigger filtering or a strongly justified language re-run.
             intro_report = {}
             if not dialogue:
+                _report(progress_cb, 52, "🛡 Kiểm tra đoạn đầu bài...")
                 segments_list, detected_lang, intro_report = audit_primary_intro(
                     model,
                     temp_wav_path,
@@ -322,6 +389,7 @@ def run_ai_pipeline(
                     detected_lang,
                     language_probability,
                     cancel_cb=cancel_cb,
+                    prefetched_probe=lrc_vad_probe,
                 )
             if intro_report.get("removed"):
                 first_voice = intro_report.get("first_voice")
@@ -429,9 +497,10 @@ def run_ai_pipeline(
                         )
                     from pipeline.lyric_timing import align_lyric_onsets
                     _check_cancel(cancel_cb)
-                    _report(progress_cb, 58, "⏱ Căn mốc lời hát")
+                    _report(progress_cb, 58, "⏱ Căn mốc lời hát...")
                     final_segments, timing_report = align_lyric_onsets(
-                        model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)
+                        model, temp_wav_path, detected_lang, final_segments,
+                        cancel_cb=cancel_cb, progress_cb=progress_cb)
                     print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
                           f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
                     if timing_report["errors"] or timing_report["capped"]:

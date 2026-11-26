@@ -56,6 +56,8 @@ class AppController(QObject):
         self.ai.job_finished.connect(self._on_ai_done)
         self.ai.job_failed.connect(self._on_ai_failed)
         self.ai.status_changed.connect(self._on_ai_status)
+        if hasattr(self.ai, "progress_updated"):
+            self.ai.progress_updated.connect(self._on_ai_progress)
 
         logger.info("✅ AppController initialized")
     
@@ -164,6 +166,7 @@ class AppController(QObject):
         # TRƯỜNG HỢP 1: Bị ép chạy lại (Reload Button)
         if force_gen:
             logger.info(f"⚡ FORCE GEN: Bỏ qua cache, bắt buộc chạy lại AI cho {media_id}")
+            self._start_ai_progress("🤖 Đang tạo lại phụ đề...")
             self._show_status("🤖 Đang tạo lại phụ đề (Force Mode)...")
             self.ai.start(
                 media_id=media_id,
@@ -176,6 +179,7 @@ class AppController(QObject):
 
         if result.status == SubtitleStatus.READY:
             logger.info("📄 Subtitle READY → load")
+            self._reset_ai_progress()
             if self._load_subtitle_to_ui(media_id) is False:
                 self._show_status("ℹ️ Chưa nhận diện được lời (có thể là nhạc không lời).")
             else:
@@ -183,6 +187,7 @@ class AppController(QObject):
             return
 
         if result.status == SubtitleStatus.NEED_AI:
+            self._start_ai_progress("🤖 Đang khởi tạo phụ đề AI...")
             self._show_status("🤖 Đang tạo phụ đề AI...")
             self.ai.start(
                 media_id=media_id,
@@ -224,9 +229,13 @@ class AppController(QObject):
         # ===== 3. LOAD VÀO UI =====
         self._load_subtitle_to_ui(media_id)
         if segments:
-            self._show_status("✨ Phụ đề AI sẵn sàng")
+            done_msg = f"✨ Phụ đề sẵn sàng ({len(segments)} câu)"
+            self._finish_ai_progress(done_msg)
+            self._show_status(done_msg)
         else:
-            self._show_status("ℹ️ Đã lưu kết quả rỗng: chưa nhận diện được lời.")
+            empty_msg = "ℹ️ Đã lưu kết quả rỗng: chưa nhận diện được lời."
+            self._finish_ai_progress(empty_msg)
+            self._show_status(empty_msg)
 
         # ===== CLEAN GPU =====
         gc.collect()
@@ -240,12 +249,42 @@ class AppController(QObject):
         if media_id != self.current_media_id:
             return
         logger.error(f"❌ AI lỗi: {error}")
+        self._fail_ai_progress(f"❌ AI lỗi: {error}")
         self._show_status(f"❌ AI lỗi: {error}")
+
+    @Slot(int)
+    def _on_ai_progress(self, percent: int):
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is not None:
+            bar.update_progress(percent)
 
     @Slot(str, str)
     def _on_ai_status(self, media_id, message):
         if media_id == self.current_media_id:
+            bar = getattr(self.window, "ai_progress_bar", None)
+            if bar is not None:
+                bar.update_message(message)
             self._show_status(message)
+
+    def _start_ai_progress(self, message: str):
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is not None:
+            bar.start_job(message)
+
+    def _finish_ai_progress(self, message: str):
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is not None:
+            bar.finish_job(message)
+
+    def _fail_ai_progress(self, message: str):
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is not None:
+            bar.fail_job(message)
+
+    def _reset_ai_progress(self):
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is not None:
+            bar.reset_idle()
 
     # =========================================================
     # SUBTITLE → UI
@@ -281,6 +320,7 @@ class AppController(QObject):
     # =========================================================
     def cancel_current_job(self):
         self.ai.cancel()
+        self._fail_ai_progress("⛔ Đã huỷ tạo phụ đề AI", hide_delay_ms=2500)
 
     # =========================================================
     # CLEAN EXIT
