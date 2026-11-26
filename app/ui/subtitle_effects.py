@@ -531,7 +531,22 @@ class SubtitleEffects(QObject):
             return
         changed = cue != self.cue
         seek = self.last_ms is not None and (pts_ms < self.last_ms or pts_ms - self.last_ms > 500)
-        if changed and not seek and self.cue is not None and self._sprite is not None and self.options['entrance'] in CHOREO_EXIT_MODES and self.label.isVisible():
+        fade_anim = getattr(self.label, 'fade_anim', None)
+        already_fading_out = bool(
+            fade_anim is not None
+            and fade_anim.state() == QAbstractAnimation.State.Running
+            and fade_anim.endValue() == 0.0
+            and float(getattr(self.label, '_opacity', 1.0)) < 0.90
+        )
+        if (
+            changed
+            and not seek
+            and not already_fading_out
+            and self.cue is not None
+            and self._sprite is not None
+            and self.options['entrance'] in CHOREO_EXIT_MODES
+            and self.label.isVisible()
+        ):
             sp = self._sprite
             origin = QPointF(self._sprite_origin)
             dpr = max(1.0, float(sp.devicePixelRatio()))
@@ -555,7 +570,7 @@ class SubtitleEffects(QObject):
                         'tiles': tiles,
                         'bounds': sp_bounds,
                     }
-        elif seek:
+        elif seek or already_fading_out:
             self._exit_ghost = None
         self.cue, self.last_ms = cue, pts_ms
         self._sync_particles(pts_ms, reset_smooth=(changed or seek or force))
@@ -1082,8 +1097,8 @@ class SubtitleEffects(QObject):
         mode = self.options['entrance']
         drew_blackhole_portal = False
         if self._exit_ghost is not None:
-            if p < 0.60:
-                out_p = p / 0.60
+            if p < 0.38:
+                out_p = p / 0.38
                 ghost = self._exit_ghost
                 g_mode = ghost.get('mode')
                 if g_mode == 'vfx_supernova_shatter':

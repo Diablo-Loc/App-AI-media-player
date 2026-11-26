@@ -964,36 +964,84 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         self.assertEqual(changed, [0])
         self.assertAlmostEqual(aligned[0]["start"], 10.67, places=2)
 
-    def test_lrc_breath_gaps_and_whisper_vocal_breath_preservation_prevent_cue_chaining(self):
-        from pipeline.fast_lyrics import parse_lrc_text, preserve_vocal_breath_gaps
-        from pipeline.lyric_refinement import finalize_display_times
+    def test_acoustic_lrc_ends_micro_gap_hygiene_and_zero_double_exit_strobe(self):
+        from PySide6.QtCore import QAbstractAnimation
+        from tools.ui_preview import APPLICATION
+        from subtitle.mode import SubtitleMode
+        from ui.subs_ui.subtitle_layer import SubtitleLayer
+        from ui.subtitle_studio import STUDIO_PROFILES
+        from pipeline.fast_lyrics import (
+            parse_lrc_text,
+            refine_lrc_ends_with_audio,
+            close_flicker_micro_gaps,
+        )
 
-        # 1. Start-only LRC lines (Brand New Sky pattern) leave natural breathing gaps instead of 0ms chaining
-        bns_lrc = (
+        # 1. Start-only LRC never chops sustained vocals early and never creates <550ms flicker micro-gaps
+        lrc = (
+            "[00:02.33]Ah-ah, ah-ah\n"
+            "[00:08.77]Ah-ah, ah-ah, ah-ah\n"
             "[00:38.97]If I fall, let it be forward\n"
             "[00:42.06]If I break, let there be light\n"
-            "[00:63.18]We keep moving\n".replace("[00:63.18]", "[01:03.18]")
-            + "[01:06.45]We keep it when I'm standing still\n"
+            "[01:24.75]The sign is lining up like it's calling me to you\n"
+            "[01:34.23]Ah-ah, ah-ah\n"
         )
-        cues = parse_lrc_text(bns_lrc, media_duration=120.0)
-        self.assertEqual(len(cues), 4)
-        # Normal 3s line leaves >=200ms breath before next cue
-        self.assertGreaterEqual(cues[1]["start"] - cues[0]["end"], 0.20)
-        # Short 3-word phrase 'We keep moving' (63.18..66.45) finishes around ~2.03s instead of hanging 3.27s
-        self.assertLessEqual(cues[2]["end"] - cues[2]["start"], 2.15)
-        self.assertGreaterEqual(cues[3]["start"] - cues[2]["end"], 1.10)
+        parsed = parse_lrc_text(lrc, media_duration=120.0)
+        self.assertEqual(len(parsed), 6)
+        # No cue may ever land in the forbidden (0, 0.55s) blink/flicker zone!
+        for a, b in zip(parsed, parsed[1:]):
+            gap = b["start"] - a["end"]
+            self.assertTrue(gap == 0.0 or gap >= 0.55, f"Forbidden micro-gap {gap}s between {a} and {b}")
 
-        # 2. Whisper acoustic breath gaps (>=120ms) survive finalize_display_times without 0ms tail glue
-        acoustic = [
-            {"start": 10.0, "end": 12.40, "text": "Every step feels paper-thin"},
-            {"start": 12.75, "end": 15.20, "text": "But the ground is holding me"},
-            # Continuous singing (<120ms gap) keeps seamless touching transition
-            {"start": 15.25, "end": 17.50, "text": "I will let it be"},
+        # 2. Acoustic VAD refinement holds sustained notes (2.33..8.23s) and trims real instrumental solos (84.75..94.23s)!
+        vad_spans = [
+            (2.5, 8.25),    # sustained vocalise 'Ah-ah, ah-ah' -> must NOT chop at 4.3s!
+            (8.8, 14.9),    # second vocalise -> stays full
+            (38.9, 89.6),   # continuous singing through 89.6s, then 4.6s pure instrumental solo until 94.23s!
+            (94.2, 100.0),
         ]
-        disp = finalize_display_times(acoustic, cjk=False, duration=30.0)
-        spaced = preserve_vocal_breath_gaps(acoustic, disp)
-        self.assertGreaterEqual(spaced[1]["start"] - spaced[0]["end"], 0.16)
-        self.assertEqual(spaced[2]["start"] - spaced[1]["end"], 0.0)
+        refined = refine_lrc_ends_with_audio(parsed, media_duration=120.0, vad_spans=vad_spans)
+        # Sustained vocalise held cleanly through singing (never cut off at 2-4s!)
+        self.assertGreaterEqual(refined[0]["end"], 8.20)
+        # Continuous chorus lines stay seamless (0ms gap -> zero flicker!)
+        self.assertEqual(refined[3]["start"] - refined[2]["end"], 0.0)
+        # Real 4.6s instrumental break after 89.6s trims cleanly around ~89.85s (leaving >4s clean visual rest!)
+        self.assertAlmostEqual(refined[4]["end"], 89.85, delta=0.15)
+        self.assertGreaterEqual(refined[5]["start"] - refined[4]["end"], 4.0)
+
+        # 3. Whisper gap hygiene closes sub-520ms flicker gaps while preserving true >=520ms pauses
+        whisper_cues = [
+            {"start": 10.0, "end": 12.60, "text": "Line A"},
+            {"start": 12.88, "end": 15.20, "text": "Line B"},  # 280ms flicker gap -> closed to 0ms
+            {"start": 16.00, "end": 18.50, "text": "Line C"},  # 800ms true pause -> preserved!
+        ]
+        cleaned = close_flicker_micro_gaps(whisper_cues, min_clean_gap=0.52)
+        self.assertEqual(cleaned[1]["start"] - cleaned[0]["end"], 0.0)
+        self.assertAlmostEqual(cleaned[2]["start"] - cleaned[1]["end"], 0.80, places=2)
+
+        # 4. SubtitleEffects.sync must NEVER double-fire _exit_ghost when SubtitleLayer is already mid-fade-out
+        layer = SubtitleLayer(SubtitleMode.EN)
+        self.addCleanup(layer.deleteLater)
+        self.addCleanup(layer.hide)
+        layer.set_fade_enabled(True)
+        layer._subtitle_effects.configure(STUDIO_PROFILES["beat_char_pop"]["subtitle_effects"])
+        layer.load_subtitles([
+            {"start": 0, "end": 2000, "orig": "First line", "en": "First line", "vi": ""},
+            {"start": 2250, "end": 4500, "orig": "Second line", "en": "Second line", "vi": ""},
+        ])
+        layer.show()
+        layer.update_position(500)
+        layer._subtitle_effects.animation.stop()
+        layer._subtitle_effects.progress = 1.0
+        layer.repaint()
+        # Enter 250ms gap -> fade-out starts and drops opacity below 0.90
+        layer.update_position(2100)
+        self.assertEqual(layer.fade_anim.state(), QAbstractAnimation.State.Running)
+        layer.set_opacity(0.45)
+        # Cue 2 arrives mid-fade -> must NOT teleport Cue 1 back into _exit_ghost, and opacity restores to 1.0!
+        layer.update_position(2260)
+        self.assertIsNone(layer._subtitle_effects._exit_ghost)
+        self.assertEqual(layer._opacity, 1.0)
+        APPLICATION.processEvents()
 
     def test_foryou_hides_top_toolbar_when_idle_and_subtitles_sit_grounded_near_bottom(self):
         from PySide6.QtCore import QPoint

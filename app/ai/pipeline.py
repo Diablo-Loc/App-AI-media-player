@@ -542,13 +542,12 @@ def run_ai_pipeline(
             # Display margins belong after coverage, so they never change which
             # vocal gaps trigger recovery or which recovered words are accepted.
             from pipeline.lyric_refinement import finalize_display_times
-            from pipeline.fast_lyrics import preserve_vocal_breath_gaps
+            from pipeline.fast_lyrics import close_flicker_micro_gaps
             if not dialogue:
-                acoustic_before_display = final_segments
-                final_segments = preserve_vocal_breath_gaps(
-                    acoustic_before_display,
+                final_segments = close_flicker_micro_gaps(
                     finalize_display_times(
                         final_segments, cjk=is_cjk, duration=coverage.get("duration")),
+                    min_clean_gap=0.52,
                 )
             _check_cancel(cancel_cb)
 

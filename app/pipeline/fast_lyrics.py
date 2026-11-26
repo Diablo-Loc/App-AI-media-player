@@ -141,58 +141,145 @@ def _is_non_lyric_line(text: str) -> bool:
 
 
 def _cue_hold_cap_seconds(text: str) -> float:
-    """Natural singing hold cap for an LRC cue with no explicit end timestamp."""
+    """Conservative fallback hold cap for unspaced LRC cues when audio VAD is unavailable."""
     vlen = max(1, visual_len(text))
     is_cjk = bool(_HIRAGANA_KATAKANA_RE.search(text) or _CJK_IDEOGRAPH_RE.search(text) or _HANGUL_RE.search(text))
-    cps = 4.6 if is_cjk else 13.0
-    return max(2.0, min(6.2, (vlen / cps) + 0.95))
+    cps = 4.0 if is_cjk else 10.5
+    return max(4.5, min(8.0, (vlen / cps) + 2.4))
 
 
-def _lrc_inter_cue_breath_seconds(span: float) -> float:
-    """Natural breathing gap before the next line's onset for start-only LRC cues."""
-    if span >= 2.2:
-        return min(0.32, max(0.20, span * 0.09))
-    if span >= 1.1:
-        return 0.16
-    if span >= 0.65:
-        return 0.06
-    return 0.0
+def close_flicker_micro_gaps(cues: list[dict], *, min_clean_gap: float = 0.52) -> list[dict]:
+    """Close sub-520ms micro-gaps that fall inside SubtitleLayer's 380ms fade-out window and cause flicker.
 
-
-def preserve_vocal_breath_gaps(acoustic_cues: list[dict], display_cues: list[dict]) -> list[dict]:
-    """Keep genuine vocal breath pauses (>=120ms acoustic silence) from being glued to 0ms by display tail padding."""
-    if not acoustic_cues or not display_cues or len(acoustic_cues) != len(display_cues):
-        return display_cues
-    out = [dict(c) for c in display_cues]
+    Genuine vocal pauses (>= 520ms) stay cleanly open; touching transitions (0ms) stay seamless.
+    """
+    if not cues or len(cues) < 2:
+        return cues
+    out = [dict(c) for c in cues]
     for idx in range(len(out) - 1):
         try:
-            a_end = float(acoustic_cues[idx]["end"])
-            b_start = float(acoustic_cues[idx + 1]["start"])
-            d_start = float(out[idx]["start"])
-            d_end = float(out[idx]["end"])
-            d_next = float(out[idx + 1]["start"])
+            end_i = float(out[idx]["end"])
+            next_s = float(out[idx + 1]["start"])
         except (KeyError, TypeError, ValueError):
             continue
-        acoustic_gap = b_start - a_end
-        if acoustic_gap < 0.12 or (d_next - d_start) < 1.1:
-            continue
-        breath = round(min(0.24, max(0.16, (acoustic_gap + 0.10) * 0.65)), 3)
-        max_end = round(d_next - breath, 3)
-        if d_end > max_end and max_end >= d_start + 0.35:
-            out[idx]["end"] = max_end
+        gap = next_s - end_i
+        if 0.0 < gap < min_clean_gap:
+            out[idx]["end"] = round(next_s, 3)
     return out
 
 
-def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[dict]:
-    """Parse standard and multi-timestamp LRC text into non-overlapping timed cues.
+def _read_full_pcm16(audio_path: str | Path) -> Optional[Any]:
+    import numpy as np
+    try:
+        with wave.open(str(audio_path), "rb") as audio:
+            if audio.getnchannels() != 1 or audio.getsampwidth() != 2 or audio.getframerate() != _SAMPLE_RATE:
+                return None
+            raw = audio.readframes(audio.getnframes())
+    except Exception:
+        return None
+    if not raw:
+        return None
+    return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
-    - Supports `[offset:±ms]` header tag.
-    - Expands repeated chorus lines `[00:15.00][01:20.00] Text`.
-    - Treats empty timestamp markers (`[00:19.50]`) as explicit cue end boundaries.
-    - Strips credit/metadata/music-only lines and caps hold duration across instrumental breaks.
+
+def _full_song_vocal_spans(wav_path: str | Path) -> Optional[list[tuple[float, float]]]:
+    """Sensitive full-song Silero VAD map (threshold=0.22) so soft/sustained vocals are never cut early."""
+    waveform = _read_full_pcm16(wav_path)
+    if waveform is None or len(waveform) == 0:
+        return None
+    try:
+        from faster_whisper.vad import VadOptions, get_speech_timestamps
+        options = VadOptions(
+            threshold=0.22,
+            min_speech_duration_ms=100,
+            max_speech_duration_s=float("inf"),
+            min_silence_duration_ms=350,
+            window_size_samples=1024,
+            speech_pad_ms=150,
+        )
+        return [
+            (item["start"] / _SAMPLE_RATE, item["end"] / _SAMPLE_RATE)
+            for item in get_speech_timestamps(waveform, vad_options=options)
+        ]
+    except Exception:
+        return None
+
+
+def refine_lrc_ends_with_audio(
+    cues: list[dict],
+    wav_path: Optional[str | Path] = None,
+    *,
+    media_duration: Optional[float] = None,
+    spacer_flags: Optional[list[bool]] = None,
+    vad_spans: Optional[list[tuple[float, float]]] = None,
+) -> list[dict]:
+    """Refine start-only LRC cue end timestamps using real full-song vocal activity.
+
+    - Never chops sustained vocal notes / ballads early based on character count.
+    - Trims cue ends cleanly right after real singing finishes before genuine instrumental breaks (>=0.90s silence).
+    - Never leaves a sub-550ms micro-gap that causes visual strobe/flicker on transition.
     """
+    if not cues:
+        return cues
+    spans = vad_spans if vad_spans is not None else (_full_song_vocal_spans(wav_path) if wav_path is not None else None)
+    if not spans:
+        return close_flicker_micro_gaps(cues, min_clean_gap=0.55)
+
+    refined: list[dict] = []
+    total = len(cues)
+    for idx, cue in enumerate(cues):
+        item = dict(cue)
+        start = float(item["start"])
+        old_end = float(item["end"])
+        is_explicit_spacer = bool(spacer_flags and idx < len(spacer_flags) and spacer_flags[idx])
+        if is_explicit_spacer:
+            refined.append(item)
+            continue
+
+        next_t = float(cues[idx + 1]["start"]) if idx + 1 < total else (float(media_duration) if media_duration else None)
+        if next_t is None or next_t <= start + 0.2:
+            refined.append(item)
+            continue
+
+        span = next_t - start
+        ov = [
+            (max(start, vs), min(next_t, ve))
+            for vs, ve in spans
+            if ve > start + 0.15 and vs < next_t - 0.10
+        ]
+        if ov:
+            last_ve = max(ve for _, ve in ov)
+            silent_tail = next_t - last_ve
+            if silent_tail >= 0.90 and last_ve >= start + min(1.8, span * 0.45):
+                # Genuine instrumental pause/outro after real vocal finish
+                trimmed = round(min(next_t - 0.55, last_ve + 0.25), 3)
+                new_end = max(round(start + min(1.5, span * 0.60), 3), trimmed)
+                if span > 9.0:
+                    new_end = min(new_end, round(start + 8.0, 3))
+                if next_t - new_end < 0.55:
+                    new_end = next_t
+            elif span <= 9.0:
+                # Continuous vocal activity into next line: hold cleanly with zero flicker gap!
+                new_end = next_t
+            else:
+                # Extreme >9s unspaced solo where dense instrumentation kept VAD active
+                new_end = min(next_t, round(start + 8.0, 3))
+                if 0.0 < (next_t - new_end) < 0.55:
+                    new_end = next_t
+            item["end"] = round(new_end, 3)
+        else:
+            # Quiet/percussion-masked vocal where VAD had no hit: keep safe fallback end without micro-gaps
+            if 0.0 < (next_t - old_end) < 0.55:
+                item["end"] = round(next_t, 3)
+        refined.append(item)
+
+    return finalize_cue_times(refined, duration=media_duration)
+
+
+def _parse_lrc_with_spacer_flags(text: str, media_duration: Optional[float] = None) -> tuple[list[dict], list[bool]]:
+    """Parse standard/multi-timestamp LRC into cues plus per-cue explicit-spacer flags."""
     if not text or not str(text).strip():
-        return []
+        return [], []
 
     offset_sec = 0.0
     events: list[tuple[float, str, bool]] = []  # (time_sec, clean_text, is_spacer)
@@ -231,7 +318,7 @@ def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[di
             events.append((t, "" if is_spacer else cleaned, is_spacer))
 
     if not events:
-        return []
+        return [], []
 
     # Standard LRC spec: positive [offset:+ms] shifts lyrics earlier; clamp to >= 0.
     adjusted = []
@@ -245,6 +332,7 @@ def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[di
     adjusted.sort(key=lambda item: (item[0], 1 if item[2] else 0))
 
     raw_cues: list[dict] = []
+    spacer_map: dict[float, bool] = {}
     total = len(adjusted)
     for idx, (start, body, is_spacer) in enumerate(adjusted):
         if is_spacer or not body:
@@ -259,22 +347,37 @@ def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[di
         hold_cap = _cue_hold_cap_seconds(body)
         if next_t is not None:
             if next_is_spacer:
-                # Trust explicit empty-line spacer timestamps up to 8s.
                 end = min(next_t, start + 8.0)
             else:
-                # Start-only LRC lines omit end times: cap hold & leave a natural vocal breath gap before next cue.
-                span = next_t - start
-                breath = _lrc_inter_cue_breath_seconds(span)
-                end = min(max(start + 0.35, next_t - breath), start + hold_cap, next_t)
+                # Never inject <600ms flicker micro-gaps; only cap long unspaced instrumental breaks.
+                end = min(next_t, start + hold_cap)
+                if 0.0 < (next_t - end) < 0.60:
+                    end = next_t
         elif media_duration is not None and media_duration > start + 0.1:
             end = min(media_duration, start + hold_cap)
         else:
             end = start + hold_cap
         if end <= start + 0.05:
             end = start + 0.5
-        raw_cues.append({"start": round(start, 3), "end": round(end, 3), "text": body})
+        s_rounded = round(start, 3)
+        raw_cues.append({"start": s_rounded, "end": round(end, 3), "text": body})
+        spacer_map[s_rounded] = bool(next_is_spacer)
 
-    return finalize_cue_times(raw_cues, duration=media_duration)
+    finalized = finalize_cue_times(raw_cues, duration=media_duration)
+    flags = [spacer_map.get(round(float(c["start"]), 3), False) for c in finalized]
+    return finalized, flags
+
+
+def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[dict]:
+    """Parse standard and multi-timestamp LRC text into non-overlapping timed cues.
+
+    - Supports `[offset:±ms]` header tag.
+    - Expands repeated chorus lines `[00:15.00][01:20.00] Text`.
+    - Treats empty timestamp markers (`[00:19.50]`) as explicit cue end boundaries.
+    - Strips credit/metadata/music-only lines and avoids <600ms flicker micro-gaps.
+    """
+    cues, _ = _parse_lrc_with_spacer_flags(text, media_duration=media_duration)
+    return cues
 
 
 def _normalize_parsed_cues(raw_segments: list[dict], media_duration: Optional[float] = None) -> list[dict]:
@@ -1004,7 +1107,7 @@ def evaluate_lrclib_items(
                 "duration_diff": round(dur_diff, 2) if dur_diff is not None else None,
             }
             continue
-        cues = parse_lrc_text(synced_raw, media_duration=media_duration)
+        cues, spacer_flags = _parse_lrc_with_spacer_flags(synced_raw, media_duration=media_duration)
         if len(cues) < 3:
             result["verification"] = {"reason": "too_few_parsed_cues"}
             continue
@@ -1025,6 +1128,13 @@ def evaluate_lrclib_items(
             result["verification"] = vad_info
             if not ok:
                 continue
+            if vad_probe_fn is None:
+                cues = refine_lrc_ends_with_audio(
+                    cues,
+                    wav_path,
+                    media_duration=media_duration,
+                    spacer_flags=spacer_flags,
+                )
         else:
             result["verification"] = {
                 "verified": True,

@@ -755,11 +755,10 @@ class SubtitleLayer(DraggableSubtitle):
             tuple(row_groups) if len(row_groups) == len(new_text.split('\n')) else ()
         )
 
-        self._subtitle_effects.sync((idx, active_sub['start'], active_sub['end'], new_text), pts_ms)
-        self._schedule_prewarm(idx)
-
-        # Nếu chữ giống hệt đang hiển thị -> Giữ nguyên
+        # Nếu chữ giống hệt đang hiển thị -> đồng bộ tiến độ hiệu ứng & giữ nguyên
         if not self.isHidden() and self.text() == new_text:
+            self._subtitle_effects.sync((idx, active_sub['start'], active_sub['end'], new_text), pts_ms)
+            self._schedule_prewarm(idx)
             if (self.fade_anim.state() == QAbstractAnimation.State.Running
                     and self.fade_anim.endValue() == 0.0):
                 self._smart_show(instant=False)
@@ -768,27 +767,32 @@ class SubtitleLayer(DraggableSubtitle):
         prev_sub_end = self.subtitles[idx - 1]['end'] if idx > 0 else 0
         gap_from_prev = active_sub['start'] - prev_sub_end
 
-        # Cập nhật chữ mới + Vị trí chuẩn nguyên khối (Atomic)
-        self._apply_text_and_geometry_atomic(new_text)
+        # Đồng bộ hiệu ứng + đổi chữ nguyên khối (tránh vẽ khung trung gian chữ cũ khi animation.start() bắn frame 0)
+        was_visible = not self.isHidden()
+        self.setUpdatesEnabled(False)
+        try:
+            self._subtitle_effects.sync((idx, active_sub['start'], active_sub['end'], new_text), pts_ms)
+            self._schedule_prewarm(idx)
+            self._apply_text_and_geometry_atomic(new_text)
+        finally:
+            self.setUpdatesEnabled(True)
         if guard is not None:
             guard.prepare_geometry()
 
+        has_vfx_entrance = bool(
+            self._subtitle_effects.options.get('enabled')
+            and self._subtitle_effects.options.get('entrance', 'none') != 'none'
+        )
         if self.isHidden():
-            if gap_from_prev >= 140 or idx == 0:
+            if not has_vfx_entrance and (gap_from_prev > 400 or idx == 0):
                 self._smart_show(instant=False)
             else:
                 self._smart_show(instant=True)
-        elif (
-            self.use_fade_effect
-            and self.fade_anim.state() == QAbstractAnimation.State.Running
-            and self.fade_anim.endValue() == 0.0
-            and gap_from_prev >= 140
-        ):
-            self._opacity = min(self._opacity, 0.18)
-            self._smart_show(instant=False)
         else:
             self.fade_anim.stop()
             self.set_opacity(1.0)
+            if was_visible:
+                self.update()
 
     def _smart_show(self, instant=False):
         """Hiển thị sub chuẩn mượt không chớp nháy"""
