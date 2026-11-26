@@ -224,11 +224,7 @@ def _read_intro_pcm16(audio_path, seconds=INTRO_SECONDS):
     return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
 
-def _intro_speech_probe(audio_path):
-    """Return a sensitive VAD map; false positives are safer than false deletion."""
-    waveform = _read_intro_pcm16(audio_path, seconds=VOICE_SCAN_SECONDS)
-    if waveform is None:
-        return None
+def _compute_sensitive_speech(waveform):
     from faster_whisper.vad import VadOptions, get_speech_timestamps
 
     options = VadOptions(
@@ -239,14 +235,24 @@ def _intro_speech_probe(audio_path):
         window_size_samples=1024,
         speech_pad_ms=350,
     )
-    spans = [
+    return [
         (item["start"] / SAMPLE_RATE, item["end"] / SAMPLE_RATE)
         for item in get_speech_timestamps(waveform, vad_options=options)
     ]
+
+
+def _intro_speech_probe(audio_path, confirmed_only=False):
+    """Return a VAD map; `confirmed_only=True` skips the 2nd sensitive pass for Fast-Path."""
+    waveform = _read_intro_pcm16(audio_path, seconds=VOICE_SCAN_SECONDS)
+    if waveform is None:
+        return None
+    from faster_whisper.vad import get_speech_timestamps
+
     confirmed = [
         (item["start"] / SAMPLE_RATE, item["end"] / SAMPLE_RATE)
         for item in get_speech_timestamps(waveform)
     ]
+    spans = None if confirmed_only else _compute_sensitive_speech(waveform)
     return {"waveform": waveform, "speech": spans, "confirmed_speech": confirmed}
 
 
@@ -1523,7 +1529,13 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
     if not probe:
         return original, language, report
 
-    speech = probe["speech"]
+    if probe.get("speech") is None and probe.get("waveform") is not None:
+        try:
+            probe = dict(probe, speech=_compute_sensitive_speech(probe["waveform"]))
+        except Exception:
+            probe = dict(probe, speech=list(probe.get("confirmed_speech") or ()))
+
+    speech = probe["speech"] or []
     confirmed_speech = probe.get("confirmed_speech", speech)
     onset_speech = _onset_speech(speech, confirmed_speech)
     report["speech"] = speech

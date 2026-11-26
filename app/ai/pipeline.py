@@ -224,8 +224,8 @@ def run_ai_pipeline(
                     )
                     success = fut_extract.result()
                     try:
-                        # Never block Whisper beyond 1.5s extra if LRCLIB network is sluggish/firewalled
-                        lrc_fetch_result = fut_lrclib.result(timeout=1.5)
+                        # Never block Whisper beyond 1.2s extra after FFmpeg finishes
+                        lrc_fetch_result = fut_lrclib.result(timeout=1.2)
                     except Exception:
                         lrc_fetch_result = ([], "", "timeout")
                 finally:
@@ -243,7 +243,19 @@ def run_ai_pipeline(
             lrc_items, lrc_eff_query, lrc_reason = lrc_fetch_result
             if should_query_lrclib and lrc_items:
                 from pipeline.fast_lyrics import evaluate_lrclib_items
-                _report(progress_cb, 12, "🔎 Xác thực mốc giọng hát LRCLIB...")
+                has_close_synced = bool(
+                    wav_duration
+                    and any(
+                        isinstance(it, dict)
+                        and it.get("syncedLyrics")
+                        and not it.get("instrumental")
+                        and it.get("duration")
+                        and abs(float(it["duration"]) - float(wav_duration)) <= 2.0
+                        for it in lrc_items[:6]
+                    )
+                )
+                if has_close_synced:
+                    _report(progress_cb, 12, "🔎 Xác thực mốc giọng hát LRCLIB...")
                 _check_cancel(cancel_cb)
                 lrc_res = evaluate_lrclib_items(
                     song_title_raw,
@@ -268,6 +280,10 @@ def run_ai_pipeline(
                     _report(progress_cb, 55, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
 
         if not used_fast_lyrics:
+            # Báo trạng thái TRƯỚC khi import torch / faster_whisper để thanh tiến trình không kẹt ở bước cũ!
+            _report(progress_cb, 15, f"🧠 Đang nạp động cơ AI ({saved_model})...")
+            _check_cancel(cancel_cb)
+
             # 🔥 IMPORT NẶNG CHỈ KHI THỰC SỰ CẦN CHẠY WHISPER
             import torch
             from faster_whisper import WhisperModel
@@ -275,7 +291,7 @@ def run_ai_pipeline(
             # ============================================================
             # 2️⃣ LOAD WHISPER MODEL (ĐÃ THÁO XÍCH MẠNG KHI FALLBACK CPU)
             # ============================================================
-            _report(progress_cb, 15, f"🧠 Nạp Whisper ({saved_model})")
+            _report(progress_cb, 20, f"🧠 Nạp Whisper ({saved_model})")
             _check_cancel(cancel_cb)
 
             model = None

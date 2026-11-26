@@ -947,9 +947,11 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         # Must NOT jump forward by +160ms on pause!
         self.assertEqual(after_pause, 11840)
 
-        # Cover title strips '【歌ってみた】' and builds clean fallback without 'covered by ...'
+        # Cover title strips '【歌ってみた】' and puts clean studio query FIRST (saving 1.4s wasted 0-hit query!)
         v = _lrclib_query_variants("【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！")
-        self.assertEqual(v[1], "Tell Your World – kz")
+        self.assertEqual(v[0], "Tell Your World – kz")
+        v_ep = _lrclib_query_variants("NTE Akane Rin EP - Morning Star and the Sea")
+        self.assertEqual(v_ep[0], "Morning Star and the Sea")
 
         # High-confidence onset word snaps cleanly even when a trailing unstressed word has prob=0.10
         cues = [{"start": 10.0, "end": 12.2, "text": "See the light"}]

@@ -582,24 +582,33 @@ _COVER_SUFFIX_RE = re.compile(
 
 
 def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
-    """Build at most two clean search queries (handles anime/YouTube/Japanese/cover/bilingual templates)."""
+    """Build at most two clean search queries, ordering the highest-hit studio query FIRST."""
     primary = _clean_query_title(raw_title)
-    variants: list[str] = []
+    base = ""
     if primary and len(_compact_alnum(primary)) >= 2:
-        cleaned_quotes = re.sub(r"[「」『』【】]", " ", primary)
-        cleaned_quotes = re.sub(r"\s+", " ", cleaned_quotes).strip()
-        variants.append(cleaned_quotes or primary)
-    # Strip 'covered by ...' credit tail for fallback lookup (raw_title still keeps 'cover' penalty for safety!)
-    cover_stripped = _COVER_SUFFIX_RE.sub("", variants[0] if variants else primary).strip(" -–—|｜")
-    if cover_stripped and cover_stripped != (variants[0] if variants else "") and len(_compact_alnum(cover_stripped)) >= 2:
-        variants.append(cover_stripped)
-    if len(variants) < 2:
-        m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
-        if m:
-            extracted = next((g for g in m.groups() if g is not None), "").strip(" -|｜\"'「」『』")
-            extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
-            if extracted and len(_compact_alnum(extracted)) >= 2 and extracted not in variants:
-                variants.append(extracted)
+        base = re.sub(r"\s+", " ", re.sub(r"[「」『』【】]", " ", primary)).strip() or primary
+
+    # 1. Explicit 'covered by ...' tail: studio catalog never contains cover vocalist credits -> put stripped query FIRST!
+    cover_stripped = _COVER_SUFFIX_RE.sub("", base).strip(" -–—|｜") if base else ""
+    if cover_stripped and cover_stripped != base and len(_compact_alnum(cover_stripped)) >= 2:
+        return (cover_stripped, base)
+
+    # 2. Long anime / EP banner ('EP - Song', 'Season 2 - Ending Full - -Song- by Artist'):
+    #    LRCLIB full-text AND-search returns 0 on episode prefixes after ~1.3s -> put extracted song title FIRST when banner is long!
+    extracted = ""
+    m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
+    if m:
+        extracted = next((g for g in m.groups() if g is not None), "").strip(" -|｜\"'「」『』")
+        extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
+        if len(_compact_alnum(extracted)) < 2 or extracted == base:
+            extracted = ""
+
+    if extracted and base:
+        if len(base.split()) >= 6:
+            return (extracted, base)
+        return (base, extracted)
+
+    variants: list[str] = [base] if base else []
     if len(variants) < 2 and variants:
         bilingual = _bilingual_script_fallback(variants[0])
         if bilingual and bilingual not in variants:
@@ -607,48 +616,155 @@ def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
     return tuple(variants[:2])
 
 
+_LRCLIB_CACHE_MAX = 250
+_LRCLIB_HIT_TTL_S = 14 * 86400
+_LRCLIB_MISS_TTL_S = 2 * 86400
+
+
+def _lrclib_cache_path() -> Optional[Path]:
+    try:
+        from paths import storage_dir
+        return storage_dir() / "lrclib-cache.json"
+    except Exception:
+        return None
+
+
+def _read_lrclib_disk_cache(cache_key: str) -> Optional[tuple[list[dict], str, str]]:
+    import time as _time
+    cpath = _lrclib_cache_path()
+    if cpath is None or not cpath.exists():
+        return None
+    try:
+        data = json.loads(cpath.read_text(encoding="utf-8"))
+        entry = (data.get("entries") or {}).get(cache_key)
+        if not isinstance(entry, dict):
+            return None
+        ts = float(entry.get("ts") or 0.0)
+        items = entry.get("items")
+        reason = str(entry.get("reason") or "no_results")
+        ttl = _LRCLIB_HIT_TTL_S if (isinstance(items, list) and items) else _LRCLIB_MISS_TTL_S
+        if (_time.time() - ts) > ttl:
+            return None
+        if isinstance(items, list):
+            return items, str(entry.get("query") or ""), reason
+    except Exception:
+        return None
+    return None
+
+
+def _write_lrclib_disk_cache(cache_key: str, items: list[dict], query: str, reason: str) -> None:
+    import time as _time
+    if reason not in ("ok", "no_results"):
+        return
+    cpath = _lrclib_cache_path()
+    if cpath is None:
+        return
+    try:
+        cpath.parent.mkdir(parents=True, exist_ok=True)
+        data: dict[str, Any] = {"entries": {}}
+        if cpath.exists():
+            try:
+                loaded = json.loads(cpath.read_text(encoding="utf-8"))
+                if isinstance(loaded, dict) and isinstance(loaded.get("entries"), dict):
+                    data = loaded
+            except Exception:
+                pass
+        entries = data["entries"]
+        # Trim to compact fields only so cache file stays tiny (< 250 KB)
+        slim_items = [
+            {
+                "trackName": it.get("trackName"),
+                "artistName": it.get("artistName"),
+                "albumName": it.get("albumName"),
+                "duration": it.get("duration"),
+                "instrumental": it.get("instrumental"),
+                "syncedLyrics": it.get("syncedLyrics"),
+                "plainLyrics": it.get("plainLyrics"),
+            }
+            for it in (items or [])[:8]
+            if isinstance(it, dict)
+        ]
+        entries[cache_key] = {"ts": round(_time.time(), 1), "query": query, "reason": reason, "items": slim_items}
+        if len(entries) > _LRCLIB_CACHE_MAX:
+            sorted_keys = sorted(entries.keys(), key=lambda k: float(entries[k].get("ts") or 0.0), reverse=True)
+            data["entries"] = {k: entries[k] for k in sorted_keys[:_LRCLIB_CACHE_MAX]}
+        tmp_path = cpath.with_suffix(f".{os.getpid()}.tmp")
+        tmp_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        os.replace(str(tmp_path), str(cpath))
+    except Exception:
+        pass
+
+
 def fetch_lrclib_items(
     song_title_raw: str,
     *,
-    timeout: float = 2.0,
+    timeout: float = 1.6,
     http_get=None,
     cancel_cb=None,
 ) -> tuple[list[dict], str, str]:
-    """Pure HTTP lookup against LRCLIB (designed to run in parallel with FFmpeg WAV extraction).
+    """Pure HTTP lookup against LRCLIB (runs in parallel with FFmpeg WAV extraction).
 
-    Returns (items, effective_query_used, status_reason).
+    Uses persistent local cache + single keep-alive TLS session + strict wall-clock budget.
     """
+    import time as _time
     variants = _lrclib_query_variants(song_title_raw)
     if not variants:
         return [], "", "empty_query"
 
-    getter = http_get
-    if getter is None:
-        import requests
-        getter = requests.get
+    cache_key = " || ".join(v.casefold() for v in variants)
+    use_real_net = http_get is None
+    if use_real_net:
+        cached = _read_lrclib_disk_cache(cache_key)
+        if cached is not None:
+            return cached
 
+    session = None
+    if use_real_net:
+        import requests
+        session = requests.Session()
+        getter = session.get
+    else:
+        getter = http_get
+
+    deadline = _time.monotonic() + max(0.8, min(float(timeout) * 1.35, 2.2))
     last_reason = "no_results"
-    for query in variants:
-        if cancel_cb and cancel_cb():
-            return [], query, "cancelled"
-        try:
-            resp = getter(
-                _LRCLIB_SEARCH_URL,
-                params={"q": query},
-                headers={"User-Agent": _LRCLIB_USER_AGENT, "Accept": "application/json"},
-                timeout=timeout,
-            )
-            status = getattr(resp, "status_code", 200)
-            if status != 200:
-                last_reason = f"http_{status}"
-                continue
-            items = resp.json()
-            if isinstance(items, list) and items:
-                return items, query, "ok"
-            last_reason = "no_results"
-        except Exception as err:
-            return [], query, f"request_error:{type(err).__name__}"
-    return [], variants[0], last_reason
+    try:
+        for query in variants:
+            if cancel_cb and cancel_cb():
+                return [], query, "cancelled"
+            rem = deadline - _time.monotonic()
+            if rem <= 0.15 and use_real_net:
+                last_reason = "timeout"
+                break
+            req_timeout = (min(0.95, rem), min(float(timeout), rem)) if use_real_net else timeout
+            try:
+                resp = getter(
+                    _LRCLIB_SEARCH_URL,
+                    params={"q": query},
+                    headers={"User-Agent": _LRCLIB_USER_AGENT, "Accept": "application/json"},
+                    timeout=req_timeout,
+                )
+                status = getattr(resp, "status_code", 200)
+                if status != 200:
+                    last_reason = f"http_{status}"
+                    continue
+                items = resp.json()
+                if isinstance(items, list) and items:
+                    if use_real_net:
+                        _write_lrclib_disk_cache(cache_key, items, query, "ok")
+                    return items, query, "ok"
+                last_reason = "no_results"
+            except Exception as err:
+                return [], query, f"request_error:{type(err).__name__}"
+        if use_real_net and last_reason == "no_results":
+            _write_lrclib_disk_cache(cache_key, [], variants[0], "no_results")
+        return [], variants[0], last_reason
+    finally:
+        if session is not None:
+            try:
+                session.close()
+            except Exception:
+                pass
 
 
 def verify_synced_cues_against_audio(
@@ -677,7 +793,7 @@ def verify_synced_cues_against_audio(
                 probe = vad_probe_fn(wav_path)
             else:
                 from pipeline.asr_intro_guard import _intro_speech_probe
-                probe = _intro_speech_probe(wav_path)
+                probe = _intro_speech_probe(wav_path, confirmed_only=True)
         except Exception as err:
             info["reason"] = f"vad_error:{type(err).__name__}"
             return False, info, None
@@ -686,8 +802,8 @@ def verify_synced_cues_against_audio(
         info["reason"] = "no_probe"
         return False, info, None
 
-    speech = probe.get("speech") or []
-    confirmed = probe.get("confirmed_speech") or speech
+    confirmed = probe.get("confirmed_speech") or []
+    speech = probe.get("speech") or confirmed
     if not speech:
         info["reason"] = "no_speech_detected"
         return False, info, probe
