@@ -257,6 +257,12 @@ def run_ai_pipeline(
                 if has_close_synced:
                     _report(progress_cb, 12, "🔎 Xác thực mốc giọng hát LRCLIB...")
                 _check_cancel(cancel_cb)
+                can_cuda_align_lrc = bool(
+                    saved_device == "cuda"
+                    and device_policy != "cpu"
+                    and os.path.exists(local_model_path)
+                    and os.path.exists(os.path.join(local_model_path, "model.bin"))
+                )
                 lrc_res = evaluate_lrclib_items(
                     song_title_raw,
                     lrc_items,
@@ -264,6 +270,7 @@ def run_ai_pipeline(
                     fetch_reason=lrc_reason,
                     media_duration=wav_duration,
                     wav_path=temp_wav_path,
+                    refine_ends_with_vad=not can_cuda_align_lrc,
                 )
                 lrclib_reference_lyric = lrc_res.get("plain_lyrics")
                 lrc_vad_probe = lrc_res.get("vad_probe")
@@ -275,9 +282,62 @@ def run_ai_pipeline(
                     print(
                         f"⚡ Fast-Path (LRCLIB dual-verified): khớp chuẩn {len(final_segments)} câu "
                         f"({detected_lang}, onset_diff={vinfo.get('onset_diff')}s, "
-                        f"voiced={vinfo.get('voiced_ratio')}), bỏ qua Whisper!"
+                        f"voiced={vinfo.get('voiced_ratio')}), bỏ qua Whisper ASR!"
                     )
-                    _report(progress_cb, 55, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
+                    # Căn mốc kết thúc câu chuẩn từng từ bằng Forced Alignment trên CUDA (~2-3s, không decode)
+                    fa_applied = False
+                    if can_cuda_align_lrc:
+                        fa_model = None
+                        try:
+                            _report(progress_cb, 35, "⏱ Căn chuẩn mốc kết thúc lời hát...")
+                            _check_cancel(cancel_cb)
+                            import torch as _fa_torch
+                            if hasattr(_fa_torch, "cuda") and _fa_torch.cuda.is_available():
+                                from faster_whisper import WhisperModel as _FAWhisperModel
+                                from pipeline.lyric_timing import align_lrc_ends
+                                fa_model = _FAWhisperModel(
+                                    local_model_path,
+                                    device="cuda",
+                                    compute_type="float16",
+                                    local_files_only=True,
+                                )
+                                aligned_lrc, fa_rep = align_lrc_ends(
+                                    fa_model,
+                                    temp_wav_path,
+                                    detected_lang,
+                                    final_segments,
+                                    duration=wav_duration,
+                                    spacer_flags=lrc_res.get("spacer_flags"),
+                                    cancel_cb=cancel_cb,
+                                    budget_s=12.0,
+                                    progress_cb=progress_cb,
+                                )
+                                if fa_rep.get("errors", 0) == 0 and aligned_lrc:
+                                    final_segments = aligned_lrc
+                                    fa_applied = True
+                                    print(
+                                        f"⏱ Căn mốc kết thúc Fast-Path (CUDA): {fa_rep['changed']}/{len(final_segments)} câu, "
+                                        f"{fa_rep['windows']} cửa sổ, {fa_rep['seconds']:.2f}s."
+                                    )
+                        except Exception as fa_err:
+                            _check_cancel(cancel_cb)
+                            print(f"⚠️ Căn mốc kết thúc CUDA gặp lỗi ({fa_err}), dùng Silero VAD fallback.")
+                        finally:
+                            if fa_model is not None:
+                                del fa_model
+                            gc.collect()
+                            _t_mod = sys.modules.get("torch")
+                            if _t_mod is not None and hasattr(_t_mod, "cuda") and _t_mod.cuda.is_available():
+                                _t_mod.cuda.empty_cache()
+                    if not fa_applied and can_cuda_align_lrc:
+                        from pipeline.fast_lyrics import refine_lrc_ends_with_audio
+                        final_segments = refine_lrc_ends_with_audio(
+                            final_segments,
+                            temp_wav_path,
+                            media_duration=wav_duration,
+                            spacer_flags=lrc_res.get("spacer_flags"),
+                        )
+                    _report(progress_cb, 60, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
 
         if not used_fast_lyrics:
             # Báo trạng thái TRƯỚC khi import torch / faster_whisper để thanh tiến trình không kẹt ở bước cũ!

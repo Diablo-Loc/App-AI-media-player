@@ -1043,6 +1043,43 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         self.assertEqual(layer._opacity, 1.0)
         APPLICATION.processEvents()
 
+    def test_apply_lrc_ends_refines_real_vocal_end_respects_spacer_and_closes_micro_gaps(self):
+        from pipeline.lyric_timing import apply_lrc_ends
+
+        cues = [
+            {"start": 2.33, "end": 8.77, "text": "Ah-ah, ah-ah"},
+            {"start": 8.77, "end": 15.32, "text": "Ah-ah, ah-ah, ah-ah"},
+            {"start": 15.32, "end": 21.45, "text": "I was standing in the quiet"},
+            {"start": 21.45, "end": 24.50, "text": "Explicit spacer line"},
+            {"start": 26.00, "end": 29.00, "text": "Tight continuous chorus"},
+            {"start": 29.00, "end": 32.00, "text": "Next tight line"},
+        ]
+        spacer_flags = [False, False, False, True, False, False]
+        candidates = {
+            0: [{"start": 2.70, "end": 5.89, "word": "Ah-ah", "probability": 0.65}],
+            1: [{"start": 8.60, "end": 13.57, "word": "Ah-ah", "probability": 0.80}],
+            2: [{"start": 15.20, "end": 19.83, "word": "quiet", "probability": 0.85}],
+            3: [{"start": 21.40, "end": 22.80, "word": "line", "probability": 0.90}],  # spacer=True -> MUST stay 24.50!
+            4: [{"start": 26.05, "end": 28.35, "word": "chorus", "probability": 0.90}],  # 28.35+0.40=28.75 -> gap 0.25s < 0.52s -> closed to 29.00!
+            5: [{"start": 29.10, "end": 30.80, "word": "line", "probability": 0.10}],  # low prob -> rejected, keeps 32.00!
+        }
+        out, changed = apply_lrc_ends(cues, candidates, language="en", duration=35.0, spacer_flags=spacer_flags)
+        # LRC starts stay untouched
+        self.assertEqual([c["start"] for c in out], [c["start"] for c in cues])
+        # Real vocal ends trimmed cleanly with +0.40s Latin singing tail
+        self.assertAlmostEqual(out[0]["end"], 6.29, places=2)
+        self.assertAlmostEqual(out[1]["end"], 13.97, places=2)
+        self.assertAlmostEqual(out[2]["end"], 20.23, places=2)
+        # Explicit LRC spacer preserved untouched
+        self.assertAlmostEqual(out[3]["end"], 24.50, places=2)
+        # Sub-520ms micro-gap closed cleanly to 29.00 (0 flicker!)
+        self.assertAlmostEqual(out[4]["end"], 29.00, places=2)
+        # Low-confidence word rejected safely
+        self.assertAlmostEqual(out[5]["end"], 32.00, places=2)
+        self.assertIn(0, changed)
+        self.assertNotIn(3, changed)
+        self.assertNotIn(5, changed)
+
     def test_foryou_hides_top_toolbar_when_idle_and_subtitles_sit_grounded_near_bottom(self):
         from PySide6.QtCore import QPoint
         from tools.ui_preview import APPLICATION, isolated_window, pump

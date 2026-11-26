@@ -165,3 +165,182 @@ def align_lyric_onsets(model, audio_path, language, cues, cancel_cb=None, budget
         output = cues
     report["seconds"] = round(time.monotonic() - tick, 3)
     return output, report
+
+
+def _lrc_align_windows(cues, tokenizer, duration):
+    """Build <=29.0s / <=400-token windows for start-only LRC cues without crossing >3.5s breaks."""
+    batch, tokens, ranges = [], [], []
+    left = right = 0.0
+    padding = tokenizer.encode(" ...")
+    total = len(cues)
+    for index, cue in enumerate(cues):
+        c_start = float(cue["start"])
+        next_start = float(cues[index + 1]["start"]) if index + 1 < total else float(duration)
+        win_s = max(0.0, c_start - 0.45)
+        win_e = min(float(duration), min(next_start + 0.30, c_start + 12.0))
+        if win_e <= win_s + 0.15:
+            continue
+        encoded = tokenizer.encode(" " + cue["text"])
+        if len(padding) + len(encoded) > 400 or (win_e - win_s) > 29.0:
+            continue
+        if batch and (
+            (win_e - left) > 29.0
+            or len(tokens) + len(padding) + len(encoded) > 400
+            or (c_start - right) > 3.5
+        ):
+            yield left, right, batch, tokens, ranges
+            batch, tokens, ranges = [], [], []
+        if not batch:
+            left = win_s
+        tokens.extend(padding)
+        begin = len(tokens)
+        tokens.extend(encoded)
+        ranges.append((begin, len(tokens)))
+        batch.append(index)
+        right = max(right, win_e)
+    if batch:
+        yield left, right, batch, tokens, ranges
+
+
+def apply_lrc_ends(cues, candidates, *, language="en", duration=None, spacer_flags=None):
+    """Refine start-only LRC cue `end` times from forced word alignment while preserving LRC `start` times.
+
+    - Keeps explicit LRC spacer endings untouched.
+    - Adds a natural singing release tail (+0.32s CJK / +0.40s Latin) after the last confident aligned word.
+    - Closes any residual sub-520ms micro-gap cleanly so transitions never flicker.
+    """
+    from .fast_lyrics import close_flicker_micro_gaps
+
+    output = [dict(cue) for cue in cues]
+    changed = []
+    total = len(output)
+    is_cjk = str(language or "").lower()[:2] in ("ja", "zh", "ko")
+    tail_pad = 0.32 if is_cjk else 0.40
+
+    for index, candidate in candidates.items():
+        if not 0 <= index < total:
+            continue
+        if spacer_flags and index < len(spacer_flags) and spacer_flags[index]:
+            continue
+        words = [word for word in (candidate or ()) if str(word.get("word", "")).strip()]
+        if not words:
+            continue
+        try:
+            w_start = float(words[0]["start"])
+            w_end = float(words[-1]["end"])
+            probs = [float(word["probability"]) for word in words]
+            spans = [(float(word["start"]), float(word["end"])) for word in words]
+        except (KeyError, TypeError, ValueError):
+            continue
+        if (
+            not all(math.isfinite(v) for pair in spans for v in pair)
+            or any(a > b for a, b in spans)
+            or not all(math.isfinite(p) and 0.0 <= p <= 1.0 for p in probs)
+        ):
+            continue
+
+        mean_prob = sum(probs) / len(probs)
+        last_prob = probs[-1]
+        if mean_prob < 0.28 or last_prob < 0.15:
+            continue
+
+        c_start = float(output[index]["start"])
+        next_t = (
+            float(output[index + 1]["start"])
+            if index + 1 < total
+            else (float(duration) if duration is not None else float(output[index]["end"]))
+        )
+        # Reject wildly displaced alignment (e.g. snapped onto a different chorus)
+        if w_start > c_start + 1.8 or w_start < c_start - 2.6 or w_end < c_start + 0.35:
+            continue
+
+        proposed_end = round(min(next_t, max(c_start + 0.45, w_end + tail_pad)), 3)
+        if duration is not None and math.isfinite(duration) and duration > 0:
+            proposed_end = min(proposed_end, round(float(duration), 3))
+        if proposed_end > c_start + 0.05 and abs(proposed_end - float(output[index]["end"])) >= 0.05:
+            output[index]["end"] = proposed_end
+            changed.append(index)
+
+    finalized = finalize_cue_times(output, duration=duration)
+    return close_flicker_micro_gaps(finalized, min_clean_gap=0.52), changed
+
+
+def align_lrc_ends(
+    model,
+    audio_path,
+    language,
+    cues,
+    *,
+    duration=None,
+    spacer_flags=None,
+    cancel_cb=None,
+    budget_s=12.0,
+    progress_cb=None,
+):
+    """One fast forced-alignment pass (no decoding) to pinpoint exact vocal endings for start-only LRC cues."""
+    report = dict(changed=0, windows=0, errors=0, capped=False, seconds=0.0)
+    tick = time.monotonic()
+    candidates = {}
+
+    def check_cancel():
+        if cancel_cb and cancel_cb():
+            raise RuntimeError("Cancelled")
+
+    check_cancel()
+    if not cues:
+        return cues, report
+    try:
+        from faster_whisper.tokenizer import Tokenizer
+
+        lang_code = str(language or "en").lower()[:2]
+        tokenizer = Tokenizer(
+            model.hf_tokenizer,
+            model.model.is_multilingual,
+            task="transcribe",
+            language=lang_code,
+        )
+        rate = model.feature_extractor.sampling_rate
+        with wave.open(str(audio_path), "rb") as audio:
+            if (
+                audio.getnchannels() != 1
+                or audio.getsampwidth() != 2
+                or audio.getframerate() != rate
+                or audio.getcomptype() != "NONE"
+            ):
+                raise ValueError("Unexpected intermediate audio format")
+            wav_dur = audio.getnframes() / rate
+            eff_dur = float(duration) if (duration is not None and math.isfinite(duration) and duration > 0) else wav_dur
+            planned = list(_lrc_align_windows(cues, tokenizer, wav_dur))
+            total_windows = max(1, len(planned))
+            for idx_w, (left, right, indices, tokens, ranges) in enumerate(planned, start=1):
+                check_cancel()
+                if time.monotonic() - tick >= budget_s:
+                    report["capped"] = True
+                    break
+                report["windows"] += 1
+                if progress_cb:
+                    pct = 40 + int((idx_w / float(total_windows)) * 18)
+                    progress_cb(pct, f"⏱ Căn mốc kết thúc lời ({idx_w}/{total_windows})...")
+                try:
+                    words = _align_window(model, tokenizer, audio, left, right, tokens, ranges)
+                    if len(words) != len(indices):
+                        raise ValueError("LRC alignment cue coverage changed")
+                    candidates.update(zip(indices, words))
+                except Exception:
+                    report["errors"] += 1
+                    break
+        check_cancel()
+        output, changed = apply_lrc_ends(
+            cues,
+            candidates,
+            language=lang_code,
+            duration=eff_dur,
+            spacer_flags=spacer_flags,
+        )
+        report["changed"] = len(changed)
+    except Exception:
+        check_cancel()
+        report["errors"] += 1
+        output = cues
+    report["seconds"] = round(time.monotonic() - tick, 3)
+    return output, report

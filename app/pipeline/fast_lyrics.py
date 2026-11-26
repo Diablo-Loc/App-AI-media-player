@@ -1038,10 +1038,12 @@ def evaluate_lrclib_items(
     media_duration: Optional[float] = None,
     wav_path: Optional[str | Path] = None,
     vad_probe_fn=None,
+    refine_ends_with_vad: bool = True,
 ) -> dict[str, Any]:
     """Score & dual-verify prefetched LRCLIB items (reuses single VAD probe if invoked)."""
     result: dict[str, Any] = {
         "synced_cues": None,
+        "spacer_flags": None,
         "plain_lyrics": None,
         "language": None,
         "track_name": "",
@@ -1128,7 +1130,7 @@ def evaluate_lrclib_items(
             result["verification"] = vad_info
             if not ok:
                 continue
-            if vad_probe_fn is None:
+            if vad_probe_fn is None and refine_ends_with_vad:
                 cues = refine_lrc_ends_with_audio(
                     cues,
                     wav_path,
@@ -1144,6 +1146,7 @@ def evaluate_lrclib_items(
             }
 
         result["synced_cues"] = cues
+        result["spacer_flags"] = spacer_flags
         result["language"] = detect_text_language(joined_text)
         result["track_name"] = str(item.get("trackName") or "")
         result["artist_name"] = str(item.get("artistName") or "")
