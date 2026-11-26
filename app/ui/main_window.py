@@ -1413,9 +1413,13 @@ class MainWindow(QMainWindow):
             print("⚠️ Không có video nào đang phát để reload!")
         
     def _show_status(self, message):
-        """Hiển thị thông báo lên thanh trạng thái (StatusBar)"""
-        # Nếu bác có dùng self.statusBar() của QMainWindow
-        self.statusBar().showMessage(message, 5000) # Hiện trong 5 giây
+        """Hiển thị thông báo gom 1 dòng duy nhất tại thanh đáy ai_progress_bar"""
+        bar = getattr(self, "ai_progress_bar", None)
+        if bar is not None:
+            if not bar._running:
+                bar.show_notice(message, hide_delay_ms=3500)
+        elif self.statusBar():
+            self.statusBar().showMessage(message, 5000)
         print(f"📢 STATUS: {message}")
         
     def toggle_fullscreen(self):

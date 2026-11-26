@@ -311,11 +311,15 @@ class AppController(QObject):
         return True
 
     # =========================================================
-    # STATUS BAR
+    # STATUS BAR (Gộp 1 dòng duy nhất tại ai_progress_bar)
     # =========================================================
     def _show_status(self, message):
-        if self.window.statusBar():
-            self.window.statusBar().showMessage(message, 5000)
+        bar = getattr(self.window, "ai_progress_bar", None)
+        if bar is None:
+            if hasattr(self.window, "statusBar") and self.window.statusBar():
+                self.window.statusBar().showMessage(message, 5000)
+        elif not bar._running and bar._state == "idle":
+            bar.show_notice(message, hide_delay_ms=3000)
         logger.info(f"📢 {message}")
 
     # =========================================================

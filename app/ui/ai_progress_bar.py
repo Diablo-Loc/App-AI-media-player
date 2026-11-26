@@ -177,13 +177,31 @@ class AIProgressBar(QFrame):
         self._set_dot_color("#77E0BE")
         self.lbl_status.setText(str(message or "🤖 Đang xử lý phụ đề..."))
         self.progress_bar.setValue(2)
+        self.progress_bar.show()
         self.lbl_percent.setText("2%")
+        self.lbl_percent.show()
         self.lbl_elapsed.setText("00:00")
+        self.lbl_elapsed.show()
         self.btn_cancel.setEnabled(True)
         self.btn_cancel.show()
         if not self._elapsed_timer.isActive():
             self._elapsed_timer.start()
         self.show()
+
+    def show_notice(self, message: str, hide_delay_ms: int = 3000):
+        """Show a brief single-line status notice on the same unified bottom bar."""
+        if not message or self._running:
+            return
+        self._hide_timer.stop()
+        self._state = "notice"
+        self._set_dot_color("#77E0BE")
+        self.lbl_status.setText(str(message))
+        self.progress_bar.hide()
+        self.lbl_percent.hide()
+        self.lbl_elapsed.hide()
+        self.btn_cancel.hide()
+        self.show()
+        self._hide_timer.start(max(600, int(hide_delay_ms)))
 
     def update_progress(self, percent: int, message: str | None = None):
         if not self._running:
