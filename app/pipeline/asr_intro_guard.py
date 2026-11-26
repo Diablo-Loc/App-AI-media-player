@@ -307,7 +307,7 @@ def _absolute_segment(segment, offset):
     )
 
 
-def _decode_intro_window(model, waveform, left, right, language, cancel_cb=None):
+def _decode_intro_window(model, waveform, left, right, language, cancel_cb=None, initial_prompt=None):
     if waveform is None or right - left < 0.5:
         return []
     clip = waveform[round(left * SAMPLE_RATE):round(right * SAMPLE_RATE)]
@@ -320,7 +320,7 @@ def _decode_intro_window(model, waveform, left, right, language, cancel_cb=None)
         beam_size=3,
         temperature=0.0,
         vad_filter=False,
-        initial_prompt=None,
+        initial_prompt=initial_prompt,
         no_speech_threshold=None,
     )
     decoded = []
@@ -872,15 +872,73 @@ EMPTY_INTRO_CHECK_SECONDS = 22.0
 EMPTY_INTRO_MIN_TOTAL_SPEECH = 1.8
 EMPTY_INTRO_MIN_ISLAND_SECONDS = 0.50
 EMPTY_INTRO_WINDOW_SECONDS = 14.0
+EMPTY_INTRO_GAP_BRIDGE_MIN = 4.5
+
+
+def _two_window_consensus_recover(
+    model,
+    waveform,
+    win_a,
+    win_b,
+    language,
+    active_speech,
+    *,
+    cancel_cb=None,
+    initial_prompt=None,
+):
+    """Decode two shifted windows and return segments only when both passes agree."""
+    a_left, a_right = win_a
+    b_left, b_right = win_b
+    passes = []
+    for left, right in (win_a, win_b):
+        decoded = _decode_intro_window(
+            model, waveform, left, right, language,
+            cancel_cb=cancel_cb, initial_prompt=initial_prompt,
+        )
+        accepted = [
+            item for item in _accepted_recovery_segments(decoded, active_speech)
+            if not _intro_media_boilerplate(getattr(item, "text", ""))
+        ]
+        passes.append(accepted)
+
+    ov_l = max(a_left, b_left)
+    ov_r = min(a_right, b_right)
+    had_non_credit = bool(passes[0] or passes[1])
+    ratio = _agreement_ratio(passes[0], passes[1], ov_l, ov_r)
+    if ratio >= RECOVERY_ONSET_AGREEMENT and passes[0]:
+        return passes[0], ratio, had_non_credit
+    # If pass 0 started inside an instrumental break and failed while pass 1 found clear lyrics,
+    # confirm pass 1 with one tightly shifted window around its own onset.
+    if passes[1] and not passes[0]:
+        first_b = min((_segment_span(s)[0] for s in passes[1] if _segment_span(s) is not None), default=None)
+        if first_b is not None:
+            duration = len(waveform) / SAMPLE_RATE
+            c_left = max(0.0, first_b - 1.1)
+            c_right = min(duration, max(b_right, first_b + 12.0))
+            if abs(c_left - b_left) >= 0.45 and c_right - c_left >= 2.0:
+                c_decoded = _decode_intro_window(
+                    model, waveform, c_left, c_right, language,
+                    cancel_cb=cancel_cb, initial_prompt=initial_prompt,
+                )
+                c_accepted = [
+                    item for item in _accepted_recovery_segments(c_decoded, active_speech)
+                    if not _intro_media_boilerplate(getattr(item, "text", ""))
+                ]
+                c_ratio = _agreement_ratio(passes[1], c_accepted, max(b_left, c_left), min(b_right, c_right))
+                if c_ratio >= RECOVERY_ONSET_AGREEMENT:
+                    return passes[1], c_ratio, True
+    return [], ratio, had_non_credit
 
 
 def _recover_empty_intro(model, waveform, segments, language, speech, confirmed_speech,
                          cancel_cb=None):
-    """Recover a completely skipped vocal intro (0..22s) via two-offset consensus.
+    """Recover skipped or credit-only vocal intros (0..30s) via two-offset consensus.
 
     Triggers ONLY when the primary pass emitted zero non-credit lyric segments
     before 22s despite clear VAD vocal activity. Two shifted windows must agree
     (>= RECOVERY_ONSET_AGREEMENT) so pure instrumental intros remain rejected.
+    Also bridges any remaining >=4.5s voiced gap between opening recovery and the
+    first primary cue using the verified opening lyric as prompt context.
     """
     from pipeline.lyric_accuracy import credit_text
 
@@ -888,15 +946,19 @@ def _recover_empty_intro(model, waveform, segments, language, speech, confirmed_
     if waveform is None or len(waveform) < SAMPLE_RATE * 4:
         return source, {}
 
+    non_credit_primary = []
     for segment in source:
         span = _segment_span(segment)
-        if span is None or span[0] >= EMPTY_INTRO_CHECK_SECONDS:
+        if span is None:
             continue
         text = str(getattr(segment, "text", "") or "").strip()
-        if text and not _intro_media_boilerplate(text) and not credit_text(
+        is_bad = (not text) or _intro_media_boilerplate(text) or credit_text(
             text, timed_words=bool(getattr(segment, "words", None))
-        ):
-            return source, {}
+        )
+        if not is_bad:
+            non_credit_primary.append((span[0], span[1], segment))
+            if span[0] < EMPTY_INTRO_CHECK_SECONDS:
+                return source, {}
 
     # Prefer default-VAD speech when present; fall back to sensitive speech for dense musical intros.
     active_speech = list(confirmed_speech or ())
@@ -914,59 +976,74 @@ def _recover_empty_intro(model, waveform, segments, language, speech, confirmed_
         return source, {}
 
     duration = len(waveform) / SAMPLE_RATE
-    onset_windows = []
-    for offset in RECOVERY_ONSET_OFFSETS:
-        left = max(0.0, first_voice - offset)
-        right = min(duration, left + EMPTY_INTRO_WINDOW_SECONDS)
-        if right - left >= 3.0:
-            onset_windows.append((left, right))
-    if len(onset_windows) != 2:
+    left_a = max(0.0, first_voice - RECOVERY_ONSET_OFFSETS[0])
+    left_b = max(left_a + 0.85, first_voice - RECOVERY_ONSET_OFFSETS[1])
+    right_a = min(duration, left_a + EMPTY_INTRO_WINDOW_SECONDS)
+    right_b = min(duration, left_b + EMPTY_INTRO_WINDOW_SECONDS)
+    if right_a - left_a < 3.0 or right_b - left_b < 3.0:
         return source, {"empty_intro_rejected": "short_audio"}
 
-    # Accept recovered cues backed by active_speech; two-offset agreement blocks instrumental hallucinations.
-    onset_passes = []
-    for left, right in onset_windows:
-        decoded = _decode_intro_window(model, waveform, left, right, language, cancel_cb=cancel_cb)
-        accepted = [
-            item for item in _accepted_recovery_segments(decoded, active_speech)
-            if not _intro_media_boilerplate(getattr(item, "text", ""))
-        ]
-        onset_passes.append(accepted)
+    recovered, onset_ratio, had_non_credit = _two_window_consensus_recover(
+        model, waveform, (left_a, right_a), (left_b, right_b),
+        language, active_speech, cancel_cb=cancel_cb, initial_prompt=None,
+    )
+    # Only retry with later lyric context when BOTH unprompted passes returned empty / credit-only
+    # (never when they produced disagreeing instrumental hallucinations).
+    if not recovered and not had_non_credit and non_credit_primary:
+        later_prompt = str(getattr(non_credit_primary[0][2], "text", "") or "").strip()[:120]
+        if later_prompt:
+            recovered, onset_ratio, _ = _two_window_consensus_recover(
+                model, waveform, (left_a, right_a), (left_b, right_b),
+                language, active_speech, cancel_cb=cancel_cb, initial_prompt=later_prompt,
+            )
 
-    first_left, first_right = onset_windows[0]
-    second_left, second_right = onset_windows[1]
-    overlap_left = max(first_left, second_left, first_voice)
-    overlap_right = min(first_right, second_right)
-    onset_ratio = _agreement_ratio(onset_passes[0], onset_passes[1], overlap_left, overlap_right)
-    if onset_ratio < RECOVERY_ONSET_AGREEMENT or not onset_passes[0]:
+    if not recovered:
         return source, {
             "empty_intro_rejected": "onset_disagreement",
             "empty_intro_onset_ratio": round(onset_ratio, 3),
         }
 
-    recovered = list(onset_passes[0])
-    # Optionally bridge into the 18..32s seam if primary still has no coverage up to 30s.
-    first_primary_start = min(
-        (_segment_span(seg)[0] for seg in source if _segment_span(seg) is not None),
-        default=duration,
-    )
-    if first_right < min(duration - 1.0, INTRO_SECONDS, first_primary_start - 1.0):
-        seam_left = max(first_left + 4.0, min(RECOVERY_SEAM_LEFT, first_right - 4.0))
-        seam_right = min(duration, max(RECOVERY_SEAM_RIGHT, first_right + 10.0))
-        if seam_right - seam_left >= 4.0:
-            seam_decoded = _decode_intro_window(model, waveform, seam_left, seam_right, language, cancel_cb=cancel_cb)
-            seam = [
-                item for item in _accepted_recovery_segments(seam_decoded, active_speech)
-                if not _intro_media_boilerplate(getattr(item, "text", ""))
-            ]
-            ov_l = max(seam_left, first_left)
-            ov_r = min(seam_right, first_right)
-            if seam and _agreement_ratio(recovered, seam, ov_l, ov_r) >= RECOVERY_SEAM_AGREEMENT:
-                stitched = _stitch_intro_recovery(recovered, seam, ov_l, ov_r)
-                if stitched:
-                    recovered = stitched
+    # Bridge any remaining >=4.5s voiced gap between end of opening recovery and first non-credit primary cue.
+    first_primary_start = min((item[0] for item in non_credit_primary), default=duration)
+    recovered_end = max((_segment_span(s)[1] for s in recovered if _segment_span(s) is not None), default=right_a)
+    gap_span = min(duration, first_primary_start) - recovered_end
+    bridge_added = 0
+    if gap_span >= EMPTY_INTRO_GAP_BRIDGE_MIN and recovered_end < INTRO_SECONDS + 2.0:
+        gap_voiced = _overlap(recovered_end, min(duration, first_primary_start), active_speech)
+        if gap_voiced >= 1.5:
+            context_prompt = str(getattr(recovered[-1], "text", "") or "").strip()[:120] or None
+            bridge_end = min(duration, max(INTRO_SECONDS + 2.0, first_primary_start + 2.0))
+            b1_left = max(0.0, recovered_end + 0.5)
+            b2_left = min(b1_left + 3.2, max(b1_left + 0.9, bridge_end - 6.0))
+            if bridge_end - b1_left >= 4.0 and bridge_end - b2_left >= 3.0:
+                bridged, _, _ = _two_window_consensus_recover(
+                    model, waveform, (b1_left, bridge_end), (b2_left, bridge_end),
+                    language, active_speech, cancel_cb=cancel_cb, initial_prompt=context_prompt,
+                )
+                if bridged:
+                    # Keep only cues that fall inside the uncovered gap before first_primary_start
+                    fresh = [
+                        seg for seg in bridged
+                        if _segment_span(seg) is not None
+                        and _segment_span(seg)[0] >= recovered_end - 0.35
+                        and _segment_span(seg)[0] < first_primary_start - 0.25
+                    ]
+                    if fresh:
+                        recovered, bridge_added = _merge_recovery_primary_first(recovered, fresh)
 
-    merged, added = _merge_recovery_primary_first(source, recovered)
+    # Remove explicit credit/boilerplate segments inside 0..30s that collided with recovered singing
+    kept = []
+    for segment in source:
+        span = _segment_span(segment)
+        if span is not None and span[0] < INTRO_SECONDS:
+            text = str(getattr(segment, "text", "") or "").strip()
+            if _intro_media_boilerplate(text) or credit_text(
+                text, timed_words=bool(getattr(segment, "words", None))
+            ):
+                continue
+        kept.append(segment)
+
+    merged, added = _merge_recovery_primary_first(kept, recovered)
     if not added:
         return source, {"empty_intro_rejected": "no_new_coverage"}
     return merged, {
@@ -974,6 +1051,7 @@ def _recover_empty_intro(model, waveform, segments, language, speech, confirmed_
         "empty_intro_first_voice": round(first_voice, 3),
         "empty_intro_onset_ratio": round(onset_ratio, 3),
         "empty_intro_added": added,
+        "empty_intro_bridge_added": bridge_added,
     }
 
 

@@ -713,6 +713,7 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
     budget = _retry_budget(duration)
     windows = windows[:budget]
     checked_suspects = set()
+    context_retries = 0
     for round_index in range(2):
         for left, right in windows:
             if len(attempted) >= budget:
@@ -759,7 +760,71 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                                           refine_options, duration, refine_fn=refine_fn,
                                           boundary_gap=boundary_gap, boundary_tolerance=boundary_tolerance)
             proposed = len(candidates)
-            verify_candidates = [
+            # If standard initial_prompt=None yielded 0 usable cues (often credit hallucination
+            # over an instrumental lead-in) on a substantial voiced gap, try one bounded
+            # context-prompted two-window consensus retry using the preceding lyric line.
+            context_verified = False
+            if (
+                round_index == 0
+                and context_retries < 2
+                and proposed == 0
+                and left >= 4.0
+                and (right - left) >= 8.0
+                and any(
+                    (ge - gs) >= 4.5 and min(right, ge) - max(left, gs) >= 4.0
+                    for gs, ge in current_voiced_gaps
+                )
+            ):
+                prev_cues = [c for c in combined if float(c["end"]) <= left + 2.5 and str(c.get("text", "")).strip()]
+                ctx_prompt = str(prev_cues[-1]["text"]).strip()[:120] if prev_cues else None
+                if ctx_prompt:
+                    c1_l = min(duration - 3.0, left + 2.5)
+                    c1_r = min(duration, right + 3.0)
+                    c2_l = min(duration - 3.0, left + 4.5)
+                    c2_r = min(duration, right + 4.0)
+                    if c1_r - c1_l >= 3.5 and c2_r - c2_l >= 3.0:
+                        context_retries += 1
+                        try:
+                            g1, _ = model.transcribe(
+                                waveform[round(c1_l * SAMPLE_RATE):round(c1_r * SAMPLE_RATE)],
+                                language=language, word_timestamps=True,
+                                condition_on_previous_text=False, beam_size=3, temperature=0.0,
+                                vad_filter=False, initial_prompt=ctx_prompt, no_speech_threshold=None,
+                            )
+                            d1 = []
+                            for seg in g1:
+                                _check_cancel(cancel_cb)
+                                d1.append(seg)
+                            cand1 = _candidate_cues(
+                                d1, c1_l, c1_r, recovery_bounds, speech,
+                                refine_options, duration, refine_fn=refine_fn,
+                                boundary_gap=boundary_gap, boundary_tolerance=boundary_tolerance,
+                            )
+                            if cand1:
+                                g2, _ = model.transcribe(
+                                    waveform[round(c2_l * SAMPLE_RATE):round(c2_r * SAMPLE_RATE)],
+                                    language=language, word_timestamps=True,
+                                    condition_on_previous_text=False, beam_size=3, temperature=0.0,
+                                    vad_filter=False, initial_prompt=ctx_prompt, no_speech_threshold=None,
+                                )
+                                d2 = []
+                                for seg in g2:
+                                    _check_cancel(cancel_cb)
+                                    d2.append(seg)
+                                ev2 = _decoded_evidence(d2, c2_l)
+                                confirmed_ctx = [
+                                    item for item in cand1
+                                    if _supported_by_prior_decode(item, ev2)
+                                ]
+                                if confirmed_ctx:
+                                    candidates = confirmed_ctx
+                                    proposed = len(candidates)
+                                    context_verified = True
+                        except RuntimeError:
+                            raise
+                        except Exception:
+                            pass
+            verify_candidates = [] if context_verified else [
                 item for item in candidates
                 if _needs_recovery_verification(item, current_gaps, speech, duration)
             ]

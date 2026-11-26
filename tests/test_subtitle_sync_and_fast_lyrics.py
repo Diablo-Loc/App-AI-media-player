@@ -278,6 +278,45 @@ class EmptyIntroConsensusAndRefinementTests(unittest.TestCase):
         self.assertIn("君の声が聞こえる", texts)
         self.assertIn("Later chorus line", texts)
 
+    def test_empty_intro_bridges_14_to_30s_gap_using_opening_lyric_prompt(self):
+        import numpy as np
+        from pipeline.asr_intro_guard import _recover_empty_intro
+
+        waveform = np.zeros(16000 * 40, dtype=np.float32)
+        primary = [self._seg(30.3, 35.0, "とめどなく溢れる不安が")]
+        speech = [(5.0, 36.0)]
+        prompts_seen = []
+
+        class BridgeModel:
+            def __init__(self):
+                self.calls = 0
+
+            def transcribe(self, clip, **kwargs):
+                self.calls += 1
+                prompts_seen.append(kwargs.get("initial_prompt"))
+                # Calls 1 & 2: opening 5..14s (unprompted)
+                if self.calls == 1:
+                    segs = [self._seg(1.8, 10.2, "明け星揺らめいてる儚い海に消えない光")]
+                elif self.calls == 2:
+                    segs = [self._seg(0.8, 9.2, "明け星揺らめいてる儚い海に消えない光")]
+                # Calls 3 & 4: bridge 14..32s (prompted with opening lyric!)
+                elif self.calls == 3:
+                    segs = [self._seg(5.5, 14.5, "夢見ている未来が遠ざかってゆくような")]
+                else:
+                    segs = [self._seg(2.3, 11.3, "夢見ている未来が遠ざかってゆくような")]
+                return iter(segs), SimpleNamespace(language="ja", language_probability=0.99)
+
+            _seg = staticmethod(self._seg)
+
+        merged, rep = _recover_empty_intro(BridgeModel(), waveform, primary, "ja", speech, speech)
+        self.assertTrue(rep.get("empty_intro_recovered"))
+        self.assertGreaterEqual(rep.get("empty_intro_bridge_added", 0), 1)
+        self.assertIn("明け星揺らめいてる儚い海に消えない光", prompts_seen)
+        texts = [s.text for s in merged]
+        self.assertIn("明け星揺らめいてる儚い海に消えない光", texts)
+        self.assertIn("夢見ている未来が遠ざかってゆくような", texts)
+        self.assertIn("とめどなく溢れる不安が", texts)
+
     def test_empty_intro_rejects_instrumental_hallucination_disagreement(self):
         import numpy as np
         from pipeline.asr_intro_guard import _recover_empty_intro
