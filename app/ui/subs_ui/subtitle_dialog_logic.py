@@ -29,7 +29,9 @@ class SubtitleToolsDialogLogic:
         os.makedirs(sub_storage_dir, exist_ok=True)
 
         candidates = [
+            os.path.join(sub_storage_dir, "json", f"{self.media_id}.json") if self.media_id else "",
             os.path.join(sub_storage_dir, f"{self.media_id}.json") if self.media_id else "",
+            os.path.join(sub_storage_dir, "ass", f"{self.media_id}.ass") if self.media_id else "",
             os.path.join(sub_storage_dir, f"{self.media_id}.ass") if self.media_id else "",
             os.path.join(sub_storage_dir, "source", "srt", f"{filename}.srt"),
             os.path.join(media_dir, "subtitles", f"{filename}.ass") if media_dir else "",
@@ -39,7 +41,7 @@ class SubtitleToolsDialogLogic:
         for candidate in candidates:
             if candidate and os.path.exists(candidate):
                 return candidate
-        return os.path.join(sub_storage_dir, f"{self.media_id or filename}.json")
+        return os.path.join(sub_storage_dir, "json", f"{self.media_id or filename}.json")
 
     def sync_context_from_parent(self):
         parent = self.parent()
@@ -300,23 +302,40 @@ class SubtitleToolsDialogLogic:
                 continue
 
             if st <= curr_time <= et:
+                # Match SubtitleLayer bisect_right semantics: on touching boundaries pick incoming row
                 current_active = row
-                break
 
-        if current_active >= 0 and current_active != self.active_row_index:
+        if current_active != self.active_row_index:
             self.table_model.set_active_row(current_active)
-            try:
-                idx = self.table_model.index(current_active, 2)
-                self.table_combined.scrollTo(idx, QAbstractItemView.PositionAtCenter)
-            except Exception:
-                pass
+            if current_active >= 0:
+                try:
+                    idx = self.table_model.index(current_active, 2)
+                    self.table_combined.scrollTo(idx, QAbstractItemView.PositionAtCenter)
+                except Exception:
+                    pass
             self.active_row_index = current_active
 
     def _on_player_position_changed(self, pos_ms: int):
         try:
-            self._sync_active_sub_for_time(float(pos_ms) / 1000.0)
+            parent = self.parent()
+            if parent and hasattr(parent, 'authoritative_subtitle_position_ms') and callable(getattr(parent, 'authoritative_subtitle_position_ms')):
+                curr_sec = float(parent.authoritative_subtitle_position_ms()) / 1000.0
+            else:
+                curr_sec = float(pos_ms) / 1000.0
+            self._sync_active_sub_for_time(curr_sec)
         except Exception:
             pass
+
+    def _sync_orig_editor_from_segments(self, segments: list):
+        if not hasattr(self, 'editor_orig'):
+            return
+        lines_orig = []
+        for seg in segments or []:
+            start = float(seg.get('start', 0.0) or 0.0)
+            end = float(seg.get('end', 0.0) or 0.0)
+            orig_text = seg.get('text', '') or seg.get('orig', '') or seg.get('jp', '')
+            lines_orig.append(f"[{start:.2f} --> {end:.2f}] {orig_text}")
+        self.editor_orig.setPlainText("\n".join(lines_orig))
 
     def _highlight_active_row(self, row: int):
         self.table_model.set_active_row(row)
@@ -665,6 +684,7 @@ class SubtitleToolsDialogLogic:
 
         before = self.table_model.snapshot()
         self.table_model.set_segments(segments)
+        self._sync_orig_editor_from_segments(segments)
         after = self.table_model.snapshot()
         self._push_undo(before, after, "Import Subtitles")
 
@@ -736,9 +756,15 @@ class SubtitleToolsDialogLogic:
                 QMessageBox.warning(self, "Lỗi đọc file", f"Không thể đọc file: {e}")
 
     def start_auto_translation(self):
-        parsed_orig = self._parse_tab_orig()
+        # Always translate from the active tab (Table when on Tab 2 after edits/import, Orig when on Tab 1)
+        if self.tabs.currentIndex() == 1:
+            parsed_orig = self._parse_table_combined() or self._parse_tab_orig()
+            if parsed_orig:
+                self._sync_orig_editor_from_segments(parsed_orig)
+        else:
+            parsed_orig = self._parse_tab_orig() or self._parse_table_combined()
         if not parsed_orig:
-            QMessageBox.warning(self, "Cảnh báo", "Tab phụ đề gốc không có dữ liệu để dịch!")
+            QMessageBox.warning(self, "Cảnh báo", "Không có dữ liệu phụ đề để dịch!")
             return
 
         settings = QSettings("MyStudio", "AI_Music_Player")
@@ -786,6 +812,7 @@ class SubtitleToolsDialogLogic:
         self.progress_bar.hide()
 
         self._update_combined_table_ui(updated_segments)
+        self._sync_orig_editor_from_segments(updated_segments)
         self.tabs.setCurrentIndex(1)
 
         QMessageBox.information(
@@ -898,8 +925,10 @@ class SubtitleToolsDialogLogic:
             for idx, item in enumerate(parsed_data):
                 existing = existing_segments[idx] if idx < len(existing_segments) else {}
                 seg_dict = dict(existing)
-                seg_dict["start"] = float(item.get('start', 0.0))
-                seg_dict["end"] = float(item.get('end', 0.0))
+                seg_start = max(0.0, float(item.get('start', 0.0)))
+                seg_end = max(seg_start + 0.05, float(item.get('end', seg_start + 0.05)))
+                seg_dict["start"] = round(seg_start, 3)
+                seg_dict["end"] = round(seg_end, 3)
                 new_text = item.get('text') or item.get('orig') or ''
                 seg_dict["text"] = new_text
                 seg_dict["orig"] = new_text
@@ -926,6 +955,11 @@ class SubtitleToolsDialogLogic:
                             ctrl.current_subtitle_id = None
                         ctrl._load_subtitle_to_ui(media_id)
                     if hasattr(ctrl, 'sub_layer') and ctrl.sub_layer:
+                        if hasattr(parent, 'authoritative_subtitle_position_ms') and callable(getattr(parent, 'authoritative_subtitle_position_ms')):
+                            try:
+                                ctrl.sub_layer.update_position(int(parent.authoritative_subtitle_position_ms()))
+                            except Exception:
+                                pass
                         ctrl.sub_layer.update()
                 QMessageBox.information(self, "Thành công", f"✅ Đã lưu và cập nhật {len(new_segments)} câu phụ đề thành công!")
                 self.accept()
@@ -981,24 +1015,39 @@ class SubtitleToolsDialogLogic:
 
         settings = QSettings("MyStudio", "AI_Music_Player")
         provider = settings.value("online_provider", "Local Default")
-        if provider == "Local Default":
-            QMessageBox.warning(
-                self,
-                "Cảnh báo",
-                "Vui lòng chọn một dịch vụ AI Online trong Cài đặt trước khi Khớp Lời."
-            )
-            return
         api_key = (
             settings.value("api_key", "").strip()
             or settings.value("gemini_key", "").strip()
             or settings.value("openai_key", "").strip()
             or settings.value("claude_key", "").strip()
         )
-        if not api_key:
-            QMessageBox.warning(
+        # Instant offline/local DP lyric snapping works with ZERO API key!
+        if provider == "Local Default" or not api_key:
+            from pipeline.lyric_reference_snap import snap_asr_cues_to_reference
+            snapped, snap_rep = snap_asr_cues_to_reference(
+                whisper_lines,
+                ref_text,
+                lang=self.detected_lang if self.detected_lang != "auto" else "",
+            )
+            lines_output = [
+                f"[{seg['start']:.2f} --> {seg['end']:.2f}] {seg['text']}"
+                for seg in snapped
+            ]
+            self.editor_orig.setPlainText("\n".join(lines_output))
+            # Keep Table tab in sync with updated orig text while preserving existing EN/VI translations
+            table_segs = self._parse_table_combined()
+            if len(table_segs) == len(snapped):
+                merged_table = []
+                for idx_s, seg in enumerate(snapped):
+                    row_d = dict(table_segs[idx_s])
+                    row_d["text"] = seg["text"]
+                    row_d["orig"] = seg["text"]
+                    merged_table.append(row_d)
+                self._update_combined_table_ui(merged_table)
+            QMessageBox.information(
                 self,
-                "Cảnh báo",
-                "Vui lòng cài đặt API Key trong Cài đặt ứng dụng!"
+                "✅ Hoàn tất (Local)",
+                f"Đã khớp chuẩn {snap_rep.get('snapped_cues', 0)}/{len(snapped)} dòng theo Lời Chuẩn (giữ nguyên 100% mốc giờ)!"
             )
             return
 
@@ -1018,6 +1067,16 @@ class SubtitleToolsDialogLogic:
         self.btn_align.setText("✨ Khớp & Sửa Lời Chuẩn (Align Lyrics)")
         self.progress_bar.hide()
         self.editor_orig.setPlainText("\n".join(lines_output))
+        parsed_new = self._parse_tab_orig()
+        table_segs = self._parse_table_combined()
+        if parsed_new and len(table_segs) == len(parsed_new):
+            merged_table = []
+            for idx_s, seg in enumerate(parsed_new):
+                row_d = dict(table_segs[idx_s])
+                row_d["text"] = seg["text"]
+                row_d["orig"] = seg["text"]
+                merged_table.append(row_d)
+            self._update_combined_table_ui(merged_table)
         QMessageBox.information(
             self,
             "✅ Hoàn tất",

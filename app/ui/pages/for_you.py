@@ -240,6 +240,7 @@ class VideoStage(QFrame):
             self.subtitle_window.enable_render = True
             self.subtitle_window.show()
 
+        self.update_layout_execution()
         self.update_layout()
 
     def update_layout(self):
@@ -252,26 +253,35 @@ class VideoStage(QFrame):
         # stage still has a pending resize or metadata callback.
         if self.video_widget and self.video_widget.parentWidget() is not self:
             return
-        if not self.subtitle_window or not self.video_widget:
+        if not self.video_widget:
             return
-               
-        w, h = self.width(), self.height()
-        if w <= 0 or h <= 0: return 
 
-        scale = min(w / self.video_width, h / self.video_height)
-        target_w = int(self.video_width * scale)
-        target_h = int(self.video_height * scale)
+        w, h = self.width(), self.height()
+        if w <= 0 or h <= 0:
+            return
+
+        # Gỡ mọi giới hạn kích thước cố định còn sót từ chế độ Mini (140x80)
+        self.video_widget.setMinimumSize(0, 0)
+        self.video_widget.setMaximumSize(16777215, 16777215)
+
+        scale = min(w / max(1, self.video_width), h / max(1, self.video_height))
+        target_w = min(w, int(round(self.video_width * scale)))
+        target_h = min(h, int(round(self.video_height * scale)))
 
         local_x = (w - target_w) // 2
         local_y = (h - target_h) // 2
 
         self.video_widget.setGeometry(local_x, local_y, target_w, target_h)
+        self.video_widget.update()
+
+        if not self.subtitle_window:
+            return
 
         # Lấy tọa độ gốc của Stage & khung Video thực tế
         stage_pos = self.mapToGlobal(QPoint(0, 0))
         v_global_x = stage_pos.x() + local_x
         v_global_y = stage_pos.y() + local_y
-        
+
         # Căn phụ đề theo khung video sao cho luôn neo sát mép dưới (không trôi lên giữa khung hình)
         video_rect = QRect(v_global_x, v_global_y, target_w, target_h)
         if hasattr(self.subtitle_window, 'set_bottom_margin'):
@@ -574,6 +584,7 @@ class ForYouPage(QWidget):
 
     def setup_content(self, video_widget, subtitle_window=None):
         self.video_container.set_components(video_widget, subtitle_window)
+        QTimer.singleShot(80, self.video_container.update_layout)
 
     def update_art(self, media_item):
         self.title_label.setText(media_item.title)
@@ -669,6 +680,8 @@ class ForYouPage(QWidget):
 
         if not win.isFullScreen() and not win.isMaximized():
             win.showMaximized()
+        QTimer.singleShot(40, self.video_container.update_layout)
+        QTimer.singleShot(180, self.video_container.update_layout)
 
     def hideEvent(self, event):
         win = self.window()

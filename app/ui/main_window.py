@@ -332,6 +332,10 @@ class MainWindow(QMainWindow):
         self.media_player.player.metaDataChanged.connect(
             self._on_video_metadata_ready
         )
+        if hasattr(self.video_display, 'videoSink') and self.video_display.videoSink() is not None:
+            self.video_display.videoSink().videoSizeChanged.connect(
+                self._on_video_metadata_ready
+            )
     def _hardware_play(self):
         if self.audio_effects.set_pending_playback(True):
             return
@@ -1395,26 +1399,27 @@ class MainWindow(QMainWindow):
         # ngay sau khi bài mới được kích hoạt, cập nhật mini player
         self.sync_mini_player_state()
     
-    def _on_video_metadata_ready(self):
-        """Hàm callback khi video load xong metadata (để lấy width/height)"""
+    def _on_video_metadata_ready(self, *_args):
+        """Hàm callback khi video load xong metadata hoặc kích thước khung hình thực tế"""
         if not hasattr(self, 'foryou_page'): return
         
         # 1. Lấy resolution từ Player
         # Lưu ý: PySide6 trả về QSize
-        video_size = self.media_player.player.videoSink().videoSize()
+        sink = self.media_player.player.videoSink()
+        video_size = sink.videoSize() if sink is not None else None
+        if (video_size is None or not video_size.isValid()) and hasattr(self.video_display, 'videoSink'):
+            vsink = self.video_display.videoSink()
+            video_size = vsink.videoSize() if vsink is not None else None
         
-        if video_size.isValid():
+        if video_size is not None and video_size.isValid() and video_size.width() > 0 and video_size.height() > 0:
             w = video_size.width()
             h = video_size.height()
-            print(f"📏 Video Size Detected: {w}x{h}")
-            
-            # 2. Cập nhật vào VideoStage
             video_stage = self.foryou_page.video_container
-            video_stage.video_width = w
-            video_stage.video_height = h
-            
-            # 3. Ép tính toán lại giao diện ngay lập tức
-            video_stage.resizeEvent(None)
+            if video_stage.video_width != w or video_stage.video_height != h:
+                print(f"📏 Video Size Detected: {w}x{h}")
+                video_stage.video_width = w
+                video_stage.video_height = h
+            video_stage.update_layout()
                     
     # DÙNG CHO NÚT RELOAD / CONTEXT MENU
     def force_reload_subtitle(self, media_item):

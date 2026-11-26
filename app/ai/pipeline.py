@@ -163,6 +163,7 @@ def run_ai_pipeline(
 
     temp_wav_path = None
     lrclib_reference_lyric = None
+    lrclib_reference_candidates = []
     lrc_vad_probe = None
     wav_duration = None
     used_fast_lyrics = False
@@ -271,9 +272,14 @@ def run_ai_pipeline(
                     media_duration=wav_duration,
                     wav_path=temp_wav_path,
                     refine_ends_with_vad=not can_cuda_align_lrc,
+                    allow_mv_offset=can_cuda_align_lrc,
                 )
                 lrclib_reference_lyric = lrc_res.get("plain_lyrics")
+                lrclib_reference_candidates = lrc_res.get("plain_candidates") or (
+                    [lrclib_reference_lyric] if lrclib_reference_lyric else []
+                )
                 lrc_vad_probe = lrc_res.get("vad_probe")
+                requires_strict_fa = bool(lrc_res.get("requires_strict_fa"))
                 if lrc_res.get("synced_cues"):
                     final_segments = lrc_res["synced_cues"]
                     detected_lang = lrc_res.get("language") or "en"
@@ -308,15 +314,26 @@ def run_ai_pipeline(
                                     final_segments,
                                     duration=wav_duration,
                                     spacer_flags=lrc_res.get("spacer_flags"),
+                                    strict_mv=requires_strict_fa,
                                     cancel_cb=cancel_cb,
                                     budget_s=12.0,
                                     progress_cb=progress_cb,
                                 )
-                                if fa_rep.get("errors", 0) == 0 and aligned_lrc:
+                                if fa_rep.get("errors", 0) == 0 and fa_rep.get("sync_verified") is False:
+                                    # Forced alignment proved LRCLIB does not match this recording's real timing!
+                                    print(
+                                        f"⚠️ Lời LRCLIB lệch nhịp thực tế ({fa_rep.get('reject_reason')}), "
+                                        "tự động chuyển sang Whisper ASR!"
+                                    )
+                                    used_fast_lyrics = False
+                                    final_segments = []
+                                    fa_applied = True
+                                elif fa_rep.get("errors", 0) == 0 and aligned_lrc:
                                     final_segments = aligned_lrc
                                     fa_applied = True
                                     print(
-                                        f"⏱ Căn mốc kết thúc Fast-Path (CUDA): {fa_rep['changed']}/{len(final_segments)} câu, "
+                                        f"⏱ Căn mốc Fast-Path (CUDA): {fa_rep['changed']}/{len(final_segments)} câu, "
+                                        f"shift={fa_rep.get('global_shift', 0.0):+.2f}s, mad={fa_rep.get('median_abs_residual', 0.0):.2f}s, "
                                         f"{fa_rep['windows']} cửa sổ, {fa_rep['seconds']:.2f}s."
                                     )
                         except Exception as fa_err:
@@ -329,15 +346,20 @@ def run_ai_pipeline(
                             _t_mod = sys.modules.get("torch")
                             if _t_mod is not None and hasattr(_t_mod, "cuda") and _t_mod.cuda.is_available():
                                 _t_mod.cuda.empty_cache()
-                    if not fa_applied and can_cuda_align_lrc:
-                        from pipeline.fast_lyrics import refine_lrc_ends_with_audio
-                        final_segments = refine_lrc_ends_with_audio(
-                            final_segments,
-                            temp_wav_path,
-                            media_duration=wav_duration,
-                            spacer_flags=lrc_res.get("spacer_flags"),
-                        )
-                    _report(progress_cb, 60, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
+                    if requires_strict_fa and not fa_applied:
+                        # Coarse-shifted MVs MUST pass strict CUDA FA; never trust unverified coarse offsets.
+                        used_fast_lyrics = False
+                        final_segments = []
+                    if used_fast_lyrics:
+                        if not fa_applied and can_cuda_align_lrc:
+                            from pipeline.fast_lyrics import refine_lrc_ends_with_audio
+                            final_segments = refine_lrc_ends_with_audio(
+                                final_segments,
+                                temp_wav_path,
+                                media_duration=wav_duration,
+                                spacer_flags=lrc_res.get("spacer_flags"),
+                            )
+                        _report(progress_cb, 60, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
 
         if not used_fast_lyrics:
             # Báo trạng thái TRƯỚC khi import torch / faster_whisper để thanh tiến trình không kẹt ở bước cũ!
@@ -609,6 +631,22 @@ def run_ai_pipeline(
                         final_segments, cjk=is_cjk, duration=coverage.get("duration")),
                     min_clean_gap=0.52,
                 )
+                if final_segments and lrclib_reference_candidates:
+                    from pipeline.lyric_reference_snap import snap_asr_cues_to_reference
+                    final_segments, snap_rep = snap_asr_cues_to_reference(
+                        final_segments,
+                        lrclib_reference_candidates,
+                        lang=detected_lang,
+                    )
+                    if snap_rep.get("snapped_cues", 0) > 0:
+                        if snap_rep.get("selected_lyrics"):
+                            lrclib_reference_lyric = snap_rep["selected_lyrics"]
+                        sel_track = snap_rep.get("selected_track") or "LRCLIB"
+                        print(
+                            f"✨ Chuẩn hóa lời gốc theo tham chiếu ({sel_track}): "
+                            f"gắn chuẩn {snap_rep['snapped_cues']}/{snap_rep['total_cues']} câu "
+                            f"(giữ nguyên 100% mốc giờ Whisper, mode={snap_rep.get('mode')})."
+                        )
             _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng

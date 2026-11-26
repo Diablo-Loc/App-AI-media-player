@@ -18,10 +18,12 @@ def _parse_srt_time(ts: str) -> float:
     return float(ts)
 
 def _format_srt_time(seconds: float) -> str:
-    ms = int(round((seconds - int(seconds)) * 1000))
-    s = int(seconds) % 60
-    m = (int(seconds) // 60) % 60
-    h = int(seconds) // 3600
+    total_ms = max(0, int(round(float(seconds) * 1000)))
+    ms = total_ms % 1000
+    total_s = total_ms // 1000
+    s = total_s % 60
+    m = (total_s // 60) % 60
+    h = total_s // 3600
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 def _parse_ass_time(ts: str) -> float:
@@ -158,7 +160,7 @@ def save_subs(path: str, segments: List[dict]):
             for i, s in enumerate(segments, start=1):
                 start = _format_srt_time(float(s.get('start', 0.0)))
                 end = _format_srt_time(float(s.get('end', 0.0)))
-                txt = s.get('text', '')
+                txt = str(s.get('text') or s.get('orig') or s.get('jp') or s.get('en') or s.get('vi') or '')
                 f.write(f"{i}\n{start} --> {end}\n{txt}\n\n")
         return
     if lower.endswith('.ass'):
@@ -176,7 +178,7 @@ def save_subs(path: str, segments: List[dict]):
             for s in segments:
                 start = _format_ass_time(float(s.get('start', 0.0)))
                 end = _format_ass_time(float(s.get('end', 0.0)))
-                txt = s.get('text', '')
+                txt = str(s.get('text') or s.get('orig') or s.get('jp') or s.get('en') or s.get('vi') or '').replace('\n', r'\N')
                 f.write(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{txt}\n")
         return
     # default to json

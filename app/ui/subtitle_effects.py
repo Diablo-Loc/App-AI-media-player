@@ -1512,6 +1512,13 @@ class SubtitleEffects(QObject):
 
         self.kinetic.last_draw_count = 0
         cue_span = max(0, self.cue[2] - self.cue[1]) if self.cue else 0
+        if erase_sweep and self.scan_progress >= 1.0:
+            # At sweep end skip all glyph passes so DPR glow outside contentsRect cannot survive.
+            if decorative:
+                self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
+                                     p, burst=mode == 'burst', beat_pulse=0.0)
+            painter.restore()
+            return True
         if mode in PER_CHAR_MODES and cue_span >= 900:
             entry_ms = min(900, max(self.options['duration'], int(self.options['duration'] * 1.55)), int(cue_span * 0.56))
         else:

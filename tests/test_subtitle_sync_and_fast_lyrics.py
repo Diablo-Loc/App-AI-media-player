@@ -1080,6 +1080,93 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         self.assertNotIn(3, changed)
         self.assertNotIn(5, changed)
 
+    def test_derivative_cover_blocks_lrclib_synced_and_alignment_gate_fixes_offset_or_rejects_drift(self):
+        from pipeline.fast_lyrics import evaluate_lrclib_items
+        from pipeline.lyric_timing import _apply_lrc_alignment
+
+        # 1. Cover song ('【歌ってみた】... covered by ...') MUST NEVER inherit original studio synced timestamps!
+        items = [{
+            "trackName": "Tell Your World",
+            "artistName": "kz (livetune)",
+            "duration": 255.8,
+            "instrumental": False,
+            "plainLyrics": "形のない気持ち忘れないように\n決まりきったレイアウトを消した",
+            "syncedLyrics": (
+                "[00:26.16] 形のない気持ち忘れないように\n"
+                "[00:32.51] 決まりきったレイアウトを消した\n"
+                "[00:38.97] ふと口ずさんだフレーズをつかまえて\n"
+            ),
+        }]
+        res = evaluate_lrclib_items(
+            "【歌ってみた】Tell Your World – kz - covered by 月見ヤチヨ(cv.早見沙織) from 超かぐや姫！",
+            items,
+            effective_query="Tell Your World – kz",
+            media_duration=255.2,
+            wav_path=None,
+        )
+        self.assertIsNone(res["synced_cues"])
+        self.assertEqual(res["verification"]["reason"], "derivative_performance_skip_synced")
+        # Plain reference is STILL preserved for online translation!
+        self.assertIn("形のない気持ち忘れないように", res["plain_lyrics"])
+
+        # 2. Constant master offset (-0.31s YouTube vs Spotify) is corrected cleanly across all cues
+        cues = [
+            {"start": 12.16, "end": 17.41, "text": "See how far we've come"},
+            {"start": 17.41, "end": 23.25, "text": "And we are stronger now"},
+            {"start": 23.25, "end": 29.45, "text": "Memories we will cherish"},
+            {"start": 29.45, "end": 34.73, "text": "Walk as one with dawn"},
+        ]
+        cands = {
+            0: [{"start": 11.85, "end": 15.86, "word": "See", "probability": 0.85}],
+            1: [{"start": 17.10, "end": 20.52, "word": "And", "probability": 0.90}],
+            2: [{"start": 22.94, "end": 27.80, "word": "Memories", "probability": 0.92}],
+            3: [{"start": 29.14, "end": 31.84, "word": "Walk", "probability": 0.95}],
+        }
+        aligned, changed, diag = _apply_lrc_alignment(cues, cands, language="en", duration=40.0)
+        self.assertTrue(diag["sync_verified"])
+        # Includes ONSET_LEAD (0.05s) so subtitles appear crisply right ahead of acoustic vocal onset
+        self.assertAlmostEqual(diag["global_shift"], -0.36, places=2)
+        self.assertAlmostEqual(aligned[0]["start"], 11.80, places=2)
+        self.assertAlmostEqual(aligned[0]["end"], 16.26, places=2)
+
+        # 3. Wildly drifted LRC (erratic +/-1.5s errors) MUST fail sync_verified so pipeline falls back to Whisper!
+        bad_cands = {
+            0: [{"start": 10.10, "end": 14.00, "word": "See", "probability": 0.80}],
+            1: [{"start": 19.30, "end": 22.00, "word": "And", "probability": 0.80}],
+            2: [{"start": 21.50, "end": 26.00, "word": "Memories", "probability": 0.80}],
+            3: [{"start": 31.40, "end": 33.00, "word": "Walk", "probability": 0.80}],
+        }
+        _out_bad, _ch_bad, bad_diag = _apply_lrc_alignment(cues, bad_cands, language="en", duration=40.0)
+        self.assertFalse(bad_diag["sync_verified"])
+
+    def test_foryou_black_stage_stays_fixed_and_video_fits_inside(self):
+        from tools.ui_preview import APPLICATION, isolated_window, pump
+
+        with isolated_window() as pair:
+            mw = pair[0] if isinstance(pair, tuple) else pair
+            mw.showMaximized = lambda: None
+            mw.show()
+            mw.sidebar.setCurrentRow(1)
+            mw.handle_sidebar_click(mw.sidebar.item(1))
+            pump(60)
+            vs = mw.foryou_page.video_container
+            # Black VideoStage stays unconstrained (fixed full left-column stage, never shrinks to video height)
+            self.assertGreater(vs.maximumHeight(), 10000)
+            for w, h in ((1920, 1040), (1536, 920), (1280, 720), (1100, 750)):
+                mw.resize(w, h)
+                pump(50)
+                sg = vs.geometry()
+                vg = mw.video_display.geometry()
+                # Video fits tightly inside the fixed black stage along its limiting edge (letterbox/pillarbox black)
+                self.assertTrue(
+                    abs(sg.width() - vg.width()) <= 1 or abs(sg.height() - vg.height()) <= 1,
+                    f"Video did not fit fixed stage at {w}x{h}: {sg} vs {vg}",
+                )
+                self.assertLessEqual(vg.width(), sg.width())
+                self.assertLessEqual(vg.height(), sg.height())
+                self.assertAlmostEqual(vg.width() / float(vg.height()), 16.0 / 9.0, delta=0.02)
+        APPLICATION.processEvents()
+
     def test_foryou_hides_top_toolbar_when_idle_and_subtitles_sit_grounded_near_bottom(self):
         from PySide6.QtCore import QPoint
         from tools.ui_preview import APPLICATION, isolated_window, pump
@@ -1124,6 +1211,150 @@ class UniversalCommercialAsrTests(unittest.TestCase):
             self.assertLessEqual(pb_top - glyph_bot, 16.0)
             self.assertGreaterEqual(pb_top - glyph_bot, 2.0)
         APPLICATION.processEvents()
+
+    def test_snap_asr_cues_to_reference_covers_merged_split_homophone_medley_and_wrong_song(self):
+        from pipeline.lyric_reference_snap import snap_asr_cues_to_reference
+
+        # 1. Cover / MV with 1:2 merged Kana->Kanji cues + 2:1 split English cues -> preserves 100% Whisper times!
+        ja_ref = (
+            "叶えられなくて 涙零れ\n"
+            "下を向いても\n"
+            "明け星 揺らめいてる\n"
+            "儚い海に 消えない光\n"
+        )
+        ja_asr = [
+            {"start": 5.15, "end": 9.49, "text": "叶えられなくて涙こぼれ下を向いても"},
+            {"start": 9.49, "end": 14.59, "text": "明け星揺らめいてる儚い海に消えない光"},
+        ]
+        snapped_ja, rep_ja = snap_asr_cues_to_reference(ja_asr, ja_ref, lang="ja")
+        self.assertEqual(rep_ja["snapped_cues"], 2)
+        self.assertEqual([c["start"] for c in snapped_ja], [5.15, 9.49])
+        self.assertEqual([c["end"] for c in snapped_ja], [9.49, 14.59])
+        self.assertEqual(snapped_ja[0]["text"], "叶えられなくて 涙零れ 下を向いても")
+        self.assertEqual(snapped_ja[1]["text"], "明け星 揺らめいてる 儚い海に 消えない光")
+
+        # 2. Chinese Traditional reference vs Simplified homophone ASR + sandwich rescue + 2:1 split!
+        zh_ref = (
+            "風抖落雪霜 傘骨吱呀響\n"
+            "墨跡暈染處掩埋著神明溫熱的心臟\n"
+            "一步一風景 一步一迷局\n"
+            "未完的誓言沉入暗青水面\n"
+        )
+        zh_asr = [
+            {"start": 21.60, "end": 25.10, "text": "风抖落雪霜 三股炙鸭响"},
+            {"start": 25.10, "end": 29.22, "text": "墨镜云燃出掩埋着生命温热的心脏"},
+            {"start": 29.93, "end": 33.01, "text": "一步一附近一步一迷去"},
+            {"start": 33.01, "end": 36.11, "text": "未完的誓言沉入安静水面"},
+        ]
+        snapped_zh, rep_zh = snap_asr_cues_to_reference(zh_asr, zh_ref, lang="zh")
+        self.assertEqual(rep_zh["snapped_cues"], 4)
+        self.assertEqual(snapped_zh[1]["text"], "墨跡暈染處掩埋著神明溫熱的心臟")
+        self.assertEqual(snapped_zh[2]["text"], "一步一風景 一步一迷局")
+
+        # 3. Multi-candidate selection ('Run BTS' wrong song vs 'Run' true song!) + split 2:1 English line
+        wrong_cand = {
+            "track_name": "Run BTS",
+            "artist_name": "BTS",
+            "plain_lyrics": "Yeah yeah\nOkay\nRun run\nLet's go\nMake it move left and right",
+        }
+        true_cand = {
+            "track_name": "Run",
+            "artist_name": "BTS",
+            "plain_lyrics": (
+                "넌 내 하나뿐인 태양 세상에 딱 하나\n"
+                "널 향해 피지만 난 자꾸 목말라\n"
+                "And these are memories we'll cherish more and more\n"
+                "다시 Run Run Run 난 멈출 수가 없어\n"
+            ),
+        }
+        story_mv_asr = [
+            {"start": 42.0, "end": 44.5, "text": "형 어디 가?"},  # Spoken MV acting dialogue -> MUST stay untouched!
+            {"start": 55.1, "end": 59.2, "text": "넌 내 하나뿐인 태양 세상에 딱 하나"},
+            {"start": 59.2, "end": 63.4, "text": "널향해 피지만 난 자꾸 목말라"},
+            {"start": 64.0, "end": 66.2, "text": "And these are memories"},
+            {"start": 66.2, "end": 69.0, "text": "we will cherish more and more"},
+            {"start": 70.0, "end": 74.0, "text": "다시 런런런 난 멈출 수가 없어"},
+        ]
+        snapped_mv, rep_mv = snap_asr_cues_to_reference(story_mv_asr, [wrong_cand, true_cand], lang="ko")
+        self.assertIn("Run - BTS", rep_mv["selected_track"])
+        self.assertEqual(snapped_mv[0]["text"], "형 어디 가?")  # MV dialogue untouched!
+        self.assertEqual(snapped_mv[3]["text"], "And these are memories")
+        self.assertEqual(snapped_mv[4]["text"], "we'll cherish more and more")
+        self.assertEqual(snapped_mv[5]["text"], "다시 Run Run Run 난 멈출 수가 없어")
+        # Timestamps 100% unchanged
+        self.assertEqual([(c["start"], c["end"]) for c in snapped_mv], [(c["start"], c["end"]) for c in story_mv_asr])
+
+        # 4. Medley partial mode: snaps Tell Your World lines, leaves English medley song untouched!
+        medley_asr = [
+            {"start": 1.0, "end": 5.0, "text": "形のない気持ち忘れないように"},
+            {"start": 5.2, "end": 9.5, "text": "決まりきったれいあうとを決した"},
+            {"start": 12.0, "end": 15.0, "text": "You can surely know how the wind blows"},
+            {"start": 15.2, "end": 18.5, "text": "Where the blue is taking me to roll"},
+        ]
+        tyw_ref = (
+            "形のない気持ち忘れないように\n"
+            "決まりきったレイアウトを消した\n"
+            "ふと口ずさんだフレーズをつかまえて\n"
+            "胸に秘めた言葉乗せ 空に解き放つの\n"
+            "君に伝えたいことが\n"
+            "君に届けたいことが\n"
+            "たくさんの点は線になって\n"
+            "遠く彼方へと響く\n"
+        )
+        snapped_med, rep_med = snap_asr_cues_to_reference(medley_asr, tyw_ref, lang="ja")
+        self.assertEqual(rep_med["mode"], "partial_medley")
+        self.assertEqual(snapped_med[0]["text"], "形のない気持ち忘れないように")
+        self.assertEqual(snapped_med[1]["text"], "決まりきったレイアウトを消した")
+        self.assertEqual(snapped_med[2]["text"], "You can surely know how the wind blows")
+        self.assertEqual(snapped_med[3]["text"], "Where the blue is taking me to roll")
+
+    def test_subtitle_io_export_vfx_and_editor_sync_audit(self):
+        import tempfile
+        from ui.subs_ui.subtitle_io import _format_srt_time, load_subs, save_subs
+        from ui.video_subtitle_export import ExportCue, ExportSettings, ExportSnapshot, SubtitleBandRenderer
+
+        # 1. SRT time rounding never overflows to ,1000ms
+        self.assertEqual(_format_srt_time(12.9996), "00:00:13,000")
+        self.assertEqual(_format_srt_time(0.0), "00:00:00,000")
+
+        # 2. save_subs / load_subs fallback handles 'orig'-only dicts for SRT, ASS, and LRC
+        segs = [{"start": 1.25, "end": 4.50, "orig": "First line\nSecond line", "en": "EN", "vi": "VI"}]
+        with tempfile.TemporaryDirectory() as tmp:
+            for ext in (".srt", ".ass", ".lrc"):
+                p = os.path.join(tmp, "out" + ext)
+                save_subs(p, segs)
+                loaded = load_subs(p)
+                self.assertTrue(loaded, ext)
+                self.assertIn("First line", loaded[0]["text"], ext)
+
+        # 3. Video burn-in export advances beat clock (_smooth_pts_ms) & matches PER_CHAR_MODES duration
+        snap = ExportSnapshot(
+            source="fixture.mp4",
+            cues=(ExportCue(0, 1000, 4000, "Beat sync lyric"),),
+            style={
+                "font_size": 24, "font_color": "#FFFFFF", "bg_color": "#090D16",
+                "bg_opacity": 0.0, "outline_enabled": True, "outline_width": 3,
+                "outline_color": "#050811", "shadow_enabled": True, "shadow_alpha": 210,
+            },
+            effects={
+                "enabled": True, "entrance": "vfx_beat_char_pop", "color": "cyber_neon",
+                "trail": "bass_visualizer", "intensity": "normal", "duration": 540,
+                "glow": True, "soft_fade": False,
+            },
+            fade_enabled=True,
+            anchor_width=1280, anchor_height=720, user_moved=False,
+            rel_x_offset=0, bottom_offset=12,
+        )
+        renderer = SubtitleBandRenderer(snap, 1280, 720, ExportSettings())
+        # PER_CHAR_MODES extends 540ms -> 837ms on a 3000ms cue (matching live SubtitleEffects!)
+        self.assertLess(renderer._effect_phase(snap.cues[0], 1600), 1.0)
+        f1 = renderer.frame(2000)
+        p1 = renderer.effects._smooth_pts_ms
+        f2 = renderer.frame(2240)
+        p2 = renderer.effects._smooth_pts_ms
+        self.assertAlmostEqual(p1, 2000.0, places=1)
+        self.assertAlmostEqual(p2, 2240.0, places=1)
+        self.assertNotEqual(f1, f2)
 
 
 if __name__ == "__main__":

@@ -36,7 +36,9 @@ from core.audio_effects import find_tool
 from ui.icons import button_icon
 from ui.design_system import ACCENT, BORDER, DIALOG_STYLE, MUTED, RAISED, SURFACE, TEXT
 from ui.subtitle_effects import SubtitleEffects, normalize_options
+from ui.subtitle_kinetic import PER_CHAR_MODES
 from ui.subtitle_particles import subtitle_row_groups
+from ui.subtitle_vfx import VFX_MODES
 from ui.subtitle_studio import (
     build_typography_plan,
     draw_cinema_pill,
@@ -1304,6 +1306,11 @@ class SubtitleBandRenderer:
             for cue in snapshot.cues
         ), default=16)
         logical_band = max(16, logical_band)
+        fx_opts = normalize_options(snapshot.effects)
+        if fx_opts.get('enabled') and (fx_opts.get('entrance') in VFX_MODES or fx_opts.get('trail') != 'none'):
+            # Extra top headroom inside the RGBA overlay band so bouncing VFX letters/particles never clip
+            # while preserving exact bottom_y alignment (`y = self.band_height - target_h`).
+            logical_band += 36
         safe_height = (max(1, self.safe_bottom-self.safe_top)
                        if self.settings.safe_subtitles else height)
         self.band_height = min(safe_height, max(1, math.ceil(logical_band*self.scale)))
@@ -1470,7 +1477,12 @@ class SubtitleBandRenderer:
 
     def _effect_phase(self, cue, pts_ms):
         options = self.effects.options
-        duration = max(1, min(options['duration'], int((cue.end-cue.start)/2)))
+        cue_len = max(0, int(cue.end - cue.start))
+        if options.get('entrance') in PER_CHAR_MODES and cue_len >= 900:
+            eff_dur = min(900, max(options['duration'], int(options['duration'] * 1.55)))
+            duration = max(1, min(eff_dur, int(cue_len * 0.56)))
+        else:
+            duration = max(1, min(options['duration'], int(cue_len / 2)))
         elapsed = max(0.0, pts_ms-cue.start)
         moving = (options['entrance'] != 'none' or options['soft_fade'] or options['shimmer']
                   or options['color'] == 'shift')
@@ -1516,6 +1528,8 @@ class SubtitleBandRenderer:
         )
         if active or keep_erased_sweep:
             self.effects.cue = (cue.index, cue.start, cue.end, display_text)
+            self.effects.last_ms = pts_ms
+            self.effects._smooth_pts_ms = float(pts_ms)
             if active:
                 self.effects.progress = self._effect_phase(cue, pts_ms)
                 self.effects.scan_progress = min(

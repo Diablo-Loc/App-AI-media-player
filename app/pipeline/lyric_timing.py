@@ -203,30 +203,67 @@ def _lrc_align_windows(cues, tokenizer, duration):
 
 
 def apply_lrc_ends(cues, candidates, *, language="en", duration=None, spacer_flags=None):
-    """Refine start-only LRC cue `end` times from forced word alignment while preserving LRC `start` times.
+    """Verify LRC sync against forced word alignment, correct global master offset, and refine exact vocal ends.
 
-    - Keeps explicit LRC spacer endings untouched.
-    - Adds a natural singing release tail (+0.32s CJK / +0.40s Latin) after the last confident aligned word.
-    - Closes any residual sub-520ms micro-gap cleanly so transitions never flicker.
+    Returns (refined_cues, changed_indices, diagnostics_dict) when called with internal helper,
+    while preserving 2-tuple return `(refined_cues, changed_indices)` for backward callers.
     """
+    refined, changed, _diag = _apply_lrc_alignment(
+        cues,
+        candidates,
+        language=language,
+        duration=duration,
+        spacer_flags=spacer_flags,
+    )
+    return refined, changed
+
+
+def _apply_lrc_alignment(
+    cues,
+    candidates,
+    *,
+    language="en",
+    duration=None,
+    spacer_flags=None,
+    strict_mv=False,
+):
+    """Align both global start offset (e.g. YouTube vs Spotify trim) and per-cue vocal endings from forced alignment.
+
+    Also computes a strict sync-truth gate (`sync_verified`): if alignment coverage is too low or
+    the LRC drifts unpredictably from the actual singing (`mad > 0.65s` or `|shift| > 1.80s`),
+    `sync_verified` is False so the pipeline falls back to full Whisper ASR.
+    """
+    import statistics
     from .fast_lyrics import close_flicker_micro_gaps
 
     output = [dict(cue) for cue in cues]
-    changed = []
     total = len(output)
     is_cjk = str(language or "").lower()[:2] in ("ja", "zh", "ko")
     tail_pad = 0.32 if is_cjk else 0.40
+    diag = {
+        "sync_verified": True,
+        "global_shift": 0.0,
+        "median_abs_residual": 0.0,
+        "aligned_cues": 0,
+        "reject_reason": "",
+    }
+    if not output or not candidates:
+        if output:
+            diag["sync_verified"] = False
+            diag["reject_reason"] = "no_alignment_candidates"
+        return output, [], diag
 
+    parsed = {}
+    start_deltas = []
     for index, candidate in candidates.items():
         if not 0 <= index < total:
-            continue
-        if spacer_flags and index < len(spacer_flags) and spacer_flags[index]:
             continue
         words = [word for word in (candidate or ()) if str(word.get("word", "")).strip()]
         if not words:
             continue
         try:
-            w_start = float(words[0]["start"])
+            w0_s = float(words[0]["start"])
+            w0_e = float(words[0]["end"])
             w_end = float(words[-1]["end"])
             probs = [float(word["probability"]) for word in words]
             spans = [(float(word["start"]), float(word["end"])) for word in words]
@@ -238,22 +275,72 @@ def apply_lrc_ends(cues, candidates, *, language="en", duration=None, spacer_fla
             or not all(math.isfinite(p) and 0.0 <= p <= 1.0 for p in probs)
         ):
             continue
-
         mean_prob = sum(probs) / len(probs)
         last_prob = probs[-1]
-        if mean_prob < 0.28 or last_prob < 0.15:
+        if mean_prob < 0.28:
             continue
+        c_start = float(output[index]["start"])
+        # DTW sometimes stretches a tiny first word over preceding silence (e.g. 'I' 13.5..15.6s);
+        # when multiple words exist, anchor onset near w0_end - 0.25s to measure true vocal onset cleanly.
+        w0_text = str(words[0].get("word", "")).strip()
+        est_start = (
+            (w0_e - 0.25)
+            if (len(words) >= 2 and (w0_e - w0_s) > 0.65 and len(w0_text) <= 5)
+            else w0_s
+        )
+        parsed[index] = (w0_s, est_start, w_end, mean_prob, last_prob)
+        if mean_prob >= 0.35 and abs(est_start - c_start) <= 3.0:
+            # Target acoustic vocal onset minus ONSET_LEAD (50ms) so subtitles feel snappy, not late
+            start_deltas.append((est_start - ONSET_LEAD) - c_start)
 
+    diag["aligned_cues"] = len(parsed)
+    cov_ratio = 0.60 if strict_mv else 0.45
+    min_required = min(total, max(3, int(math.ceil(total * cov_ratio))))
+    if len(start_deltas) < min_required:
+        diag["sync_verified"] = False
+        diag["reject_reason"] = f"low_alignment_coverage({len(start_deltas)}/{total})"
+        return output, [], diag
+
+    global_shift = float(statistics.median(start_deltas))
+    mad = float(statistics.median(abs(d - global_shift) for d in start_deltas))
+    diag["global_shift"] = round(global_shift, 3)
+    diag["median_abs_residual"] = round(mad, 3)
+
+    max_shift = 2.40 if strict_mv else 1.80
+    max_mad = 0.35 if strict_mv else 0.65
+    if abs(global_shift) > max_shift or mad > max_mad:
+        diag["sync_verified"] = False
+        diag["reject_reason"] = f"lrc_drift(shift={global_shift:+.2f}s,mad={mad:.2f}s)"
+        return output, [], diag
+
+    # 1. Apply constant master offset (e.g. YouTube vs Spotify intro trim or MV intro logo).
+    # For coarse-shifted MVs (`strict_mv`), lock any residual >=80ms; otherwise use asymmetric deadband.
+    if strict_mv:
+        applied_shift = global_shift if abs(global_shift) >= 0.08 else 0.0
+    else:
+        applied_shift = global_shift if (global_shift <= -0.14 or global_shift >= 0.25) else 0.0
+    if applied_shift != 0.0:
+        for cue in output:
+            new_s = max(0.0, round(float(cue["start"]) + applied_shift, 3))
+            new_e = max(new_s + 0.1, round(float(cue["end"]) + applied_shift, 3))
+            cue["start"] = new_s
+            cue["end"] = new_e
+
+    # 2. Refine exact vocal endings for non-spacer cues
+    changed = []
+    for index, (w0_s, est_start, w_end, mean_prob, last_prob) in parsed.items():
+        if spacer_flags and index < len(spacer_flags) and spacer_flags[index]:
+            continue
+        if last_prob < 0.15:
+            continue
         c_start = float(output[index]["start"])
         next_t = (
             float(output[index + 1]["start"])
             if index + 1 < total
             else (float(duration) if duration is not None else float(output[index]["end"]))
         )
-        # Reject wildly displaced alignment (e.g. snapped onto a different chorus)
-        if w_start > c_start + 1.8 or w_start < c_start - 2.6 or w_end < c_start + 0.35:
+        if w0_s > c_start + 1.8 or w0_s < c_start - 2.6 or w_end < c_start + 0.35:
             continue
-
         proposed_end = round(min(next_t, max(c_start + 0.45, w_end + tail_pad)), 3)
         if duration is not None and math.isfinite(duration) and duration > 0:
             proposed_end = min(proposed_end, round(float(duration), 3))
@@ -262,7 +349,7 @@ def apply_lrc_ends(cues, candidates, *, language="en", duration=None, spacer_fla
             changed.append(index)
 
     finalized = finalize_cue_times(output, duration=duration)
-    return close_flicker_micro_gaps(finalized, min_clean_gap=0.52), changed
+    return close_flicker_micro_gaps(finalized, min_clean_gap=0.52), changed, diag
 
 
 def align_lrc_ends(
@@ -273,12 +360,23 @@ def align_lrc_ends(
     *,
     duration=None,
     spacer_flags=None,
+    strict_mv=False,
     cancel_cb=None,
     budget_s=12.0,
     progress_cb=None,
 ):
-    """One fast forced-alignment pass (no decoding) to pinpoint exact vocal endings for start-only LRC cues."""
-    report = dict(changed=0, windows=0, errors=0, capped=False, seconds=0.0)
+    """One fast forced-alignment pass (no decoding) to verify LRC sync, fix global offset, and pinpoint vocal ends."""
+    report = dict(
+        changed=0,
+        windows=0,
+        errors=0,
+        capped=False,
+        seconds=0.0,
+        sync_verified=True,
+        global_shift=0.0,
+        median_abs_residual=0.0,
+        reject_reason="",
+    )
     tick = time.monotonic()
     candidates = {}
 
@@ -320,7 +418,7 @@ def align_lrc_ends(
                 report["windows"] += 1
                 if progress_cb:
                     pct = 40 + int((idx_w / float(total_windows)) * 18)
-                    progress_cb(pct, f"⏱ Căn mốc kết thúc lời ({idx_w}/{total_windows})...")
+                    progress_cb(pct, f"⏱ Căn mốc lời hát ({idx_w}/{total_windows})...")
                 try:
                     words = _align_window(model, tokenizer, audio, left, right, tokens, ranges)
                     if len(words) != len(indices):
@@ -330,14 +428,16 @@ def align_lrc_ends(
                     report["errors"] += 1
                     break
         check_cancel()
-        output, changed = apply_lrc_ends(
+        output, changed, diag = _apply_lrc_alignment(
             cues,
             candidates,
             language=lang_code,
             duration=eff_dur,
             spacer_flags=spacer_flags,
+            strict_mv=strict_mv,
         )
         report["changed"] = len(changed)
+        report.update(diag)
     except Exception:
         check_cancel()
         report["errors"] += 1

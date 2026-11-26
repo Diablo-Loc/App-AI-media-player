@@ -61,6 +61,21 @@ _VERSION_PENALTY_MARKERS = (
     "instrumental", "karaoke", "off vocal", "live", "remix",
     "cover", "acoustic", "nightcore", "sped up", "slowed", "short", "tv size", "medley",
 )
+_DERIVATIVE_PERFORMANCE_RE = re.compile(
+    r"(?i)(?:"
+    r"\bcovered\s+by\b|\bcover\s+by\b|\bcover\b|\bremix\b|\bacoustic\b|"
+    r"\bpiano\s*(?:ver(?:sion)?|cover|arr)|\borchestral\b|\blive\b|"
+    r"\bmedley\b|\bmashup\b|\bnightcore\b|\bsped\s*up\b|\bslowed\b|"
+    r"\btv\s*size\b|\bshort\s*(?:ver(?:sion)?)?\b|\b1\s*hour\b|\b8d\b|"
+    r"歌ってみた|うたってみた|翻唱|커버|メドレー|ライブ|アコースティック"
+    r")"
+)
+
+
+def _is_derivative_performance(raw_title: str) -> bool:
+    """True when the local media title marks a cover/remix/medley/live/short edit that must never inherit original studio LRC timestamps."""
+    text = unicodedata.normalize("NFKC", str(raw_title or ""))
+    return bool(_DERIVATIVE_PERFORMANCE_RE.search(text))
 
 _TITLE_BRACKET_RE = re.compile(r"[【\[]([^】\]]*)[】\]]|\(([^)]*)\)|（([^）]*)）")
 _NOISE_TITLE_WORDS = frozenset({
@@ -914,7 +929,7 @@ def verify_synced_cues_against_audio(
     cues: list[dict],
     wav_path: str | Path,
     *,
-    max_onset_diff_s: float = 1.25,
+    max_onset_diff_s: float = 0.85,
     min_voiced_ratio: float = 0.55,
     vad_probe_fn: Optional[Callable[[str | Path], Optional[dict]]] = None,
     prefetched_probe: Optional[dict] = None,
@@ -1029,6 +1044,49 @@ def verify_synced_cues_against_audio(
     return True, info, probe
 
 
+def estimate_coarse_lrc_shift(
+    cues: list[dict],
+    vad_spans: Optional[list[tuple[float, float]]],
+    *,
+    media_duration: Optional[float] = None,
+    max_shift: float = 16.0,
+) -> tuple[float, float]:
+    """Estimate constant MV intro/outro offset in [-max_shift, +max_shift] from vocal VAD spans (CPU <1ms).
+
+    Returns `(best_shift_seconds, voiced_overlap_ratio)`.
+    """
+    if not cues or not vad_spans:
+        return 0.0, 0.0
+    sample = cues[: min(24, len(cues))]
+    best_shift = 0.0
+    best_score = -1e9
+    best_ratio = 0.0
+    for step_idx in range(int(-max_shift * 4), int(max_shift * 4) + 1):
+        shift = step_idx * 0.25
+        voiced = 0.0
+        total_d = 0.0
+        oob = 0
+        for cue in sample:
+            cs = float(cue["start"]) + shift
+            ce = min(cs + 4.5, float(cue["end"]) + shift)
+            if cs < -0.35 or (media_duration and cs > media_duration - 0.5):
+                oob += 1
+                continue
+            dur = max(0.2, ce - cs)
+            ov = sum(max(0.0, min(ce, ve) - max(cs, vs)) for vs, ve in vad_spans)
+            voiced += min(dur, ov)
+            total_d += dur
+        if total_d <= 0 or oob > max(1, len(sample) // 6):
+            continue
+        ratio = voiced / total_d
+        score = ratio - 0.003 * abs(shift)
+        if score > best_score:
+            best_score = score
+            best_shift = shift
+            best_ratio = ratio
+    return round(best_shift, 2), round(best_ratio, 3)
+
+
 def evaluate_lrclib_items(
     song_title_raw: str,
     items: list[dict],
@@ -1039,17 +1097,21 @@ def evaluate_lrclib_items(
     wav_path: Optional[str | Path] = None,
     vad_probe_fn=None,
     refine_ends_with_vad: bool = True,
+    allow_mv_offset: bool = False,
 ) -> dict[str, Any]:
     """Score & dual-verify prefetched LRCLIB items (reuses single VAD probe if invoked)."""
     result: dict[str, Any] = {
         "synced_cues": None,
         "spacer_flags": None,
         "plain_lyrics": None,
+        "plain_candidates": [],
         "language": None,
         "track_name": "",
         "artist_name": "",
         "verification": {},
         "vad_probe": None,
+        "requires_strict_fa": False,
+        "coarse_shift": 0.0,
     }
     if not items:
         result["verification"] = {"reason": fetch_reason}
@@ -1081,20 +1143,38 @@ def evaluate_lrclib_items(
         reverse=True,
     )
 
+    plain_candidates: list[dict[str, Any]] = []
     for score, dur_diff, item in scored:
-        if score < 0.35:
+        if score < 0.30:
             break
         plain = str(item.get("plainLyrics") or "").strip()
         if not plain and item.get("syncedLyrics"):
             parsed_tmp = parse_lrc_text(str(item.get("syncedLyrics") or ""))
             plain = "\n".join(c["text"] for c in parsed_tmp)
         if plain and _script_compatible(song_title_raw, plain):
-            result["plain_lyrics"] = plain
-            result["track_name"] = str(item.get("trackName") or "")
-            result["artist_name"] = str(item.get("artistName") or "")
+            plain_candidates.append({
+                "plain_lyrics": plain,
+                "track_name": str(item.get("trackName") or ""),
+                "artist_name": str(item.get("artistName") or ""),
+                "score": round(score, 3),
+            })
+            if not result["plain_lyrics"] and score >= 0.35:
+                result["plain_lyrics"] = plain
+                result["track_name"] = str(item.get("trackName") or "")
+                result["artist_name"] = str(item.get("artistName") or "")
+        if len(plain_candidates) >= 5:
             break
+    result["plain_candidates"] = plain_candidates
+
+    if _is_derivative_performance(song_title_raw):
+        # Covers/remixes/medleys/live/short edits have different timing/arrangement from the studio master.
+        # Keep `plain_lyrics` / `plain_candidates` so Whisper ASR snaps wording onto official lyrics cleanly!
+        result["verification"] = {"reason": "derivative_performance_skip_synced"}
+        return result
 
     cached_probe = None
+    cached_full_spans = None
+    max_dur_diff = 16.0 if (allow_mv_offset and wav_path is not None) else 2.0
     for score, dur_diff, item in scored[:3]:
         synced_raw = str(item.get("syncedLyrics") or "").strip()
         if not synced_raw:
@@ -1102,14 +1182,15 @@ def evaluate_lrclib_items(
         if score < 0.45:
             result["verification"] = {"reason": "low_metadata_score", "score": round(score, 3)}
             continue
-        if media_duration is None or dur_diff is None or dur_diff > 2.0:
+        if media_duration is None or dur_diff is None or dur_diff > max_dur_diff:
             result["verification"] = {
                 "reason": "duration_mismatch",
                 "score": round(score, 3),
                 "duration_diff": round(dur_diff, 2) if dur_diff is not None else None,
             }
             continue
-        cues, spacer_flags = _parse_lrc_with_spacer_flags(synced_raw, media_duration=media_duration)
+        parse_dur = (float(media_duration) + 18.0) if dur_diff > 2.0 else media_duration
+        cues, spacer_flags = _parse_lrc_with_spacer_flags(synced_raw, media_duration=parse_dur)
         if len(cues) < 3:
             result["verification"] = {"reason": "too_few_parsed_cues"}
             continue
@@ -1117,25 +1198,62 @@ def evaluate_lrclib_items(
         if not _script_compatible(song_title_raw, joined_text):
             result["verification"] = {"reason": "script_mismatch"}
             continue
+        used_mv_coarse = False
+        coarse_shift = 0.0
         if wav_path is not None:
-            ok, vad_info, cached_probe = verify_synced_cues_against_audio(
-                cues,
-                wav_path,
-                vad_probe_fn=vad_probe_fn,
-                prefetched_probe=cached_probe,
-            )
-            result["vad_probe"] = cached_probe
+            ok = False
+            vad_info: dict[str, Any] = {}
+            if dur_diff <= 2.0:
+                ok, vad_info, cached_probe = verify_synced_cues_against_audio(
+                    cues,
+                    wav_path,
+                    vad_probe_fn=vad_probe_fn,
+                    prefetched_probe=cached_probe,
+                )
+                result["vad_probe"] = cached_probe
+            if not ok and allow_mv_offset and vad_probe_fn is None:
+                if cached_full_spans is None:
+                    cached_full_spans = _full_song_vocal_spans(wav_path)
+                coarse_shift, ov_ratio = estimate_coarse_lrc_shift(
+                    cues,
+                    cached_full_spans,
+                    media_duration=media_duration,
+                )
+                if ov_ratio >= 0.58:
+                    shifted_cues = []
+                    shifted_spacers = []
+                    for c_idx, c_item in enumerate(cues):
+                        ns = round(float(c_item["start"]) + coarse_shift, 3)
+                        ne = round(float(c_item["end"]) + coarse_shift, 3)
+                        if ns >= float(media_duration) - 0.35 or ne <= 0.15:
+                            continue
+                        ns = max(0.0, ns)
+                        ne = min(round(float(media_duration), 3), max(ns + 0.15, ne))
+                        shifted_cues.append(dict(c_item, start=ns, end=ne))
+                        shifted_spacers.append(bool(spacer_flags[c_idx]) if c_idx < len(spacer_flags) else False)
+                    if len(shifted_cues) >= max(3, int(len(cues) * 0.75)):
+                        cues = shifted_cues
+                        spacer_flags = shifted_spacers
+                        ok = True
+                        used_mv_coarse = True
+                        vad_info = {
+                            "verified": True,
+                            "reason": "mv_coarse_shifted_for_cuda_fa",
+                            "coarse_shift": coarse_shift,
+                            "voiced_ratio": ov_ratio,
+                        }
             vad_info["score"] = round(score, 3)
             vad_info["duration_diff"] = round(dur_diff, 2)
             result["verification"] = vad_info
             if not ok:
                 continue
-            if vad_probe_fn is None and refine_ends_with_vad:
+            if vad_probe_fn is None and refine_ends_with_vad and not used_mv_coarse:
                 cues = refine_lrc_ends_with_audio(
                     cues,
                     wav_path,
                     media_duration=media_duration,
                     spacer_flags=spacer_flags,
+                    vad_spans=cached_full_spans,
                 )
         else:
             result["verification"] = {
@@ -1150,6 +1268,8 @@ def evaluate_lrclib_items(
         result["language"] = detect_text_language(joined_text)
         result["track_name"] = str(item.get("trackName") or "")
         result["artist_name"] = str(item.get("artistName") or "")
+        result["requires_strict_fa"] = used_mv_coarse
+        result["coarse_shift"] = coarse_shift
         if not result["plain_lyrics"]:
             result["plain_lyrics"] = joined_text
         return result
