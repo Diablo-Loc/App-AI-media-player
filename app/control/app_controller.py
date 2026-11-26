@@ -274,15 +274,15 @@ class AppController(QObject):
         if bar is not None:
             bar.start_job(message)
 
-    def _finish_ai_progress(self, message: str):
+    def _finish_ai_progress(self, message: str, hide_delay_ms: int = 4000):
         bar = getattr(self.window, "ai_progress_bar", None)
         if bar is not None:
-            bar.finish_job(message)
+            bar.finish_job(message, hide_delay_ms=hide_delay_ms)
 
-    def _fail_ai_progress(self, message: str):
+    def _fail_ai_progress(self, message: str, hide_delay_ms: int = 5000):
         bar = getattr(self.window, "ai_progress_bar", None)
         if bar is not None:
-            bar.fail_job(message)
+            bar.fail_job(message, hide_delay_ms=hide_delay_ms)
 
     def _reset_ai_progress(self):
         bar = getattr(self.window, "ai_progress_bar", None)
@@ -321,9 +321,13 @@ class AppController(QObject):
     # =========================================================
     # CONTROL
     # =========================================================
-    def cancel_current_job(self):
+    def cancel_current_job(self, show_notice: bool = False):
+        was_running = bool(hasattr(self.ai, "is_running") and self.ai.is_running())
         self.ai.cancel()
-        self._fail_ai_progress("⛔ Đã huỷ tạo phụ đề AI", hide_delay_ms=2500)
+        if show_notice and was_running:
+            self._fail_ai_progress("⛔ Đã huỷ tạo phụ đề AI", hide_delay_ms=2500)
+        elif not was_running:
+            self._reset_ai_progress()
 
     # =========================================================
     # CLEAN EXIT

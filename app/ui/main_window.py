@@ -833,7 +833,7 @@ class MainWindow(QMainWindow):
     def _on_ai_cancel_clicked(self):
         ctrl = getattr(self, 'app_controller', None)
         if ctrl is not None and hasattr(ctrl, 'cancel_current_job'):
-            ctrl.cancel_current_job()
+            ctrl.cancel_current_job(show_notice=True)
 
     def _on_ai_bar_visibility_changed(self, _visible: bool):
         if hasattr(self, 'sync_subtitle_margin'):
@@ -2284,12 +2284,16 @@ class MainWindow(QMainWindow):
             self.top_toolbar_container.hide()
             self.showMaximized()
             if hasattr(self, 'playback_bar'): self.playback_bar.show()
+        if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
+            self.ai_progress_bar.show()
         else:
             if self._normal_geometry is not None:
                 self.setWindowState(self._normal_window_state)
                 self.setGeometry(self._normal_geometry)
             self.top_toolbar_container.show()
             if hasattr(self, 'playback_bar'): self.playback_bar.show()
+        if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
+            self.ai_progress_bar.show()
 
         is_setting= (index == 3 or index == 4)
         if is_setting:
@@ -2476,6 +2480,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, 'content_stack'): self.content_stack.hide()
         if hasattr(self, 'top_toolbar_container'): self.top_toolbar_container.hide()
         if hasattr(self, 'playback_bar'): self.playback_bar.hide()
+        if hasattr(self, 'ai_progress_bar'): self.ai_progress_bar.hide()
 
         # 2. ẨN CỬA SỔ CHÍNH (Quan trọng: Phải ẩn để cắt đứt luồng render cũ)
         self.hide()
@@ -2529,6 +2534,8 @@ class MainWindow(QMainWindow):
         self.central_widget.show()
         if hasattr(self, 'content_stack'): self.content_stack.show()
         if hasattr(self, 'playback_bar'): self.playback_bar.show()
+        if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
+            self.ai_progress_bar.show()
         
         is_foryou = getattr(self, 'current_page', '') == 'for_you'
         if hasattr(self, 'top_toolbar_container'):

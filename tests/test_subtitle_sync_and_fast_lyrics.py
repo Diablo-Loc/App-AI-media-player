@@ -573,6 +573,36 @@ class BugFixesIntegrationTests(unittest.TestCase):
         self.assertTrue(bar.isHidden())
         APPLICATION.processEvents()
 
+    def test_app_controller_cancel_current_job_on_track_click_and_user_cancel_button(self):
+        from tools.ui_preview import APPLICATION, isolated_window, pump
+        from control.ai_controller import AIController
+        from control.app_controller import AppController
+
+        with isolated_window() as pair:
+            mw = pair[0] if isinstance(pair, tuple) else pair
+            ai = AIController(tempfile.mkdtemp(), parent=mw)
+            ctrl = AppController(mw, mw.media_library, ai, mw.subtitle_manager)
+            mw.app_controller = ctrl
+            mw.show()
+            pump(20)
+
+            # 1. Calling cancel_current_job() when idle (exact path of MainWindow.on_media_clicked) must never crash or flash error!
+            ctrl.cancel_current_job()
+            pump(10)
+            self.assertTrue(mw.ai_progress_bar.isHidden())
+
+            # 2. Clicking '✕ Hủy' while running cancels cleanly and shows brief notice
+            ai.is_running = lambda: True
+            mw.ai_progress_bar.start_job("📝 Đang chạy...")
+            pump(10)
+            mw.ai_progress_bar.btn_cancel.click()
+            pump(10)
+            self.assertFalse(mw.ai_progress_bar.isHidden())
+            self.assertIn("Đã huỷ", mw.ai_progress_bar.lbl_status.text())
+
+            mw.ai_progress_bar.reset_idle()
+        APPLICATION.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main()
