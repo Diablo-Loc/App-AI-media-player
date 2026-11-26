@@ -775,14 +775,19 @@ class MainWindow(QMainWindow):
             self.playback_bar.dynamic_island_clicked.connect(self.switch_to_mini_mode)
             
     # --- CÁC HÀM PLAYER LOGIC ---
+    # Bù trễ thị giác mắt người + nhịp mở fade/VFX (~85 ms chuẩn phụ đề truyền hình/streaming)
+    SUBTITLE_PERCEPTUAL_LEAD_MS = 85
+
     def authoritative_subtitle_position_ms(self) -> int:
-        """Return the real audible playback clock (AudioStreamEngine when Hi-Fi active, else QMediaPlayer)."""
+        """Return the real audible playback clock (+85ms perceptual visual lead while actively playing)."""
         pb = getattr(self, 'playback_bar', None)
         slider = getattr(pb, 'time_slider', None) if pb is not None else None
         if slider is not None and slider.isSliderDown():
             return int(slider.value())
         player = getattr(getattr(self, 'media_player', None), 'player', None)
         fx = getattr(self, 'audio_effects', None)
+        raw_ms = None
+        stream_playing = False
         if fx is not None:
             seek_timer = getattr(fx, '_seek_timer', None)
             if seek_timer is not None and seek_timer.isActive():
@@ -791,11 +796,30 @@ class MainWindow(QMainWindow):
             use_stream = getattr(fx, '_use_stream_engine', None)
             if stream is not None and callable(use_stream) and use_stream():
                 if stream.is_active():
-                    return int(stream.position_ms())
-                st = stream.status_info()
-                if st.get('active') and not st.get('paused'):
-                    return int(stream.position_ms())
-        return int(player.position()) if player is not None else 0
+                    raw_ms = int(stream.position_ms())
+                    stream_playing = True
+                else:
+                    st = stream.status_info()
+                    if st.get('active') and not st.get('paused'):
+                        raw_ms = int(stream.position_ms())
+                        stream_playing = True
+        if raw_ms is None:
+            raw_ms = int(player.position()) if player is not None else 0
+
+        qt_playing = bool(player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState)
+        if stream_playing or qt_playing:
+            lead = int(getattr(self, '_subtitle_perceptual_lead_ms', self.SUBTITLE_PERCEPTUAL_LEAD_MS))
+            if lead > 0:
+                rate = 1.0
+                if player is not None:
+                    try:
+                        rate = max(0.5, min(2.0, float(player.playbackRate())))
+                    except Exception:
+                        rate = 1.0
+                advanced = raw_ms + int(round(lead * rate))
+                dur = int(player.duration()) if player is not None else 0
+                return min(dur, advanced) if dur > 0 else advanced
+        return raw_ms
 
     def _on_player_position_for_sub(self, pos_ms: int):
         sub = getattr(self, 'sub_layer', None)

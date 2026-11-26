@@ -508,6 +508,15 @@ class BugFixesIntegrationTests(unittest.TestCase):
             mw.playback_bar.time_slider.setSliderDown(True)
             self.assertEqual(mw.authoritative_subtitle_position_ms(), 91000)
             mw.playback_bar.time_slider.setSliderDown(False)
+            if getattr(mw.audio_effects, "_seek_timer", None) is not None:
+                mw.audio_effects._seek_timer.stop()
+            # When actively playing (not dragging slider), clock includes +85ms perceptual visual lead
+            raw_stream_ms = mw.audio_effects.stream.position_ms()
+            self.assertEqual(mw.authoritative_subtitle_position_ms(), raw_stream_ms + mw.SUBTITLE_PERCEPTUAL_LEAD_MS)
+            # When paused, perceptual visual lead is 0ms (exact raw timestamp)
+            mw.audio_effects.stream._paused = True
+            self.assertEqual(mw.authoritative_subtitle_position_ms(), int(mw.media_player.player.position()))
+            mw.audio_effects.stream._paused = False
 
             # While ai_progress_bar (30px) is visible, subtitle bottom margin adds +30px to avoid PlaybackBar overlap
             mw.sync_subtitle_margin()
