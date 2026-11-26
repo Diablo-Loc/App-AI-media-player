@@ -964,6 +964,82 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         self.assertEqual(changed, [0])
         self.assertAlmostEqual(aligned[0]["start"], 10.67, places=2)
 
+    def test_lrc_breath_gaps_and_whisper_vocal_breath_preservation_prevent_cue_chaining(self):
+        from pipeline.fast_lyrics import parse_lrc_text, preserve_vocal_breath_gaps
+        from pipeline.lyric_refinement import finalize_display_times
+
+        # 1. Start-only LRC lines (Brand New Sky pattern) leave natural breathing gaps instead of 0ms chaining
+        bns_lrc = (
+            "[00:38.97]If I fall, let it be forward\n"
+            "[00:42.06]If I break, let there be light\n"
+            "[00:63.18]We keep moving\n".replace("[00:63.18]", "[01:03.18]")
+            + "[01:06.45]We keep it when I'm standing still\n"
+        )
+        cues = parse_lrc_text(bns_lrc, media_duration=120.0)
+        self.assertEqual(len(cues), 4)
+        # Normal 3s line leaves >=200ms breath before next cue
+        self.assertGreaterEqual(cues[1]["start"] - cues[0]["end"], 0.20)
+        # Short 3-word phrase 'We keep moving' (63.18..66.45) finishes around ~2.03s instead of hanging 3.27s
+        self.assertLessEqual(cues[2]["end"] - cues[2]["start"], 2.15)
+        self.assertGreaterEqual(cues[3]["start"] - cues[2]["end"], 1.10)
+
+        # 2. Whisper acoustic breath gaps (>=120ms) survive finalize_display_times without 0ms tail glue
+        acoustic = [
+            {"start": 10.0, "end": 12.40, "text": "Every step feels paper-thin"},
+            {"start": 12.75, "end": 15.20, "text": "But the ground is holding me"},
+            # Continuous singing (<120ms gap) keeps seamless touching transition
+            {"start": 15.25, "end": 17.50, "text": "I will let it be"},
+        ]
+        disp = finalize_display_times(acoustic, cjk=False, duration=30.0)
+        spaced = preserve_vocal_breath_gaps(acoustic, disp)
+        self.assertGreaterEqual(spaced[1]["start"] - spaced[0]["end"], 0.16)
+        self.assertEqual(spaced[2]["start"] - spaced[1]["end"], 0.0)
+
+    def test_foryou_hides_top_toolbar_when_idle_and_subtitles_sit_grounded_near_bottom(self):
+        from PySide6.QtCore import QPoint
+        from tools.ui_preview import APPLICATION, isolated_window, pump
+        from subtitle.mode import SubtitleMode
+
+        with isolated_window() as pair:
+            mw = pair[0] if isinstance(pair, tuple) else pair
+            mw.resize(1100, 750)
+            mw.show()
+            pump(25)
+
+            # 1. Switching to For You (index 1) MUST hide top_toolbar_container even when ai_progress_bar is idle!
+            mw.sidebar.setCurrentRow(0)
+            mw.handle_sidebar_click(mw.sidebar.item(0))
+            pump(15)
+            self.assertFalse(mw.top_toolbar_container.isHidden())
+
+            mw.sidebar.setCurrentRow(1)
+            mw.handle_sidebar_click(mw.sidebar.item(1))
+            pump(25)
+            self.assertTrue(mw.top_toolbar_container.isHidden())
+
+            # Returning to Home (index 0) restores top_toolbar_container
+            mw.sidebar.setCurrentRow(0)
+            mw.handle_sidebar_click(mw.sidebar.item(0))
+            pump(25)
+            self.assertFalse(mw.top_toolbar_container.isHidden())
+
+            # 2. Subtitle glyphs sit grounded close to PlaybackBar / video bottom across modes
+            sub = mw.sub_layer
+            sub.set_mode(SubtitleMode.EN_VI)
+            sub.load_subtitles([
+                {"start": 0, "end": 5000, "orig": "We keep moving", "en": "We keep moving", "vi": "Chúng ta vẫn tiến bước"},
+            ])
+            mw.update_video_location("large")
+            pump(25)
+            sub.update_position(500)
+            pump(10)
+            pb_top = mw.playback_bar.mapToGlobal(QPoint(0, 0)).y()
+            plan, _ = sub._plan_for(sub.text(), sub.contentsRect(), sub.size(), sub.sweep_row_groups)
+            glyph_bot = sub.geometry().y() + plan.full_bounds.bottom()
+            self.assertLessEqual(pb_top - glyph_bot, 16.0)
+            self.assertGreaterEqual(pb_top - glyph_bot, 2.0)
+        APPLICATION.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main()

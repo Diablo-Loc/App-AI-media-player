@@ -1512,21 +1512,21 @@ class MainWindow(QMainWindow):
         # CHỈ chặn khi: Đang ở tab For You VÀ Video đang ở mode Normal (nằm trong khung nhỏ)
         if is_foryou_page and v_mode == 'normal':
             if hasattr(self.sub_layer, 'set_bottom_margin'):
-                self.sub_layer.set_bottom_margin(0)
+                self.sub_layer.set_bottom_margin(4)
             return
 
         # --- CÁC TRƯỜNG HỢP CÒN LẠI (Home, Library, hoặc For You nhưng mode Large/Full) ---
         if self.playback_bar.isVisible():
-            # Neo sát 6px phía trên thanh PlaybackBar (110px) + chừa chỗ nếu thanh tiến trình AI (30px) đang hiện
+            # Neo sát ngay phía trên thanh PlaybackBar (110px client-area) + chừa chỗ nếu thanh tiến trình AI (30px) đang hiện
             extra_ai = (
                 self.ai_progress_bar.height()
                 if (hasattr(self, 'ai_progress_bar') and self.ai_progress_bar.isVisible())
                 else 0
             )
-            target_margin = 116 + extra_ai
+            target_margin = 114 + extra_ai
         else:
-            # Thường là mode Fullscreen
-            target_margin = 24
+            # Chế độ Fullscreen / ẩn thanh điều khiển: hạ sát mép dưới chuẩn rạp chiếu
+            target_margin = 10
 
         if hasattr(self.sub_layer, 'set_bottom_margin'):
             self.sub_layer.set_bottom_margin(target_margin)
@@ -2311,17 +2311,19 @@ class MainWindow(QMainWindow):
                 self._normal_window_state = self.windowState()
             self.top_toolbar_container.hide()
             self.showMaximized()
-            if hasattr(self, 'playback_bar'): self.playback_bar.show()
-        if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
-            self.ai_progress_bar.show()
+            if hasattr(self, 'playback_bar'):
+                self.playback_bar.show()
+            if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
+                self.ai_progress_bar.show()
         else:
             if self._normal_geometry is not None:
                 self.setWindowState(self._normal_window_state)
                 self.setGeometry(self._normal_geometry)
             self.top_toolbar_container.show()
-            if hasattr(self, 'playback_bar'): self.playback_bar.show()
-        if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
-            self.ai_progress_bar.show()
+            if hasattr(self, 'playback_bar'):
+                self.playback_bar.show()
+            if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
+                self.ai_progress_bar.show()
 
         is_setting= (index == 3 or index == 4)
         if is_setting:

@@ -275,7 +275,7 @@ class VideoStage(QFrame):
         # Căn phụ đề theo khung video sao cho luôn neo sát mép dưới (không trôi lên giữa khung hình)
         video_rect = QRect(v_global_x, v_global_y, target_w, target_h)
         if hasattr(self.subtitle_window, 'set_bottom_margin'):
-            self.subtitle_window.set_bottom_margin(12)
+            self.subtitle_window.set_bottom_margin(4)
         if hasattr(self.subtitle_window, 'set_anchor_rect'):
             self.subtitle_window.set_anchor_rect(video_rect)
         else:

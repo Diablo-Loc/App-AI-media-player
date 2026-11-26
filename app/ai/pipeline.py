@@ -542,9 +542,14 @@ def run_ai_pipeline(
             # Display margins belong after coverage, so they never change which
             # vocal gaps trigger recovery or which recovered words are accepted.
             from pipeline.lyric_refinement import finalize_display_times
+            from pipeline.fast_lyrics import preserve_vocal_breath_gaps
             if not dialogue:
-                final_segments = finalize_display_times(
-                    final_segments, cjk=is_cjk, duration=coverage.get("duration"))
+                acoustic_before_display = final_segments
+                final_segments = preserve_vocal_breath_gaps(
+                    acoustic_before_display,
+                    finalize_display_times(
+                        final_segments, cjk=is_cjk, duration=coverage.get("duration")),
+                )
             _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng

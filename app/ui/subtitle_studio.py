@@ -1066,7 +1066,7 @@ def build_typography_plan(
     line_gap = max(4.0, line_h * 0.14)
     total_h = len(rows) * line_h + max(0, len(rows) - 1) * line_gap
     if bottom_align:
-        y_cursor = max(rect.top(), rect.bottom() - 14.0 - total_h)
+        y_cursor = max(rect.top(), rect.bottom() - 4.0 - total_h)
     else:
         y_cursor = rect.center().y() - total_h / 2.0
 

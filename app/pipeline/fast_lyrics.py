@@ -141,11 +141,46 @@ def _is_non_lyric_line(text: str) -> bool:
 
 
 def _cue_hold_cap_seconds(text: str) -> float:
-    """Upper bound for how long an LRC cue with no explicit end timestamp may stay visible."""
+    """Natural singing hold cap for an LRC cue with no explicit end timestamp."""
     vlen = max(1, visual_len(text))
     is_cjk = bool(_HIRAGANA_KATAKANA_RE.search(text) or _CJK_IDEOGRAPH_RE.search(text) or _HANGUL_RE.search(text))
-    cps = 4.2 if is_cjk else 11.5
-    return max(3.5, min(8.0, (vlen / cps) + 1.8))
+    cps = 4.6 if is_cjk else 13.0
+    return max(2.0, min(6.2, (vlen / cps) + 0.95))
+
+
+def _lrc_inter_cue_breath_seconds(span: float) -> float:
+    """Natural breathing gap before the next line's onset for start-only LRC cues."""
+    if span >= 2.2:
+        return min(0.32, max(0.20, span * 0.09))
+    if span >= 1.1:
+        return 0.16
+    if span >= 0.65:
+        return 0.06
+    return 0.0
+
+
+def preserve_vocal_breath_gaps(acoustic_cues: list[dict], display_cues: list[dict]) -> list[dict]:
+    """Keep genuine vocal breath pauses (>=120ms acoustic silence) from being glued to 0ms by display tail padding."""
+    if not acoustic_cues or not display_cues or len(acoustic_cues) != len(display_cues):
+        return display_cues
+    out = [dict(c) for c in display_cues]
+    for idx in range(len(out) - 1):
+        try:
+            a_end = float(acoustic_cues[idx]["end"])
+            b_start = float(acoustic_cues[idx + 1]["start"])
+            d_start = float(out[idx]["start"])
+            d_end = float(out[idx]["end"])
+            d_next = float(out[idx + 1]["start"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        acoustic_gap = b_start - a_end
+        if acoustic_gap < 0.12 or (d_next - d_start) < 1.1:
+            continue
+        breath = round(min(0.24, max(0.16, (acoustic_gap + 0.10) * 0.65)), 3)
+        max_end = round(d_next - breath, 3)
+        if d_end > max_end and max_end >= d_start + 0.35:
+            out[idx]["end"] = max_end
+    return out
 
 
 def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[dict]:
@@ -223,9 +258,14 @@ def parse_lrc_text(text: str, media_duration: Optional[float] = None) -> list[di
                 break
         hold_cap = _cue_hold_cap_seconds(body)
         if next_t is not None:
-            # Trust explicit empty-line spacer timestamps up to 8s; cap unspaced gaps to avoid frozen solos.
-            cap = 8.0 if next_is_spacer else hold_cap
-            end = min(next_t, start + cap)
+            if next_is_spacer:
+                # Trust explicit empty-line spacer timestamps up to 8s.
+                end = min(next_t, start + 8.0)
+            else:
+                # Start-only LRC lines omit end times: cap hold & leave a natural vocal breath gap before next cue.
+                span = next_t - start
+                breath = _lrc_inter_cue_breath_seconds(span)
+                end = min(max(start + 0.35, next_t - breath), start + hold_cap, next_t)
         elif media_duration is not None and media_duration > start + 0.1:
             end = min(media_duration, start + hold_cap)
         else:
@@ -793,7 +833,10 @@ def verify_synced_cues_against_audio(
                 probe = vad_probe_fn(wav_path)
             else:
                 from pipeline.asr_intro_guard import _intro_speech_probe
-                probe = _intro_speech_probe(wav_path, confirmed_only=True)
+                try:
+                    probe = _intro_speech_probe(wav_path, confirmed_only=True)
+                except TypeError:
+                    probe = _intro_speech_probe(wav_path)
         except Exception as err:
             info["reason"] = f"vad_error:{type(err).__name__}"
             return False, info, None

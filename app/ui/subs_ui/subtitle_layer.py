@@ -94,8 +94,8 @@ class DraggableSubtitle(QLabel):
     opacity = Property(float, get_opacity, set_opacity)
 
     def _effective_padding(self) -> tuple[int, int]:
-        # Generous horizontal room for saber/glitch/shatter VFX; tight 10px bottom keeps sub grounded low.
-        return (36, 10)
+        # Generous horizontal room for saber/glitch/shatter VFX; compact 6px bottom keeps sub grounded low.
+        return (36, 6)
 
     def set_locked(self, locked: bool):
         self.is_locked = locked
@@ -115,7 +115,10 @@ class DraggableSubtitle(QLabel):
             return self._anchor_rect_global
         win = self.parent()
         if win:
-            return win.frameGeometry() if self.isWindow() else win.rect()
+            if self.isWindow():
+                tl = win.mapToGlobal(QPoint(0, 0))
+                return QRect(tl.x(), tl.y(), win.width(), win.height())
+            return win.rect()
         return None
 
     def reset_anchor_state(self):
@@ -276,7 +279,7 @@ class DraggableSubtitle(QLabel):
         # 2. Nền kính mờ bo tròn gọn theo vùng chữ (không phình theo stage cố định)
         if self.current_bg_opacity > 0.0:
             if getattr(self, '_song_stage_size', None) is not None and plan.lines and not plan.full_bounds.isNull() and self._cached_text == curr_text:
-                pill_rect = plan.full_bounds.adjusted(-20.0, -10.0, 20.0, 10.0).intersected(self.rect())
+                pill_rect = plan.full_bounds.adjusted(-20.0, -8.0, 20.0, 8.0).intersected(self.rect())
             else:
                 pill_rect = self.rect()
             draw_cinema_pill(painter, pill_rect, self.current_bg_color, self.current_bg_opacity)
@@ -771,10 +774,18 @@ class SubtitleLayer(DraggableSubtitle):
             guard.prepare_geometry()
 
         if self.isHidden():
-            if gap_from_prev > 400 or idx == 0:
+            if gap_from_prev >= 140 or idx == 0:
                 self._smart_show(instant=False)
             else:
                 self._smart_show(instant=True)
+        elif (
+            self.use_fade_effect
+            and self.fade_anim.state() == QAbstractAnimation.State.Running
+            and self.fade_anim.endValue() == 0.0
+            and gap_from_prev >= 140
+        ):
+            self._opacity = min(self._opacity, 0.18)
+            self._smart_show(instant=False)
         else:
             self.fade_anim.stop()
             self.set_opacity(1.0)
