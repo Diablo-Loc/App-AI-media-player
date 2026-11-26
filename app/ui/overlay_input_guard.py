@@ -8,6 +8,7 @@ class OverlayInputGuard(QObject):
         QEvent.Type.Move, QEvent.Type.Resize, QEvent.Type.Show,
         QEvent.Type.Hide, QEvent.Type.ParentChange,
     ))
+    _IMMEDIATE_EVENTS = frozenset((QEvent.Type.Show, QEvent.Type.ParentChange))
 
     def __init__(self, owner, overlay, controls):
         super().__init__(owner)
@@ -23,9 +24,11 @@ class OverlayInputGuard(QObject):
         self.refresh()
 
     def eventFilter(self, watched, event):
-        if event.type() in self._GEOMETRY_EVENTS:
-            self.refresh()
-            # Native window creation/reparenting can reset the mask after Show.
+        kind = event.type()
+        if kind in self._GEOMETRY_EVENTS:
+            if kind in self._IMMEDIATE_EVENTS:
+                self.refresh()
+            # Coalesce rapid Move/Resize bursts onto a single 0ms tick.
             self._refresh_timer.start(0)
         if watched is self.overlay and isinstance(event, QMouseEvent):
             return self._forward_control_event(event)
@@ -65,13 +68,31 @@ class OverlayInputGuard(QObject):
         self._updating = True
         try:
             overlay = self.overlay
+            if not overlay.isVisible():
+                return
             origin = overlay.mapToGlobal(QPoint(0, 0))
-            region = QRegion(overlay.rect())
+            overlay_rect = overlay.rect()
+            overlay_global = QRect(origin, overlay_rect.size())
+
+            overlapping = []
             for control in self.controls:
-                if control.isVisible():
-                    rect = QRect(control.mapToGlobal(QPoint(0, 0)) - origin, control.size())
-                    region = region.subtracted(QRegion(rect))
-            if region == QRegion(overlay.rect()):
+                if not control.isVisible():
+                    continue
+                c_origin = control.mapToGlobal(QPoint(0, 0))
+                c_global = QRect(c_origin, control.size())
+                if c_global.intersects(overlay_global):
+                    overlapping.append(QRect(c_origin - origin, control.size()))
+
+            if not overlapping:
+                if not overlay.mask().isEmpty():
+                    overlay.clearMask()
+                return
+
+            region = QRegion(overlay_rect)
+            for rect in overlapping:
+                region = region.subtracted(QRegion(rect))
+
+            if region == QRegion(overlay_rect):
                 if not overlay.mask().isEmpty():
                     overlay.clearMask()
             else:

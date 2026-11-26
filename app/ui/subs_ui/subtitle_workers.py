@@ -1,6 +1,5 @@
 import re
 import gc
-import requests
 from PySide6.QtCore import QSettings, QThread, Signal
 
 from pipeline.utils import is_connected
@@ -10,11 +9,14 @@ from translate.translation_models import (
     resolve_translation_model,
 )
 
-try:
-    from google import genai
-    from google.genai import types
-except ImportError:
-    genai = None
+
+def _import_genai():
+    try:
+        from google import genai
+        from google.genai import types
+        return genai, types
+    except ImportError:
+        return None, None
 
 class AlignWorker(QThread):
     finished_signal = Signal(list, int)
@@ -98,6 +100,7 @@ No explanation.
             corrected_raw = ""
 
             if self.provider == "Google Gemini":
+                genai, types = _import_genai()
                 if not genai:
                     raise Exception("google-genai chưa được cài đặt!")
 
@@ -114,6 +117,7 @@ No explanation.
                 corrected_raw = response.text or ""
 
             elif self.provider == "Claude 3.5":
+                import requests
                 r = requests.post(
                     "https://api.anthropic.com/v1/messages",
                     headers={
@@ -135,6 +139,7 @@ No explanation.
                     corrected_raw = data["content"][0]["text"]
 
             elif self.provider == "OpenAI (GPT-4o)":
+                import requests
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json"

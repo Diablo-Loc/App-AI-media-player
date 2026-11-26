@@ -267,33 +267,19 @@ class VideoStage(QFrame):
 
         self.video_widget.setGeometry(local_x, local_y, target_w, target_h)
 
-        # Lấy tọa độ gốc của Stage
+        # Lấy tọa độ gốc của Stage & khung Video thực tế
         stage_pos = self.mapToGlobal(QPoint(0, 0))
-        
-        # Tính toán tọa độ thực tế của Video trên màn hình
         v_global_x = stage_pos.x() + local_x
         v_global_y = stage_pos.y() + local_y
-        v_bottom_global = v_global_y + target_h
-
-        self.subtitle_window.adjustSize()
-        sub_h = self.subtitle_window.height()
-                
-        bottom_margin = 10 
-        target_sub_y = v_bottom_global - sub_h - bottom_margin
         
-        anchor_rect = QRect(v_global_x, target_sub_y, target_w, sub_h)
-        
+        # Căn phụ đề theo khung video sao cho luôn neo sát mép dưới (không trôi lên giữa khung hình)
+        video_rect = QRect(v_global_x, v_global_y, target_w, target_h)
         if hasattr(self.subtitle_window, 'set_bottom_margin'):
-            self.subtitle_window.set_bottom_margin(0)
-            
-        if not self.subtitle_window.parent():
-            # Nếu không có cha (Window riêng), dùng tọa độ Global
-            self.subtitle_window.setGeometry(anchor_rect)
+            self.subtitle_window.set_bottom_margin(12)
+        if hasattr(self.subtitle_window, 'set_anchor_rect'):
+            self.subtitle_window.set_anchor_rect(video_rect)
         else:
-            # Nếu có cha, dùng set_anchor_rect để nó tự tính theo Local
-            self.subtitle_window.set_anchor_rect(anchor_rect)
-            
-        # Thêm dòng này để chắc chắn nó không bị thằng nào đè
+            self.subtitle_window.setGeometry(video_rect)
         self.subtitle_window.raise_()
                 
     def resizeEvent(self, event):

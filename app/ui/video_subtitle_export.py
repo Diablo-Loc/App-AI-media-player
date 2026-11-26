@@ -37,6 +37,12 @@ from ui.icons import button_icon
 from ui.design_system import ACCENT, BORDER, DIALOG_STYLE, MUTED, RAISED, SURFACE, TEXT
 from ui.subtitle_effects import SubtitleEffects, normalize_options
 from ui.subtitle_particles import subtitle_row_groups
+from ui.subtitle_studio import (
+    build_typography_plan,
+    draw_cinema_pill,
+    draw_studio_text_layers,
+    measure_box_size,
+)
 
 
 FADE_MS = 220
@@ -974,15 +980,30 @@ def snapshot_from_window(window) -> ExportSnapshot:
                 previous_source_end = 0.0
         size_probe.setText(text)
         size_probe.adjustSize()
+        box_w = max(1, int(size_probe.width()))
+        box_h = max(1, int(size_probe.height()))
         probe_contents = size_probe.contentsRect()
+        c_x, c_y = int(probe_contents.x()), int(probe_contents.y())
+        c_w = max(1, int(probe_contents.width()))
+        c_h = max(1, int(probe_contents.height()))
+        if getattr(layer, 'bilingual_hierarchy', False) and len(set(sweep_row_groups)) >= 2:
+            pad_x = max(0, c_x)
+            pad_y = max(0, c_y)
+            box_w, box_h = measure_box_size(
+                text, size_probe.font(),
+                sweep_row_groups, True,
+                pad_left=pad_x, pad_right=pad_x, pad_top=pad_y, pad_bottom=pad_y,
+            )
+            c_w = max(1, box_w - pad_x * 2)
+            c_h = max(1, box_h - pad_y * 2)
         cues.append(ExportCue(
             index, start, end, text, previous_source_end,
-            box_width=max(1, int(size_probe.width())),
-            box_height=max(1, int(size_probe.height())),
-            contents_x=int(probe_contents.x()),
-            contents_y=int(probe_contents.y()),
-            contents_width=max(1, int(probe_contents.width())),
-            contents_height=max(1, int(probe_contents.height())),
+            box_width=box_w,
+            box_height=box_h,
+            contents_x=c_x,
+            contents_y=c_y,
+            contents_width=c_w,
+            contents_height=c_h,
             sweep_row_groups=sweep_row_groups,
         ))
     size_probe.deleteLater()
@@ -1043,6 +1064,7 @@ def snapshot_from_window(window) -> ExportSnapshot:
         'outline_color': str(getattr(layer, 'outline_color', '#000000')),
         'shadow_enabled': bool(getattr(layer, 'use_shadow', True)),
         'shadow_alpha': int(getattr(layer, 'shadow_alpha', 160)),
+        'subtitle_hierarchy': False,
         'padding_left': pad_left,
         'padding_right': pad_right,
         'padding_top': pad_top,
@@ -1157,7 +1179,9 @@ class _RenderLabel(QObject):
         self.use_outline = style['outline_enabled']
         self.outline_width = style['outline_width']
         self.outline_color = style['outline_color']
+        self.bilingual_hierarchy = False
         self.sweep_row_groups = ()
+        self._cached_plan = None
 
     def configure(self, text, size, contents, sweep_row_groups=()):
         self._text, self._size, self._contents = text, QSize(size), QRect(contents)
@@ -1167,6 +1191,8 @@ class _RenderLabel(QObject):
     def font(self): return self._font
     def fontMetrics(self): return QFontMetrics(self._font)
     def size(self): return self._size
+    def width(self): return self._size.width()
+    def height(self): return self._size.height()
     def rect(self): return QRect(0, 0, self._size.width(), self._size.height())
     def contentsRect(self): return QRect(self._contents)
     def devicePixelRatioF(self): return self._dpr
@@ -1244,6 +1270,7 @@ class SubtitleBandRenderer:
         font.setPixelSize(max(8, int(style['font_size'])))
         self.style, self.font = style, font
         self.metrics = QFontMetrics(font)
+        self.bilingual_hierarchy = False
         self.pad_left = max(0, int(style.get('padding_left', 12)))
         self.pad_right = max(0, int(style.get('padding_right', 12)))
         self.pad_top = max(0, int(style.get('padding_top', 6)))
@@ -1369,6 +1396,28 @@ class SubtitleBandRenderer:
                 QSize(cue.box_width, cue.box_height),
                 QRect(cue.contents_x, cue.contents_y, cue.contents_width, cue.contents_height),
             )
+        row_groups = tuple(cue.sweep_row_groups or ()) if cue is not None else ()
+        if self.bilingual_hierarchy and len(set(row_groups)) >= 2 and len(row_groups) == len(text.split('\n')):
+            w, h = measure_box_size(
+                text,
+                self.font,
+                row_groups,
+                True,
+                pad_left=self.pad_left,
+                pad_right=self.pad_right,
+                pad_top=self.pad_top,
+                pad_bottom=self.pad_bottom,
+            )
+            max_logical_width = self.max_logical_text_width + self.pad_left + self.pad_right
+            width = min(max_logical_width, max(1, w))
+            height = max(1, h)
+            contents = QRect(
+                self.pad_left,
+                self.pad_top,
+                max(1, width - self.pad_left - self.pad_right),
+                max(1, height - self.pad_top - self.pad_bottom),
+            )
+            return QSize(width, height), contents
         lines = text.split('\n')
         width = (max((self.metrics.horizontalAdvance(line) for line in lines), default=1)
                  + self.pad_left + self.pad_right)
@@ -1385,20 +1434,17 @@ class SubtitleBandRenderer:
         )
         return QSize(width, height), contents
 
-    def _path_for(self, text, size, contents):
-        key = (text, size.width(), size.height(), contents.getRect())
+    def _plan_for(self, text, size, contents, row_groups=()):
+        hierarchy = bool(self.bilingual_hierarchy)
+        key = (text, size.width(), size.height(), contents.getRect(), tuple(row_groups), hierarchy)
         if key == self._path_key:
             return self._path
-        path = QPainterPath()
-        lines = text.split('\n')
-        line_height = self.metrics.lineSpacing()
-        total_h = line_height * len(lines)
-        for index, line in enumerate(lines):
-            x = contents.x() + (contents.width()-self.metrics.horizontalAdvance(line))/2
-            y = contents.y() + (contents.height()-total_h)/2 + self.metrics.ascent() + index*line_height
-            path.addText(x, y, self.font, line)
-        self._path_key, self._path = key, path
-        return path
+        plan = build_typography_plan(text, self.font, contents, tuple(row_groups), hierarchy)
+        self._path_key, self._path = key, plan
+        return plan
+
+    def _path_for(self, text, size, contents, row_groups=()):
+        return self._plan_for(text, size, contents, row_groups).full_path
 
     def _cue_at(self, pts_ms):
         if not self.snapshot.cues:
@@ -1458,7 +1504,9 @@ class SubtitleBandRenderer:
         self.image.fill(Qt.GlobalColor.transparent)
         size, contents = self._geometry(display_text, cue)
         self.label.configure(display_text, size, contents, display_row_groups)
-        path = self._path_for(display_text, size, contents)
+        plan = self._plan_for(display_text, size, contents, display_row_groups)
+        self.label._cached_plan = plan
+        path = plan.full_path
         keep_erased_sweep = (
             not active
             and options['enabled']
@@ -1495,23 +1543,43 @@ class SubtitleBandRenderer:
         painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
         painter.scale(self.scale, self.scale)
         painter.setOpacity(opacity)
-        bg = QColor(self.style['bg_color'])
-        if not bg.isValid():
-            bg = QColor('#000000')
-        bg.setAlpha(int(max(0.0, min(1.0, self.style['bg_opacity']))*255))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(bg)
-        painter.drawRoundedRect(QRect(0, 0, size.width(), size.height()), 6, 6)
+        if self.bilingual_hierarchy:
+            if float(self.style['bg_opacity']) > 0.0:
+                draw_cinema_pill(painter, QRect(0, 0, size.width(), size.height()), self.style['bg_color'], float(self.style['bg_opacity']))
+        else:
+            bg = QColor(self.style['bg_color'])
+            if not bg.isValid():
+                bg = QColor('#000000')
+            bg.setAlpha(int(max(0.0, min(1.0, self.style['bg_opacity'])) * 255))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(bg)
+            painter.drawRoundedRect(QRect(0, 0, size.width(), size.height()), 6, 6)
         if not self.effects.paint(painter, path):
-            if self.style['shadow_enabled']:
-                painter.fillPath(path.translated(2, 2),
-                                 QColor(0, 0, 0, self.style['shadow_alpha']))
-            if self.style['outline_enabled']:
-                pen = QPen(QColor(self.style['outline_color']), self.style['outline_width'])
-                pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
-                painter.setPen(pen)
-                painter.drawPath(path)
-            painter.fillPath(path, QColor(self.style['font_color']))
+            if self.bilingual_hierarchy:
+                draw_studio_text_layers(
+                    painter,
+                    plan,
+                    font_color=self.style['font_color'],
+                    color_mode='original',
+                    progress=1.0,
+                    use_shadow=self.style['shadow_enabled'],
+                    shadow_alpha=self.style['shadow_alpha'],
+                    use_outline=self.style['outline_enabled'],
+                    outline_width=self.style['outline_width'],
+                    outline_color=self.style['outline_color'],
+                    glow=False,
+                    draw_fill=True,
+                )
+            else:
+                if self.style['shadow_enabled']:
+                    painter.fillPath(path.translated(2, 2),
+                                     QColor(0, 0, 0, self.style['shadow_alpha']))
+                if self.style['outline_enabled']:
+                    pen = QPen(QColor(self.style['outline_color']), self.style['outline_width'])
+                    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+                    painter.setPen(pen)
+                    painter.drawPath(path)
+                painter.fillPath(path, QColor(self.style['font_color']))
         painter.end()
 
         x = round(self.center_x-target_w/2)

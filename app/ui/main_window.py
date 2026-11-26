@@ -22,7 +22,8 @@ from control.audio_effects import install_audio_effects
 from control.volume_settings import install_volume_settings
 from ui.media_card import MediaCard
 from ui.subs_ui.subtitle_layer import SubtitleLayer
-from ui.subtitle_effects import install_subtitle_effects
+from ui.subtitle_effects import install_subtitle_effects, normalize_options
+from ui.subtitle_studio import STUDIO_PROFILES
 from ui.subs_ui.sub_panel import SettingsPanel
 from subtitle.mode import SubtitleMode 
 from ui.vol_panel import VolumePopup
@@ -177,7 +178,7 @@ class MainWindow(QMainWindow):
             outline_width=self.config.get("outline_width", 4),
             outline_color=self.config.get("outline_color", "#000000"),
             shadow_enabled=self.config.get("shadow_enabled", True),
-            shadow_alpha=self.config.get("shadow_alpha", 160)
+            shadow_alpha=self.config.get("shadow_alpha", 160),
         )
         # khóa vị trí nếu cần
         self.sub_layer.set_locked(self.config.get("lock_position", False))
@@ -224,6 +225,7 @@ class MainWindow(QMainWindow):
         self.subsettings_panel.shadow_changed.connect(self._on_shadow_changed)
         self.subsettings_panel.reset_requested.connect(self._reset_defaults)
         self.subsettings_panel.fade_effect_changed.connect(self.set_fade_enabled)
+        self.subsettings_panel.studio_profile_requested.connect(self._apply_studio_subtitle_profile)
         install_subtitle_effects(self)
         # Nút mở settings
         self.playback_bar.btn_subseting.clicked.connect(self.toggle_subsettings_panel)
@@ -485,13 +487,15 @@ class MainWindow(QMainWindow):
             QApplication.instance().quit()
 
     def moveEvent(self, event):
-        """Kéo cửa sổ chính -> Sub trôi theo"""
+        """Kéo cửa sổ chính -> Sub & Subtitle Studio panel trôi bám theo"""
         super().moveEvent(event)
         if hasattr(self, 'sub_layer') and self.sub_layer.isVisible():
             if not self.sub_layer._user_moved:
                 self.sub_layer.center_at_bottom()
             else:
                 self.sub_layer._ensure_within_bounds_global()
+        if hasattr(self, 'subsettings_panel') and self.subsettings_panel.isVisible():
+            self._position_subsettings_panel()
             
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -503,17 +507,11 @@ class MainWindow(QMainWindow):
         sub = getattr(self, "sub_layer", None)
 
         if video and video.isVisible():
-            # 1. Cập nhật vị trí Subtitle
+            # 1. Giữ SubtitleLayer gọn nhẹ đúng kích thước chữ/stage, căn vị trí nổi trên video
             if sub:
-                # Lấy tọa độ tương đối của video so với MainWindow
-                rect = video.geometry()
-                pos = video.mapTo(self, QPoint(0, 0)) # Chuyển tọa độ
-                
-                # Đặt sub đè lên đúng vị trí video
-                sub.setGeometry(pos.x(), pos.y(), rect.width(), rect.height())
-                
-                if hasattr(sub, "adaptive_resize"):
-                    sub.adaptive_resize(rect.width())
+                if getattr(sub, '_song_stage_size', None) is None:
+                    sub.adjustSize()
+                sub.recalc_position()
                 sub.raise_()
 
             # 2. Đảm bảo UI controls luôn nằm trên cùng
@@ -521,24 +519,25 @@ class MainWindow(QMainWindow):
                 self.playback_bar.raise_()
             if hasattr(self, "subsettings_panel"):
                 self.subsettings_panel.raise_()
-            
+
             self.sync_subtitle_margin()
-        
+
         else:
             # Nếu không hiện video thì ẩn sub đi
-            if sub: sub.hide()
+            if sub:
+                sub.hide()
+
+        if hasattr(self, "subsettings_panel") and self.subsettings_panel.isVisible():
+            self._position_subsettings_panel()
+            self.subsettings_panel.raise_()
 
         if hasattr(self, 'foryou_page') and self.content_stack.currentWidget() == self.foryou_page:
-             video = getattr(self, "video_display", None)
-             sub = getattr(self, "sub_layer", None)
-             if video and sub and video.isVisible():
-                 # Lấy vị trí video trong trang For You
-                 pos = video.mapTo(self, QPoint(0, 0))
-                 rect = video.rect()
-                 # Ép Sub đè lên
-                 sub.setGeometry(pos.x(), pos.y(), rect.width(), rect.height())
-                 if hasattr(sub, "adaptive_resize"):
-                    sub.adaptive_resize(rect.width())
+            video = getattr(self, "video_display", None)
+            sub = getattr(self, "sub_layer", None)
+            if video and sub and video.isVisible():
+                if getattr(sub, '_song_stage_size', None) is None:
+                    sub.adjustSize()
+                sub.recalc_position()
                     
         # ==============================================================
         # PHẦN 2: XỬ LÝ GRID DANH SÁCH (CHẠY TRỄ / DEBOUNCE)
@@ -1405,11 +1404,11 @@ class MainWindow(QMainWindow):
 
         # --- CÁC TRƯỜNG HỢP CÒN LẠI (Home, Library, hoặc For You nhưng mode Large/Full) ---
         if self.playback_bar.isVisible():
-            # Thường là mode Normal ở Home hoặc mode Large
-            target_margin = 140  
+            # Neo sát 6px phía trên thanh PlaybackBar (110px); vẫn đủ chỗ 14px cho sóng nhạc Equalizer dưới chân chữ
+            target_margin = 116
         else:
             # Thường là mode Fullscreen
-            target_margin = 40   
+            target_margin = 24
 
         if hasattr(self.sub_layer, 'set_bottom_margin'):
             self.sub_layer.set_bottom_margin(target_margin)
@@ -1455,38 +1454,40 @@ class MainWindow(QMainWindow):
                 card.update_thumbnail(thumb_path)
                 break
 
+    def _position_subsettings_panel(self):
+        """Neo bảng Subtitle Studio bám dính sát mép phải cửa sổ chính, không tràn khỏi màn hình."""
+        screen = self.screen().availableGeometry()
+        win_tl = self.mapToGlobal(QPoint(0, 0))
+        win_w = self.width()
+        win_h = self.height()
+        win_right = win_tl.x() + win_w
+        win_bottom = win_tl.y() + win_h
+
+        panel_w = min(920, max(520, min(screen.width() - 24, win_w - 16)))
+        panel_h = min(556, max(240, screen.height() - 24))
+        self.subsettings_panel.setFixedWidth(panel_w)
+        self.subsettings_panel.setFixedHeight(panel_h)
+
+        # Dính sát mép phải cửa sổ app (chừa 4px để giữ trọn viền bo góc)
+        x = win_right - panel_w - 4
+        bar_h = self.playback_bar.height() if (hasattr(self, 'playback_bar') and self.playback_bar.isVisible()) else 0
+        if bar_h > 0:
+            y = win_bottom - bar_h - panel_h - 6
+        else:
+            y = win_bottom - panel_h - 10
+        y = max(win_tl.y() + 8, y)
+
+        x = max(screen.left() + 8, min(x, screen.right() - panel_w - 4))
+        y = max(screen.top() + 8, min(y, screen.bottom() - panel_h - 8))
+        self.subsettings_panel.move(int(x), int(y))
+
     def toggle_subsettings_panel(self):
-        """Bật tắt bảng cài đặt (Phiên bản căn lề phải chuẩn & sửa lỗi tọa độ)"""
+        """Bật tắt bảng Subtitle Studio luôn nằm dính sát mép phải cửa sổ chính."""
         if self.subsettings_panel.isVisible():
             self.subsettings_panel.hide()
             return
-            
-        # 1. Ép panel tính lại kích thước thật dựa trên nội dung
-        self.subsettings_panel.adjustSize() 
 
-        # 2. Lấy nút settings
-        btn = self.playback_bar.btn_subseting
-        
-        # 3. Lấy tọa độ TOÀN CỤC (Global) trên màn hình máy tính
-        # Bắt buộc dùng Global vì Popup di chuyển theo tọa độ màn hình
-        btn_pos = btn.mapToGlobal(QPoint(0, 0))
-        
-        # 4. Tính toán vị trí X (Căn lề PHẢI panel thẳng với lề PHẢI nút)
-        # Công thức: Mép phải nút - Chiều rộng panel
-        # (btn_pos.x() + btn.width()) là tọa độ mép phải của nút
-        x = (btn_pos.x() + btn.width()) - self.subsettings_panel.width()
-        
-        # 5. Tính toán vị trí Y (Nằm phía TRÊN nút, cách 10px)
-        y = btn_pos.y() - self.subsettings_panel.height() - 10
-        
-        # --- [Tùy chọn] Chống tràn mép trái ---
-        # (Phòng trường hợp màn hình quá bé hoặc nút quá to)
-        win_pos = self.mapToGlobal(QPoint(0, 0))
-        if x < win_pos.x():
-             x = win_pos.x() + 10 # Ép vào mép trái
-        
-        # 6. Di chuyển và hiển thị
-        self.subsettings_panel.move(x, y)
+        self._position_subsettings_panel()
         self.subsettings_panel.show()
         self.subsettings_panel.raise_()
         self.subsettings_panel.activateWindow()
@@ -1567,6 +1568,41 @@ class MainWindow(QMainWindow):
         # 2. Lưu vào config và ghi ra file settings.json
         self._save_setting("fade_enabled", enabled)
         
+    def _apply_studio_subtitle_profile(self, profile_key: str):
+        """Áp dụng trọn bộ cấu hình Studio Editor một chạm với cỡ chữ đồng nhất."""
+        spec = STUDIO_PROFILES.get(profile_key)
+        if not spec:
+            return
+        effects_opts = normalize_options(spec.get('subtitle_effects'))
+        self.config["font_color"] = spec["font_color"]
+        self.config["bg_color"] = spec["bg_color"]
+        self.config["bg_opacity"] = spec["bg_opacity"]
+        self.config["outline_enabled"] = spec["outline_enabled"]
+        self.config["outline_width"] = spec["outline_width"]
+        self.config["outline_color"] = spec["outline_color"]
+        self.config["shadow_enabled"] = spec["shadow_enabled"]
+        self.config["shadow_alpha"] = spec["shadow_alpha"]
+        self.config["fade_enabled"] = spec["fade_enabled"]
+        self.config.pop("subtitle_hierarchy", None)
+        self.config["subtitle_effects"] = effects_opts
+        self.save_config()
+
+        self.sub_layer.apply_style(
+            color=spec["font_color"],
+            bg_color=spec["bg_color"],
+            bg_opacity=spec["bg_opacity"],
+            outline_enabled=spec["outline_enabled"],
+            outline_width=spec["outline_width"],
+            outline_color=spec["outline_color"],
+            shadow_enabled=spec["shadow_enabled"],
+            shadow_alpha=spec["shadow_alpha"],
+            fade_enabled=spec["fade_enabled"],
+        )
+        self.sub_layer._subtitle_effects.configure(effects_opts)
+        self.sub_layer.update_position(self.sub_layer._current_ms_cache)
+        self.subsettings_panel.sync_ui(self.config)
+        self.subsettings_panel.effects_panel.play_preview()
+
     def _reset_defaults(self):
         # Reset về mặc định
         defaults = {
@@ -1587,7 +1623,7 @@ class MainWindow(QMainWindow):
         }
         self.config = defaults
         self.save_config()
-        
+
         # Update Layer
         self.sub_layer.set_mode(SubtitleMode.EN_VI)
         self.sub_layer.apply_style(
@@ -1599,7 +1635,7 @@ class MainWindow(QMainWindow):
             outline_width=defaults["outline_width"],
             outline_color=defaults["outline_color"],
             shadow_enabled=defaults["shadow_enabled"],
-            shadow_alpha=defaults["shadow_alpha"]
+            shadow_alpha=defaults["shadow_alpha"],
         )
         self.sub_layer.set_locked(defaults["lock_position"])
         self.sub_layer.set_fade_enabled(defaults["fade_enabled"])
@@ -1921,14 +1957,14 @@ class MainWindow(QMainWindow):
                     if hasattr(sub, '_custom_rect'): sub._custom_rect = None
                     if hasattr(sub, 'set_anchor_rect'): sub.set_anchor_rect(None)
                     
-                    # Ép kích thước phủ kín màn hình ngay lập tức
-                    sub.resize(self.size())
-                    sub.setGeometry(0, 0, self.width(), self.height())
-                    sub.show()
+                    # Giữ kích thước gọn theo chữ, tránh giãn toàn màn hình gây giật DWM
+                    sub.adjustSize()
                     sub.enable_render = True
+                    sub.show()
                     sub.raise_()
-                    
-                    if hasattr(sub, 'recalc_position'): sub.recalc_position()
+
+                    if hasattr(sub, 'recalc_position'):
+                        sub.recalc_position()
                     self.sync_subtitle_margin()
 
             # =====================================================
@@ -2500,11 +2536,14 @@ class MainWindow(QMainWindow):
     def process_realtime_audio(self, audio_data):
         """
         Hàm nhận mảng NumPy (frames, channels) từ luồng C++ đẩy về.
-        Chạy an toàn hoàn toàn trên luồng giao diện chính của Qt.
+        Chạy an toàn hoàn toàn trên luồng giao diện chính của Qt (chỉ đọc thụ động, không tác động âm thanh).
         """
-        # audio_data lúc này là mảng float chuẩn, bác thích làm gì thì làm:
-        # Ví dụ: Lấy kênh trái/phải để vẽ sóng nhạc Visualizer realtime
-        pass
+        sub = getattr(self, 'sub_layer', None)
+        if sub is None or not sub.isVisible():
+            return
+        fx = getattr(sub, '_subtitle_effects', None)
+        if fx is not None and fx.wants_audio_beat():
+            fx.feed_audio_samples(audio_data)
 
     def on_audio_outputs_changed(self):
 
