@@ -147,7 +147,14 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     if not subs: 
         return subs
         
-    src_lang = str(src_lang).lower().strip()
+    src_lang = str(src_lang or "").lower().strip()
+    if src_lang in ("", "auto"):
+        from pipeline.fast_lyrics import detect_text_language
+        sample_text = "\n".join(
+            (s.top.text if getattr(s, "top", None) and getattr(s.top, "text", None) else "")
+            for s in subs
+        )
+        src_lang = detect_text_language(sample_text, fallback="en")
 
     # ==============================================================================
     # 🇻🇳 TRƯỜNG HỢP SPECIAL: BÀI HÁT TIẾNG VIỆT
@@ -257,12 +264,12 @@ def translate_pipeline(subs, provider="Local Default", key=None, src_lang="ja", 
     return subs
 
 def clear_translator():
-    import torch  # 🔥 LAZY IMPORT - chỉ load torch khi cần dọn dẹp
     global _translator_instance
     if _translator_instance is not None:
         print("🧹 Giải phóng bộ nhớ AI...")
         del _translator_instance
         _translator_instance = None
         gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        torch_mod = sys.modules.get("torch")
+        if torch_mod is not None and hasattr(torch_mod, "cuda") and torch_mod.cuda.is_available():
+            torch_mod.cuda.empty_cache()

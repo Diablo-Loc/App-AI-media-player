@@ -275,6 +275,7 @@ class SubtitleEffects(QObject):
         self.cue = None
         self.last_ms = None
         self.player = None
+        self._position_provider = None
         self._sprite_key = None
         self._sprite = None
         self._sprite_origin = QPointF()
@@ -480,6 +481,20 @@ class SubtitleEffects(QObject):
         player.mediaStatusChanged.connect(self._media_status_changed)
         player.sourceChanged.connect(self._source_changed)
 
+    def bind_position_provider(self, provider):
+        """Attach an authoritative audio-clock callable returning playback position in ms."""
+        self._position_provider = provider
+
+    def _authoritative_pts_ms(self) -> int:
+        if self._position_provider is not None:
+            try:
+                value = self._position_provider()
+                if value is not None:
+                    return int(value)
+            except Exception:
+                pass
+        return int(self.player.position()) if self.player else int(self._scan_ms or 0)
+
     def _source_changed(self, source):
         self._release_sprites()
         self.clear()
@@ -646,7 +661,7 @@ class SubtitleEffects(QObject):
             if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
                 self._particle_timer.stop()
                 return
-            native_ms = self.player.position()
+            native_ms = self._authoritative_pts_ms()
             if native_ms < self.cue[1] or native_ms > self.cue[2]:
                 self.scan_progress = 1.0
                 self._particle_timer.stop()
@@ -1534,6 +1549,8 @@ def install_subtitle_effects(owner):
     effect = owner.sub_layer._subtitle_effects
     effect.configure(owner.config.get('subtitle_effects'))
     effect.bind_player(owner.media_player.player)
+    if hasattr(owner, 'authoritative_subtitle_position_ms'):
+        effect.bind_position_provider(owner.authoritative_subtitle_position_ms)
 
     def changed(options):
         effect.configure(options)

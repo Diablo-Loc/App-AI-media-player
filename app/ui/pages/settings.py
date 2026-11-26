@@ -53,6 +53,14 @@ class SettingsPage(QWidget):
                              "Áp dụng khi tạo hoặc dịch sub mới; sub đã lưu giữ nguyên.")
         self.combo_content_mode.currentIndexChanged.connect(self._refresh_content_mode)
 
+        self.combo_fast_lyrics = QComboBox()
+        self.combo_fast_lyrics.addItems(["Bật (Siêu tốc)", "Tắt (Luôn dùng AI)"])
+        self.add_setting_row(
+            "Lấy lời nhanh:",
+            self.combo_fast_lyrics,
+            "Ưu tiên sub có sẵn (.lrc/.srt/.ass, sub nhúng) hoặc lời chuẩn LRCLIB đã xác thực giọng hát (< 1s); tự về AI Whisper nếu không khớp.",
+        )
+
         self.combo_device = QComboBox()
         self.combo_device.addItems(["cuda", "cpu"])
         self.add_setting_row("Compute Device:", self.combo_device, "Sử dụng GPU (NVIDIA) để dịch nhanh hơn")
@@ -191,6 +199,7 @@ class SettingsPage(QWidget):
         new_config = {
             "ai_model": self.combo_model.currentData(),
             "subtitle_content_mode": self.combo_content_mode.currentData(),
+            "fast_lyrics_enabled": self.combo_fast_lyrics.currentText(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "translation_model": self.combo_translation_model.currentData() or "",
@@ -222,6 +231,13 @@ class SettingsPage(QWidget):
         selected_mode = resolve_content_mode(self.settings.value("subtitle_content_mode", "lyrics"))
         self.combo_content_mode.setCurrentIndex(self.combo_content_mode.findData(selected_mode))
         self._refresh_content_mode()
+        raw_fast = self.settings.value("fast_lyrics_enabled", "Bật (Siêu tốc)")
+        if isinstance(raw_fast, bool):
+            fast_label = "Bật (Siêu tốc)" if raw_fast else "Tắt (Luôn dùng AI)"
+        else:
+            fast_label = str(raw_fast or "Bật (Siêu tốc)")
+        idx_fast = self.combo_fast_lyrics.findText(fast_label)
+        self.combo_fast_lyrics.setCurrentIndex(idx_fast if idx_fast >= 0 else 0)
         self.combo_device.setCurrentText(self.settings.value("device", "cpu"))
         self.combo_online_ai.setCurrentText(self.settings.value("online_provider", "Local Default"))
         self._refresh_translation_models(self.settings.value("translation_model", ""))
@@ -243,6 +259,7 @@ class SettingsPage(QWidget):
                     break
             self.combo_content_mode.setCurrentIndex(0)
             self._refresh_content_mode()
+            self.combo_fast_lyrics.setCurrentIndex(0)
             self.combo_device.setCurrentText("cpu")
             self.combo_online_ai.setCurrentText("Local Default")
             self._refresh_translation_models("")
@@ -259,6 +276,7 @@ class SettingsPage(QWidget):
         new_config = {
             "ai_model": self.combo_model.currentData(),
             "subtitle_content_mode": self.combo_content_mode.currentData(),
+            "fast_lyrics_enabled": self.combo_fast_lyrics.currentText(),
             "device": self.combo_device.currentText(),
             "online_provider": self.combo_online_ai.currentText(),
             "translation_model": self.combo_translation_model.currentData() or "",

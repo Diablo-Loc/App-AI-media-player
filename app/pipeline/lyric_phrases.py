@@ -49,6 +49,41 @@ def _readable_chunks(words, limit, join):
         yield words
 
 
+_ORPHAN_CJK_PARTICLES = frozenset(
+    "にをはがのでてもへやねよなわ的了着过呢吗吧啊"
+)
+
+
+def _attach_orphan_cjk_particles(phrases, limit, join, terminal):
+    """Attach isolated 1-char trailing CJK particles to an adjacent phrase when close."""
+    merged = []
+    idx = 0
+    total = len(phrases)
+    while idx < total:
+        phrase = phrases[idx]
+        text = join([w["text"] for w in phrase]).strip() if phrase and not phrase[0].get("fallback") else ""
+        if len(text) == 1 and text in _ORPHAN_CJK_PARTICLES:
+            if merged and not merged[-1][0].get("fallback") and not terminal(merged[-1][-1]["text"]):
+                prev = merged[-1]
+                prev_end = max(w["end"] for w in prev)
+                gap = phrase[0]["start"] - prev_end
+                if -0.05 <= gap <= 0.45 and _length(prev + phrase, join) <= limit:
+                    merged[-1] = prev + phrase
+                    idx += 1
+                    continue
+            if idx + 1 < total and not phrases[idx + 1][0].get("fallback"):
+                nxt = phrases[idx + 1]
+                gap = nxt[0]["start"] - max(w["end"] for w in phrase)
+                if -0.05 <= gap <= 0.35 and _length(phrase + nxt, join) <= limit:
+                    phrases = list(phrases)
+                    phrases[idx + 1] = phrase + nxt
+                    idx += 1
+                    continue
+        merged.append(phrase)
+        idx += 1
+    return merged
+
+
 def group_words(events, max_chars, min_pause, join, terminal, continued_sources):
     """Yield one readable phrase, retaining short ASR fragments and repetitions.
 
@@ -66,12 +101,13 @@ def group_words(events, max_chars, min_pause, join, terminal, continued_sources)
                    for source, words in by_source.items()}
     limit = max(8, min(max_chars * 3, 128))
     buffer = []
+    raw_phrases = []
     for event in events:
         if event["fallback"]:
-            yield from _readable_chunks(buffer, limit, join)
+            raw_phrases.extend(_readable_chunks(buffer, limit, join))
             buffer = []
             # No word boundaries: retain the whole source cue and its timing.
-            yield [event]
+            raw_phrases.append([event])
             continue
         if buffer:
             previous = buffer[-1]
@@ -92,7 +128,8 @@ def group_words(events, max_chars, min_pause, join, terminal, continued_sources)
             long_phrase_pause = duration >= 8.0 and gap >= 0.12
             if (explicit_boundary or gap >= min_pause or source_boundary
                     or soft_boundary or long_phrase_pause):
-                yield from _readable_chunks(buffer, limit, join)
+                raw_phrases.extend(_readable_chunks(buffer, limit, join))
                 buffer = []
         buffer.append(event)
-    yield from _readable_chunks(buffer, limit, join)
+    raw_phrases.extend(_readable_chunks(buffer, limit, join))
+    yield from _attach_orphan_cjk_particles(raw_phrases, limit, join, terminal)

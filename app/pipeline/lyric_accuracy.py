@@ -15,17 +15,17 @@ _EXPLICIT_CREDIT = re.compile(r"\b(?:please subscribe|amara\.org)\b")
 _CREDIT_LABEL = re.compile(
     r"^(?:lyrics?|music|copyright|subtitles?|producer|composer|arranger|"
     r"mix(?:ed|ing)?|master(?:ed|ing)?|record(?:ed|ing)?|"
-    r"作[詞词]|作曲|[編编]曲|歌[詞词]|[製制]作人|[監监]製|"
+    r"作[詞词]|作曲|[編编]曲|[編编][寫写]|演唱|原唱|歌[詞词]|[製制]作人|[監监]製|"
     r"混音(?:[師师])?|[錄录]音(?:[師师])?|母[帶带])\s*[:：]",
     re.IGNORECASE,
 )
 _COMBINED_JP_LABEL = re.compile(r"^(?:作詞|作曲|編曲)(?:\s*[・/、&]\s*(?:作詞|作曲|編曲))+")
 _CJK_ROLE_TOKEN = re.compile(
-    r"詞曲|作[詞词]曲|作[詞词]|作曲|[編编]曲|[製制]作人|[監监]製|"
+    r"詞曲|作[詞词]曲|作[詞词]|作曲|[編编]曲|[編编][寫写]|演唱|原唱|[製制]作人|[監监]製|"
     r"混音(?:[師师])?|[錄录]音(?:[師师])?|母[帶带](?:工程[師师])?"
 )
 _CJK_ROLE_PREFIX = re.compile(
-    r"^(?:詞曲|作[詞词]曲|作[詞词]|作曲|[編编]曲|[製制]作人|[監监]製|"
+    r"^(?:詞曲|作[詞词]曲|作[詞词]|作曲|[編编]曲|[編编][寫写]|演唱|原唱|[製制]作人|[監监]製|"
     r"混音(?:[師师])?|[錄录]音(?:[師师])?|母[帶带](?:工程[師师])?)\s*[:：]?\s*"
 )
 _ROLE_BYLINE = re.compile(

@@ -87,324 +87,371 @@ def run_ai_pipeline(
     
     # 🔥 FIX NVIDIA DLLS (LAZY CALL - chỉ gọi khi AI thực sự chạy)
     fix_nvidia_dlls()
-    
-    # 🔥🔥🔥 IMPORT NẶNG TẠI ĐÂY (LAZY IMPORT) 🔥🔥🔥
-    # Những library này chỉ được nạp khi user thực sự nhấn nút "Tạo AI"
-    # Giúp app startup nhanh 30 giây!
-    import torch
-    from faster_whisper import WhisperModel
-    import lyricsgenius
-    from subtitle.ass.renderer import render_ass
+
     from translate.pipeline import TranslateMode
-    
+
     # Set default translate_mode nếu chưa có
     if translate_mode is None:
         translate_mode = TranslateMode.PIVOT_VI
-    
+
     # --- BƯỚC KẾT NỐI SETTING: Đọc từ Registry ---
     settings = QSettings("MyStudio", "AI_Music_Player")
     from pipeline.content_mode import resolve_content_mode, DIALOGUE
     content_mode = resolve_content_mode(settings.value("subtitle_content_mode", "lyrics"))
     dialogue = content_mode == DIALOGUE
-    
+
+    raw_fast_lyrics = settings.value("fast_lyrics_enabled", "Bật (Siêu tốc)")
+    if isinstance(raw_fast_lyrics, bool):
+        fast_lyrics_enabled = raw_fast_lyrics
+    else:
+        fast_lyrics_str = str(raw_fast_lyrics or "Bật (Siêu tốc)").strip().lower()
+        fast_lyrics_enabled = not (fast_lyrics_str.startswith("tắt") or fast_lyrics_str in {"0", "false", "off", "no"})
+
     # Nếu chưa có gì, mặc định dùng "medium" cho an toàn (vì large-v3 nặng 3GB RAM)
-    saved_model = settings.value("ai_model", "medium") 
-    
+    saved_model = settings.value("ai_model", "medium")
+
     # Nếu chưa có gì, mặc định dùng "cpu" để tránh lỗi Driver NVIDIA chưa cài
     saved_device = settings.value("device", "cpu")
-    
+
     # Mặc định là Local, không tốn tiền, không cần mạng
     online_provider = settings.value("online_provider", "Local Default")
     api_key = settings.value("api_key", "").strip()
     # ----------------------------------------------
-    
+
     input_path = Path(input_path)
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     song_title_raw = input_path.stem
-    
+
     current_file_path = os.path.abspath(__file__)
     current_dir = os.path.dirname(current_file_path)
     app_root = os.path.dirname(os.path.dirname(current_dir))
     local_model_path = os.path.join(app_root, "app_resources", "whisper_models", saved_model)
     fallback_model_path = os.path.join(app_root, "app_resources", "whisper_models", "medium")
-    
+
     temp_wav_path = None
+    lrclib_reference_lyric = None
+    used_fast_lyrics = False
+    final_segments = None
+    detected_lang = "en"
+    coverage = {}
     try:
         # ============================================================
-        # 1️⃣ EXTRACT AUDIO (DÙNG TEMP FILE MANAGER)
+        # 0️⃣ FAST-PATH PRE-ASR WATERFALL (Sidecar / Embedded / LRCLIB)
         # ============================================================
-        _report(progress_cb, 5, "🎧 Trích xuất audio")
-        _check_cancel(cancel_cb)
-
-        # 🔥 CÁCH MỚI: Xin cấp phát 1 file tạm an toàn trong storage/temp_cache
-        # Không cần lo đặt tên trùng lặp, không cần lo tạo folder thủ công
-        temp_wav_path = TempFileManager.create_unique_path()
-
-        # Gọi hàm tối ưu (đã ẩn cửa sổ đen CMD)
-        success = extract_audio(str(input_path), str(temp_wav_path))
-        if not success:
-            raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
-        time.sleep(0.5)
-        # ============================================================
-        # 2️⃣ LOAD WHISPER MODEL (ĐÃ THÁO XÍCH MẠNG KHI FALLBACK CPU)
-        # ============================================================
-        _report(progress_cb, 15, f"🧠 Nạp Whisper ({saved_model})")
-        _check_cancel(cancel_cb)
-
-        model = None
-        try:
-            has_cuda = False
-            try: has_cuda = torch.cuda.is_available()
-            except AttributeError: has_cuda = False
-                
-            actual_device = "cuda" if saved_device == "cuda" and has_cuda else "cpu"
-            compute_type = "float16" if actual_device == "cuda" else "int8"
-            
-            if device_policy == "cpu":
-                raise RuntimeError("Force CPU")
-
-            # Trường hợp 1: Có file offline local -> Khóa mạng, chạy offline hoàn toàn
-            if os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "model.bin")):
-                print(f"⚡ Đang chạy Model từ nguồn Local tuyệt đối: {local_model_path}")
-                model = WhisperModel(
-                    local_model_path, 
-                    device=actual_device, 
-                    compute_type=compute_type,
-                    local_files_only=True
+        if fast_lyrics_enabled:
+            from pipeline.fast_lyrics import (
+                extract_embedded_subtitle,
+                find_sidecar_subtitle,
+                lookup_lrclib,
+                probe_media_duration,
+            )
+            _report(progress_cb, 4, "⚡ Kiểm tra phụ đề có sẵn...")
+            _check_cancel(cancel_cb)
+            media_duration = probe_media_duration(input_path)
+            local_hit = find_sidecar_subtitle(input_path, media_duration=media_duration)
+            if local_hit is None:
+                local_hit = extract_embedded_subtitle(input_path, media_duration=media_duration)
+            if local_hit is not None:
+                final_segments = local_hit["cues"]
+                detected_lang = local_hit["language"]
+                used_fast_lyrics = True
+                print(
+                    f"⚡ Fast-Path ({local_hit['source']}): nạp sẵn {len(final_segments)} dòng "
+                    f"({detected_lang}), bỏ qua Whisper!"
                 )
-            else:
-                # Trường hợp 2: Local trống -> Mở xích mạng tạm thời để tải tự động hoặc đọc cache hệ thống
-                print(f"🌐 Sẵn sàng đồng bộ trực tuyến cho model: {saved_model}")
-                os.environ["HF_HUB_OFFLINE"] = "0" # Mở khóa mạng
+                _report(progress_cb, 55, f"⚡ Nạp nhanh phụ đề có sẵn ({len(final_segments)} dòng)")
+
+        if not used_fast_lyrics:
+            # ============================================================
+            # 1️⃣ EXTRACT AUDIO (DÙNG TEMP FILE MANAGER)
+            # ============================================================
+            _report(progress_cb, 6, "🎧 Trích xuất audio")
+            _check_cancel(cancel_cb)
+
+            temp_wav_path = TempFileManager.create_unique_path()
+            success = extract_audio(str(input_path), str(temp_wav_path))
+            if not success:
+                raise RuntimeError("Lỗi trích xuất âm thanh (FFmpeg failed)")
+
+            # Tầng 2 Fast-Path: LRCLIB xác thực kép (Metadata + Thời lượng <=2s + Silero VAD onset/overlap)
+            if fast_lyrics_enabled and not dialogue and is_connected():
+                from pipeline.fast_lyrics import lookup_lrclib, probe_media_duration
+                _report(progress_cb, 10, "🌐 Tìm & xác thực lời chuẩn LRCLIB...")
+                _check_cancel(cancel_cb)
+                wav_duration = probe_media_duration(temp_wav_path)
+                lrc_res = lookup_lrclib(
+                    song_title_raw,
+                    media_duration=wav_duration,
+                    wav_path=temp_wav_path,
+                )
+                lrclib_reference_lyric = lrc_res.get("plain_lyrics")
+                if lrc_res.get("synced_cues"):
+                    final_segments = lrc_res["synced_cues"]
+                    detected_lang = lrc_res.get("language") or "en"
+                    used_fast_lyrics = True
+                    vinfo = lrc_res.get("verification") or {}
+                    print(
+                        f"⚡ Fast-Path (LRCLIB dual-verified): khớp chuẩn {len(final_segments)} câu "
+                        f"({detected_lang}, onset_diff={vinfo.get('onset_diff')}s, "
+                        f"voiced={vinfo.get('voiced_ratio')}), bỏ qua Whisper!"
+                    )
+                    _report(progress_cb, 55, f"⚡ Khớp chuẩn lời LRCLIB ({len(final_segments)} câu)")
+
+        if not used_fast_lyrics:
+            # 🔥 IMPORT NẶNG CHỈ KHI THỰC SỰ CẦN CHẠY WHISPER
+            import torch
+            from faster_whisper import WhisperModel
+
+            # ============================================================
+            # 2️⃣ LOAD WHISPER MODEL (ĐÃ THÁO XÍCH MẠNG KHI FALLBACK CPU)
+            # ============================================================
+            _report(progress_cb, 15, f"🧠 Nạp Whisper ({saved_model})")
+            _check_cancel(cancel_cb)
+
+            model = None
+            try:
+                has_cuda = False
+                try: has_cuda = torch.cuda.is_available()
+                except AttributeError: has_cuda = False
+
+                actual_device = "cuda" if saved_device == "cuda" and has_cuda else "cpu"
+                compute_type = "float16" if actual_device == "cuda" else "int8"
+
+                if device_policy == "cpu":
+                    raise RuntimeError("Force CPU")
+
+                # Trường hợp 1: Có file offline local -> Khóa mạng, chạy offline hoàn toàn
+                if os.path.exists(local_model_path) and os.path.exists(os.path.join(local_model_path, "model.bin")):
+                    print(f"⚡ Đang chạy Model từ nguồn Local tuyệt đối: {local_model_path}")
+                    model = WhisperModel(
+                        local_model_path,
+                        device=actual_device,
+                        compute_type=compute_type,
+                        local_files_only=True
+                    )
+                else:
+                    # Trường hợp 2: Local trống -> Mở xích mạng tạm thời để tải tự động hoặc đọc cache hệ thống
+                    print(f"🌐 Sẵn sàng đồng bộ trực tuyến cho model: {saved_model}")
+                    os.environ["HF_HUB_OFFLINE"] = "0" # Mở khóa mạng
+                    os.environ["TRANSFORMERS_OFFLINE"] = "0"
+
+                    model = WhisperModel(
+                        saved_model,
+                        device=actual_device,
+                        compute_type=compute_type,
+                        local_files_only=False
+                    )
+
+            except Exception as e:
+                print(f"⚠️ Luồng chính lỗi, kích hoạt Fallback CPU cứu vãn: {e}")
+
+                # Mở khóa mạng tối đa để chế độ CPU có thể tự kết nối tải file cứu app
+                os.environ["HF_HUB_OFFLINE"] = "0"
                 os.environ["TRANSFORMERS_OFFLINE"] = "0"
-                
-                model = WhisperModel(
-                    saved_model, 
-                    device=actual_device, 
-                    compute_type=compute_type,
-                    local_files_only=False
-                )
 
-        except Exception as e:
-            print(f"⚠️ Luồng chính lỗi, kích hoạt Fallback CPU cứu vãn: {e}")
-            
-            # Mở khóa mạng tối đa để chế độ CPU có thể tự kết nối tải file cứu app
-            os.environ["HF_HUB_OFFLINE"] = "0"
-            os.environ["TRANSFORMERS_OFFLINE"] = "0"
-            
-            if os.path.exists(fallback_model_path) and os.path.exists(os.path.join(fallback_model_path, "model.bin")):
-                model = WhisperModel(fallback_model_path, device="cpu", compute_type="int8", local_files_only=True)
-            else:
-                print("📡 Đang tải tự động model 'medium' từ Hugging Face về máy qua CPU...")
-                model = WhisperModel("medium", device="cpu", compute_type="int8", local_files_only=False)
-        # ============================================================
-        # 3️⃣ TRANSCRIBE
-        # ============================================================
-        _report(progress_cb, 30, "📝 Nhận diện lời nói")
-        _check_cancel(cancel_cb)
+                if os.path.exists(fallback_model_path) and os.path.exists(os.path.join(fallback_model_path, "model.bin")):
+                    model = WhisperModel(fallback_model_path, device="cpu", compute_type="int8", local_files_only=True)
+                else:
+                    print("📡 Đang tải tự động model 'medium' từ Hugging Face về máy qua CPU...")
+                    model = WhisperModel("medium", device="cpu", compute_type="int8", local_files_only=False)
+            # ============================================================
+            # 3️⃣ TRANSCRIBE
+            # ============================================================
+            _report(progress_cb, 30, "📝 Nhận diện lời nói")
+            _check_cancel(cancel_cb)
 
-        song_title = input_path.stem.replace("_", " ").replace("-", " ")
+            song_title = input_path.stem.replace("_", " ").replace("-", " ")
 
-        prompt_text = " .+"
-        
-        try:
-            # Truyền file temp_wav_path vào
-            if dialogue:
-                from pipeline.dialogue import transcription_options
-                segments_generator, info = model.transcribe(
-                    str(temp_wav_path), **transcription_options())
-            else:
-                segments_generator, info = model.transcribe(
-                    str(temp_wav_path),
-                    language=None,
-                    word_timestamps=True,
-                    condition_on_previous_text=False,
-                    beam_size=3,
-                    temperature=0.0,
-                    vad_filter=False,
-                    vad_parameters=dict(min_silence_duration_ms=1000),
-                    initial_prompt= prompt_text
-                    #prompt_reset_on_temperature=0.5
-                    #log_prob_threshold=None,      # Ép AI nhận diện ngay cả khi âm thanh mờ nhạt
-                    #compression_ratio_threshold=2.4, # Cho phép nhạc dạo đầu lặp lại không bị coi là rác
-                    #no_speech_threshold=0.4        # Chấp nhận tiếng người nhỏ hơn nhạc nền
-                )
-            detected_lang = info.language
-            print(f"📡 Ngôn ngữ phát hiện: {detected_lang} ({info.language_probability*100:.1f}%)")
-            segments_list = list(segments_generator)
-            language_probability = getattr(info, "language_probability", 0.0)
-            
-        except Exception as e:
-            # Xử lý lỗi tràn VRAM
-            if "cuda" in str(e).lower():
-                print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
-                del model
-                torch.cuda.empty_cache()
-                model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
-                                     else "medium", device="cpu", compute_type="int8")
-                # Chạy lại với file temp
-                from pipeline.lyric_accuracy import primary_options
+            prompt_text = " .+"
+
+            try:
+                # Truyền file temp_wav_path vào
                 if dialogue:
                     from pipeline.dialogue import transcription_options
-                    segments_generator, fallback_info = model.transcribe(
+                    segments_generator, info = model.transcribe(
                         str(temp_wav_path), **transcription_options())
                 else:
-                    segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
-                segments_list = list(segments_generator)
-                detected_lang = fallback_info.language
-                language_probability = getattr(fallback_info, "language_probability", 0.0)
-            else:
-                raise e
-
-        # Independent first-window sanity check. The full-song primary decode
-        # above is kept unchanged for normal songs; only a long instrumental
-        # intro can trigger filtering or a strongly justified language re-run.
-        intro_report = {}
-        if not dialogue:
-            segments_list, detected_lang, intro_report = audit_primary_intro(
-                model,
-                temp_wav_path,
-                segments_list,
-                detected_lang,
-                language_probability,
-                cancel_cb=cancel_cb,
-            )
-        if intro_report.get("removed"):
-            first_voice = intro_report.get("first_voice")
-            voice_note = f" (giọng đầu ~{first_voice:.2f}s)" if isinstance(first_voice, (int, float)) else ""
-            print(
-                f"🛡 Intro guard: bỏ {len(intro_report['removed'])} đoạn ASR không được xác minh{voice_note}."
-            )
-        if intro_report.get("language_rerun"):
-            print(
-                "🌐 Kiểm tra lại ngôn ngữ từ đoạn có giọng: "
-                f"{intro_report.get('language_before')} → {intro_report.get('language_after')}."
-            )
-        if intro_report.get("error"):
-            print(f"⚠️ Bỏ qua kiểm tra intro, giữ nguyên ASR chính: {intro_report['error']}")
-        if intro_report.get("language_probe_error"):
-            print(
-                "⚠️ Không kiểm tra lại được ngôn ngữ intro; giữ nguyên ASR chính: "
-                f"{intro_report['language_probe_error']}"
-            )
-        if intro_report.get("language_rerun_rejected"):
-            print("⚠️ Bỏ kết quả nhận diện lại ngôn ngữ vì rỗng; giữ nguyên ASR chính.")
-        if intro_report.get("verification_error"):
-            print(
-                "⚠️ Không xác minh được chữ ở intro; giữ nguyên các câu ASR thường: "
-                f"{intro_report['verification_error']}"
-            )
-
-        _check_cancel(cancel_cb)
-        
-        # ============================================================
-        # 4️⃣ PRE-PROCESSING (XỬ LÝ THÔNG MINH AN TOÀN)
-        # ============================================================
-        _report(progress_cb, 50, f"🧹 Làm sạch dữ liệu ({detected_lang})")
-        
-        raw_segments = []
-        for s in segments_list:
-            # 🔥 SỬ DỤNG HÀM TÁI CẤU TRÚC
-            # Bỏ qua s.text của Whisper (vì nó có thể bị dính hoặc sai format)
-            # Tự xây lại câu từ s.words
-            if dialogue:
-                processed_text = s.text.strip()
-            elif s.words:
-                processed_text = universal_text_reconstruct(s.words, s.text)
-            else:
-                processed_text = s.text.strip() # Fallback nếu xui xẻo không có words
-
-            if not processed_text: continue
-
-            # Chuẩn bị dữ liệu words cho bước aligner sau này
-            words_data = []
-            if s.words:
-                words_data = [{"start": w.start, "end": w.end, "word": w.word} for w in s.words]
-
-            raw_segments.append({
-                "start": s.start,
-                "end": s.end,
-                "text": processed_text, 
-                "words": words_data,
-            })
-
-                        
-        # ============================================================
-        # 5️⃣ REFINE SEGMENTS & EXPORT RAW
-        # ============================================================
-        _report(progress_cb, 55, "✂️ Căn chỉnh subtitle")
-        _check_cancel(cancel_cb)
-
-        # Keep the orchestration options compatible with legacy refinement.
-        # The new profile uses its own 50 ms lead / 80 ms tail, not these offsets.
-        is_cjk = detected_lang in LANG_CONFIG["cjk"]
-        
-        if dialogue:
-            from pipeline.dialogue import refine_dialogue
-            final_segments = refine_dialogue(raw_segments, cjk=is_cjk)
-        else:
-            final_segments = refine_lyrics(
-                raw_segments,
-                max_chars=22 if is_cjk else 74,
-                min_pause=0.54 if is_cjk else 0.6,
-                start_offset=-0.2 if is_cjk else 0,
-                end_padding=0.27 if is_cjk else 0.6,
-                gap_threshold=0.6,
-                memory_reset_t=3.0
-            )
-
-        coverage = {}
-        try:
-            if not dialogue:
-                final_segments, coverage = repair_missing_subtitles(
-                    model, temp_wav_path, detected_lang, final_segments,
-                    dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,
-                         start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,
-                         gap_threshold=0.6, memory_reset_t=3.0),
-                    cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,
-                    boundary_gap=0.0, boundary_tolerance=0.08,
-                    primary_segments=segments_list)
-                print(f"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, "
-                      f"{len(coverage.get('attempts', []))} lượt nhận diện lại.")
-                if coverage.get("unresolved_speech"):
-                    print(f"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}")
-                if coverage.get("error"):
-                    print(f"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}")
-                if coverage.get("verification_errors"):
-                    print(
-                        f"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery "
-                        "vì lượt xác minh độc lập bị lỗi."
+                    segments_generator, info = model.transcribe(
+                        str(temp_wav_path),
+                        language=None,
+                        word_timestamps=True,
+                        condition_on_previous_text=False,
+                        beam_size=3,
+                        temperature=0.0,
+                        vad_filter=False,
+                        vad_parameters=dict(min_silence_duration_ms=1000),
+                        initial_prompt= prompt_text
                     )
-                # Align only already accepted text, after all coverage decisions.
-                # The loaded local model stays owned by this worker; no new ASR or
-                # provider request, and unreliable candidates keep the old timing.
-                from pipeline.lyric_timing import align_lyric_onsets
-                _check_cancel(cancel_cb)
-                _report(progress_cb, 58, "⏱ Căn mốc lời hát")
-                final_segments, timing_report = align_lyric_onsets(
-                    model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)
-                print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
-                      f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
-                if timing_report["errors"] or timing_report["capped"]:
-                    print("ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.")
-        except Exception as error:
-            _check_cancel(cancel_cb)
-            # Preserve primary recognition if optional local coverage detection fails.
-            print(f"⚠️ Không kiểm tra được coverage bổ sung: {error}")
-        finally:
-            del model
-            gc.collect()
-            if hasattr(torch, "cuda") and torch.cuda.is_available():
-                torch.cuda.empty_cache()
+                detected_lang = info.language
+                print(f"📡 Ngôn ngữ phát hiện: {detected_lang} ({info.language_probability*100:.1f}%)")
+                segments_list = list(segments_generator)
+                language_probability = getattr(info, "language_probability", 0.0)
 
-        # Display margins belong after coverage, so they never change which
-        # vocal gaps trigger recovery or which recovered words are accepted.
-        from pipeline.lyric_refinement import finalize_display_times
-        if not dialogue:
-            final_segments = finalize_display_times(
-                final_segments, cjk=is_cjk, duration=coverage.get("duration"))
-        _check_cancel(cancel_cb)
+            except Exception as e:
+                # Xử lý lỗi tràn VRAM
+                if "cuda" in str(e).lower():
+                    print("⚠️ Lỗi VRAM, thử lại bằng CPU...")
+                    del model
+                    torch.cuda.empty_cache()
+                    model = WhisperModel(fallback_model_path if os.path.isfile(os.path.join(fallback_model_path, "model.bin"))
+                                         else "medium", device="cpu", compute_type="int8")
+                    # Chạy lại với file temp
+                    from pipeline.lyric_accuracy import primary_options
+                    if dialogue:
+                        from pipeline.dialogue import transcription_options
+                        segments_generator, fallback_info = model.transcribe(
+                            str(temp_wav_path), **transcription_options())
+                    else:
+                        segments_generator, fallback_info = model.transcribe(str(temp_wav_path), **primary_options())
+                    segments_list = list(segments_generator)
+                    detected_lang = fallback_info.language
+                    language_probability = getattr(fallback_info, "language_probability", 0.0)
+                else:
+                    raise e
+
+            # Independent first-window sanity check. The full-song primary decode
+            # above is kept unchanged for normal songs; only a long instrumental
+            # intro can trigger filtering or a strongly justified language re-run.
+            intro_report = {}
+            if not dialogue:
+                segments_list, detected_lang, intro_report = audit_primary_intro(
+                    model,
+                    temp_wav_path,
+                    segments_list,
+                    detected_lang,
+                    language_probability,
+                    cancel_cb=cancel_cb,
+                )
+            if intro_report.get("removed"):
+                first_voice = intro_report.get("first_voice")
+                voice_note = f" (giọng đầu ~{first_voice:.2f}s)" if isinstance(first_voice, (int, float)) else ""
+                print(
+                    f"🛡 Intro guard: bỏ {len(intro_report['removed'])} đoạn ASR không được xác minh{voice_note}."
+                )
+            if intro_report.get("empty_intro_recovered"):
+                print(
+                    f"🛡 Intro guard: cứu được {intro_report.get('empty_intro_added', 0)} đoạn đầu bài bị bỏ sót "
+                    f"(giọng đầu ~{intro_report.get('empty_intro_first_voice')}s)."
+                )
+            if intro_report.get("language_rerun"):
+                print(
+                    "🌐 Kiểm tra lại ngôn ngữ từ đoạn có giọng: "
+                    f"{intro_report.get('language_before')} → {intro_report.get('language_after')}."
+                )
+            if intro_report.get("error"):
+                print(f"⚠️ Bỏ qua kiểm tra intro, giữ nguyên ASR chính: {intro_report['error']}")
+            if intro_report.get("language_probe_error"):
+                print(
+                    "⚠️ Không kiểm tra lại được ngôn ngữ intro; giữ nguyên ASR chính: "
+                    f"{intro_report['language_probe_error']}"
+                )
+            if intro_report.get("language_rerun_rejected"):
+                print("⚠️ Bỏ kết quả nhận diện lại ngôn ngữ vì rỗng; giữ nguyên ASR chính.")
+            if intro_report.get("verification_error"):
+                print(
+                    "⚠️ Không xác minh được chữ ở intro; giữ nguyên các câu ASR thường: "
+                    f"{intro_report['verification_error']}"
+                )
+
+            _check_cancel(cancel_cb)
+
+            # ============================================================
+            # 4️⃣ PRE-PROCESSING (XỬ LÝ THÔNG MINH AN TOÀN)
+            # ============================================================
+            _report(progress_cb, 50, f"🧹 Làm sạch dữ liệu ({detected_lang})")
+
+            raw_segments = []
+            for s in segments_list:
+                if dialogue:
+                    processed_text = s.text.strip()
+                elif s.words:
+                    processed_text = universal_text_reconstruct(s.words, s.text)
+                else:
+                    processed_text = s.text.strip()
+
+                if not processed_text: continue
+
+                words_data = []
+                if s.words:
+                    words_data = [{"start": w.start, "end": w.end, "word": w.word} for w in s.words]
+
+                raw_segments.append({
+                    "start": s.start,
+                    "end": s.end,
+                    "text": processed_text,
+                    "words": words_data,
+                })
+
+            # ============================================================
+            # 5️⃣ REFINE SEGMENTS & EXPORT RAW
+            # ============================================================
+            _report(progress_cb, 55, "✂️ Căn chỉnh subtitle")
+            _check_cancel(cancel_cb)
+
+            is_cjk = detected_lang in LANG_CONFIG["cjk"]
+
+            if dialogue:
+                from pipeline.dialogue import refine_dialogue
+                final_segments = refine_dialogue(raw_segments, cjk=is_cjk)
+            else:
+                final_segments = refine_lyrics(
+                    raw_segments,
+                    max_chars=22 if is_cjk else 74,
+                    min_pause=0.54 if is_cjk else 0.6,
+                    start_offset=-0.2 if is_cjk else 0,
+                    end_padding=0.27 if is_cjk else 0.6,
+                    gap_threshold=0.6,
+                    memory_reset_t=3.0
+                )
+
+            try:
+                if not dialogue:
+                    final_segments, coverage = repair_missing_subtitles(
+                        model, temp_wav_path, detected_lang, final_segments,
+                        dict(max_chars=22 if is_cjk else 74, min_pause=0.54 if is_cjk else 0.6,
+                             start_offset=-0.2 if is_cjk else 0, end_padding=0.27 if is_cjk else 0.6,
+                             gap_threshold=0.6, memory_reset_t=3.0),
+                        cancel_cb=cancel_cb, progress_cb=progress_cb, refine_fn=refine_lyrics,
+                        boundary_gap=0.0, boundary_tolerance=0.08,
+                        primary_segments=segments_list,
+                        prefetched_speech=intro_report.get("confirmed_speech"))
+                    print(f"🛠 Kiểm tra coverage: thêm {coverage.get('added_cues', 0)} dòng, "
+                          f"{len(coverage.get('attempts', []))} lượt nhận diện lại.")
+                    if coverage.get("unresolved_speech"):
+                        print(f"⚠️ Vùng có giọng nghi thiếu lời, cần kiểm tra: {coverage['unresolved_speech']}")
+                    if coverage.get("error"):
+                        print(f"⚠️ Nhận diện bổ sung gặp lỗi: {coverage['error']}")
+                    if coverage.get("verification_errors"):
+                        print(
+                            f"⚠️ Bỏ {len(coverage['verification_errors'])} kết quả recovery "
+                            "vì lượt xác minh độc lập bị lỗi."
+                        )
+                    from pipeline.lyric_timing import align_lyric_onsets
+                    _check_cancel(cancel_cb)
+                    _report(progress_cb, 58, "⏱ Căn mốc lời hát")
+                    final_segments, timing_report = align_lyric_onsets(
+                        model, temp_wav_path, detected_lang, final_segments, cancel_cb=cancel_cb)
+                    print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
+                          f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
+                    if timing_report["errors"] or timing_report["capped"]:
+                        print("ℹ️ Căn mốc chưa hoàn tất; các câu còn lại giữ thời gian ASR cũ.")
+            except Exception as error:
+                _check_cancel(cancel_cb)
+                print(f"⚠️ Không kiểm tra được coverage bổ sung: {error}")
+            finally:
+                del model
+                gc.collect()
+                if hasattr(torch, "cuda") and torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+
+            # Display margins belong after coverage, so they never change which
+            # vocal gaps trigger recovery or which recovered words are accepted.
+            from pipeline.lyric_refinement import finalize_display_times
+            if not dialogue:
+                final_segments = finalize_display_times(
+                    final_segments, cjk=is_cjk, duration=coverage.get("duration"))
+            _check_cancel(cancel_cb)
 
         # Xuất file SRT/LRC ra thư mục Output của người dùng
         base_name = input_path.stem
@@ -448,11 +495,12 @@ def run_ai_pipeline(
                 if is_connected():
                     # Gọi thẳng Online Logic
                     result = translate_online_pipeline(
-                        subs, 
-                        online_provider, 
-                        api_key, 
+                        subs,
+                        online_provider,
+                        api_key,
                         song_title_raw=song_title_raw,
-                        content_mode=content_mode
+                        content_mode=content_mode,
+                        extra_reference_lyric=lrclib_reference_lyric,
                     )
                     if result:
                         subs = result
@@ -477,10 +525,11 @@ def run_ai_pipeline(
                 )
 
         # Giải phóng bộ nhớ
-        clear_translator() 
+        clear_translator()
         gc.collect()
-        if hasattr(torch, "cuda") and torch.cuda.is_available():
-            torch.cuda.empty_cache()
+        torch_mod = sys.modules.get("torch")
+        if torch_mod is not None and hasattr(torch_mod, "cuda") and torch_mod.cuda.is_available():
+            torch_mod.cuda.empty_cache()
 
         # ============================================================
         # 7️⃣ KẾT THÚC

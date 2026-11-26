@@ -96,6 +96,20 @@ def parse_ass_text(text: str) -> List[dict]:
                 segments.append({'start': start, 'end': end, 'text': txt})
     return segments
 
+def _format_lrc_time(seconds: float) -> str:
+    total_cs = max(0, int(round(float(seconds) * 100)))
+    cs = total_cs % 100
+    total_s = total_cs // 100
+    s = total_s % 60
+    m = total_s // 60
+    return f"[{m:02d}:{s:02d}.{cs:02d}]"
+
+
+def parse_lrc_text(text: str) -> List[dict]:
+    from pipeline.fast_lyrics import parse_lrc_text as _parse_lrc
+    return _parse_lrc(text)
+
+
 def load_subs(path: str) -> List[dict]:
     lower = path.lower()
     if lower.endswith('.json'):
@@ -106,11 +120,14 @@ def load_subs(path: str) -> List[dict]:
         if isinstance(data, list):
             return data
         return []
+    if lower.endswith('.lrc'):
+        with open(path, 'r', encoding='utf-8-sig') as f:
+            return parse_lrc_text(f.read())
     if lower.endswith('.srt'):
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, 'r', encoding='utf-8-sig') as f:
             return parse_srt_text(f.read())
     if lower.endswith('.ass'):
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, 'r', encoding='utf-8-sig') as f:
             return parse_ass_text(f.read())
     # fallback try json
     try:
@@ -127,6 +144,14 @@ def save_subs(path: str, segments: List[dict]):
     if lower.endswith('.json'):
         with open(path, 'w', encoding='utf-8') as f:
             json.dump({'segments': segments}, f, ensure_ascii=False, indent=2)
+        return
+    if lower.endswith('.lrc'):
+        with open(path, 'w', encoding='utf-8') as f:
+            for s in segments:
+                ts = _format_lrc_time(float(s.get('start', 0.0)))
+                txt = str(s.get('text', '') or s.get('orig', '') or s.get('jp', '')).replace('\n', ' ').strip()
+                if txt:
+                    f.write(f"{ts}{txt}\n")
         return
     if lower.endswith('.srt'):
         with open(path, 'w', encoding='utf-8') as f:

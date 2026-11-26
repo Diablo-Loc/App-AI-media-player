@@ -3,6 +3,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 
 import numpy as np
 
@@ -248,6 +249,7 @@ class AudioStreamEngine:
 
         self._start_ms = 0.0
         self._played_frames = 0
+        self._last_write_mono = 0.0
         self._out_sr = 48000
         self._out_dtype = 'float32'
         self._latency_sec = 0.16
@@ -290,7 +292,13 @@ class AudioStreamEngine:
             if self._out_sr <= 0:
                 return int(self._start_ms)
             hw_latency = self._latency_sec if (self._playing and not self._paused) else 0.0
-            elapsed = max(0.0, (self._played_frames / float(self._out_sr)) - hw_latency) * 1000.0 * self._playback_rate
+            base_sec = (self._played_frames / float(self._out_sr)) - hw_latency
+            interp_sec = 0.0
+            if self._playing and not self._paused and self._last_write_mono > 0.0 and base_sec > 0.0:
+                chunk_sec = self._chunk_frames_for_rate(self._out_sr) / float(self._out_sr)
+                dt = max(0.0, time.monotonic() - self._last_write_mono)
+                interp_sec = min(dt, chunk_sec * 1.25)
+            elapsed = max(0.0, base_sec + interp_sec) * 1000.0 * self._playback_rate
             return max(0, int(round(self._start_ms + elapsed)))
 
     def status_info(self) -> dict:
@@ -535,6 +543,7 @@ class AudioStreamEngine:
                     self._current_amp = current_amp
                     if op_id == self._op_id:
                         self._played_frames += len(pcm)
+                        self._last_write_mono = time.monotonic()
                         if uf:
                             self._underflows += 1
                 return not (cancel_event.is_set() or op_id != self._op_id)
@@ -667,6 +676,7 @@ class AudioStreamEngine:
             self._preferred_device = preferred_device_name or ''
             self._start_ms = float(max(0, int(start_ms)))
             self._played_frames = 0
+            self._last_write_mono = 0.0
             self._underflows = 0
             self._paused = bool(paused)
             self._playing = True
@@ -741,6 +751,7 @@ class AudioStreamEngine:
             self._paused = True
             self._start_ms = float(self.position_ms())
             self._played_frames = 0
+            self._last_write_mono = 0.0
         self._stop_active_worker(release_exclusive=True)
 
     def resume(self, current_pos_ms: int | None = None):
@@ -786,6 +797,7 @@ class AudioStreamEngine:
             self._op_id += 1
             self._playing = False
             self._paused = False
+            self._last_write_mono = 0.0
         self._stop_active_worker(release_exclusive=True)
 
     def shutdown(self):

@@ -217,7 +217,7 @@ class TranslationWorker(QThread):
         try:
             if self.isInterruptionRequested():
                 return
-            import torch
+            import sys
             from translate.pipeline import translate_pipeline, clear_translator
             from translate.online_logic import translate_online_pipeline
 
@@ -245,6 +245,10 @@ class TranslationWorker(QThread):
 
             detected_lang = self.settings.get("detected_lang", "auto") or "auto"
             detected_lang = detected_lang.lower().strip()
+            if detected_lang in ("", "auto"):
+                from pipeline.fast_lyrics import detect_text_language
+                sample_text = "\n".join(s.text for s in subs_list if s.text)
+                detected_lang = detect_text_language(sample_text, fallback="en")
 
             use_online = self.settings.get("use_online_translation", False)
             online_provider = self.settings.get("online_provider", "Local Default") if use_online else "Local Default"
@@ -279,8 +283,9 @@ class TranslationWorker(QThread):
 
             clear_translator()
             gc.collect()
-            if hasattr(torch, "cuda") and torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            torch_mod = sys.modules.get("torch")
+            if torch_mod is not None and hasattr(torch_mod, "cuda") and torch_mod.cuda.is_available():
+                torch_mod.cuda.empty_cache()
 
             updated_segments = []
             final_list = result_subs if result_subs else subs_list

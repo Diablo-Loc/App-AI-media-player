@@ -99,7 +99,7 @@ def correct_raw_segments_online(raw_segments, provider, key, master_lyric, song_
                 "messages": [{"role": "user", "content": user_content}],
                 "temperature": 0.0
             }
-            r = requests.post("https://api.anthropic.com/v1/messages", json=payload, timeout=30)
+            r = requests.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload, timeout=30)
             r.raise_for_status()
             corrected_response_text = r.json()['content'][0]['text']
 

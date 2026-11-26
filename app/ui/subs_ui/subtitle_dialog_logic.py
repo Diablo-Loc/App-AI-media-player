@@ -267,12 +267,17 @@ class SubtitleToolsDialogLogic:
 
         ctrl = parent.app_controller
         curr_time = None
-        if hasattr(ctrl, 'get_current_position_seconds') and callable(getattr(ctrl, 'get_current_position_seconds')):
+        if hasattr(parent, 'authoritative_subtitle_position_ms') and callable(getattr(parent, 'authoritative_subtitle_position_ms')):
+            try:
+                curr_time = parent.authoritative_subtitle_position_ms() / 1000.0
+            except Exception:
+                curr_time = None
+        if curr_time is None and hasattr(ctrl, 'get_current_position_seconds') and callable(getattr(ctrl, 'get_current_position_seconds')):
             try:
                 curr_time = ctrl.get_current_position_seconds()
             except Exception:
                 curr_time = None
-        elif hasattr(ctrl, 'player') and hasattr(ctrl.player, 'position'):
+        elif curr_time is None and hasattr(ctrl, 'player') and hasattr(ctrl.player, 'position'):
             try:
                 curr_time = ctrl.player.position() / 1000.0
             except Exception:
@@ -645,7 +650,7 @@ class SubtitleToolsDialogLogic:
                 self._push_undo(before, after, "Paste Segments")
 
     def _import_subs(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Import Subtitles", "", "Subtitle Files (*.json *.srt *.ass);;All Files (*)")
+        path, _ = QFileDialog.getOpenFileName(self, "Import Subtitles", "", "Subtitle Files (*.json *.lrc *.srt *.ass);;All Files (*)")
         if not path:
             return
         try:
@@ -664,7 +669,7 @@ class SubtitleToolsDialogLogic:
         self._push_undo(before, after, "Import Subtitles")
 
     def _export_subs(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Export Subtitles", "", "Subtitle Files (*.json *.srt *.ass);;All Files (*)")
+        path, _ = QFileDialog.getSaveFileName(self, "Export Subtitles", "", "Subtitle Files (*.json *.lrc *.srt *.ass);;All Files (*)")
         if not path:
             return
         try:

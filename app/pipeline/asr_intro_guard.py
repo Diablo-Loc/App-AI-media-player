@@ -868,6 +868,115 @@ def _anchored_no_prompt_recovery(model, waveform, segments, language, confirmed_
     }
 
 
+EMPTY_INTRO_CHECK_SECONDS = 22.0
+EMPTY_INTRO_MIN_TOTAL_SPEECH = 1.8
+EMPTY_INTRO_MIN_ISLAND_SECONDS = 0.50
+EMPTY_INTRO_WINDOW_SECONDS = 14.0
+
+
+def _recover_empty_intro(model, waveform, segments, language, speech, confirmed_speech,
+                         cancel_cb=None):
+    """Recover a completely skipped vocal intro (0..22s) via two-offset consensus.
+
+    Triggers ONLY when the primary pass emitted zero non-credit lyric segments
+    before 22s despite clear VAD vocal activity. Two shifted windows must agree
+    (>= RECOVERY_ONSET_AGREEMENT) so pure instrumental intros remain rejected.
+    """
+    from pipeline.lyric_accuracy import credit_text
+
+    source = list(segments or ())
+    if waveform is None or len(waveform) < SAMPLE_RATE * 4:
+        return source, {}
+
+    for segment in source:
+        span = _segment_span(segment)
+        if span is None or span[0] >= EMPTY_INTRO_CHECK_SECONDS:
+            continue
+        text = str(getattr(segment, "text", "") or "").strip()
+        if text and not _intro_media_boilerplate(text) and not credit_text(
+            text, timed_words=bool(getattr(segment, "words", None))
+        ):
+            return source, {}
+
+    # Prefer default-VAD speech when present; fall back to sensitive speech for dense musical intros.
+    active_speech = list(confirmed_speech or ())
+    if _overlap(0.0, EMPTY_INTRO_CHECK_SECONDS, active_speech) < EMPTY_INTRO_MIN_TOTAL_SPEECH:
+        active_speech = list(speech or ())
+    if _overlap(0.0, EMPTY_INTRO_CHECK_SECONDS, active_speech) < EMPTY_INTRO_MIN_TOTAL_SPEECH:
+        return source, {}
+
+    first_voice = None
+    for s, e in sorted(active_speech):
+        if s < EMPTY_INTRO_CHECK_SECONDS - 2.0 and (e - s) >= EMPTY_INTRO_MIN_ISLAND_SECONDS:
+            first_voice = s
+            break
+    if first_voice is None:
+        return source, {}
+
+    duration = len(waveform) / SAMPLE_RATE
+    onset_windows = []
+    for offset in RECOVERY_ONSET_OFFSETS:
+        left = max(0.0, first_voice - offset)
+        right = min(duration, left + EMPTY_INTRO_WINDOW_SECONDS)
+        if right - left >= 3.0:
+            onset_windows.append((left, right))
+    if len(onset_windows) != 2:
+        return source, {"empty_intro_rejected": "short_audio"}
+
+    # Accept recovered cues backed by active_speech; two-offset agreement blocks instrumental hallucinations.
+    onset_passes = []
+    for left, right in onset_windows:
+        decoded = _decode_intro_window(model, waveform, left, right, language, cancel_cb=cancel_cb)
+        accepted = [
+            item for item in _accepted_recovery_segments(decoded, active_speech)
+            if not _intro_media_boilerplate(getattr(item, "text", ""))
+        ]
+        onset_passes.append(accepted)
+
+    first_left, first_right = onset_windows[0]
+    second_left, second_right = onset_windows[1]
+    overlap_left = max(first_left, second_left, first_voice)
+    overlap_right = min(first_right, second_right)
+    onset_ratio = _agreement_ratio(onset_passes[0], onset_passes[1], overlap_left, overlap_right)
+    if onset_ratio < RECOVERY_ONSET_AGREEMENT or not onset_passes[0]:
+        return source, {
+            "empty_intro_rejected": "onset_disagreement",
+            "empty_intro_onset_ratio": round(onset_ratio, 3),
+        }
+
+    recovered = list(onset_passes[0])
+    # Optionally bridge into the 18..32s seam if primary still has no coverage up to 30s.
+    first_primary_start = min(
+        (_segment_span(seg)[0] for seg in source if _segment_span(seg) is not None),
+        default=duration,
+    )
+    if first_right < min(duration - 1.0, INTRO_SECONDS, first_primary_start - 1.0):
+        seam_left = max(first_left + 4.0, min(RECOVERY_SEAM_LEFT, first_right - 4.0))
+        seam_right = min(duration, max(RECOVERY_SEAM_RIGHT, first_right + 10.0))
+        if seam_right - seam_left >= 4.0:
+            seam_decoded = _decode_intro_window(model, waveform, seam_left, seam_right, language, cancel_cb=cancel_cb)
+            seam = [
+                item for item in _accepted_recovery_segments(seam_decoded, active_speech)
+                if not _intro_media_boilerplate(getattr(item, "text", ""))
+            ]
+            ov_l = max(seam_left, first_left)
+            ov_r = min(seam_right, first_right)
+            if seam and _agreement_ratio(recovered, seam, ov_l, ov_r) >= RECOVERY_SEAM_AGREEMENT:
+                stitched = _stitch_intro_recovery(recovered, seam, ov_l, ov_r)
+                if stitched:
+                    recovered = stitched
+
+    merged, added = _merge_recovery_primary_first(source, recovered)
+    if not added:
+        return source, {"empty_intro_rejected": "no_new_coverage"}
+    return merged, {
+        "empty_intro_recovered": True,
+        "empty_intro_first_voice": round(first_voice, 3),
+        "empty_intro_onset_ratio": round(onset_ratio, 3),
+        "empty_intro_added": added,
+    }
+
+
 def _prevoice_candidates(segments, speech):
     source = list(segments or ())
     if not source or not speech:
@@ -1314,6 +1423,25 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
             raise
         except Exception as error:
             report["anchored_recovery_error"] = str(error)
+
+    if not report.get("intro_reconciled") and not report.get("anchored_recovery"):
+        try:
+            empty_recovered, empty_report = _recover_empty_intro(
+                model,
+                probe["waveform"],
+                working,
+                language,
+                speech,
+                confirmed_speech,
+                cancel_cb=cancel_cb,
+            )
+            report.update(empty_report)
+            if empty_report.get("empty_intro_recovered"):
+                working = empty_recovered
+        except RuntimeError:
+            raise
+        except Exception as error:
+            report["empty_intro_error"] = str(error)
 
     filtered, removed = filter_instrumental_intro_segments(
         working,

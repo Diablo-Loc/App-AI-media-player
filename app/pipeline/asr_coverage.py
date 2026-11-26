@@ -607,10 +607,32 @@ def merge_recovered(existing, candidates, safe_gap=0.12, overlap_tolerance=0.0):
     return sorted(result, key=lambda cue: cue["start"])
 
 
+def _load_pcm16_fast(audio_path):
+    """Read normalized mono 16 kHz PCM16 WAV directly via stdlib wave + numpy (~5 ms)."""
+    import wave
+    import numpy as np
+    try:
+        with wave.open(str(audio_path), "rb") as audio:
+            if (
+                audio.getnchannels() == 1
+                and audio.getsampwidth() == 2
+                and audio.getframerate() == SAMPLE_RATE
+                and audio.getcomptype() == "NONE"
+            ):
+                raw = audio.readframes(audio.getnframes())
+                if not raw:
+                    return np.empty((0,), dtype=np.float32)
+                return np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+    except Exception:
+        pass
+    from faster_whisper.audio import decode_audio
+    return decode_audio(str(audio_path), sampling_rate=SAMPLE_RATE)
+
+
 def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                              cancel_cb=None, progress_cb=None, refine_fn=refine_segments,
                              boundary_gap=0.12, boundary_tolerance=0.0,
-                             primary_segments=None):
+                             primary_segments=None, prefetched_speech=None):
     """Retry missing speech in bounded clips using the already loaded model.
 
     VAD only selects retries; it never removes audio from the primary pass.
@@ -644,13 +666,15 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
         report["unresolved_speech"] = []
         return cues, report
     _check_cancel(cancel_cb)
-    from faster_whisper.audio import decode_audio
-    from faster_whisper.vad import get_speech_timestamps
-    waveform = decode_audio(str(audio_path), sampling_rate=SAMPLE_RATE)
+    waveform = _load_pcm16_fast(audio_path)
     _check_cancel(cancel_cb)
-    # Local bundled Silero model. Never change the primary ASR's vad_filter.
-    speech = [(span["start"] / SAMPLE_RATE, span["end"] / SAMPLE_RATE)
-              for span in get_speech_timestamps(waveform)]
+    # Local bundled Silero model. Reuse intro-guard default VAD when whole clip <= 60s.
+    if prefetched_speech is not None and duration <= 60.0:
+        speech = list(prefetched_speech)
+    else:
+        from faster_whisper.vad import get_speech_timestamps
+        speech = [(span["start"] / SAMPLE_RATE, span["end"] / SAMPLE_RATE)
+                  for span in get_speech_timestamps(waveform)]
     report["speech"] = speech
     suspects = [
         item for item in suspects

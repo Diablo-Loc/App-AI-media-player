@@ -13,7 +13,10 @@ from .lyric_phrases import group_words
 ONSET_LEAD = 0.05
 OFFSET_TAIL = 0.08
 FINAL_TIMING_ATTRIBUTE = "_botube_final_timing"
-FILLER_TOKENS = {"ha", "haha", "he", "hehe", "hi", "ho", "ah", "oh", "la", "na", "ハ", "は", "ㅋ", "ㅎ"}
+FILLER_TOKENS = {
+    "ha", "haha", "he", "hehe", "hi", "ho", "ah", "oh", "la", "na",
+    "ハ", "は", "ラ", "ら", "ハイ", "ハッ", "啦", "ㅋ", "ㅎ",
+}
 
 
 def _key(text):
@@ -27,7 +30,7 @@ def compress_fused_fillers(text):
     words/phrases survive. Eight fused units is deliberately conservative.
     """
     return re.sub(
-        r"(?<!\w)(ha|he|hi|ho|hà|há|hê|ah|oh|la|na|ハ|は|ㅋ|ㅎ)(?:\1){7,}(?!\w)",
+        r"(?<!\w)(ha|he|hi|ho|hà|há|hê|ah|oh|la|na|ハイ|ハッ|アー|オー|ハ|は|ラ|ら|啦|ㅋ|ㅎ)(?:\1){7,}(?!\w)",
         lambda match: match.group(1) * 3, text, flags=re.IGNORECASE)
 
 

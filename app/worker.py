@@ -38,9 +38,9 @@ from PySide6.QtCore import QThread, Signal
 # =========================================================================
 # HÀM WRAPPER (CHẠY TRONG PROCESS CON)
 # =========================================================================
-def _ai_process_wrapper(input_path, output_dir, media_id, queue):
+def _ai_process_wrapper(input_path, output_dir, media_id, queue, cancel_event=None):
     """
-    Process con: Load Torch -> Chạy -> Trả về -> Tự hủy -> GPU được giải phóng.
+    Process con: Chỉ load Torch khi thực sự cần Whisper/NLLB -> Chạy -> Trả về -> Tự hủy -> GPU được giải phóng.
     """
     try:
         import os
@@ -54,10 +54,9 @@ def _ai_process_wrapper(input_path, output_dir, media_id, queue):
             queue.put(("progress", percent, message))
 
         def proxy_cancel_cb():
-            return False
+            return bool(cancel_event is not None and cancel_event.is_set())
 
-        # --- LAZY IMPORT (CHỈ LOAD KHI PROCESS NÀY CHẠY) ---
-        import torch
+        # --- LAZY IMPORT (KHÔNG import torch sớm để Fast-Path Sidecar/LRCLIB chạy <1s) ---
         from ai.pipeline import run_ai_pipeline
 
         # --- CHẠY PIPELINE ---
@@ -69,23 +68,34 @@ def _ai_process_wrapper(input_path, output_dir, media_id, queue):
             cancel_cb=proxy_cancel_cb,
             device_policy="auto",
         )
-        
+
         # --- GỬI KẾT QUẢ VỀ ---
         queue.put(("finished", result))
-        time.sleep(1.0)
-        
+        try:
+            queue.close()
+            queue.join_thread()
+        except Exception:
+            time.sleep(0.15)
+
     except Exception as e:
+        if cancel_event is not None and cancel_event.is_set():
+            return
         # Lấy traceback chi tiết
         error_msg = traceback.format_exc()
-        
+
         # Ghi vào file log ngay tại thư mục chứa file EXE
         # Dùng mode "a" để ghi nối tiếp, không bị ghi đè
         with open("error_log.txt", "a", encoding="utf-8") as f:
             f.write(f"\n--- ERROR AT {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
             f.write(error_msg)
             f.write("-" * 30 + "\n")
-            
+
         queue.put(("failed", error_msg))
+        try:
+            queue.close()
+            queue.join_thread()
+        except Exception:
+            pass
 
 # =========================================================================
 # CLASS AIWORKER (MAIN PROCESS)
@@ -104,23 +114,30 @@ class AIWorker(QThread):
         self._cancelled = False
         self._process = None
         self._queue = None
+        self._cancel_event = None
                     
     def run(self):
         self.started.emit(self.media_id)
         
+        ctx = multiprocessing.get_context('spawn') # Bắt buộc cho PyTorch/Windows
         queue = multiprocessing.Queue()
         self._queue = queue
-        ctx = multiprocessing.get_context('spawn') # Bắt buộc cho PyTorch/Windows
+        cancel_event = ctx.Event() if hasattr(ctx, "Event") else None
+        self._cancel_event = cancel_event
+
+        proc_kwargs = {
+            "input_path": self.input_path,
+            "output_dir": self.output_dir,
+            "media_id": self.media_id,
+            "queue": queue,
+        }
+        if cancel_event is not None:
+            proc_kwargs["cancel_event"] = cancel_event
 
         # Khởi tạo Process con
         self._process = ctx.Process(
             target=_ai_process_wrapper,
-            kwargs={
-                "input_path": self.input_path,
-                "output_dir": self.output_dir,
-                "media_id": self.media_id,
-                "queue": queue
-            }
+            kwargs=proc_kwargs,
         )
         self._process.start()
 
@@ -167,8 +184,14 @@ class AIWorker(QThread):
     # CONTROL
     # =========================
     def cancel(self):
-        """Hủy nhẹ nhàng (đặt cờ)"""
+        """Hủy nhẹ nhàng (đặt cờ & báo trực tiếp process con dọn file tạm)"""
         self._cancelled = True
+        ev = getattr(self, "_cancel_event", None)
+        if ev is not None:
+            try:
+                ev.set()
+            except Exception:
+                pass
 
     def stop(self):
         """
@@ -176,7 +199,7 @@ class AIWorker(QThread):
         Gọi hàm này trước khi đóng App hoặc chuyển bài để tránh lỗi QThread Destroyed.
         """
         if self.isRunning():
-            self._cancelled = True      # 1. Đặt cờ hủy
+            self.cancel()               # 1. Đặt cờ hủy & báo process con
             self.requestInterruption()  # 2. Yêu cầu Qt ngắt
             self.wait()                 # 3. CHỜ (Block) cho đến khi run() thoát hẳn
             
@@ -184,9 +207,21 @@ class AIWorker(QThread):
         """Dừng process con an toàn và giải phóng queue/refs."""
         process = self._process
         queue = self._queue
+        ev = getattr(self, "_cancel_event", None)
 
         try:
+            if ev is not None and self._cancelled:
+                try:
+                    ev.set()
+                except Exception:
+                    pass
             if process is not None:
+                # Cho process con 1.2s tự thoát qua finally (xóa sạch file WAV tạm) trước khi terminate
+                if getattr(process, "is_alive", lambda: False)() and self._cancelled:
+                    try:
+                        process.join(timeout=1.2)
+                    except Exception:
+                        pass
                 if getattr(process, "is_alive", lambda: False)():
                     try:
                         process.terminate()
@@ -212,4 +247,5 @@ class AIWorker(QThread):
 
             self._process = None
             self._queue = None
+            self._cancel_event = None
             self._cancelled = False

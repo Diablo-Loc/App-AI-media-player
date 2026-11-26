@@ -203,7 +203,7 @@ def ask_ai_for_clean_title(raw_title, key):
         print(f"⚠️ Lỗi AI Clean: {e}")
         return raw_title
     
-def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_mode=None):
+def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_mode=None, extra_reference_lyric=None):
     if not subs or not key or not key.strip(): 
         return None
     
@@ -231,6 +231,7 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_
     from translate.genius_reference import (
         build_reference_hints,
         clean_search_title,
+        reference_match_metrics,
         source_text_from_subs,
     )
     clean_title = clean_search_title(song_title_raw or "") or song_title_raw
@@ -253,6 +254,16 @@ def translate_online_pipeline(subs, provider, key, song_title_raw=None, content_
             print("⚠️ Genius: không có reference đủ tin cậy; tiếp tục dịch bằng lời máy.")
     else:
         print("⚡ Chế độ nhanh: Bỏ qua Genius, dịch trực tiếp lời máy.")
+
+    # Fallback tham chiếu sạch từ LRCLIB (không cần API key / không bị Cloudflare) qua đúng cổng kiểm chứng ASR.
+    if not dialogue and not reference_by_id and extra_reference_lyric and str(extra_reference_lyric).strip():
+        source_text = source_text_from_subs(subs)
+        candidate_ref = str(extra_reference_lyric).strip()
+        metrics = reference_match_metrics(source_text, candidate_ref)
+        if metrics["score"] >= 0.42 and metrics["sequence_coverage"] >= 0.20:
+            reference_by_id = build_reference_hints(subs, candidate_ref)
+            if reference_by_id:
+                print(f"✅ LRCLIB Reference: xác minh và ghép tham chiếu {len(reference_by_id)}/{len(subs)} câu.")
 
     # --- BƯỚC 2: XÂY DỰNG PROMPT LYRIC ĐƠN GIẢN ---
     # Keep the stable provider/fallback/parser flow, but send the translator a

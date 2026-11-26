@@ -183,8 +183,11 @@ class MainWindow(QMainWindow):
         # khóa vị trí nếu cần
         self.sub_layer.set_locked(self.config.get("lock_position", False))
         
-        # Kết nối player timeline với sub layer
-        self.media_player.player.positionChanged.connect(self.sub_layer.update_position)
+        # Kết nối player timeline với sub layer qua Master Audio Clock
+        self._sub_clock_timer = QTimer(self)
+        self._sub_clock_timer.setInterval(25)
+        self._sub_clock_timer.timeout.connect(self._tick_subtitle_clock)
+        self.media_player.player.positionChanged.connect(self._on_player_position_for_sub)
         
         # --- 3. SETUP CONTROLS (PlaybackBar) ---
         self.playback_bar = PlaybackBar(self)
@@ -293,6 +296,8 @@ class MainWindow(QMainWindow):
         self.audio_devices = QMediaDevices()
         self.audio_effects = install_audio_effects(self)
         self._volume_settings = install_volume_settings(self)
+        if hasattr(self, 'sub_layer') and hasattr(self.sub_layer, '_subtitle_effects'):
+            self.sub_layer._subtitle_effects.bind_position_provider(self.authoritative_subtitle_position_ms)
 
         self._system_media_connected = False
         self.audio_devices.audioOutputsChanged.connect(
@@ -430,6 +435,8 @@ class MainWindow(QMainWindow):
                 self._startup_timer.stop()
             if hasattr(self, "_sidebar_timer") and self._sidebar_timer:
                 self._sidebar_timer.stop()
+            if hasattr(self, "_sub_clock_timer") and self._sub_clock_timer:
+                self._sub_clock_timer.stop()
 
             if hasattr(self, '_folder_scan_queue'):
                 self._folder_scan_queue.shutdown()
@@ -729,6 +736,7 @@ class MainWindow(QMainWindow):
     def _connect_signals(self):
         player = self.media_player.player
         player.playbackStateChanged.connect(self.update_ui_state)
+        player.playbackStateChanged.connect(self._sync_subtitle_clock_state)
         player.positionChanged.connect(self.on_position_changed)
         player.durationChanged.connect(self.update_slider_range)
         player.mediaStatusChanged.connect(self.handle_media_status_wrapper)
@@ -760,6 +768,54 @@ class MainWindow(QMainWindow):
             self.playback_bar.dynamic_island_clicked.connect(self.switch_to_mini_mode)
             
     # --- CÁC HÀM PLAYER LOGIC ---
+    def authoritative_subtitle_position_ms(self) -> int:
+        """Return the real audible playback clock (AudioStreamEngine when Hi-Fi active, else QMediaPlayer)."""
+        fx = getattr(self, 'audio_effects', None)
+        if fx is not None:
+            stream = getattr(fx, 'stream', None)
+            use_stream = getattr(fx, '_use_stream_engine', None)
+            if stream is not None and callable(use_stream) and use_stream():
+                if stream.is_active():
+                    return int(stream.position_ms())
+                st = stream.status_info()
+                if st.get('active') and not st.get('paused'):
+                    return int(stream.position_ms())
+        player = getattr(getattr(self, 'media_player', None), 'player', None)
+        return int(player.position()) if player is not None else 0
+
+    def _on_player_position_for_sub(self, pos_ms: int):
+        sub = getattr(self, 'sub_layer', None)
+        if sub is None:
+            return
+        player = getattr(getattr(self, 'media_player', None), 'player', None)
+        if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            sub.update_position(self.authoritative_subtitle_position_ms())
+        else:
+            sub.update_position(int(pos_ms))
+
+    def _sync_subtitle_clock_state(self, state):
+        timer = getattr(self, '_sub_clock_timer', None)
+        if timer is None:
+            return
+        if state == QMediaPlayer.PlaybackState.PlayingState:
+            if not timer.isActive():
+                timer.start()
+        else:
+            if timer.isActive():
+                timer.stop()
+
+    def _tick_subtitle_clock(self):
+        sub = getattr(self, 'sub_layer', None)
+        if sub is None or not sub.enable_render or sub.mode == SubtitleMode.OFF or not sub.subtitles:
+            return
+        player = getattr(getattr(self, 'media_player', None), 'player', None)
+        if player is None or player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+            timer = getattr(self, '_sub_clock_timer', None)
+            if timer is not None and timer.isActive():
+                timer.stop()
+            return
+        sub.update_position(self.authoritative_subtitle_position_ms())
+
     def handle_media_status(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.play_next()
