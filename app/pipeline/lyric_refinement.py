@@ -214,10 +214,14 @@ def refine_lyrics(segments, max_chars=22, min_pause=0.54, start_offset=-0.2,
     output = []
     for phrase in group_words(accepted_events, max_chars, min_pause, join_tokens, _terminal,
                               continued_sources):
+        joined = (
+            phrase[0]["text"]
+            if phrase[0]["fallback"]
+            else compress_fused_fillers(join_tokens([word["text"] for word in phrase]))
+        )
         output.append(dict(start=max(0.0, phrase[0]["start"] - ONSET_LEAD),
                            end=max(word["end"] for word in phrase) + OFFSET_TAIL,
-                           text=phrase[0]["text"] if phrase[0]["fallback"] else
-                           join_tokens([word["text"] for word in phrase])))
+                           text=joined))
     return finalize_cue_times(output)
 
 

@@ -737,5 +737,179 @@ class AsrCoverageContextGateTests(unittest.TestCase):
         self.assertTrue(any("夢見ている未来が遠ざかってゆく" in c["text"] for c in combined))
 
 
+class UniversalCommercialAsrTests(unittest.TestCase):
+    def test_multilingual_credit_boilerplate_catches_korean_variants_without_banning_lyrics(self):
+        from pipeline.lyric_accuracy import credit_text
+
+        for junk in (
+            "자막제공자",
+            "자막 제공: 홍길동",
+            "한글 자막 by 한효정",
+            "한글자막 by ABC",
+            "자막은 설정에서 선택하실 수 있습니다.",
+            "시청해 주셔서 감사합니다",
+            "MBC 뉴스 이덕영입니다",
+        ):
+            self.assertTrue(credit_text(junk, timed_words=True), f"Expected credit_text=True for {junk!r}")
+
+        for real_lyric in (
+            "고마워 고마워 고마워",
+            "감사합니다 내 곁에 있어줘서",
+            "넌 내 하나뿐인 태양",
+            "I need you girl",
+        ):
+            self.assertFalse(credit_text(real_lyric, timed_words=True), f"False positive credit on {real_lyric!r}")
+
+    def test_repeat_loop_pruner_strips_pathological_loops_and_keeps_real_choruses(self):
+        from pipeline.asr_intro_guard import _prune_pathological_repeat_loops
+
+        # 1. Extreme intro loop (comp=6.19, nsp=0.87)
+        intro_loop = [
+            SimpleNamespace(start=i * 2.0, end=i * 2.0 + 1.8, text="이 노래는", words=[], compression_ratio=6.19, no_speech_prob=0.87)
+            for i in range(6)
+        ] + [
+            SimpleNamespace(start=28.0, end=31.0, text="잠이 멀어져만 가", words=[], compression_ratio=0.9, no_speech_prob=0.10)
+        ]
+        kept, removed = _prune_pathological_repeat_loops(intro_loop)
+        self.assertEqual([s.text for s in kept], ["잠이 멀어져만 가"])
+        self.assertEqual(len(removed), 6)
+
+        # 2. Mid-song runaway loop with lead-in carrier segment
+        mid_loop = [
+            SimpleNamespace(start=342.8, end=348.8, text="아이유의 러브 앨범들 이 앨범은", words=[], compression_ratio=2.5, no_speech_prob=0.30),
+        ] + [
+            SimpleNamespace(start=348.8 + i * 2.1, end=350.6 + i * 2.1, text="이 앨범은", words=[], compression_ratio=2.5, no_speech_prob=0.30)
+            for i in range(6)
+        ] + [
+            SimpleNamespace(start=365.0, end=368.0, text="곁에 머물러 줄래", words=[], compression_ratio=1.1, no_speech_prob=0.10),
+        ]
+        kept2, removed2 = _prune_pathological_repeat_loops(mid_loop)
+        self.assertEqual([s.text for s in kept2], ["곁에 머물러 줄래"])
+        self.assertEqual(len(removed2), 7)
+
+        # 3. Real repeated chorus ("I need you girl" x5, comp=2.23, nsp=0.29) MUST survive untouched!
+        real_chorus = [
+            SimpleNamespace(start=74.0 + i * 1.5, end=75.4 + i * 1.5, text="I need you girl", words=[], compression_ratio=2.23, no_speech_prob=0.29)
+            for i in range(5)
+        ]
+        kept3, removed3 = _prune_pathological_repeat_loops(real_chorus)
+        self.assertEqual(len(kept3), 5)
+        self.assertEqual(removed3, [])
+
+    def test_unvoiced_outro_courtesy_filter_and_gap_priority(self):
+        from pipeline.asr_coverage import _prioritize_windows, _strip_unvoiced_courtesy_hallucinations
+
+        cues = [
+            {"start": 10.0, "end": 13.0, "text": "감사합니다."},       # voiced -> MUST stay!
+            {"start": 200.0, "end": 202.0, "text": "감사합니다."},     # unvoiced outro -> MUST drop!
+            {"start": 205.0, "end": 207.0, "text": "Thank you."},     # unvoiced outro -> MUST drop!
+        ]
+        kept, removed = _strip_unvoiced_courtesy_hallucinations(cues, [(9.5, 13.5), (50.0, 180.0)], duration=210.0)
+        self.assertEqual(removed, 2)
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(kept[0]["start"], 10.0)
+
+        # Big voiced gap (>=2.0s) later in song must be scheduled ahead of tiny breath pause earlier
+        wins = [(10.0, 22.0), (120.0, 132.0)]
+        voiced_gaps = [(14.0, 14.8), (122.0, 130.0)]
+        ordered = _prioritize_windows(wins, voiced_gaps, [])
+        self.assertEqual(ordered[0], (120.0, 132.0))
+
+    def test_universal_title_cleanup_and_bilingual_lrclib_variants(self):
+        from pipeline.fast_lyrics import _clean_query_title, _lrclib_query_variants, _script_compatible
+
+        self.assertEqual(
+            _lrclib_query_variants("MV BTS방탄소년단  I NEED U_1080p"),
+            ("BTS 방탄소년단 I NEED U", "BTS I NEED U"),
+        )
+        self.assertEqual(
+            _lrclib_query_variants("VIETSUBKARA Audio BTS 방탄소년단 Dead Leaves_v720P"),
+            ("BTS 방탄소년단 Dead Leaves", "BTS Dead Leaves"),
+        )
+        self.assertEqual(
+            _lrclib_query_variants("BLACKPINK 블랙핑크 Pink Venom Official MV 4K"),
+            ("BLACKPINK 블랙핑크 Pink Venom", "BLACKPINK Pink Venom"),
+        )
+        self.assertEqual(
+            _clean_query_title("YOASOBI ヨアソビ Idol [Official Music Video] 1080p"),
+            "YOASOBI ヨアソビ Idol",
+        )
+        # Bilingual K-Pop lyrics with heavy English chorus pass; pure Romaji still rejected
+        mixed_ko = "I need you girl\n" * 25 + "왜 혼자 사랑하고 혼자서만 이별해\n" * 6
+        self.assertTrue(_script_compatible("BTS 방탄소년단 I NEED U", mixed_ko))
+        pure_romaji = "Wae honja saranghago honjaseoman ibyeolhae " * 15
+        self.assertFalse(_script_compatible("BTS 방탄소년단 I NEED U", pure_romaji))
+
+    def test_intra_segment_loop_pruning_multilingual_credits_and_instrumental_intro_lrc(self):
+        from pipeline.asr_intro_guard import _prune_pathological_repeat_loops
+        from pipeline.lyric_accuracy import credit_text
+        from pipeline.lyric_refinement import refine_lyrics
+        from pipeline.fast_lyrics import verify_synced_cues_against_audio
+
+        # 1. Intra-segment collapsed phrase loops ("I'm sorry, "*7 x5 and "啦"*28)
+        sorry_loop = [
+            SimpleNamespace(start=i * 3.0, end=i * 3.0 + 2.8, text="I'm sorry, " * 7, words=[], compression_ratio=3.2, no_speech_prob=0.6)
+            for i in range(5)
+        ] + [
+            SimpleNamespace(start=38.0, end=42.0, text="Isn't it so incredible", words=[], compression_ratio=1.0, no_speech_prob=0.1)
+        ]
+        kept, removed = _prune_pathological_repeat_loops(sorry_loop)
+        self.assertEqual([s.text for s in kept], ["Isn't it so incredible"])
+        self.assertEqual(len(removed), 5)
+
+        la_blob = [
+            SimpleNamespace(start=164.0, end=173.0, text="啦" * 28, words=[], compression_ratio=4.5, no_speech_prob=0.7),
+            SimpleNamespace(start=175.0, end=179.0, text="不曾低步踏碎", words=[], compression_ratio=1.1, no_speech_prob=0.1),
+        ]
+        kept_la, removed_la = _prune_pathological_repeat_loops(la_blob)
+        self.assertEqual([s.text for s in kept_la], ["不曾低步踏碎"])
+        self.assertEqual(len(removed_la), 1)
+
+        # Joined phrase fused-filler compression (separate 1-char tokens glued by join_tokens)
+        refined = refine_lyrics([{
+            "start": 10.0,
+            "end": 15.0,
+            "text": "啦" * 20,
+            "words": [{"start": 10.0 + i * 0.2, "end": 10.18 + i * 0.2, "word": "啦"} for i in range(20)],
+        }])
+        self.assertEqual(refined[0]["text"], "啦啦啦")
+
+        # 2. Multilingual explicit YouTube/transcript credits
+        for junk in (
+            "© transcript Emily Beynon",
+            "Thank you so much for watching this video, and I'll see you in the next video!",
+            "由 Am ara.",
+            "Terima kasih telah menonton!",
+            "Cảm ơn các bạn đã xem",
+        ):
+            self.assertTrue(credit_text(junk, timed_words=True), f"Expected credit_text=True for {junk!r}")
+
+        # 3. Synced LRC over brief instrumental VAD hits before sustained vocal block (>=4s)
+        cues = [
+            {"start": 21.65, "end": 25.48, "text": "Line 1"},
+            {"start": 25.48, "end": 29.40, "text": "Line 2"},
+            {"start": 29.40, "end": 33.34, "text": "Line 3"},
+            {"start": 33.34, "end": 37.20, "text": "Line 4"},
+            {"start": 37.20, "end": 41.00, "text": "Line 5"},
+            {"start": 41.00, "end": 44.40, "text": "Line 6"},
+        ]
+        probe = {
+            "speech": [(0.0, 60.0)],
+            "confirmed_speech": [(1.78, 5.20), (9.07, 10.32), (21.42, 60.0)],
+        }
+        ok, info, _ = verify_synced_cues_against_audio(cues, "dummy.wav", prefetched_probe=probe)
+        self.assertTrue(ok, f"Expected verified=True, got {info}")
+        self.assertLessEqual(info["onset_diff"], 0.30)
+
+        # Still REJECTS a late-shifted LRC when earlier speech was a real 10s verse (>=6s)!
+        probe_real_intro = {
+            "speech": [(0.0, 60.0)],
+            "confirmed_speech": [(1.0, 12.0), (21.42, 60.0)],
+        }
+        ok2, info2, _ = verify_synced_cues_against_audio(cues, "dummy.wav", prefetched_probe=probe_real_intro)
+        self.assertFalse(ok2)
+        self.assertEqual(info2["reason"], "onset_mismatch")
+
+
 if __name__ == "__main__":
     unittest.main()

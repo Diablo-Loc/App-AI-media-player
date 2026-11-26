@@ -502,6 +502,55 @@ def _expand_verified_primary_coverage(coverage, primary, replacement):
         matches[0]["end"] = max(matches[0]["end"], evidence_end)
 
 
+_UNVOICED_COURTESY_TEXTS = frozenset({
+    "thankyou", "thanks", "thanksforwatching", "thankyouforwatching",
+    "감사합니다", "고맙습니다", "수고하셨습니다",
+    "ありがとうございました", "ありがとうございます",
+    "谢谢", "謝謝", "谢谢大家", "謝謝大家", "感谢收看", "感謝收看",
+    "cảmơn", "camon",
+})
+
+
+def _strip_unvoiced_courtesy_hallucinations(cues, speech, duration):
+    """Drop bare courtesy sign-offs ONLY when VAD shows literally zero voice and isolated/outro."""
+    if not cues or not speech:
+        return list(cues), 0
+    kept = []
+    removed = 0
+    total = len(cues)
+    for idx, cue in enumerate(cues):
+        norm = _normalized_recovery_text(cue.get("text", ""))
+        if norm in _UNVOICED_COURTESY_TEXTS:
+            start = float(cue["start"])
+            end = float(cue["end"])
+            voiced = overlap(start, end, speech)
+            prev_gap = start - float(cues[idx - 1]["end"]) if idx > 0 else start
+            next_gap = float(cues[idx + 1]["start"]) - end if idx + 1 < total else (duration - end)
+            near_outro = duration > 0 and end >= duration - 25.0
+            isolated = prev_gap >= 3.0 and next_gap >= 2.0
+            if voiced < 0.05 and (near_outro or isolated):
+                removed += 1
+                continue
+        kept.append(cue)
+    return kept, removed
+
+
+def _prioritize_windows(windows, voiced_gaps, suspects):
+    """Spend retry budget on substantial missing vocal spans (>=2.0s) before tiny breath pauses."""
+    def _priority(win):
+        left, right = win
+        max_gap = 0.0
+        for gs, ge in voiced_gaps:
+            ov = min(right, ge) - max(left, gs)
+            if ov > 0:
+                max_gap = max(max_gap, ge - gs)
+        has_suspect = any(_meaningful_overlap(left, right, s["start"], s["end"]) for s in suspects)
+        tier = 0 if (max_gap >= 2.0 or has_suspect) else 1
+        return (tier, left)
+
+    return sorted(windows, key=_priority)
+
+
 def _retry_budget(duration):
     """Bound optional recovery work for both short and long media."""
     return min(24, max(10, int(math.ceil(max(1.0, duration) / 60.0)) * 4))
@@ -694,22 +743,33 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
         speech = [(span["start"] / SAMPLE_RATE, span["end"] / SAMPLE_RATE)
                   for span in get_speech_timestamps(waveform)]
     report["speech"] = speech
+    accepted_base, stripped_courtesy = _strip_unvoiced_courtesy_hallucinations(cues, speech, duration)
+    if stripped_courtesy:
+        report["stripped_unvoiced_courtesy"] = stripped_courtesy
     suspects = [
         item for item in suspects
         if overlap(item["start"], item["end"], speech) >= MIN_VOICED_GAP_SECONDS
     ]
     report["voiced_confidence_suspects"] = len(suspects)
     _check_cancel(cancel_cb)
-    accepted_base = list(cues)
     combined = list(accepted_base)
     recovered = []
     attempted = set()
     first_round_evidence = []
+    initial_voiced_gaps = _voiced_gaps(audit_gaps, speech)
+    # On full-length songs (>60s), skip sub-1.1s inter-line breath gaps in retry window
+    # planning so GPU time goes to genuine missing vocal lines instead of reverb pauses.
+    plan_gaps = (
+        [g for g in initial_voiced_gaps if (g[1] - g[0]) >= 1.10 and overlap(g[0], g[1], speech) >= 0.65]
+        if duration > 60.0
+        else initial_voiced_gaps
+    )
     windows = _merge_windows(
-        _plan_gap_windows(_voiced_gaps(audit_gaps, speech), speech, duration)
+        _plan_gap_windows(plan_gaps, speech, duration)
         + _suspect_windows(suspects, duration),
         duration,
     )
+    windows = _prioritize_windows(windows, plan_gaps, suspects)
     budget = _retry_budget(duration)
     windows = windows[:budget]
     checked_suspects = set()
@@ -770,7 +830,6 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                 and context_retries < 2
                 and proposed == 0
                 and decoded
-                and left >= 4.0
                 and (right - left) >= 8.0
                 and any(
                     (ge - gs) >= 4.5 and min(right, ge) - max(left, gs) >= 4.0
@@ -783,13 +842,20 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                         str(getattr(seg, "text", "") or "").strip(),
                         timed_words=bool(getattr(seg, "words", None)),
                     )
+                    or (_finite(getattr(seg, "compression_ratio", None), 0.0) or 0.0) >= 2.80
                     for seg in decoded
                 )
             else:
                 raw_had_credit = False
             if raw_had_credit:
                 prev_cues = [c for c in combined if float(c["end"]) <= left + 2.5 and str(c.get("text", "")).strip()]
-                ctx_prompt = str(prev_cues[-1]["text"]).strip()[:120] if prev_cues else None
+                next_cues = [c for c in combined if float(c["start"]) >= right - 3.5 and str(c.get("text", "")).strip()]
+                if prev_cues:
+                    ctx_prompt = str(prev_cues[-1]["text"]).strip()[:120]
+                elif next_cues:
+                    ctx_prompt = str(next_cues[0]["text"]).strip()[:120]
+                else:
+                    ctx_prompt = None
                 if ctx_prompt:
                     c1_l = min(duration - 3.0, left + 2.5)
                     c1_r = min(duration, right + 3.0)
@@ -912,8 +978,16 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
         current_gaps = missing_ranges(
             coverage_cues, duration, min_gap=AUDIT_MIN_GAP_SECONDS
         )
+        remaining_voiced = _voiced_gaps(current_gaps, speech)
+        # On full-length songs (>60s), only spend a second pass when round 1 actually
+        # changed coverage or a substantial >=3.0s voiced gap remains unresolved.
+        if duration > 60.0 and round_index == 0:
+            has_big_remaining = any((ge - gs) >= 3.0 and overlap(gs, ge, speech) >= 1.5 for gs, ge in remaining_voiced)
+            if not recovered and report["replaced_cues"] == 0 and not has_big_remaining:
+                break
+            remaining_voiced = [g for g in remaining_voiced if (g[1] - g[0]) >= 1.50 and overlap(g[0], g[1], speech) >= 0.90]
         windows = _merge_windows(
-            _plan_gap_windows(_voiced_gaps(current_gaps, speech), speech, duration),
+            _plan_gap_windows(remaining_voiced, speech, duration),
             duration,
         )
         windows = [

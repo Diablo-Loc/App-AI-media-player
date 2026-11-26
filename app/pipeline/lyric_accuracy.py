@@ -5,13 +5,35 @@ import unicodedata
 _CREDIT_PHRASES = (
     "thanks for watching", "thank you for watching", "subtitles by",
     "captioned by", "translated by", "corrected by", "synced by", "subs by",
+    "transcribed by", "transcript by", "subtitled by",
     "all rights reserved", "resemblance to actual persons", "work of fiction",
-    "字幕志愿者", "字幕志願者", "字幕制作", "字幕製作",
+    "字幕志愿者", "字幕志願者", "字幕制作", "字幕製作", "字幕组", "字幕組",
     "ご視聴ありがとうございました", "視聴ありがとうございました", "チャンネル登録",
     "高評価をお願い", "ご覧いただきありがとうございます", "시청해주셔서 감사합니다",
     "구독과 좋아요", "한글자막 by", "자막 제작", "다음 영상에서 만나요",
+    "terima kasih telah menonton", "terima kasih sudah menonton",
+    "gracias por ver", "merci d'avoir regardé",
+    "cảm ơn đã xem", "cảm ơn các bạn đã xem",
 )
-_EXPLICIT_CREDIT = re.compile(r"\b(?:please subscribe|amara\.org)\b")
+_EXPLICIT_CREDIT = re.compile(
+    r"\b(?:please\s+subscribe|am\s*ara(?:\s*\.\s*org)?|"
+    r"thank(?:s|\s+you)(?:\s+\w+){0,3}\s+for\s+watching|"
+    r"see\s+you\s+in\s+(?:the\s+)?next\s+video)\b|"
+    r"©\s*(?:transcript|subtitles?|captions?)|[听聽][译譯]\s*[:：]",
+    re.IGNORECASE,
+)
+_KOREAN_CREDIT_BOILERPLATE = re.compile(
+    r"자막\s*제공(?:자)?|"
+    r"자막은\s*설정에서|"
+    r"한글\s*자막(?:\s*by)?|"
+    r"자막\s*제작|"
+    r"시청해\s*주셔서\s*감사합니다|"
+    r"구독과\s*좋아요|"
+    r"알림\s*설정|"
+    r"영상\s*편집|"
+    r"(?:mbc|kbs|sbs|ytn)\s*뉴스",
+    re.IGNORECASE,
+)
 _CREDIT_LABEL = re.compile(
     r"^(?:lyrics?|music|copyright|subtitles?|producer|composer|arranger|"
     r"mix(?:ed|ing)?|master(?:ed|ing)?|record(?:ed|ing)?|"
@@ -54,7 +76,7 @@ def credit_text(text, timed_words=False):
     normalized = _SPACES.sub(" ", unicodedata.normalize("NFKC", text).casefold().strip())
     if any(phrase in normalized for phrase in _CREDIT_PHRASES):
         return True
-    if _EXPLICIT_CREDIT.search(normalized):
+    if _EXPLICIT_CREDIT.search(normalized) or _KOREAN_CREDIT_BOILERPLATE.search(normalized):
         return True
     if (_CREDIT_LABEL.match(normalized) or _COMBINED_JP_LABEL.match(normalized)
             or _ROLE_BYLINE.match(normalized)):

@@ -1111,6 +1111,128 @@ def _needs_secondary_prevoice_verification(
     return False
 
 
+_INTRA_SEGMENT_LOOP_RE = re.compile(r"(.{1,16}?)\1{4,}")
+
+
+def _is_intra_segment_loop(norm_text):
+    """Detect a single segment dominated (>=75%) by a short unit repeated 5+ times."""
+    if not norm_text or len(norm_text) < 12:
+        return False
+    best_span = 0
+    for m in _INTRA_SEGMENT_LOOP_RE.finditer(norm_text):
+        span = m.end() - m.start()
+        if span > best_span:
+            best_span = span
+    return best_span >= max(12, int(len(norm_text) * 0.75))
+
+
+def _prune_pathological_repeat_loops(segments):
+    """Remove only unmistakable Whisper degenerate repeat loops across the whole track.
+
+    Preserves legitimate repeated hooks/choruses (e.g. 3-5x normal refrains with
+    healthy compression_ratio/no_speech_prob). Only strips contiguous runs carrying
+    Whisper's mathematical loop-collapse signature so intro/coverage recovery can
+    re-decode the real singing underneath.
+    """
+    source = list(segments or ())
+    if not source:
+        return source, []
+
+    norms = []
+    spans = []
+    comps = []
+    nsps = []
+    intra_loops = []
+    for seg in source:
+        norm = _normalized_text(getattr(seg, "text", ""))
+        norms.append(norm)
+        spans.append(_segment_span(seg))
+        comps.append(_finite(getattr(seg, "compression_ratio", None), 0.0) or 0.0)
+        nsps.append(_finite(getattr(seg, "no_speech_prob", None), 0.0) or 0.0)
+        intra_loops.append(_is_intra_segment_loop(norm))
+
+    drop_indices = set()
+    n = len(source)
+    i = 0
+    while i < n:
+        key = norms[i]
+        if len(key) < 2 or spans[i] is None:
+            i += 1
+            continue
+        # 1. Single-segment degenerate intra-loop (e.g. "啦"*28 or "I'm sorry, "*7)
+        if intra_loops[i]:
+            j = i + 1
+            while j < n and intra_loops[j] and spans[j] is not None and (
+                norms[j] == key or spans[j][0] - spans[j - 1][1] <= 3.0
+            ):
+                j += 1
+            count = j - i
+            run_dur = max(spans[k][1] for k in range(i, j)) - spans[i][0]
+            max_comp = max(comps[i:j])
+            mean_nsp = sum(nsps[i:j]) / float(count)
+            # Single-char runaway syllable (>=14x like "啦"*28) OR multi-segment/high-comp intra-loop
+            single_char_runaway = len(set(key)) <= 2 and len(key) >= 14
+            if (
+                single_char_runaway
+                or (count >= 2 and run_dur >= 5.0)
+                or max_comp >= 2.80
+                or mean_nsp >= 0.50
+            ):
+                for k in range(i, j):
+                    drop_indices.add(k)
+                i = j
+                continue
+
+        # 2. Multi-segment identical-text loop (e.g. "이 노래는" x10, "이 앨범은" x7)
+        j = i + 1
+        while j < n and norms[j] == key and spans[j] is not None:
+            j += 1
+        count = j - i
+        if count >= 4:
+            run_start = spans[i][0]
+            run_end = max(spans[k][1] for k in range(i, j))
+            run_dur = run_end - run_start
+            max_comp = max(comps[i:j])
+            mean_nsp = sum(nsps[i:j]) / float(count)
+            is_extreme_loop = (
+                run_dur >= 6.0 and max_comp >= 3.50 and mean_nsp >= 0.45
+            )
+            is_runaway_loop = (
+                count >= 6
+                and len(key) <= 64
+                and run_dur >= 9.0
+                and (max_comp >= 2.30 or mean_nsp >= 0.35 or count >= 7)
+            )
+            if is_extreme_loop or is_runaway_loop:
+                for k in range(i, j):
+                    drop_indices.add(k)
+                # Also drop an immediately preceding lead-in carrier segment that ends
+                # with the exact loop phrase OR belongs to the exact same collapsed Whisper
+                # 30s window (identical compression_ratio >= 2.80).
+                if i > 0 and spans[i - 1] is not None and (run_start - spans[i - 1][1]) <= 1.2:
+                    prev_norm = norms[i - 1]
+                    same_collapsed_chunk = comps[i - 1] >= 2.80 and abs(comps[i - 1] - comps[i]) <= 0.05
+                    ends_with_loop = prev_norm.endswith(key) and prev_norm != key and (
+                        comps[i - 1] >= 2.40 or nsps[i - 1] >= 0.45 or len(prev_norm) <= len(key) * 4
+                    )
+                    if same_collapsed_chunk or ends_with_loop:
+                        drop_indices.add(i - 1)
+        i = j
+
+    if not drop_indices:
+        return source, []
+
+    kept = []
+    removed = []
+    for idx, seg in enumerate(source):
+        if idx in drop_indices:
+            sp = spans[idx] or (0.0, 0.0)
+            removed.append((idx, sp[0], sp[1], str(getattr(seg, "text", "") or "").strip(), "repeat_loop"))
+        else:
+            kept.append(seg)
+    return kept, removed
+
+
 def filter_instrumental_intro_segments(
     segments, speech, verified_segments=None, verified_offset=0.0,
     verified_segments_secondary=None, verified_offset_secondary=0.0,
@@ -1322,6 +1444,12 @@ def _language_consensus_probe(model, audio_path, segments, current_language,
     if len(windows) < LANGUAGE_CONSENSUS_REQUIRED:
         return None
 
+    # When primary detection was a near-random instrumental guess (<0.35, e.g. 'jw' at 0.11),
+    # allow unanimous later vocal windows at >=0.55 (average >=0.62) to rescue the language.
+    very_low_primary = probability < 0.35
+    min_win_prob = 0.55 if very_low_primary else LANGUAGE_CONSENSUS_MIN_PROB
+    min_avg_prob = 0.62 if very_low_primary else LANGUAGE_CONSENSUS_MIN_AVG_PROB
+
     evidence = []
     for left, right in windows:
         _check_cancel(cancel_cb)
@@ -1341,7 +1469,7 @@ def _language_consensus_probe(model, audio_path, segments, current_language,
         del generator
         candidate = str(getattr(info, "language", "") or "").strip()
         confidence = _finite(getattr(info, "language_probability", None), 0.0) or 0.0
-        if candidate and confidence >= LANGUAGE_CONSENSUS_MIN_PROB:
+        if candidate and confidence >= min_win_prob:
             evidence.append((candidate, confidence, left, right))
             if sum(1 for item in evidence if item[0] == candidate) >= LANGUAGE_CONSENSUS_REQUIRED:
                 break
@@ -1361,7 +1489,9 @@ def _language_consensus_probe(model, audio_path, segments, current_language,
     if runner_up >= len(matches):
         return None
     average = sum(row[0] for row in matches) / len(matches)
-    if average < LANGUAGE_CONSENSUS_MIN_AVG_PROB:
+    if average < min_avg_prob:
+        return None
+    if very_low_primary and average < probability + 0.35:
         return None
     if probability >= 0.45 and average < probability + LANGUAGE_CONSENSUS_MIN_GAIN:
         return None
@@ -1502,7 +1632,18 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
         except Exception as error:
             report["anchored_recovery_error"] = str(error)
 
+    pre_removed = []
     if not report.get("intro_reconciled") and not report.get("anchored_recovery"):
+        # Strip explicit intro credits and confirmed pathological repeat loops BEFORE
+        # _recover_empty_intro() so contaminated 0..30s windows can cleanly trigger
+        # 2-window consensus + context-bridge recovery instead of staying blocked.
+        working, loop_removed = _prune_pathological_repeat_loops(working)
+        pre_removed.extend(loop_removed)
+        working, credit_removed = filter_instrumental_intro_segments(
+            working,
+            onset_speech,
+        )
+        pre_removed.extend(credit_removed)
         try:
             empty_recovered, empty_report = _recover_empty_intro(
                 model,
@@ -1520,12 +1661,15 @@ def audit_primary_intro(model, audio_path, segments, language, language_probabil
             raise
         except Exception as error:
             report["empty_intro_error"] = str(error)
+    else:
+        working, loop_removed = _prune_pathological_repeat_loops(working)
+        pre_removed.extend(loop_removed)
 
     filtered, removed = filter_instrumental_intro_segments(
         working,
         onset_speech,
     )
-    report["removed"] = removed
+    report["removed"] = pre_removed + removed
     if onset_speech:
         report["first_voice"] = min(start for start, _ in onset_speech)
     return filtered, language, report

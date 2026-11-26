@@ -427,6 +427,21 @@ def extract_embedded_subtitle(media_path: str | Path, media_duration: Optional[f
     return hit
 
 
+_SCRIPT_BOUNDARY_RE = re.compile(
+    r"(?<=[A-Za-z0-9])(?=[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af])|"
+    r"(?<=[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af])(?=[A-Za-z0-9])"
+)
+_UNBRACKETED_MEDIA_NOISE_RE = re.compile(
+    r"(?i)(?:^|\s)(?:"
+    r"official\s+(?:music\s+video|lyric\s+video|audio|mv|pv|visualizer)|"
+    r"music\s+video|lyric\s+video|color\s+coded|lyrics?\s+karaoke|"
+    r"vietsub\s*kara|vietsubkara|vietsub|engsub|hansub|thaisub|indosub|"
+    r"v?\d{3,4}p|\d{2,3}fps|4k|8k|uhd|qhd|fhd|320kbps|"
+    r"mv|pv|karaoke|audio"
+    r")(?=\s|$)"
+)
+
+
 def _clean_query_title(raw_title: str) -> str:
     text = unicodedata.normalize("NFKC", str(raw_title or "")).strip()
     text = re.sub(r"\.(?:mp3|m4a|aac|flac|wav|ogg|opus|mp4|mkv|webm|mov|avi)$", "", text, flags=re.IGNORECASE)
@@ -441,7 +456,13 @@ def _clean_query_title(raw_title: str) -> str:
         return match.group(0)
 
     text = _TITLE_BRACKET_RE.sub(_strip_noise_bracket, text)
+    text = _SCRIPT_BOUNDARY_RE.sub(" ", text)
     text = re.sub(r"\s+[-|｜]\s+(?:official\s*)?(?:music\s*)?(?:video|audio|lyrics?|mv|pv)\s*$", "", text, flags=re.IGNORECASE)
+    # Strip unbracketed resolution / MV / fansub tags (never stripping whole title)
+    stripped = _UNBRACKETED_MEDIA_NOISE_RE.sub(" ", text)
+    stripped = re.sub(r"\s+", " ", stripped).strip(" -|｜")
+    if len(_compact_alnum(stripped)) >= 2:
+        text = stripped
     return re.sub(r"\s+", " ", text).strip(" -|｜")
 
 
@@ -518,8 +539,9 @@ def _script_compatible(raw_title: str, cues_text: str) -> bool:
         return True
     lyric_cjk = len(_HIRAGANA_KATAKANA_RE.findall(cues_text)) + len(_CJK_IDEOGRAPH_RE.findall(cues_text)) + len(_HANGUL_RE.findall(cues_text))
     lyric_latin = len(_LATIN_RE.findall(cues_text))
-    # Require real CJK/Hangul script in lyrics when the title itself is CJK/Hangul.
-    return lyric_cjk >= 8 and lyric_cjk * 3 >= lyric_latin
+    # Require real CJK/Hangul script in lyrics when the title itself is CJK/Hangul,
+    # while allowing bilingual K-Pop/J-Pop songs with substantial English choruses.
+    return lyric_cjk >= 8 and lyric_cjk * 6 >= lyric_latin
 
 
 _ANIME_TRACK_EXTRACT_RE = re.compile(
@@ -530,8 +552,26 @@ _ANIME_TRACK_EXTRACT_RE = re.compile(
 )
 
 
+def _bilingual_script_fallback(cleaned_title: str) -> str:
+    """When a title mixes Latin + CJK/Hangul aliases (e.g. 'BTS 방탄소년단 RUN'), build a single-script query."""
+    tokens = re.findall(r"[^\s\-|｜/]+", cleaned_title)
+    latin_tokens = [t for t in tokens if _LATIN_RE.search(t) and not (_HIRAGANA_KATAKANA_RE.search(t) or _CJK_IDEOGRAPH_RE.search(t) or _HANGUL_RE.search(t))]
+    native_tokens = [t for t in tokens if (_HIRAGANA_KATAKANA_RE.search(t) or _CJK_IDEOGRAPH_RE.search(t) or _HANGUL_RE.search(t))]
+    if not latin_tokens or not native_tokens:
+        return ""
+    latin_q = " ".join(latin_tokens).strip()
+    native_q = " ".join(native_tokens).strip()
+    # Prefer Latin core when it contains >= 2 meaningful words (artist + English title),
+    # otherwise prefer native script core (e.g. native title + single Latin artist/tag).
+    if len(latin_tokens) >= 2 and len(_compact_alnum(latin_q)) >= 4:
+        return latin_q
+    if len(_compact_alnum(native_q)) >= 3:
+        return native_q
+    return ""
+
+
 def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
-    """Build at most two clean search queries (handles anime/YouTube/Japanese title templates)."""
+    """Build at most two clean search queries (handles anime/YouTube/Japanese/bilingual templates)."""
     primary = _clean_query_title(raw_title)
     variants: list[str] = []
     if primary and len(_compact_alnum(primary)) >= 2:
@@ -544,6 +584,10 @@ def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
         extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
         if extracted and len(_compact_alnum(extracted)) >= 2 and extracted not in variants:
             variants.append(extracted)
+    if len(variants) < 2 and primary:
+        bilingual = _bilingual_script_fallback(variants[0])
+        if bilingual and bilingual not in variants:
+            variants.append(bilingual)
     return tuple(variants[:2])
 
 
@@ -657,20 +701,46 @@ def verify_synced_cues_against_audio(
     info["first_vad"] = round(first_vad, 3)
     info["onset_diff"] = round(onset_diff, 3)
 
-    if onset_diff > max_onset_diff_s:
-        info["reason"] = "onset_mismatch"
-        return False, info, probe
-
     sample = probed_cues[:6]
     voiced_hits = 0
+    confirmed_hits = 0
     for cue in sample:
         cs, ce = float(cue["start"]), min(59.5, float(cue["end"]))
         dur = max(0.05, ce - cs)
-        ov = sum(max(0.0, min(ce, se) - max(cs, ss)) for ss, se in speech)
-        if ov >= min(0.25, dur * 0.25):
+        req_ov = min(0.25, dur * 0.25)
+        ov_sens = sum(max(0.0, min(ce, se) - max(cs, ss)) for ss, se in speech)
+        ov_conf = sum(max(0.0, min(ce, se) - max(cs, ss)) for ss, se in confirmed)
+        if ov_sens >= req_ov:
             voiced_hits += 1
+        if ov_conf >= req_ov:
+            confirmed_hits += 1
     ratio = voiced_hits / float(len(sample))
+    confirmed_ratio = confirmed_hits / float(len(sample))
     info["voiced_ratio"] = round(ratio, 3)
+    info["confirmed_ratio"] = round(confirmed_ratio, 3)
+
+    if onset_diff > max_onset_diff_s:
+        # Instrumental intros (flute/guitar/strings/synth) often trigger brief VAD hits
+        # near t=0 before real singing begins. Accept when first_lrc lands squarely on the
+        # onset of a sustained confirmed vocal block (>=4s), all earlier VAD bursts were
+        # brief (<6s), and default-VAD confirms >=80% of opening cues.
+        matched_main_onset = None
+        if first_lrc > first_vad + max_onset_diff_s and confirmed_ratio >= 0.80:
+            ordered_conf = sorted(confirmed)
+            for idx_c, (cs, ce) in enumerate(ordered_conf):
+                if (ce - cs) < 4.0:
+                    continue
+                delta = first_lrc - cs
+                if -max_onset_diff_s <= delta <= max(1.65, max_onset_diff_s):
+                    earlier_all_brief = all((pe - ps) < 6.0 for ps, pe in ordered_conf[:idx_c])
+                    if earlier_all_brief:
+                        matched_main_onset = cs
+                        break
+        if matched_main_onset is None:
+            info["reason"] = "onset_mismatch"
+            return False, info, probe
+        info["matched_vocal_block_onset"] = round(matched_main_onset, 3)
+        info["onset_diff"] = round(abs(first_lrc - matched_main_onset), 3)
 
     if ratio < min_voiced_ratio:
         info["reason"] = "low_voiced_overlap"
