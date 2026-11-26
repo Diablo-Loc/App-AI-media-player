@@ -643,5 +643,99 @@ class BugFixesIntegrationTests(unittest.TestCase):
         APPLICATION.processEvents()
 
 
+class AsrCoverageContextGateTests(unittest.TestCase):
+    def _make_wav(self, tmpdir, seconds=45.0):
+        import wave
+        wav_path = Path(tmpdir) / "sample.wav"
+        nframes = int(seconds * 16000)
+        with wave.open(str(wav_path), "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(16000)
+            wf.writeframes(b"\x00\x00" * nframes)
+        return wav_path
+
+    def test_coverage_skips_context_retry_when_unprompted_decode_is_clean_empty(self):
+        from pipeline.asr_coverage import repair_missing_subtitles
+
+        calls = []
+
+        class FakeModel:
+            def transcribe(self, clip, **kwargs):
+                calls.append(kwargs.get("initial_prompt"))
+                return [], None
+
+        cues = [
+            {"id": 1, "start": 1.0, "end": 6.0, "text": "星が瞬く夜に", "words": []},
+            {"id": 2, "start": 31.0, "end": 38.0, "text": "明日へ歩いてゆく", "words": []},
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            wav = self._make_wav(td, seconds=45.0)
+            combined, report = repair_missing_subtitles(
+                FakeModel(),
+                str(wav),
+                "ja",
+                cues,
+                {},
+                prefetched_speech=[(1.0, 6.0), (14.0, 26.0), (31.0, 38.0)],
+            )
+        self.assertEqual(len(combined), 2)
+        self.assertEqual(report["added_cues"], 0)
+        self.assertTrue(calls)
+        self.assertTrue(all(prompt is None for prompt in calls))
+
+    def test_coverage_runs_context_retry_when_unprompted_decode_is_credit_hallucination(self):
+        from pipeline.asr_coverage import repair_missing_subtitles
+
+        prompt_calls = []
+
+        class FakeModel:
+            def transcribe(self, clip, **kwargs):
+                prompt = kwargs.get("initial_prompt")
+                if prompt is None:
+                    seg = SimpleNamespace(
+                        start=1.0,
+                        end=5.0,
+                        text="ご視聴ありがとうございました",
+                        words=[],
+                        avg_logprob=-0.25,
+                        no_speech_prob=0.10,
+                    )
+                    return [seg], None
+                prompt_calls.append(prompt)
+                # Window is (4.0, 14.0) -> c1_l=6.5, c2_l=8.5; both map cleanly to abs 8.5..12.5s
+                local_start = 2.0 if len(prompt_calls) == 1 else 0.0
+                local_end = local_start + 4.0
+                w1 = SimpleNamespace(start=local_start, end=local_start + 2.0, word="夢見ている未来が", probability=0.92)
+                w2 = SimpleNamespace(start=local_start + 2.0, end=local_end, word="遠ざかってゆく", probability=0.90)
+                seg = SimpleNamespace(
+                    start=local_start,
+                    end=local_end,
+                    text="夢見ている未来が遠ざかってゆく",
+                    words=[w1, w2],
+                    avg_logprob=-0.20,
+                    no_speech_prob=0.05,
+                )
+                return [seg], None
+
+        cues = [
+            {"id": 1, "start": 1.0, "end": 6.0, "text": "星が瞬く夜に", "words": []},
+            {"id": 2, "start": 14.0, "end": 20.0, "text": "明日へ歩いてゆく", "words": []},
+        ]
+        with tempfile.TemporaryDirectory() as td:
+            wav = self._make_wav(td, seconds=25.0)
+            combined, report = repair_missing_subtitles(
+                FakeModel(),
+                str(wav),
+                "ja",
+                cues,
+                {},
+                prefetched_speech=[(1.0, 6.0), (8.0, 13.0), (14.0, 20.0)],
+            )
+        self.assertEqual(prompt_calls, ["星が瞬く夜に", "星が瞬く夜に"])
+        self.assertEqual(report["added_cues"], 1)
+        self.assertTrue(any("夢見ている未来が遠ざかってゆく" in c["text"] for c in combined))
+
+
 if __name__ == "__main__":
     unittest.main()

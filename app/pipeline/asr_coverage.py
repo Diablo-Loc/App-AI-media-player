@@ -760,14 +760,16 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                                           refine_options, duration, refine_fn=refine_fn,
                                           boundary_gap=boundary_gap, boundary_tolerance=boundary_tolerance)
             proposed = len(candidates)
-            # If standard initial_prompt=None yielded 0 usable cues (often credit hallucination
-            # over an instrumental lead-in) on a substantial voiced gap, try one bounded
-            # context-prompted two-window consensus retry using the preceding lyric line.
+            # Only trigger the bounded context-prompted two-window retry when standard
+            # initial_prompt=None actually fell into a credit/boilerplate hallucination
+            # (e.g. "ご視聴ありがとうございました") over a substantial voiced gap — never on pure
+            # instrumental breaks where Whisper cleanly returned empty.
             context_verified = False
             if (
                 round_index == 0
                 and context_retries < 2
                 and proposed == 0
+                and decoded
                 and left >= 4.0
                 and (right - left) >= 8.0
                 and any(
@@ -775,6 +777,17 @@ def repair_missing_subtitles(model, audio_path, language, cues, refine_options,
                     for gs, ge in current_voiced_gaps
                 )
             ):
+                from pipeline.lyric_accuracy import credit_text as _is_credit_text
+                raw_had_credit = any(
+                    _is_credit_text(
+                        str(getattr(seg, "text", "") or "").strip(),
+                        timed_words=bool(getattr(seg, "words", None)),
+                    )
+                    for seg in decoded
+                )
+            else:
+                raw_had_credit = False
+            if raw_had_credit:
                 prev_cues = [c for c in combined if float(c["end"]) <= left + 2.5 and str(c.get("text", "")).strip()]
                 ctx_prompt = str(prev_cues[-1]["text"]).strip()[:120] if prev_cues else None
                 if ctx_prompt:
