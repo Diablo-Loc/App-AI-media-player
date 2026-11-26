@@ -442,6 +442,47 @@ class BugFixesIntegrationTests(unittest.TestCase):
         self.assertIn("Morning Star and the Sea", v1)
         v2 = _lrclib_query_variants("Goblin Slayer Season 2 - Ending Full - -Kasumi no Mukou e- by Yuki Nakashima")
         self.assertIn("Kasumi no Mukou e", v2)
+        v3 = _lrclib_query_variants("YOASOBI「アイドル」 Official Music Video")
+        self.assertIn("アイドル", v3)
+
+    def test_seek_drag_and_ai_progress_margin_guard_in_main_window(self):
+        from tools.ui_preview import APPLICATION, isolated_window, pump
+
+        with isolated_window() as pair:
+            mw = pair[0] if isinstance(pair, tuple) else pair
+            mw.show()
+            mw.update_video_location("large")
+            pump(30)
+
+            # While dragging slider, authoritative clock MUST follow slider (never snap back to old stream!)
+            mw.audio_effects.stream._out_sr = 48000
+            mw.audio_effects.stream._latency_sec = 0.16
+            mw.audio_effects.stream._start_ms = 5000.0
+            mw.audio_effects.stream._played_frames = 48000
+            mw.audio_effects.stream._playing = True
+            mw.audio_effects.stream._paused = False
+            mw.audio_effects.stream._active_stream = object()
+            mw.audio_effects._use_stream_engine = lambda: True
+
+            mw.playback_bar.time_slider.setRange(0, 200000)
+            mw.playback_bar.time_slider.setValue(91000)
+            mw.playback_bar.time_slider.setSliderDown(True)
+            self.assertEqual(mw.authoritative_subtitle_position_ms(), 91000)
+            mw.playback_bar.time_slider.setSliderDown(False)
+
+            # While ai_progress_bar (30px) is visible, subtitle bottom margin adds +30px to avoid PlaybackBar overlap
+            mw.sync_subtitle_margin()
+            idle_margin = mw.sub_layer._current_margin
+            mw.ai_progress_bar.start_job("🎧 Đang xử lý...")
+            pump(20)
+            mw.sync_subtitle_margin()
+            busy_margin = mw.sub_layer._current_margin
+            self.assertEqual(busy_margin, idle_margin + 30)
+
+            mw.ai_progress_bar.reset_idle()
+            mw.audio_effects.stream._active_stream = None
+            mw.audio_effects.stream._playing = False
+        APPLICATION.processEvents()
 
     def test_audit_primary_intro_reuses_prefetched_probe_without_second_vad_call(self):
         import numpy as np

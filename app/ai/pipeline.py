@@ -213,14 +213,23 @@ def run_ai_pipeline(
             if should_query_lrclib:
                 from concurrent.futures import ThreadPoolExecutor
                 from pipeline.fast_lyrics import fetch_lrclib_items
-                with ThreadPoolExecutor(max_workers=2) as pool:
+                pool = ThreadPoolExecutor(max_workers=2)
+                try:
                     fut_extract = pool.submit(extract_audio, str(input_path), str(temp_wav_path))
-                    fut_lrclib = pool.submit(fetch_lrclib_items, song_title_raw, timeout=2.2)
+                    fut_lrclib = pool.submit(
+                        fetch_lrclib_items,
+                        song_title_raw,
+                        timeout=2.0,
+                        cancel_cb=cancel_cb,
+                    )
                     success = fut_extract.result()
                     try:
-                        lrc_fetch_result = fut_lrclib.result(timeout=2.5)
+                        # Never block Whisper beyond 1.5s extra if LRCLIB network is sluggish/firewalled
+                        lrc_fetch_result = fut_lrclib.result(timeout=1.5)
                     except Exception:
                         lrc_fetch_result = ([], "", "timeout")
+                finally:
+                    pool.shutdown(wait=False, cancel_futures=True)
             else:
                 success = extract_audio(str(input_path), str(temp_wav_path))
 

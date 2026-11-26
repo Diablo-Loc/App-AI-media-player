@@ -194,6 +194,7 @@ class MainWindow(QMainWindow):
         from ui.ai_progress_bar import AIProgressBar
         self.ai_progress_bar = AIProgressBar(self)
         self.ai_progress_bar.cancel_requested.connect(self._on_ai_cancel_clicked)
+        self.ai_progress_bar.visibility_changed.connect(self._on_ai_bar_visibility_changed)
 
         # --- 4. SETUP SETTINGS PANEL ---
         self.subsettings_panel = SettingsPanel(self) # Đổi tên thống nhất là settings_panel
@@ -776,8 +777,16 @@ class MainWindow(QMainWindow):
     # --- CÁC HÀM PLAYER LOGIC ---
     def authoritative_subtitle_position_ms(self) -> int:
         """Return the real audible playback clock (AudioStreamEngine when Hi-Fi active, else QMediaPlayer)."""
+        pb = getattr(self, 'playback_bar', None)
+        slider = getattr(pb, 'time_slider', None) if pb is not None else None
+        if slider is not None and slider.isSliderDown():
+            return int(slider.value())
+        player = getattr(getattr(self, 'media_player', None), 'player', None)
         fx = getattr(self, 'audio_effects', None)
         if fx is not None:
+            seek_timer = getattr(fx, '_seek_timer', None)
+            if seek_timer is not None and seek_timer.isActive():
+                return int(player.position()) if player is not None else 0
             stream = getattr(fx, 'stream', None)
             use_stream = getattr(fx, '_use_stream_engine', None)
             if stream is not None and callable(use_stream) and use_stream():
@@ -786,7 +795,6 @@ class MainWindow(QMainWindow):
                 st = stream.status_info()
                 if st.get('active') and not st.get('paused'):
                     return int(stream.position_ms())
-        player = getattr(getattr(self, 'media_player', None), 'player', None)
         return int(player.position()) if player is not None else 0
 
     def _on_player_position_for_sub(self, pos_ms: int):
@@ -826,6 +834,10 @@ class MainWindow(QMainWindow):
         ctrl = getattr(self, 'app_controller', None)
         if ctrl is not None and hasattr(ctrl, 'cancel_current_job'):
             ctrl.cancel_current_job()
+
+    def _on_ai_bar_visibility_changed(self, _visible: bool):
+        if hasattr(self, 'sync_subtitle_margin'):
+            QTimer.singleShot(0, self.sync_subtitle_margin)
 
     def handle_media_status(self, status):
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
@@ -1477,8 +1489,13 @@ class MainWindow(QMainWindow):
 
         # --- CÁC TRƯỜNG HỢP CÒN LẠI (Home, Library, hoặc For You nhưng mode Large/Full) ---
         if self.playback_bar.isVisible():
-            # Neo sát 6px phía trên thanh PlaybackBar (110px); vẫn đủ chỗ 14px cho sóng nhạc Equalizer dưới chân chữ
-            target_margin = 116
+            # Neo sát 6px phía trên thanh PlaybackBar (110px) + chừa chỗ nếu thanh tiến trình AI (30px) đang hiện
+            extra_ai = (
+                self.ai_progress_bar.height()
+                if (hasattr(self, 'ai_progress_bar') and self.ai_progress_bar.isVisible())
+                else 0
+            )
+            target_margin = 116 + extra_ai
         else:
             # Thường là mode Fullscreen
             target_margin = 24

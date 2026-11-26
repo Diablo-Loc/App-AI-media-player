@@ -254,6 +254,9 @@ class AppController(QObject):
 
     @Slot(int)
     def _on_ai_progress(self, percent: int):
+        active_id = getattr(self.ai, "_current_media_id", self.current_media_id)
+        if active_id is not None and active_id != self.current_media_id:
+            return
         bar = getattr(self.window, "ai_progress_bar", None)
         if bar is not None:
             bar.update_progress(percent)

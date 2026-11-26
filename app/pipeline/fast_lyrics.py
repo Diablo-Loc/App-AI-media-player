@@ -524,22 +524,25 @@ def _script_compatible(raw_title: str, cues_text: str) -> bool:
 
 _ANIME_TRACK_EXTRACT_RE = re.compile(
     r"(?:-\s*-([^-\n]{2,80}?)-(?:\s+by\b|$)|"
+    r"[「『]([^」』]{1,80})[」』]|"
     r"\b(?:EP|OST|Opening(?:\s+Full)?|Ending(?:\s+Full)?|Full\s+(?:Opening|Ending)|OP\d*|ED\d*|Theme)\s*[-:｜|]\s*(.+)$)",
     re.IGNORECASE,
 )
 
 
 def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
-    """Build at most two clean search queries (handles anime/YouTube title templates)."""
+    """Build at most two clean search queries (handles anime/YouTube/Japanese title templates)."""
     primary = _clean_query_title(raw_title)
     variants: list[str] = []
     if primary and len(_compact_alnum(primary)) >= 2:
-        variants.append(primary)
+        cleaned_quotes = re.sub(r"[「」『』]", " ", primary)
+        cleaned_quotes = re.sub(r"\s+", " ", cleaned_quotes).strip()
+        variants.append(cleaned_quotes or primary)
     m = _ANIME_TRACK_EXTRACT_RE.search(primary or "")
     if m:
-        extracted = (m.group(1) or m.group(2) or "").strip(" -|｜\"'「」『』")
+        extracted = next((g for g in m.groups() if g is not None), "").strip(" -|｜\"'「」『』")
         extracted = re.sub(r"\s+by\s+.+$", "", extracted, flags=re.IGNORECASE).strip(" -|｜")
-        if extracted and len(_compact_alnum(extracted)) >= 3 and extracted not in variants:
+        if extracted and len(_compact_alnum(extracted)) >= 2 and extracted not in variants:
             variants.append(extracted)
     return tuple(variants[:2])
 
@@ -547,8 +550,9 @@ def _lrclib_query_variants(raw_title: str) -> tuple[str, ...]:
 def fetch_lrclib_items(
     song_title_raw: str,
     *,
-    timeout: float = 2.2,
+    timeout: float = 2.0,
     http_get=None,
+    cancel_cb=None,
 ) -> tuple[list[dict], str, str]:
     """Pure HTTP lookup against LRCLIB (designed to run in parallel with FFmpeg WAV extraction).
 
@@ -565,6 +569,8 @@ def fetch_lrclib_items(
 
     last_reason = "no_results"
     for query in variants:
+        if cancel_cb and cancel_cb():
+            return [], query, "cancelled"
         try:
             resp = getter(
                 _LRCLIB_SEARCH_URL,

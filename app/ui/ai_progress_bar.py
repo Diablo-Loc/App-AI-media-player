@@ -21,6 +21,7 @@ class AIProgressBar(QFrame):
     """Collapsible studio-dark bottom status & progress strip for AI subtitle jobs."""
 
     cancel_requested = Signal()
+    visibility_changed = Signal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -248,6 +249,14 @@ class AIProgressBar(QFrame):
         if not self._running:
             self._state = "idle"
             self.hide()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.visibility_changed.emit(True)
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        self.visibility_changed.emit(False)
 
     def shutdown(self):
         self._running = False
