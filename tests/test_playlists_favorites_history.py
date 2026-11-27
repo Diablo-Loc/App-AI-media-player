@@ -449,12 +449,25 @@ class CollectionsAndHistoryUiTests(unittest.TestCase):
         pump(20)
         self.assertEqual(w.foryou_page.lbl_pl_title.text(), "Wuthering waves")
 
-        # Playing from Favorites (non-custom playlist) resets ForYouPage queue header back to "Danh sách phát"
+        # Playing from Favorites updates ForYouPage queue header to "Bài hát Yêu thích"
         store.set_favorite(self.items[1], True)
         w.collections_page.select_collection("__favorites__")
         pump(20)
         with patch.object(w.audio_effects, "play_source"):
             w.collections_page.btn_play_all.click()
+            pump(20)
+        self.assertEqual(w.foryou_page.lbl_pl_title.text(), "Bài hát Yêu thích")
+        # Editing an unrelated custom playlist must NOT wipe Favorites header
+        store.rename_playlist(pid, "Wuthering Waves OST")
+        pump(20)
+        self.assertEqual(w.foryou_page.lbl_pl_title.text(), "Bài hát Yêu thích")
+
+        # Playing from History or Home resets ForYouPage queue header back to "Danh sách phát"
+        w.sidebar.setCurrentRow(0)
+        w.handle_sidebar_click(w.sidebar.item(0))
+        pump(20)
+        with patch.object(w.audio_effects, "play_source"):
+            w.on_media_clicked(self.items[0])
             pump(20)
         self.assertEqual(w.foryou_page.lbl_pl_title.text(), "Danh sách phát")
 
@@ -623,11 +636,12 @@ class CollectionsAndHistoryUiTests(unittest.TestCase):
         self.assertEqual(row0.lbl_play_badge.text(), "3 lượt")
         self.assertFalse(row0.top_stats_box.isHidden())
 
-        # Play Top pushes ranked order straight into active_playlist
+        # Play Top pushes ranked order straight into active_playlist & shows "Nghe nhiều nhất" in ForYou
         with patch.object(w.audio_effects, "play_source"):
             page.btn_play_all.click()
             pump(30)
         self.assertEqual(w.current_media_item.id, self.items[4].id)
+        self.assertEqual(w.foryou_page.lbl_pl_title.text(), "Nghe nhiều nhất")
         self.assertEqual(
             [m.id for m in w.active_playlist],
             [self.items[4].id, self.items[2].id, self.items[6].id],

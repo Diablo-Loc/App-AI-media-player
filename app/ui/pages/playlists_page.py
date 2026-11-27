@@ -1248,11 +1248,12 @@ class PlaylistsPage(QWidget):
         return list(self._filtered_tracks)
 
     def current_custom_playlist_header(self) -> Tuple[Optional[str], str]:
-        """Return (playlist_id, playlist_name) ONLY when a user-created Playlist is selected; else (None, '')."""
-        if (
-            self.store is None
-            or self.selected_collection_id in (FAVORITES_COLLECTION_ID, MOST_PLAYED_COLLECTION_ID)
-        ):
+        """Return (custom_playlist_id_or_None, header_title) for Favorites, Most Played, and Custom Playlists."""
+        if self.selected_collection_id == FAVORITES_COLLECTION_ID:
+            return None, "Bài hát Yêu thích"
+        if self.selected_collection_id == MOST_PLAYED_COLLECTION_ID:
+            return None, "Nghe nhiều nhất"
+        if self.store is None:
             return None, ""
         pl = self.store.get_playlist(self.selected_collection_id)
         if not pl:

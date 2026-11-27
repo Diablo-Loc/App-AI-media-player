@@ -2745,7 +2745,7 @@ class MainWindow(QMainWindow):
     def _set_foryou_queue_playlist(self, playlist_id, playlist_name: str = ""):
         self._active_queue_playlist_id = playlist_id if playlist_id else None
         if hasattr(self, "foryou_page") and hasattr(self.foryou_page, "set_playlist_header_title"):
-            self.foryou_page.set_playlist_header_title(playlist_name if playlist_id else None)
+            self.foryou_page.set_playlist_header_title(playlist_name or None)
 
     def _sync_active_playlist_header(self):
         pid = getattr(self, "_active_queue_playlist_id", None)
