@@ -299,6 +299,7 @@ class InstallerAndLegacyCleanupContractTests(unittest.TestCase):
         self.assertIn(f'AppId={{{APP_ID}', text)
         self.assertIn(f'#define AppVersion "{APP_VERSION}"', text)
         self.assertIn('UsePreviousAppDir=yes', text)
+        self.assertIn('DisableDirPage=no', text)
         self.assertIn('CloseApplications=yes', text)
 
         # 2. User data write permissions under Program Files

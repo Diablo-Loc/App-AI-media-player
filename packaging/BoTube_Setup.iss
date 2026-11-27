@@ -43,7 +43,7 @@ AppUpdatesURL={#AppURL}/releases
 DefaultDirName={autopf}\{#AppName}
 UsePreviousAppDir=yes
 DisableProgramGroupPage=yes
-DisableDirPage=auto
+DisableDirPage=no
 
 OutputDir=..\Installer
 OutputBaseFilename=BoTube_Setup
