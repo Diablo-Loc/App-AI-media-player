@@ -51,6 +51,7 @@ from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
 from ui.system_media_manager import SystemMediaManager
 from ui.subs_ui.lyric_settings_dialog import SubtitleToolsDialog
+from ui.update_dialog import install_app_update_controller
 
 class InternalMediaPlayer(QObject):
     def __init__(self, parent=None):
@@ -321,8 +322,7 @@ class MainWindow(QMainWindow):
         self._sidebar_timer.setSingleShot(True)
         self._sidebar_timer.timeout.connect(lambda: self.sidebar.setCurrentRow(0))
         self._sidebar_timer.start(100)
-        # Auto-update check disabled - user can manually check via menu if needed
-        # QTimer.singleShot(2000, lambda: download_and_install(self))
+        self.update_controller = install_app_update_controller(self, settings=self.settings_page.settings)
         self.media_manager = SystemMediaManager(self)
         self.audio_devices = QMediaDevices()
         self.audio_effects = install_audio_effects(self)
@@ -499,6 +499,8 @@ class MainWindow(QMainWindow):
                 self.audio_effects.shutdown()
             if hasattr(self, 'download_page'):
                 self.download_page.shutdown_workers()
+            if hasattr(self, 'update_controller') and self.update_controller is not None:
+                self.update_controller.shutdown()
             info_owner = getattr(QApplication.instance(), '_media_info_worker_owner', None)
             if info_owner is not None:
                 info_owner.shutdown()

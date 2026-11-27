@@ -1,128 +1,119 @@
-# BoTube · AI Media Player
+<div align="center">
 
-<p align="center">
-  <strong>Next-Gen AI Media Player for Windows with Neural ASR, Multi-LLM Translation & Kinetic Subtitle Engine</strong>
+# BoTube 6.0 · AI Media Player & Hi-Fi Audio Studio
+
+**Commercial-Grade Windows AI Media Player — 64-bit Float WASAPI Exclusive Audio, Whisper CUDA ASR, Multi-LLM Lyric Translation, Word-Level Karaoke, NVIDIA NVENC Video Export & SHA-256 Auto-Updater**
+
+<p>
+  <a href="https://diablo-loc.github.io/App-AI-media-player/"><img src="https://img.shields.io/badge/Official%20Website-BoTube%206.0-16332B?style=for-the-badge&logo=googlechrome&logoColor=77E0BE" alt="Official Website"/></a>
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe"><img src="https://img.shields.io/badge/Download%20Windows%20x64-BoTube__Setup.exe-77E0BE?style=for-the-badge&logo=windows&logoColor=0B1017" alt="Download Windows Installer"/></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=0078D4&label=Latest%20Release" alt="Latest Release"/></a>
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
-  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11"/>
+<p>
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=1F6FEB&label=Latest%20Release" alt="Latest Release"/></a>
+  <img src="https://img.shields.io/badge/Version-6.0.0-2EA043?style=flat-square" alt="Version 6.0.0"/>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
   <img src="https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6 / Qt6"/>
-  <img src="https://img.shields.io/badge/AI_Engine-Faster--Whisper%20%2B%20CUDA-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA"/>
+  <img src="https://img.shields.io/badge/Audio-64--bit%20Float%20WASAPI-77E0BE?style=flat-square" alt="64-bit Float WASAPI"/>
+  <img src="https://img.shields.io/badge/AI%20%26%20Export-Whisper%20CUDA%20%2B%20NVENC-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA + NVENC"/>
 </p>
 
-[Tiếng Việt](README.md) · **English**
+[Tiếng Việt](README.md) · **English** · [🌐 Official BoTube 6.0 Website](https://diablo-loc.github.io/App-AI-media-player/) · [📦 Download BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)
 
-BoTube is a next-generation Windows media player seamlessly combining local media organization, online media downloading, neural speech-to-text subtitle generation, multi-LLM translation, and professional subtitle editing. Featuring a modern interface built with Python and PySide6, BoTube can be easily installed via `BoTube_Setup.exe`, with AI models and acceleration libraries modularly managed in Settings.
+</div>
 
-This README describes the latest version with **Lyrics** and **Dialogue / Film** modes. You can switch the application interface live between **Tiếng Việt** and **English** at any time in **Settings → Appearance & Language**.
+---
+
+**BoTube 6.0** is a next-generation Windows 10/11 64-bit desktop media player engineered for audiophiles, music lovers, and creators. It unites a **64-bit Float Hi-Fi Audio Engine with WASAPI Exclusive DAC output**, **Faster-Whisper CUDA transcription**, **Multi-LLM lyric translation (NLLB / Gemini / OpenAI / Claude)**, **syllable-accurate Word Karaoke with instant offline phonetics**, **NVIDIA NVENC hardware video export**, and a **SHA-256 verified GitHub Releases auto-updater** inside one ultra-responsive, privacy-first application.
 
 ![BoTube interface preview: navigation, the For You page, and playback controls](docs/images/botube-interface.png)
 
-*This illustration uses the application's actual UI components with an empty playlist. It contains no personal music library or user data.*
+*This preview is rendered directly from the application's real PySide6 UI components with an empty playlist and contains no personal media data.*
 
-## Features
+---
 
-- **Media playback:** folder-based library, search, For You page, playback queue, shuffle, repeat, fullscreen, and mini player.
-- **AI subtitles:** language detection and transcription with faster-whisper, running on a CPU or NVIDIA GPU.
-- **Translation:** local translation with NLLB-200 or online translation through Google Gemini, OpenAI, and Claude. Choose a model for the selected provider in Settings.
-- **Subtitle display:** show the original text, English, Vietnamese, or a combination. Customize fonts, colors, position, and optional effects, including shuriken, stars, petals, typography, and hiding text after a sweep.
-- **Subtitle editing:** edit text and timestamps; import/export JSON, SRT, and ASS. The AI generation flow also exports the original transcription as SRT and LRC.
-- **Video export with subtitles:** burn the displayed subtitles into a video, with controls for canvas, aspect ratio, resolution, FPS, and export quality.
-- **Audio:** remembered volume, loudness normalization between tracks, and optional sound presets, including headphone presets.
-- **Bilingual interface (`Tiếng Việt` / `English`):** switch the entire application UI live in **Settings → Appearance & Language** without restarting or altering saved user data.
-- **Video and music downloads:** powered by yt-dlp, with format and quality selection in the download interface.
+## Major Highlights in BoTube 6.0
 
-The library currently scans `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov`, and `.avi` files. Playback of a particular file also depends on its codecs and available decoders.
+| Pillar | What's New in BoTube 6.0 |
+| --- | --- |
+| **64-bit Float Hi-Fi Audio & Audio Lab** | 64-bit Float DSP pipeline, **EBU R128 (−14 LUFS)** loudness normalization with 0 dBTP true-peak protection, **10-Band & Parametric EQ** (Squiglink/AutoEQ compatible), **WASAPI Exclusive** for external USB DACs, and an interactive RTA spectrum & live **A/B Audio Lab**. |
+| **Word-Level Karaoke & Offline Phonetics** | Apple-Music-grade **AMLL Sing** sweep synced to true vocal syllable timings, plus instant offline romanization (**Hepburn Romaji, tone-marked Pinyin, Korean Revised Romanization**) toggled anytime with `R`. |
+| **NVIDIA NVENC Video + Lyrics Export** | Automatic **NVIDIA GPU `h264_nvenc` ⚡** hardware acceleration for burning displayed lyrics and optical effects into 16:9, 9:16 Shorts, 1:1, or 4K video — with seamless CPU `libx264` fallback and lossless audio stream-copy. |
+| **Collections, History & Smart Resume** | Dedicated **Collections** (Favorites, custom Playlists, Most Played statistics) and **Playback History** with timestamp-exact **Smart Resume**. |
+| **Studio Settings & 100% Live VI/EN UI** | Redesigned auto-saving Studio Settings and instant **Vietnamese ↔ English** switching across every page, popup, chart, and dialog without restarting or touching saved user data. |
+| **Commercial Auto-Updater & Lean Bundle** | Built-in **GitHub Releases + Inno Setup 6** updater with **SHA-256 verification**, UAC-safe silent in-place upgrades, automatic non-elevated relaunch, and a **>174 MB leaner** packaged footprint. |
 
-## Getting started
+---
 
-### Install with BoTube_Setup.exe
+## Complete Feature Set
 
-**[Download BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)** · [Browse releases](https://github.com/Diablo-Loc/App-AI-media-player/releases)
+- **Media Playback & Smart Library:** fast folder scanning (`.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov`, `.avi`), instant metadata search, **For You** continuous queue, **Collections** (Favorites / Playlists / Most Played), **Smart Resume History**, fullscreen player, and **Mini Player**.
+- **Hi-Fi Audio Studio:** remembered playback volume, non-destructive loudness balancing, dedicated DAC/headphone presets, 64-bit Parametric EQ, and real-time **Audio Lab** measurements.
+- **Neural ASR & Fast Synced Lyrics:** prioritizes existing sidecar subtitles (`.lrc`/`.srt`/`.ass`) or verified **LRCLIB** vocal alignment (**< 1s**), automatically falling back to **Faster-Whisper** (`tiny` → `large-v3`, CPU or NVIDIA CUDA) in **Lyrics** or **Dialogue / Film** mode.
+- **Multi-LLM Translation & Genius Verification:** free offline translation via **NLLB-200** or poetic online translation via **Google Gemini**, **OpenAI (GPT-4o / GPT-5)**, and **Anthropic Claude** with cue-verified **Genius** lyric cross-checking.
+- **Kinetic Subtitles, Karaoke & Editor:** display Original, English, Vietnamese, or bilingual tracks; optional **AMLL Sing**, shuriken, star, petal, and kinetic typography presets; **🎤 Karaoke Mode**; offline top-line phonetics (`R`); plus a full subtitle editor supporting `JSON`, `SRT`, `ASS`, and `LRC`.
+- **Video + Lyrics Burn-In Export:** flexible canvas framing (`source`, `16:9`, `9:16`, `1:1`, `4:5`, `21:9`), resolutions up to 4K, custom FPS, safe-area anti-clipping, and automatic **NVENC** acceleration.
+- **Source-Quality Media Downloads:** powered by `yt-dlp`, preserving native AAC/Opus audio streams or MP3 320 kbps with resumable partial downloads.
 
-1. Open **Releases**, choose a version, and download `BoTube_Setup.exe` from **Assets**.
-2. Run the installer, complete the usual Windows installation steps, and launch BoTube from its shortcut.
-3. **Before generating AI subtitles for the first time**, open **Tùy chỉnh** (Settings) → **Tải / Cập nhật Resource AI (Thư viện & Model)** (Download / Update AI Resources). Choose a Whisper model and click **Bắt đầu cài đặt tự động** (Start automatic installation). Wait for the libraries and model to finish downloading and installing.
-4. To translate locally, also select **Model dịch thuật NLLB Offline** (Offline NLLB translation model). Online translation still requires Whisper on your computer for transcription. NLLB is also required if you want local fallback when an API fails.
-5. Return to Settings, select the downloaded **Whisper Model**, **Compute Device** (`cpu` or `cuda`), and **Loại nội dung** (Content type), then click **Lưu cài đặt** (Save settings).
-6. Select **Local Default** or an online service. For online translation, choose a translation model and enter your API key.
-7. Select a media folder, choose a track or video, and generate AI subtitles. Use the subtitle tools to review, edit, or export the results.
+---
 
-Installer users do not need to clone the repository or build the application. Installing the app and preparing its AI resources are separate steps. An internet connection is needed for the initial resource downloads.
+## Installation & Upgrading (100% Safe 5.0 → 6.0 Upgrade)
+
+### Fresh Install or Upgrade with `BoTube_Setup.exe`
+
+**[🌐 Visit Official BoTube 6.0 Website](https://diablo-loc.github.io/App-AI-media-player/)** · **[⬇️ Download BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)** · **[📋 All Releases](https://github.com/Diablo-Loc/App-AI-media-player/releases)**
+
+1. Download **`BoTube_Setup.exe`** from [Releases](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest) and run the Windows installer.
+   - **Already running BoTube 5.0?** The 6.0 installer preserves the exact same `AppId`, upgrades in-place automatically, cleans up stale v5.0 runtime files, and **preserves 100% of your library, playlists, subtitles (`storage/`), and offline AI models (`app_resources/`)**.
+2. Launch BoTube from the Start Menu or Desktop shortcut. Hi-Fi playback, downloads, and existing subtitles work immediately.
+3. **Before generating AI subtitles for the first time**, open **Settings → Download / Manage Offline AI Models**, choose a Whisper model (`large-v3` recommended for multilingual music on NVIDIA GPUs), and click **Start automatic installation**.
+4. For completely offline translation (or local fallback when cloud APIs fail), also install **Offline NLLB-200**.
+5. Pick your compute device (`CUDA` or `CPU`), content mode, and preferred translation provider in **Settings** (changes auto-save immediately).
 
 ![Install BoTube, download AI resources, select settings, and generate subtitles](docs/images/botube-setup-flow.en.svg)
 
-### Using a portable release
+### Automatic In-App Updates (BoTube 6.0.0+)
 
-Extract the entire package into a writable folder, run `BoTube.exe`, and prepare the AI resources and settings as described above.
+BoTube 6.0 ships with a native **GitHub Releases Auto-Updater**:
+- Performs a lightweight background check once per day on startup (configurable or triggerable manually anytime in **Settings → Software Updates**).
+- Downloads `BoTube_Setup.exe` strictly over HTTPS from GitHub, validates the Windows PE header (`MZ`), and verifies the **SHA-256 cryptographic digest** before launch.
+- Hands off cleanly to Inno Setup (`/SILENT /CLOSEAPPLICATIONS`), closes BoTube safely, upgrades binaries in-place, and automatically relaunches BoTube as a normal non-elevated user.
+- Never touches your `storage/` directory or `app_resources/` AI models.
 
-Keep the complete portable folder, especially `_internal/`, `bin/`, `icon/`, and any included AI resources. Do not run or distribute the EXE by itself.
+### Disk Space Guidance
 
-Media playback in the EXE uses the bundled runtime. **Installing new AI libraries through the resource downloader in the EXE currently requires Python on PATH**; Python 3.11 64-bit is recommended. This installation step is unnecessary if the package already includes compatible AI libraries and models.
+**The installer size is not the total size after installing optional offline AI models:**
+- `BoTube_Setup.exe` itself is lean and bundles only the app runtime, FFmpeg/FFprobe, and `yt-dlp`.
+- Plan roughly **15–20 GB of free disk space** on the installation drive if you download a large Whisper model (`large-v3`), local `NLLB-200`, and PyTorch/CUDA libraries into `app_resources/`.
+- Processed audio cache (`storage/audio-playback-cache/`) targets a ~**1 GiB** budget.
 
-### Disk space
+### Content Modes
 
-**The installer size is not the total disk usage after AI setup.** The v5.0.0 installer is approximately **306 MiB**. AI libraries, Whisper, NLLB, and caches take additional space. Check each installer's size on the [Releases page](https://github.com/Diablo-Loc/App-AI-media-player/releases).
-
-- Plan for approximately **15–20 GB of free space** when using one large Whisper model and local NLLB, including temporary downloads and unpacking. This is a planning allowance, not a fixed size or universal minimum requirement.
-- Smaller Whisper models use less space; downloading several models adds to the total. The separate AI libraries can also occupy several GB.
-- Resources are stored in `app_resources/` beside the application, so the installation drive needs enough free space and write access.
-- The processed audio cache has a budget of approximately **1 GiB**. Downloaded videos and videos exported with subtitles need additional space in your chosen output folder; an exported file may be larger than its source.
-
-Sizes shown in the interface are estimates. Download size and installed size may differ. Review the disk space guidance before installing the larger AI resources.
-
-### Choosing a content mode
-
-| Mode | Suitable for | Processing |
+| Mode | Best For | Processing Pipeline |
 | --- | --- | --- |
-| **Lời bài hát** (Lyrics) · default | Music, music videos, lyric videos | Keeps the lyric workflow: intro/missing-lyrics checks, cue grouping, timing alignment, and lyric translation prompts. Genius can provide references when enabled. |
-| **Hội thoại / Phim** (Dialogue / Film) | Dialogue in videos or films | Splits cues using words, punctuation, and pauses; uses ASR timestamps; bypasses music-specific credit/intro filters and Genius; translates in a dialogue style. |
+| **Song Lyrics** · default | Music, MVs, lyric videos | Music-aware intro/credit guards, rhythmic cue grouping, word-level Karaoke timings, lyric translation prompts, and optional Genius verification. |
+| **Dialogue / Film** | Movies, videos, podcasts | Natural pause/punctuation cue segmentation, bypasses music/Genius filters, and translates in natural dialogue style. |
 
-The mode applies when generating or translating subtitles. Changing it does not convert or realign previously saved subtitles. Dialogue mode shares Whisper, translation services, and the player with Lyrics mode; it does not currently identify or label individual speakers.
+---
 
-### Choosing models and translation services
-
-- **Whisper:** available choices are `tiny`, `base`, `small`, `medium`, `large-v2`, and `large-v3`. Larger models generally require more resources. For multilingual lyrics where quality is the priority, `large-v3` is a starting point if your hardware supports it.
-- **CPU / CUDA:** CPU processing works without a suitable GPU. CUDA requires an NVIDIA GPU and compatible libraries/drivers. Choose CPU if you encounter CUDA errors or insufficient VRAM.
-- **Local Default:** runs NLLB-200 on your computer without an API key. Offline use requires the necessary libraries and model to be installed first.
-- **Online:** subtitle text is sent to the selected provider. API keys, model access, quotas, and charges belong to your account. A model listed in the application may not be available to every account.
-- **Genius:** an optional lyric reference service using a **Client Access Token**. Only references that pass the matching checks are used. Without a sufficiently reliable reference, translation continues from the machine transcription.
-
-A successful normal online batch uses one translation request. Long inputs use bounded batches; only temporary errors or missing IDs trigger limited recovery attempts. When online translation fails, the app retains its local fallback flow, which still requires compatible NLLB resources.
-
-### Subtitles and video export
-
-Text effects change presentation only; they do not edit saved subtitle text or timestamps. Sweeps follow the cue duration rather than aligning karaoke word by word to the vocals.
-
-In subtitle settings, select **Xuất video + lyric** (Export video + lyrics) to create a video with burned-in subtitles. Choose the source aspect ratio, 16:9, 9:16, 1:1, or other canvases, and customize fitting/filling, dimensions, FPS, the safe area, and export-specific display settings.
-
-Burning subtitles into the image requires video re-encoding. Audio stream copying is preferred; MP4 may use AAC for compatibility. Export creates a new file and does not overwrite the source video.
-
-### Audio
-
-Loudness normalization and sound presets are optional; original media files are preserved. Normalization with EQ disabled uses gain on the existing playback path. EQ prepares a separate playback source: changing presets during a track may reload that source and briefly interrupt playback.
-
-Processed playback sources are cached in `storage/audio-playback-cache/`, with a budget of approximately 1 GiB. The file currently in use is protected, so actual usage can exceed the budget. This cache reuses processing results; it is neither an AI model nor an edited original music file.
-
-## Keyboard shortcuts
-
-When the player window has keyboard focus:
+## Keyboard Shortcuts
 
 | Key | Action |
 | --- | --- |
-| `Space` | Play / pause |
-| `F` | Toggle fullscreen |
-| `Esc` | Exit the active fullscreen mode |
-| `←` / `→` | Seek backward / forward by 10 seconds |
-| `↑` / `↓` | Increase / decrease volume |
+| `Space` | Play / Pause |
+| `F` | Toggle Fullscreen |
+| `Esc` | Exit Fullscreen |
+| `←` / `→` | Seek Backward / Forward 10 seconds |
+| `↑` / `↓` | Increase / Decrease Volume |
+| `R` | Toggle top-line **Phonetics (Romaji / Pinyin / Korean)** during video playback |
 
-## Running from source
+---
 
-The target environment is **64-bit Windows with Python 3.11**. Prepare [FFmpeg and FFprobe](https://ffmpeg.org/download.html): place `ffmpeg.exe` and `ffprobe.exe` in the repository's root `bin/` folder. Source runs also support locating them in `app_resources/bin/` or on PATH.
+## Running from Source & Building Releases
 
-Open PowerShell in the repository root:
+Target environment: **64-bit Windows 10/11, Python 3.11**. Place `ffmpeg.exe` and `ffprobe.exe` in `bin/` at the repository root (or `app_resources/bin/` / PATH).
+
+### 1. Run from Source
 
 ```powershell
 py -3.11 -m venv venv
@@ -130,82 +121,60 @@ py -3.11 -m venv venv
 .\venv\Scripts\python.exe app/run_app.py
 ```
 
-`requirements.txt` contains application dependencies. Prepare the portable AI libraries and models separately through the resource downloader. After installation, save your model/device choices in Settings before generating subtitles.
+### 2. Build Portable Package & Windows Installer (One Command)
 
-The entry point is `app/run_app.py`. Large resources such as `bin/`, `app_resources/`, and sample media are not included in a normal source clone.
+Requires `PyInstaller` (`pip install -r requirements-build.txt`) and **Inno Setup 6**:
 
-## Data and resources
+```powershell
+# Builds PyInstaller portable bundle -> compiles Inno Setup 6 -> outputs BoTube_Setup.exe + .sha256
+.\packaging\build_release_installer.ps1 -BuildPortable
+```
+
+- Automatically reads the single-source version from `app/version.py` (`6.0.0`), invokes `build_app.py` without overwriting previous `dist/` outputs, compiles `packaging/BoTube_Setup.iss`, and writes `Installer\BoTube_Setup.exe` alongside `Installer\BoTube_Setup.exe.sha256`.
+- For a dry-run source & tooling check without compiling: `.\venv\Scripts\python.exe build_app.py --dry-run`.
+
+### 3. User Data Layout
 
 ```text
 BoTube/
-├── BoTube.exe                    # Included in a packaged release
-├── _internal/                    # Packaged runtime
+├── BoTube.exe                    # Main executable
+├── _internal/                    # PyInstaller runtime (cleanly replaced on upgrade)
 ├── bin/                          # FFmpeg, FFprobe
-├── icon/
-├── app_resources/
-│   ├── libs/                     # Portable AI libraries
-│   ├── whisper_models/           # Downloaded Whisper models
-│   └── translation_models/
-│       └── nllb-200/             # Local translation model
-└── storage/                      # Library, subtitles, preferences, cache
+├── icon/ & resources/            # Application icons
+├── app_resources/                # Portable AI libraries, Whisper & NLLB models (100% preserved)
+└── storage/                      # Library, playlists, subtitles, preferences & cache (100% preserved)
 ```
 
-When running from source, `storage/` and `app_resources/` are in the project root; when running the EXE, they are beside it. Some AI/API settings are stored using **Windows QSettings**, so copying the portable folder to another computer does not transfer every setting or API key.
+---
 
-Back up `storage/` and keep your source media before switching releases. You can reuse `app_resources/` if the resources are compatible with the new app version. Do not upload API keys, tokens, personal data, models, or caches to GitHub.
+## Development & Testing
 
-## Building the EXE
-
-Build on Windows from the source version you intend to release. Provide FFmpeg/FFprobe in `bin/`, the icon, native DLL, and the UI resources checked by the build script.
+Core source lives under `app/` (`core/`, `ui/`, `control/`, `ai/`, `pipeline/`, `translate/`, `subtitle/`, `download_core/`).
 
 ```powershell
-.\venv\Scripts\python.exe -m pip install -r requirements-build.txt
-.\venv\Scripts\python.exe build_app.py --dry-run
-.\venv\Scripts\python.exe build_app.py
+$env:PYTHONPATH=".;app"; $env:KMP_DUPLICATE_LIB_OK="TRUE"; $env:QT_QPA_PLATFORM="offscreen"
+.\venv\Scripts\python.exe -m unittest `
+  tests.test_app_updater `
+  tests.test_ui_settings_and_i18n `
+  tests.test_app_optimization `
+  tests.test_hifi_audio_engine `
+  tests.test_subtitle_studio `
+  tests.test_nvenc_video_export `
+  tests.test_word_karaoke_and_phonetics `
+  tests.test_playlists_favorites_history `
+  tests.test_download_studio -v
 ```
 
-The script creates an **onedir** package:
+See [project documentation](docs/README.md), [feature parity contracts](docs/FEATURE_PARITY.md), [testing guide](tests/README.md), and [development rules](AGENTS.md).
 
-- First build: `dist/BoTube/BoTube.exe`.
-- If `dist/BoTube/` already exists: `dist/release-<timestamp>/BoTube/BoTube.exe`, preserving the old build.
-- Use `--dist-dir` to choose a new output directory. The script prints the final output path.
+## Current Limitations
 
-The build prepares a separate AI resource directory but **does not automatically copy all libraries/models from `app_resources/` into the release**. For immediate or offline AI use, add compatible resources to the BoTube folder before distribution. Do not include your personal `storage/` folder.
+- Neural ASR may occasionally mishear words or drift timestamps on rapid vocals, heavy backing mixes, or overlapping dialogue — review cues in the built-in Subtitle Editor before publishing.
+- Online translation and media downloads depend on network availability, API quotas, and upstream services; keep API keys and Genius tokens strictly local.
+- Audio presets enhance loudness consistency and eliminate digital clipping, but cannot restore details permanently lost to low-bitrate source compression.
 
-Before publishing, run the EXE from its packaged directory and try media playback, generating/saving/reopening subtitles in both modes, the local/online translation services you intend to use, and video export. `--dry-run` checks configuration and resources; it does not replace testing the actual EXE.
+## Licenses & Third-Party Resources
 
-## Updates
-
-The application can check for updates through `version.json` metadata on GitHub. This depends on the release's update package and corresponding helper; building the application does not create or publish an update package automatically.
-
-For a new portable release, extract it into a separate folder and transfer compatible data/resources after backing them up. Older hot-patch instructions are not the packaging process for the current application.
-
-## Current limitations
-
-- AI can misrecognize words, omit text, or produce inaccurate timing with fast singing, vocal ornamentation, loud background music, quiet voices, or overlapping speakers. Review generated subtitles before publishing them.
-- Dialogue mode has functional checks and checks preserving the music branch, but has not been benchmarked broadly enough on real films to guarantee every situation.
-- Translation quality depends on the transcription, language, and model/provider. Genius references do not replace reviewing the output.
-- Downloads and online translation depend on the network, content source, and external services. A 503 error may be temporary; a 401/404 requires checking the key or model rather than simply waiting and retrying.
-- Audio presets do not restore detail lost through codec compression. Offline operation, GPU support, and performance depend on the installed resources and actual hardware.
-
-## Development and testing
-
-Main source code is in `app/`: `ai/` and `pipeline/` handle transcription; `translate/` handles translation; `subtitle/` and `core/` manage data; `ui/`, `control/`, and `download_core/` provide the interface, controls, and downloads.
-
-```powershell
-# Focused checks for content modes and subtitle display timing
-.\venv\Scripts\python.exe -m unittest tests.test_dialogue_mode tests.test_subtitle_display_timing -v
-
-# Run the full test suite
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-The test suite includes snapshots and contracts from earlier development phases; do not assume the entire suite passes. Unit tests, Qt checks, and individual benchmarks do not replace real GPU, API, media, and EXE testing.
-
-See the [project documentation](docs/README.md), [feature contracts](docs/FEATURE_PARITY.md), [testing guide](tests/README.md), and [development rules](AGENTS.md). When reporting a bug, include the version/commit, model/device, content mode, reproduction steps, and affected timestamps. Remove keys/tokens from logs.
-
-## Licenses and third-party resources
-
-Libraries, models, decoders, and icons have their own licenses. Bundled Lucide icons use the [ISC License](app/ui/assets/icons/LICENSE). The local [NLLB-200 distilled 600M](https://huggingface.co/facebook/nllb-200-distilled-600M) model is published under **CC-BY-NC-4.0**; review its terms when planning commercial use or distribution.
-
-The repository currently has no root `LICENSE` file covering all BoTube source code.
+- Bundled Lucide icons are licensed under the [ISC License](app/ui/assets/icons/LICENSE).
+- The optional offline [NLLB-200 distilled 600M](https://huggingface.co/facebook/nllb-200-distilled-600M) model is distributed under **CC-BY-NC-4.0**; review its terms before commercial redistribution.
+- Bundled third-party libraries, FFmpeg, `yt-dlp`, and AI models remain subject to their respective upstream licenses.
