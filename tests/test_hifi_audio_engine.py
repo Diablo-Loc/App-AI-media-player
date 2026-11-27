@@ -1108,9 +1108,12 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
             studio = ctrl.settings_studio
             self.assertIsNotNone(studio)
 
-            # Switch sidebar cleanly to Settings (index 4)
-            window.sidebar.setCurrentRow(4)
-            window.handle_sidebar_click(window.sidebar.item(4))
+            # Switch sidebar cleanly to Settings
+            settings_row = window.sidebar.row_for_page('settings')
+            if settings_row < 0:
+                settings_row = window.sidebar.count() - 1
+            window.sidebar.setCurrentRow(settings_row)
+            window.handle_sidebar_click(window.sidebar.item(settings_row))
             window.show()
             pump(60)
 

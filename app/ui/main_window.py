@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import html
 import logging
 import json
 import psutil
@@ -33,12 +35,20 @@ import shutil
 from config import ConfigManager
 
 from core.media_library import MediaLibrary
+from core.user_collections import (
+    UserCollectionsStore,
+    compute_play_count_threshold_sec,
+    format_duration_mmss,
+)
+from ui.collection_menus import show_add_to_playlist_menu, show_media_context_menu
 
 #Import pages for app
 from ui.pages.mode_manager import HomePage, LibraryPage
 from ui.library_grid_view import library_grid
 from ui.pages.content_manager import ContentController
 from ui.pages.for_you import ForYouPage
+from ui.pages.playlists_page import PlaylistsPage
+from ui.pages.history_page import HistoryPage
 from ui.pages.download import DownloadPage
 from ui.pages.settings import SettingsPage
 from ui.pages.dynamic_island import MiniPlayer
@@ -241,10 +251,30 @@ class MainWindow(QMainWindow):
 
         # --- 6. TRẠNG THÁI NỘI BỘ ---
         self.video_mode = None
+        self.current_media_item = None
+        self._pending_resume_seek_ms = None
+        self._resume_settled_target_ms = 0
+        self._resume_settled_until = 0.0
+        self._resume_fallback_timer = QTimer(self)
+        self._resume_fallback_timer.setSingleShot(True)
+        self._resume_fallback_timer.timeout.connect(
+            lambda: self._apply_pending_resume_seek(allow_loaded=True)
+        )
+        self._last_listen_media_id = None
+        self._last_listen_pos_ms = 0
+        self._session_listened_sec = 0.0
+        self._session_play_counted = False
+        self._active_queue_playlist_id = None
         self.media_items = []      
         self.all_media_items = []
         self.grid_widgets = []     
         self.pending_items = []
+        self.user_collections = UserCollectionsStore(
+            store_path=storage_dir() / "user_collections.json",
+            parent=self,
+        )
+        self.user_collections.favorites_changed.connect(self._sync_current_favorite_visual)
+        self.user_collections.playlists_changed.connect(self._sync_active_playlist_header)
 
         # --- 7. UI LAYOUT & WINDOW ---
         self.init_ui() 
@@ -423,12 +453,28 @@ class MainWindow(QMainWindow):
         print("🔻 Đang thực hiện quy trình đóng ứng dụng...")
         
         try:
-            # --- BƯỚC 1: DỪNG PLAYER (Giải phóng file đang phát) ---
+            # --- BƯỚC 1: DỪNG PLAYER & CHỐT VỊ TRÍ NGHE GẦN NHẤT ---
+            if hasattr(self, "_resume_fallback_timer") and self._resume_fallback_timer.isActive():
+                self._resume_fallback_timer.stop()
             if hasattr(self, "media_player") and self.media_player:
                 player = getattr(self.media_player, "player", self.media_player)
+                if (
+                    hasattr(self, "user_collections")
+                    and getattr(self, "current_media_item", None) is not None
+                    and getattr(self, "_pending_resume_seek_ms", None) is None
+                ):
+                    try:
+                        pos_ms = int(player.position()) if hasattr(player, "position") else 0
+                        if pos_ms >= 1000:
+                            self.user_collections.update_last_played_position(pos_ms)
+                    except Exception:
+                        pass
                 if hasattr(player, "stop"):
                     player.stop()
                     player.setSource(QUrl("")) # Nhả file ra
+
+            if hasattr(self, "user_collections") and self.user_collections is not None:
+                self.user_collections.shutdown()
 
             # --- 🔥 BƯỚC 1.5: GIẢI PHÓNG AUDIO ENGINE NATIVE C++ (MỚI) ---
             # Ngắt callback từ DLL C++ bắn về Python trước để tránh giật lag luồng hệ thống
@@ -646,7 +692,15 @@ class MainWindow(QMainWindow):
 
         # B. Sidebar Custom (Load từ file sidebar.py)
         self.sidebar = Sidebar()
-        self.sidebar.add_menu_items(["🏠 Trang chủ", "🎶 For You", "📚 Thư viện", "💾 Download", "⚙️ Tùy chỉnh"])
+        self.sidebar.add_menu_items([
+            "🏠 Trang chủ",
+            "🎶 For You",
+            "📚 Thư viện",
+            "❤️ Bộ sưu tập",
+            "🕒 Lịch sử",
+            "💾 Download",
+            "⚙️ Tùy chỉnh",
+        ])
 
         # Add vào Container
         self.sidebar_layout.addWidget(self.btn_menu, alignment=Qt.AlignHCenter)
@@ -655,7 +709,7 @@ class MainWindow(QMainWindow):
         self.sidebar_layout.addWidget(self.brand_label)
         self.sidebar_layout.addWidget(self.sidebar)
         
-        # 2. Content Stack (Nơi chứa 2 trang Home/Library)
+        # 2. Content Stack (Giữ nguyên index 0..4 để tương thích tuyệt đối, thêm 5: Bộ sưu tập & 6: Lịch sử)
         self.content_stack = QStackedWidget()
         self.home_page = HomePage()
         self.foryou_page = ForYouPage()
@@ -664,11 +718,24 @@ class MainWindow(QMainWindow):
         self.download_page.download_started_signal.connect(self.pause_refresh)
         self.download_page.manual_refresh_signal.connect(self.resume_refresh)
         self.settings_page = SettingsPage()
-        self.content_stack.addWidget(self.home_page)    # Index 0
-        self.content_stack.addWidget(self.foryou_page)  # Index 1
-        self.content_stack.addWidget(self.library_page) # Index 2
-        self.content_stack.addWidget(self.download_page) # Index 3
-        self.content_stack.addWidget(self.settings_page) # Index 4
+        self.collections_page = PlaylistsPage(
+            store=self.user_collections,
+            media_library=self.media_library,
+            all_items_provider=lambda: list(self.all_media_items),
+            notify_callback=self._show_status,
+        )
+        self.history_page = HistoryPage(
+            store=self.user_collections,
+            media_library=self.media_library,
+            notify_callback=self._show_status,
+        )
+        self.content_stack.addWidget(self.home_page)        # Index 0
+        self.content_stack.addWidget(self.foryou_page)      # Index 1
+        self.content_stack.addWidget(self.library_page)     # Index 2
+        self.content_stack.addWidget(self.download_page)    # Index 3
+        self.content_stack.addWidget(self.settings_page)    # Index 4
+        self.content_stack.addWidget(self.collections_page) # Index 5
+        self.content_stack.addWidget(self.history_page)     # Index 6
 
         # 3. Tạo Vỏ bọc (Toolbar + Stack)
         self.content_ctrl = ContentController(self)
@@ -678,6 +745,10 @@ class MainWindow(QMainWindow):
         self.browser_layout.addWidget(self.sidebar_container) 
         self.browser_layout.addWidget(self.grid_main_page, 1)
         self.foryou_page.playlist_item_clicked.connect(self.on_playlist_item_clicked)
+        self.collections_page.play_requested.connect(self._play_from_collection)
+        self.collections_page.folders_scan_requested.connect(self.load_folders_content)
+        self.history_page.play_requested.connect(self._play_from_collection)
+        self.history_page.resume_requested.connect(self._resume_last_played)
         # --- SETUP VIDEO LARGE ---
         self.video_container = QFrame()
         self.video_container.setStyleSheet("background-color: black;")
@@ -762,6 +833,11 @@ class MainWindow(QMainWindow):
         self.sidebar.itemClicked.connect(self.handle_sidebar_click)
         self.foryou_page.shuffle_req_signal.connect(self.toggle_global_shuffle)
         self.playback_bar.shuffle_clicked.connect(self.toggle_global_shuffle)
+        self.playback_bar.favorite_toggled.connect(self.toggle_current_favorite)
+        self.playback_bar.add_to_playlist_clicked.connect(self.open_current_add_to_playlist_menu)
+        player.durationChanged.connect(self._apply_pending_resume_seek)
+        player.playbackStateChanged.connect(self._apply_pending_resume_seek)
+        player.seekableChanged.connect(self._apply_pending_resume_seek)
         
         # 1. Khi đang kéo -> Cập nhật video liên tục
         self.playback_bar.time_slider.sliderMoved.connect(self.on_seek_move)
@@ -868,10 +944,17 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, self.sync_subtitle_margin)
 
     def handle_media_status(self, status):
+        if status in (
+            QMediaPlayer.MediaStatus.LoadedMedia,
+            QMediaPlayer.MediaStatus.BufferedMedia,
+        ):
+            self._apply_pending_resume_seek()
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
             self.play_next()
 
     def toggle_play_pause(self):
+        if self._try_startup_resume():
+            return
         if self.audio_effects.toggle_pending_start():
             self.sync_mini_player_state()
             return
@@ -896,8 +979,65 @@ class MainWindow(QMainWindow):
             self.media_manager.set_status(is_playing)
             
     def on_position_changed(self, position):
+        pos_int = int(position or 0)
+        pending_resume = getattr(self, "_pending_resume_seek_ms", None)
+        if pending_resume is not None and int(pending_resume) > 1000 and pos_int < 1500:
+            return
+        settled_until = float(getattr(self, "_resume_settled_until", 0.0) or 0.0)
+        settled_target = int(getattr(self, "_resume_settled_target_ms", 0) or 0)
+        if settled_target > 1500 and time.monotonic() < settled_until:
+            if pos_int < 1500:
+                return
+            self._resume_settled_until = 0.0
+
         if not self.playback_bar.time_slider.isSliderDown():
-            self.playback_bar.update_position(position, self.format_time(position))
+            self.playback_bar.update_position(pos_int, self.format_time(pos_int))
+        cur = getattr(self, "current_media_item", None)
+        if (
+            hasattr(self, "user_collections")
+            and cur is not None
+            and pending_resume is None
+            and pos_int > 0
+        ):
+            self.user_collections.update_last_played_position(pos_int)
+            player = getattr(getattr(self, "media_player", None), "player", None)
+            is_playing = bool(
+                player is not None
+                and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+            )
+            if is_playing and not self.playback_bar.time_slider.isSliderDown():
+                cur_id = getattr(cur, "id", None)
+                prev_pos_ms = int(self._last_listen_pos_ms)
+                if cur_id == self._last_listen_media_id:
+                    # Phát lặp lại cùng 1 bài từ cuối về đầu -> mở phiên đếm lượt mới
+                    if prev_pos_ms > 15000 and pos_int < 2500:
+                        self._session_listened_sec = 0.0
+                        self._session_play_counted = False
+                    delta_sec = (pos_int - prev_pos_ms) / 1000.0
+                    if 0.0 < delta_sec <= 5.0:
+                        self._session_listened_sec += delta_sec
+                        if self._session_play_counted:
+                            self.user_collections.add_listen_seconds(cur_id, delta_sec)
+                        else:
+                            p_dur_sec = (int(player.duration() or 0) / 1000.0) if player is not None else 0.0
+                            m_dur_sec = float(getattr(cur, "duration", 0.0) or 0.0)
+                            eff_dur_sec = p_dur_sec if p_dur_sec > 0.0 else m_dur_sec
+                            threshold_sec = compute_play_count_threshold_sec(eff_dur_sec)
+                            qualified = (
+                                self._session_listened_sec >= 240.0
+                                if eff_dur_sec > 480.0
+                                else self._session_listened_sec > threshold_sec
+                            )
+                            if qualified:
+                                self._session_play_counted = True
+                                if m_dur_sec <= 0.0 and eff_dur_sec > 0.0:
+                                    cur.duration = eff_dur_sec
+                                self.user_collections.record_play_stat(
+                                    cur,
+                                    initial_listen_sec=self._session_listened_sec,
+                                )
+                self._last_listen_media_id = cur_id
+                self._last_listen_pos_ms = pos_int
 
     def update_slider_range(self, duration):
         if duration > 0:
@@ -986,14 +1126,24 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key.Key_Up), self).activated.connect(lambda: self.adjust_volume(0.05))
         QShortcut(QKeySequence(Qt.Key.Key_Down), self).activated.connect(lambda: self.adjust_volume(-0.05))
 
-    # --- GRID & LOADING LOGIC (Giữ nguyên) ---
+    # --- GRID & LOADING LOGIC (Giữ nguyên + Mở rộng Đa thư mục) ---
     def choose_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Chọn thư mục video")
         if not folder: return
 
-        # Lưu Config
+        # Lưu Config & đồng bộ danh sách nguồn đa thư mục
         from config import ConfigManager
         ConfigManager.save_last_folder(folder)
+        if hasattr(self, "user_collections"):
+            added = self.user_collections.add_folder(folder)
+            folders = self.user_collections.get_folders()
+            if len(folders) > 1:
+                if added:
+                    self._show_status(
+                        f"📂 Đã thêm nguồn thư mục (đang gộp {len(folders)} thư mục — quản lý tại Bộ sưu tập)"
+                    )
+                self.load_folders_content(folders)
+                return
 
         # Load folder (Chỉ truyền folder, không cần use_cache)
         self.load_folder_content(folder)
@@ -1155,8 +1305,17 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            # Tìm index dựa trên object media_item hiện tại (nhanh và chuẩn hơn so sánh path)
-            current_idx = self.active_playlist.index(self.current_media_item)
+            # Tìm index dựa trên object media_item hiện tại (fallback theo id nếu metadata được cập nhật thumbnail/duration)
+            try:
+                current_idx = self.active_playlist.index(self.current_media_item)
+            except ValueError:
+                cur_id = getattr(self.current_media_item, "id", None)
+                current_idx = next(
+                    (i for i, item in enumerate(self.active_playlist) if getattr(item, "id", None) == cur_id),
+                    -1,
+                )
+                if current_idx < 0:
+                    raise ValueError("Current item not found in active_playlist")
             
             # Tính toán index mới
             new_idx = current_idx + direction
@@ -1179,6 +1338,8 @@ class MainWindow(QMainWindow):
 
     def switch_to_player_page(self):
         """Click vào video: Điều hướng thông minh dựa trên Tab hiện tại"""
+        if getattr(self, "current_media_item", None) is None and self._try_startup_resume():
+            return
         if not hasattr(self, 'media_player') or self.media_player.player.playbackState() == QMediaPlayer.PlaybackState.StoppedState:
             return
 
@@ -1201,6 +1362,8 @@ class MainWindow(QMainWindow):
 
     def handle_panel_click(self):
         """Xử lý khi click vào panel dưới đáy"""
+        if getattr(self, "current_media_item", None) is None and self._try_startup_resume():
+            return
         # Nếu media chưa chạy thì bỏ qua
         if not hasattr(self, 'media_player') or self.media_player.player.playbackState() == QMediaPlayer.PlaybackState.StoppedState:
             return
@@ -1274,11 +1437,22 @@ class MainWindow(QMainWindow):
         # Quan trọng: Không return False tùy tiện, hãy để super() lo phần còn lại
         return super().eventFilter(watched, event)
 
-    def on_media_clicked(self, media_item, force_gen=False, update_playlist=True):
+    def on_media_clicked(self, media_item, force_gen=False, update_playlist=True, resume_position_ms=0):
         """Xử lý khi click vào một bài hát / video"""
+        if media_item is None:
+            return
 
-        # Lưu bài đang phát để hàm play_next biết đường mà tìm
-        self.current_media_item = media_item
+        video_path = str(getattr(media_item, "path", "") or "")
+        file_exists = bool(video_path and os.path.isfile(video_path))
+        has_active_media = getattr(self, "current_media_item", None) is not None
+
+        # Nếu đang có bài phát hợp lệ mà user bấm vào mục đã bị xóa file gốc,
+        # thoát sớm để không làm gián đoạn hàng đợi, current_media_item hay job AI hiện tại.
+        if not file_exists and has_active_media:
+            print(f"❌ File không tồn tại hoặc path lỗi: {video_path}")
+            if hasattr(self, "_show_status"):
+                self._show_status(f"⚠️ Không tìm thấy file gốc: {getattr(media_item, 'title', 'Video')}")
+            return
 
         # Chụp ảnh toàn bộ danh sách từ giao diện đang hiển thị
         if update_playlist:
@@ -1290,8 +1464,24 @@ class MainWindow(QMainWindow):
                 self.active_playlist = self.foryou_page.get_playback_playlist()
                 print(f"📋 Playlist ForYou: Đã chốt {len(self.active_playlist)} bài.")
 
+            # TRƯỜNG HỢP 1.5: Trang Bộ sưu tập (Playlist/Yêu thích) hoặc Lịch sử
+            elif current_page in (
+                getattr(self, 'collections_page', None),
+                getattr(self, 'history_page', None),
+            ):
+                self.active_playlist = current_page.get_playback_playlist()
+                if hasattr(self, '_set_foryou_queue_playlist'):
+                    if current_page is getattr(self, 'collections_page', None) and hasattr(current_page, 'current_custom_playlist_header'):
+                        pid, pname = current_page.current_custom_playlist_header()
+                        self._set_foryou_queue_playlist(pid, pname)
+                    else:
+                        self._set_foryou_queue_playlist(None, "")
+                print(f"📋 Playlist Collection/History: Đã chốt {len(self.active_playlist)} bài.")
+
             # TRƯỜNG HỢP 2: Các trang cũ (Dùng Grid Layout như Home/Library)
             elif current_page and hasattr(current_page, 'grid_layout'):
+                if hasattr(self, '_set_foryou_queue_playlist'):
+                    self._set_foryou_queue_playlist(None, "")
                 layout = current_page.grid_layout
                 virtual = getattr(current_page, '_library_grid_view', None)
                 if virtual is not None:
@@ -1304,7 +1494,7 @@ class MainWindow(QMainWindow):
                 print(f"📋 Playlist Library: Đã chốt {len(self.active_playlist)} bài.")
 
             # Sau khi chốt playlist, nếu For You đang mở thì đồng bộ giao diện bên phải luôn
-            if self.active_playlist and hasattr(self, 'foryou_page'):
+            if file_exists and self.active_playlist and hasattr(self, 'foryou_page'):
                     # sync For You page only when necessary
                 if not self.foryou_page.master_data:
                     # first time loading playlist, we need to tell page where to start
@@ -1313,21 +1503,49 @@ class MainWindow(QMainWindow):
                 else:
                     # playlist already shown – just highlight the new track
                     self.foryou_page.mark_playing_item(media_item.id)
-        
-        # 0. HỦY JOB CŨ (AI, subtitle...)
-        if hasattr(self, "app_controller"):
-            self.app_controller.cancel_current_job()
 
         # =============================
-        # 1. KIỂM TRA PATH
+        # 1. KIỂM TRA PATH TRƯỚC KHI ĐỔI BÀI / HỦY JOB AI
         # =============================
-        video_path = str(media_item.path)
-
-        if not video_path or not os.path.isfile(video_path):
+        if not file_exists:
             print(f"❌ File không tồn tại hoặc path lỗi: {video_path}")
+            if hasattr(self, "_show_status"):
+                self._show_status(f"⚠️ Không tìm thấy file gốc: {getattr(media_item, 'title', 'Video')}")
             return
 
+        # Lưu bài đang phát để hàm play_next biết đường mà tìm
+        self.current_media_item = media_item
+
+        # 0. HỦY JOB CŨ (AI, subtitle...)
+        if getattr(self, "app_controller", None):
+            self.app_controller.cancel_current_job()
+
         print(f"▶️ Bắt đầu phát: {media_item.title} - {getattr(media_item, 'artist', '')} (Force: {force_gen})")
+        resume_target_ms = max(0, int(resume_position_ms or 0))
+        if hasattr(self, "_resume_fallback_timer") and self._resume_fallback_timer.isActive():
+            self._resume_fallback_timer.stop()
+        self._resume_settled_target_ms = 0
+        self._resume_settled_until = 0.0
+        self._pending_resume_seek_ms = resume_target_ms if resume_target_ms > 1000 else None
+
+        # =============================
+        # 1.5. GHI NHẬN LỊCH SỬ XEM & PHIÊN GẦN NHẤT + KHỞI TẠO BỘ ĐẾM >50% LƯỢT NGHE
+        # =============================
+        self._last_listen_media_id = media_item.id
+        self._last_listen_pos_ms = resume_target_ms if resume_target_ms > 1000 else 0
+        self._session_listened_sec = 0.0
+        self._session_play_counted = False
+        if hasattr(self, "user_collections"):
+            self.user_collections.record_history(media_item)
+            self.user_collections.record_last_played_track(
+                media_item,
+                position_ms=resume_target_ms if resume_target_ms > 1000 else 0,
+            )
+            self._sync_current_favorite_visual()
+        if hasattr(self, "collections_page"):
+            self.collections_page.set_playing_media_id(media_item.id)
+        if hasattr(self, "history_page"):
+            self.history_page.set_playing_media_id(media_item.id)
 
         # =============================
         # 2. CẬP NHẬT GIAO DIỆN (TITLE + ARTIST)
@@ -1335,6 +1553,11 @@ class MainWindow(QMainWindow):
         artist_name = getattr(media_item, "artist", "Unknown Artist")
         if hasattr(self, "playback_bar") and hasattr(self.playback_bar, 'set_media_info'):
             self.playback_bar.set_media_info(media_item.title, artist_name, item_data=self.current_media_item)
+            if resume_target_ms > 1000:
+                est_dur_ms = int(round(float(getattr(media_item, "duration", 0.0) or 0.0) * 1000))
+                if est_dur_ms > resume_target_ms:
+                    self.playback_bar.update_duration(est_dur_ms, self.format_time(est_dur_ms))
+                self.playback_bar.update_position(resume_target_ms, self.format_time(resume_target_ms))
 
         # 🎯 ĐẨY TRỰC TIẾP TÊN BÀI HÁT VÀ CA SĨ LÊN POPUP WINDOWS
         if hasattr(self, 'media_manager') and self.media_manager.enabled:
@@ -1366,7 +1589,7 @@ class MainWindow(QMainWindow):
         # 5. GIAO QUYỀN CHO AppController (LOGIC AI/SUB)
         # =============================
         # Chỉ gọi 1 lần duy nhất ở đây
-        if hasattr(self, "app_controller"):
+        if getattr(self, "app_controller", None):
             self.app_controller.on_media_item_clicked(media_item, force_gen=force_gen)
         QTimer.singleShot(100, self.sync_subtitle_margin)
         
@@ -1380,9 +1603,10 @@ class MainWindow(QMainWindow):
             
             # 2. CẬP NHẬT PLAYLIST (CHỈ KHI CẦN THIẾT)
             if update_playlist and hasattr(self, 'active_playlist') and current_page != self.foryou_page:
-                # Kiểm tra nếu danh sách hiện tại khác hoàn toàn danh sách mới (VD: chuyển từ album A sang album B)
-                # Hoặc nếu danh sách ForYou đang rỗng
-                if not self.foryou_page.original_data or len(self.foryou_page.original_data) != len(self.active_playlist):
+                # Kiểm tra nếu danh sách hiện tại khác danh sách mới (so cả độ dài lẫn danh sách ID)
+                old_ids = [getattr(x, 'id', None) for x in (self.foryou_page.original_data or [])]
+                new_ids = [getattr(x, 'id', None) for x in self.active_playlist]
+                if not old_ids or old_ids != new_ids:
                     self.foryou_page.load_playlist(self.active_playlist)
                 else:
                     # Nếu danh sách giống nhau rồi thì KHÔNG gọi load_playlist nữa
@@ -1551,6 +1775,7 @@ class MainWindow(QMainWindow):
         """Hàm này gọi khi người dùng THẢ chuột ra khỏi thanh trượt"""
         # Lấy giá trị cuối cùng của slider và set cho player (để chốt vị trí)
         position = self.playback_bar.time_slider.value()
+        self._last_listen_pos_ms = int(position)
         self.media_player.player.setPosition(position)
         
     def change_playback_speed(self, speed):
@@ -1560,6 +1785,12 @@ class MainWindow(QMainWindow):
         print(f"Changed speed to {speed}x")
         
     def update_card_thumbnail(self, media_id, thumb_path):
+        if hasattr(self, "user_collections"):
+            self.user_collections.refresh_media_thumbnail(media_id, thumb_path)
+        for page_attr in ("collections_page", "history_page"):
+            page = getattr(self, page_attr, None)
+            if page is not None and hasattr(page, "refresh_thumbnail"):
+                page.refresh_thumbnail(media_id, thumb_path)
         # 1. Tìm card trong kho (Dictionary) - Siêu nhanh O(1)
         if hasattr(self, 'card_map') and media_id in self.card_map:
             target_card = self.card_map[media_id]
@@ -1626,12 +1857,20 @@ class MainWindow(QMainWindow):
         from config import ConfigManager # Import ConfigManager
         
         last_folder = ConfigManager.get_last_folder()
-        
-        if last_folder:
-            print(f"🔄 Khôi phục phiên làm việc: {last_folder}")
-            
+        folders = (
+            self.user_collections.sync_legacy_last_folder(last_folder)
+            if hasattr(self, "user_collections")
+            else ([last_folder] if last_folder else [])
+        )
+        self._restore_passive_last_played_ui()
+
+        if len(folders) > 1:
+            print(f"🔄 Khôi phục đa thư mục ({len(folders)} nguồn): {folders}")
+            QTimer.singleShot(100, lambda f=list(folders): self.load_folders_content(f))
+        elif len(folders) == 1:
+            print(f"🔄 Khôi phục phiên làm việc: {folders[0]}")
             # Dùng QTimer delay 100ms để giao diện hiện lên xong mới load nhạc
-            QTimer.singleShot(100, lambda: self.load_folder_content(last_folder))
+            QTimer.singleShot(100, lambda f=folders[0]: self.load_folder_content(f))
         else:
             print("🆕 Chưa có thư mục cũ, chờ người dùng chọn.")
 
@@ -1887,6 +2126,42 @@ class MainWindow(QMainWindow):
         # 🔥 QUAN TRỌNG: Đảm bảo cột này cũng được co giãn
         self.grid_layout.setColumnStretch(col, 1)
         
+    def load_folders_content(self, folders):
+        """Quét gộp nhiều thư mục nguồn song song trên luồng ngầm, khử trùng lặp theo media_id."""
+        if self.refresh_paused:
+            return
+        valid_folders = [str(p) for p in (folders or []) if p and os.path.isdir(str(p))]
+        if not valid_folders:
+            self.clear_grid()
+            if hasattr(self, "watcher"):
+                watched = self.watcher.directories()
+                if watched:
+                    self.watcher.removePaths(watched)
+            self.current_watched_folder = ""
+            self._folder_scan_completed([])
+            return
+
+        if len(valid_folders) == 1:
+            self.load_folder_content(valid_folders[0])
+            return
+
+        self.clear_grid()
+        if not hasattr(self, "watcher"):
+            self.watcher = QFileSystemWatcher()
+            self.watcher.directoryChanged.connect(self.on_folder_changed)
+        old_dirs = self.watcher.directories()
+        if old_dirs:
+            self.watcher.removePaths(old_dirs)
+        self.watcher.addPaths(valid_folders)
+        self.current_watched_folder = valid_folders[0]
+
+        if not hasattr(self, "_folder_scan_queue"):
+            from control.library_scan import LibraryScanQueue
+            self._folder_scan_queue = LibraryScanQueue(self.media_library, self)
+            self._folder_scan_queue.completed.connect(self._folder_scan_completed)
+            self._folder_scan_queue.failed.connect(self._folder_scan_failed)
+        self._folder_scan_queue.request(list(valid_folders))
+
     #lưu vị trí foulder chưa mp4,... cũ
     def load_folder_content(self, folder_path):
         """
@@ -1943,17 +2218,24 @@ class MainWindow(QMainWindow):
             # 2. ĐẨY DỮ LIỆU SANG FOR YOU TẠI ĐÂY (Vị trí mới)
             if hasattr(self, 'foryou_page'): 
                 print("🚀 Đang đẩy dữ liệu vào trang For You...")
+                self._set_foryou_queue_playlist(None, "")
                 self.foryou_page.load_playlist(self.all_media_items)
             else:
                 print("⚠️ Vẫn không tìm thấy biến self.foryou_page")
 
             # 3. Cập nhật dữ liệu cho Controller và vẽ Grid chính
-            self.content_ctrl.set_new_data(self.all_media_items)
-            #self.media_items = self.all_media_items.copy()
-            #self.pending_items = self.media_items.copy()
-            
-            #self.load_next_batch() 
-            self.sidebar.setCurrentRow(0)
+            # Nếu người dùng đang mở Bộ sưu tập (5) hoặc Lịch sử (6) (VD: vừa thêm/quét lại thư mục),
+            # giữ nguyên tab hiện tại để không giật màn hình về Trang chủ.
+            cur_stack_idx = self.content_stack.currentIndex() if hasattr(self, 'content_stack') else 0
+            if cur_stack_idx in (5, 6):
+                if cur_stack_idx == 5 and hasattr(self, 'collections_page'):
+                    self.collections_page.refresh_all()
+                    self.collections_page.refresh_folders_ui()
+                elif cur_stack_idx == 6 and hasattr(self, 'history_page'):
+                    self.history_page.refresh_view()
+            else:
+                self.content_ctrl.set_new_data(self.all_media_items)
+                self.sidebar.setCurrentRow(0)
 
         # Nạp dữ liệu vào hàng chờ (SAU KHI ĐÃ CLEAR GRID)
         #self.pending_items = self.media_items.copy()
@@ -1980,7 +2262,13 @@ class MainWindow(QMainWindow):
         self.update_timer = QTimer()
         self.update_timer.setSingleShot(True)
         # Đợi 1.5 giây sau khi ngừng copy mới quét lại
-        self.update_timer.timeout.connect(lambda: self.load_folder_content(path))
+        def _reload():
+            folders = self.user_collections.get_folders() if hasattr(self, "user_collections") else []
+            if len(folders) > 1:
+                self.load_folders_content(folders)
+            else:
+                self.load_folder_content(path)
+        self.update_timer.timeout.connect(_reload)
         self.update_timer.start(1500)
     
     #Logic tìm kiếm 
@@ -2274,13 +2562,30 @@ class MainWindow(QMainWindow):
             self.sidebar.setEnabled(True)
             
         # 2. Refresh lại danh sách video (giữ nguyên logic 1s của bác)
-        if hasattr(self, 'current_watched_folder') and self.current_watched_folder:
+        folders = self.user_collections.get_folders() if hasattr(self, 'user_collections') else []
+        if len(folders) > 1:
+            QTimer.singleShot(1000, lambda f=list(folders): self.load_folders_content(f))
+        elif hasattr(self, 'current_watched_folder') and self.current_watched_folder:
             QTimer.singleShot(1000, lambda: self.load_folder_content(self.current_watched_folder))
             
         print("🔓 [BẢO VỆ] Hệ thống đã mở khóa và cập nhật video mới.")
 
+    _PAGE_KEY_TO_STACK = {
+        "home": 0,
+        "for_you": 1,
+        "library": 2,
+        "download": 3,
+        "settings": 4,
+        "collections": 5,
+        "history": 6,
+    }
+
     def handle_sidebar_click(self, item):
-        index = self.sidebar.row(item) 
+        if item is None:
+            return
+        row = self.sidebar.row(item)
+        page_key = self.sidebar.page_key_at(row) if hasattr(self.sidebar, "page_key_at") else ""
+        index = self._PAGE_KEY_TO_STACK.get(page_key, row)
         if index == self.content_stack.currentIndex():
             return
 
@@ -2324,15 +2629,16 @@ class MainWindow(QMainWindow):
             if self._normal_geometry is not None:
                 self.setWindowState(self._normal_window_state)
                 self.setGeometry(self._normal_geometry)
-            self.top_toolbar_container.show()
+            # Chỉ hiện thanh mở thư mục & tìm kiếm chung tại Trang chủ (0) và Thư viện (2)
+            if index in (0, 2):
+                self.top_toolbar_container.show()
+            else:
+                self.top_toolbar_container.hide()
             if hasattr(self, 'playback_bar'):
                 self.playback_bar.show()
             if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
                 self.ai_progress_bar.show()
 
-        is_setting= (index == 3 or index == 4)
-        if is_setting:
-            self.top_toolbar_container.hide()
         # ===============================================================
         # BƯỚC 3: ĐIỀU HƯỚNG
         # ===============================================================
@@ -2342,6 +2648,8 @@ class MainWindow(QMainWindow):
             elif index == 2: self.content_ctrl.switch_to_library()
             elif index == 3: self.content_ctrl.switch_to_download()
             elif index == 4: self.content_ctrl.switch_to_settings()
+            elif index == 5: self.content_ctrl.switch_to_collections()
+            elif index == 6: self.content_ctrl.switch_to_history()
 
         # 4. Cập nhật vị trí video & sub
         if index == 1:
@@ -2387,6 +2695,208 @@ class MainWindow(QMainWindow):
     def on_playlist_item_clicked(self, media_item):
         self.on_media_clicked(media_item) # Phát nhạc (giữ nguyên)
         self.sync_to_foryou(media_item)    # Cập nhật số 2/615 (gọi thêm)
+
+    # =========================================================================
+    # ❤️ YÊU THÍCH, PLAYLIST, MENU NGỮ CẢNH & SMART RESUME
+    # =========================================================================
+    def _sync_current_favorite_visual(self):
+        if not hasattr(self, "playback_bar") or not hasattr(self, "user_collections"):
+            return
+        cur = getattr(self, "current_media_item", None)
+        is_fav = self.user_collections.is_favorite(getattr(cur, "id", None)) if cur else False
+        self.playback_bar.set_favorite_visual(is_fav)
+
+    def toggle_current_favorite(self):
+        cur = getattr(self, "current_media_item", None)
+        if cur is None or not hasattr(self, "user_collections"):
+            return
+        now_fav = self.user_collections.toggle_favorite(cur)
+        self._sync_current_favorite_visual()
+        self._show_status(
+            f"❤️ Đã thêm “{cur.title}” vào Yêu thích"
+            if now_fav
+            else f"💔 Đã bỏ “{cur.title}” khỏi Yêu thích"
+        )
+
+    def open_current_add_to_playlist_menu(self, global_pos):
+        cur = getattr(self, "current_media_item", None)
+        if cur is None or not hasattr(self, "user_collections"):
+            return
+        show_add_to_playlist_menu(
+            self,
+            global_pos,
+            cur,
+            self.user_collections,
+            on_notify=self._show_status,
+        )
+
+    def show_item_context_menu(self, media_item, global_pos):
+        if media_item is None:
+            return
+        show_media_context_menu(
+            self,
+            global_pos,
+            media_item,
+            getattr(self, "user_collections", None),
+            on_play=lambda item: (self.on_media_clicked(item), self.sync_to_foryou(item)),
+            on_notify=self._show_status,
+        )
+
+    def _set_foryou_queue_playlist(self, playlist_id, playlist_name: str = ""):
+        self._active_queue_playlist_id = playlist_id if playlist_id else None
+        if hasattr(self, "foryou_page") and hasattr(self.foryou_page, "set_playlist_header_title"):
+            self.foryou_page.set_playlist_header_title(playlist_name if playlist_id else None)
+
+    def _sync_active_playlist_header(self):
+        pid = getattr(self, "_active_queue_playlist_id", None)
+        if not pid or not hasattr(self, "user_collections"):
+            return
+        pl = self.user_collections.get_playlist(pid)
+        if pl:
+            self._set_foryou_queue_playlist(pid, pl["name"])
+        else:
+            self._set_foryou_queue_playlist(None, "")
+
+    def _play_from_collection(self, media_item, queue_items):
+        if media_item is None:
+            return
+        video_path = str(getattr(media_item, "path", "") or "")
+        if not video_path or not os.path.isfile(video_path):
+            print(f"❌ File không tồn tại hoặc path lỗi: {video_path}")
+            if hasattr(self, "_show_status"):
+                self._show_status(f"⚠️ Không tìm thấy file gốc: {getattr(media_item, 'title', 'Video')}")
+            return
+        sender = self.sender()
+        if sender is getattr(self, "collections_page", None) and hasattr(sender, "current_custom_playlist_header"):
+            pid, pname = sender.current_custom_playlist_header()
+        else:
+            pid, pname = None, ""
+        self._set_foryou_queue_playlist(pid, pname)
+        queue = list(queue_items) if queue_items else [media_item]
+        self.active_playlist = queue
+        self.on_media_clicked(media_item, update_playlist=False)
+        if hasattr(self, "foryou_page"):
+            self.foryou_page.current_playing_id = media_item.id
+            self.foryou_page.load_playlist(queue)
+            self.foryou_page.mark_playing_item(media_item.id)
+        if hasattr(self, "audio_effects"):
+            self.audio_effects.playback_queue_changed()
+
+    def _try_startup_resume(self) -> bool:
+        if getattr(self, "current_media_item", None) is not None or not hasattr(self, "user_collections"):
+            return False
+        lp = self.user_collections.get_last_played(self.media_library)
+        if lp and lp[0].path and os.path.isfile(lp[0].path):
+            self._resume_last_played(lp[0], lp[1])
+            return True
+        return False
+
+    def _restore_passive_last_played_ui(self):
+        if not hasattr(self, "user_collections") or getattr(self, "current_media_item", None) is not None:
+            return
+        lp = self.user_collections.get_last_played(self.media_library)
+        if not lp:
+            return
+        media, pos_ms, _ts = lp
+        if not media.path or not os.path.isfile(media.path):
+            return
+        pos_str = format_duration_mmss(pos_ms / 1000.0)
+        display_title = media.title if len(media.title) <= 36 else (media.title[:33] + "...")
+        artist = media.artist or "Unknown Artist"
+        safe_title = html.escape(display_title)
+        safe_artist = html.escape(artist)
+        self.playback_bar.lbl_song_info.setText(
+            f"<div style='line-height: 120%;'>"
+            f"<span style='font-size: 13px; font-weight: bold; color: #DCE7F3;'>{safe_title}</span><br>"
+            f"<span style='font-size: 11px; color: #77E0BE;'>▶ Bấm Phát để tiếp tục tại {pos_str} • {safe_artist}</span>"
+            f"</div>"
+        )
+        self.playback_bar.lbl_song_info.setToolTip(
+            f"Phiên nghe gần nhất: {media.title}\nNghệ sĩ: {artist}\nDừng tại: {pos_str}"
+        )
+        est_dur_ms = int(round(float(getattr(media, "duration", 0.0) or 0.0) * 1000))
+        if est_dur_ms > 0 and 0 < pos_ms < est_dur_ms:
+            self.playback_bar.update_duration(est_dur_ms, self.format_time(est_dur_ms))
+            self.playback_bar.update_position(int(pos_ms), self.format_time(int(pos_ms)))
+
+    def _resume_last_played(self, media_item, position_ms: int):
+        if media_item is None or not media_item.path or not os.path.isfile(media_item.path):
+            self._show_status("⚠️ Không tìm thấy file gốc để tiếp tục phát")
+            return
+        target_ms = max(0, int(position_ms or 0))
+        self._set_foryou_queue_playlist(None, "")
+        queue = list(self.all_media_items) if self.all_media_items else [media_item]
+        if all(getattr(x, "id", "") != media_item.id for x in queue):
+            queue.insert(0, media_item)
+        self.active_playlist = queue
+        self.on_media_clicked(media_item, update_playlist=False, resume_position_ms=target_ms)
+        if target_ms > 1000:
+            self._apply_pending_resume_seek()
+            pos_str = format_duration_mmss(target_ms / 1000.0)
+            self._show_status(f"▶️ Tiếp tục phát “{media_item.title}” từ {pos_str}")
+
+    def _apply_pending_resume_seek(self, *_args, allow_loaded: bool = False):
+        target_ms = getattr(self, "_pending_resume_seek_ms", None)
+        if target_ms is None or int(target_ms) <= 0:
+            return
+        target_ms = int(target_ms)
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        if player is None:
+            return
+        dur = int(player.duration() or 0)
+        status = player.mediaStatus()
+        has_source = not player.source().isEmpty()
+        is_playing = player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+        seekable_ok = player.isSeekable() if has_source else True
+        playing_ok = is_playing if has_source else True
+
+        if (
+            dur > 0
+            and seekable_ok
+            and playing_ok
+            and status == QMediaPlayer.MediaStatus.LoadedMedia
+            and not allow_loaded
+        ):
+            if hasattr(self, "_resume_fallback_timer") and not self._resume_fallback_timer.isActive():
+                self._resume_fallback_timer.start(140)
+            return
+
+        ready_now = (
+            dur > 0
+            and seekable_ok
+            and playing_ok
+            and (
+                status == QMediaPlayer.MediaStatus.BufferedMedia
+                or (allow_loaded and status == QMediaPlayer.MediaStatus.LoadedMedia)
+            )
+        )
+        if not ready_now:
+            return
+
+        if hasattr(self, "_resume_fallback_timer") and self._resume_fallback_timer.isActive():
+            self._resume_fallback_timer.stop()
+
+        if dur > 0 and target_ms >= max(0, dur - 1500):
+            self._pending_resume_seek_ms = None
+            return
+
+        self._pending_resume_seek_ms = None
+        self._resume_settled_target_ms = target_ms
+        self._resume_settled_until = time.monotonic() + 0.5
+        self._last_listen_pos_ms = target_ms
+        player.setPosition(target_ms)
+        if hasattr(self, "audio_effects"):
+            if hasattr(self.audio_effects, "sync_resume_position"):
+                self.audio_effects.sync_resume_position(target_ms)
+            elif hasattr(self.audio_effects, "_seek_requested"):
+                self.audio_effects._seek_requested(target_ms)
+        if hasattr(self, "playback_bar"):
+            if dur > 0:
+                self.playback_bar.update_duration(dur, self.format_time(dur))
+            self.playback_bar.update_position(target_ms, self.format_time(target_ms))
+            self.playback_bar.seek_requested.emit(target_ms)
+        if hasattr(self, "sub_layer") and self.sub_layer is not None:
+            self.sub_layer.update_position(target_ms)
     
     def toggle_global_shuffle(self):
         self.is_global_shuffle = not self.is_global_shuffle
@@ -2573,8 +3083,9 @@ class MainWindow(QMainWindow):
             self.ai_progress_bar.show()
         
         is_foryou = getattr(self, 'current_page', '') == 'for_you'
+        cur_idx = self.content_stack.currentIndex() if hasattr(self, 'content_stack') else 0
         if hasattr(self, 'top_toolbar_container'):
-            self.top_toolbar_container.setHidden(is_foryou)
+            self.top_toolbar_container.setVisible(cur_idx in (0, 2))
 
         # 4. CẬP NHẬT VIDEO & SUB (Dùng manage_video_state như sidebar click)
         self.video_mode = None # Xóa dấu vết để ép manage chạy full logic

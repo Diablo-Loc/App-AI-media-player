@@ -462,14 +462,15 @@ class ForYouPage(QWidget):
         pl_header_layout.setContentsMargins(15, 15, 15, 10)
         
         row1 = QHBoxLayout()
-        lbl_pl_title = QLabel("Danh sách phát")
-        lbl_pl_title.setStyleSheet("font-size: 16px; font-weight: bold; color: white; border: none;")
+        row1.setSpacing(10)
+        self.lbl_pl_title = ElidedLabel("Danh sách phát", max_lines=1)
+        self.lbl_pl_title.setMinimumWidth(0)
+        self.lbl_pl_title.setStyleSheet("font-size: 16px; font-weight: bold; color: white; border: none;")
         self.lbl_count = QLabel("0/0")
         self.lbl_count.setStyleSheet("color: #aaa; font-size: 12px; border: none;")
         
-        row1.addWidget(lbl_pl_title)
-        row1.addStretch()
-        row1.addWidget(self.lbl_count)
+        row1.addWidget(self.lbl_pl_title, 1)
+        row1.addWidget(self.lbl_count, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         row2 = QHBoxLayout()
         self.btn_repeat = QPushButton()
@@ -579,8 +580,18 @@ class ForYouPage(QWidget):
         if item_data:
             card._playlist_item = item_data
             card.clicked.connect(lambda _, row=card: self.playlist_item_clicked.emit(row._playlist_item))
+            card.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            card.customContextMenuRequested.connect(
+                lambda pos, row=card: self._on_playlist_card_context(row, pos)
+            )
             
         return card
+
+    def _on_playlist_card_context(self, card, local_pos):
+        item = getattr(card, "_playlist_item", None)
+        win = self.window()
+        if item is not None and win is not None and hasattr(win, "show_item_context_menu"):
+            win.show_item_context_menu(item, card.mapToGlobal(local_pos))
 
     def setup_content(self, video_widget, subtitle_window=None):
         self.video_container.set_components(video_widget, subtitle_window)
@@ -592,6 +603,15 @@ class ForYouPage(QWidget):
     
     def update_playing_status(self, current_index, total_count):
         self.lbl_count.setText(f"Bài hát - {current_index}/{total_count}")
+
+    def set_playlist_header_title(self, playlist_name=None):
+        cleaned = str(playlist_name or "").strip()
+        if cleaned:
+            self.lbl_pl_title.setText(cleaned)
+            self.lbl_pl_title.setToolTip(cleaned)
+        else:
+            self.lbl_pl_title.setText("Danh sách phát")
+            self.lbl_pl_title.setToolTip("")
 
     def toggle_shuffle(self):
         self.shuffle_req_signal.emit()

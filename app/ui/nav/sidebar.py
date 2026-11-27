@@ -69,14 +69,44 @@ class Sidebar(QListWidget):
             # UserRole + 2: Lưu Full Text (Icon + Chữ)
             item.setData(Qt.UserRole + 2, full_text) 
             # Preserve the legacy role values; use a separate visual label.
-            names = {"🏠": "house", "🎶": "music", "📚": "library", "💾": "download", "⚙️": "settings"}
+            names = {
+                "🏠": "house",
+                "🎶": "music",
+                "📚": "library",
+                "❤️": "heart",
+                "🕒": "history",
+                "💾": "download",
+                "⚙️": "settings",
+            }
+            page_keys = {
+                "🏠": "home",
+                "🎶": "for_you",
+                "📚": "library",
+                "❤️": "collections",
+                "🕒": "history",
+                "💾": "download",
+                "⚙️": "settings",
+            }
             visual_label = label_text if icon_text in names else full_text
             item.setData(Qt.UserRole + 3, visual_label)
+            item.setData(Qt.UserRole + 4, page_keys.get(icon_text, visual_label.lower()))
             item.setIcon(icon(names.get(icon_text, "music")))
             item.setText("" if self._compact else visual_label)
             item.setToolTip(visual_label)
             
             self.addItem(item)
+
+    def page_key_at(self, row: int) -> str:
+        item = self.item(row)
+        if item is None:
+            return ""
+        return str(item.data(Qt.UserRole + 4) or "")
+
+    def row_for_page(self, page_key: str) -> int:
+        for i in range(self.count()):
+            if self.page_key_at(i) == page_key:
+                return i
+        return -1
 
     def set_mini_mode(self):
         """Chế độ thu nhỏ: Chỉ hiện Icon, Căn giữa"""

@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QVBoxLayout, QLabel, 
                              QPushButton, QSlider, QWidget,QSizePolicy, QGridLayout)
-from PySide6.QtCore import Qt, Signal, QEvent, QSize
+from PySide6.QtCore import Qt, Signal, QEvent, QSize, QPoint
 from .video_info_popup import VideoInfoPopup
-from .icons import button_icon, ACCENT, TEXT, INK
+from .icons import button_icon, ACCENT, HEART_COLOR, TEXT, INK
 from .design_system import PLAYBACK_STYLE
 from .track_label import TrackLabel
 from .mini_video_dock import MiniVideoDock
@@ -30,6 +30,8 @@ class PlaybackBar(QFrame):
     reload_clicked = Signal()
     dynamic_island_clicked = Signal()
     subtitle_tools_clicked = Signal()
+    favorite_toggled = Signal()
+    add_to_playlist_clicked = Signal(QPoint)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -42,11 +44,13 @@ class PlaybackBar(QFrame):
         self._current_item_data = None # Biến lưu data bài hát hiện tại
         self.setStyleSheet(PLAYBACK_STYLE)
         controls = (
+            (self.btn_favorite, "heart", "Thêm vào Yêu thích"),
             (self.btn_shuffle, "shuffle", "Phát ngẫu nhiên"),
             (self.btn_prev, "skip-back", "Bài trước"),
             (self.btn_play, "play", "Phát / Tạm dừng"),
             (self.btn_next, "skip-forward", "Bài tiếp theo"),
             (self.btn_repeat, "repeat", "Lặp lại"),
+            (self.btn_add_playlist, "plus", "Thêm vào Playlist"),
             (self.btn_info, "info", "Thông tin bài hát"),
             (self.btn_subseting, "settings", "Cài đặt phụ đề"),
             (self.btn_sub, "captions", "Công cụ phụ đề"),
@@ -145,6 +149,8 @@ class PlaybackBar(QFrame):
         btns_layout = self.transport_layout = QHBoxLayout(self.transport_area)
         btns_layout.setContentsMargins(0, 0, 0, 0)
         btns_layout.setSpacing(8)
+        self.btn_favorite = QPushButton()
+        self.btn_favorite.setEnabled(False)
         self.btn_shuffle = QPushButton()
         self.btn_prev = QPushButton()
         self.btn_play = QPushButton()
@@ -152,8 +158,18 @@ class PlaybackBar(QFrame):
         self.btn_play.setObjectName("playButton")
         self.btn_next = QPushButton()
         self.btn_repeat = QPushButton()
+        self.btn_add_playlist = QPushButton()
+        self.btn_add_playlist.setEnabled(False)
 
-        for btn in [self.btn_shuffle, self.btn_prev, self.btn_play, self.btn_next, self.btn_repeat]:
+        for btn in [
+            self.btn_favorite,
+            self.btn_shuffle,
+            self.btn_prev,
+            self.btn_play,
+            self.btn_next,
+            self.btn_repeat,
+            self.btn_add_playlist,
+        ]:
             btns_layout.addWidget(btn)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
         
@@ -238,10 +254,16 @@ class PlaybackBar(QFrame):
         self.btn_reload.clicked.connect(self.reload_clicked.emit)
         self.btn_shuffle.clicked.connect(self.shuffle_clicked.emit)
         self.btn_dynamic_island.clicked.connect(self.dynamic_island_clicked.emit)
+        self.btn_favorite.clicked.connect(self.favorite_toggled.emit)
+        self.btn_add_playlist.clicked.connect(self._emit_add_to_playlist)
         
         self.time_slider.sliderReleased.connect(lambda: self.seek_requested.emit(self.time_slider.value()))
         self.time_slider.valueChanged.connect(self._on_slider_moved)
         self.btn_sub.clicked.connect(self.subtitle_tools_clicked.emit)
+
+    def _emit_add_to_playlist(self):
+        pos = self.btn_add_playlist.mapToGlobal(QPoint(0, -8))
+        self.add_to_playlist_clicked.emit(pos)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -251,12 +273,20 @@ class PlaybackBar(QFrame):
     def _arrange_controls(self, width):
         """Reflow the same controls; keep the video surface and footer height."""
         compact = width < 1000
-        # Keep the original 760 px minimum with the added audio button.
+        # Keep the original 760 px minimum with the added audio, favorite and playlist buttons.
         control_side = 32 if compact else 36
         for button in (self.btn_info, self.btn_subseting, self.btn_sub, self.btn_reload,
                        self.btn_vol, self.btn_audio, self.btn_dynamic_island, self.btn_fs):
             if button.width() != control_side:
                 button.setFixedSize(control_side, control_side)
+        transport_side = 26 if compact else 36
+        for button in (self.btn_favorite, self.btn_shuffle, self.btn_prev,
+                       self.btn_next, self.btn_repeat, self.btn_add_playlist):
+            if button.width() != transport_side:
+                button.setFixedSize(transport_side, transport_side)
+        play_side = 34 if compact else 40
+        if self.btn_play.width() != play_side:
+            self.btn_play.setFixedSize(play_side, play_side)
         self.extra_area.setFixedWidth(8 * control_side + 7 * 4)
         info_width = max(210, min(260 if compact else 320, int(width * 0.29)))
         if self.info_area.preferred_width != info_width:
@@ -267,7 +297,7 @@ class PlaybackBar(QFrame):
         if compact == self._compact_layout:
             return
         self._compact_layout = compact
-        self.transport_layout.setSpacing(4 if compact else 8)
+        self.transport_layout.setSpacing(2 if compact else 8)
         for widget in (self.info_area, self.center_area, self.extra_area, self.slider_area):
             self.main_layout.removeWidget(widget)
         self.center_layout.removeWidget(self.slider_area)
@@ -341,8 +371,10 @@ class PlaybackBar(QFrame):
         self.lbl_song_info.setText(formatted_text)
         self.lbl_song_info.setToolTip(f"{title}\nNghệ sĩ: {artist}")
         
-        # 🔥 KHI CÓ VIDEO -> BẬT NÚT RELOAD & FULLSCREEN
+        # 🔥 KHI CÓ VIDEO -> BẬT NÚT RELOAD, YÊU THÍCH, PLAYLIST & FULLSCREEN
         self.btn_reload.setEnabled(True)
+        self.btn_favorite.setEnabled(True)
+        self.btn_add_playlist.setEnabled(True)
         main_win = self.window()
         if main_win and hasattr(main_win, 'media_manager') and getattr(main_win.media_manager, 'enabled', False):
             # Lấy biến title và artist sẵn có trong hàm của bác đẩy lên hệ thống
@@ -370,6 +402,17 @@ class PlaybackBar(QFrame):
         """Đổi màu nút Shuffle dựa trên trạng thái từ MainWindow"""
         button_icon(self.btn_shuffle, "shuffle", color=ACCENT if is_active else TEXT)
         self.btn_shuffle.setToolTip("Phát ngẫu nhiên: bật" if is_active else "Phát ngẫu nhiên: tắt")
+
+    def set_favorite_visual(self, is_favorite: bool):
+        """Cập nhật biểu tượng trái tim Yêu thích theo bài đang phát"""
+        button_icon(
+            self.btn_favorite,
+            "heart-filled" if is_favorite else "heart",
+            color=HEART_COLOR if is_favorite else TEXT,
+        )
+        self.btn_favorite.setToolTip(
+            "Bỏ khỏi Yêu thích" if is_favorite else "Thêm vào Yêu thích"
+        )
 
     def update_volume_icon(self, volume):
         name = "volume-x" if volume == 0 else "volume-1" if volume < 0.5 else "volume-2"

@@ -827,8 +827,15 @@ class AudioEffectsController(QObject):
         if hasattr(self.window, 'sidebar'):
             self.window.sidebar.blockSignals(True)
             try:
-                if self.window.sidebar.count() > 4:
-                    self.window.sidebar.setCurrentRow(4)
+                settings_row = (
+                    self.window.sidebar.row_for_page('settings')
+                    if hasattr(self.window.sidebar, 'row_for_page')
+                    else 4
+                )
+                if settings_row < 0:
+                    settings_row = 4
+                if self.window.sidebar.count() > settings_row:
+                    self.window.sidebar.setCurrentRow(settings_row)
             finally:
                 self.window.sidebar.blockSignals(False)
         stack.setCurrentWidget(self.benchmark_page)
@@ -1097,11 +1104,12 @@ class AudioEffectsController(QObject):
         except Exception:
             pass
         paused = self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState
+        start_pos_ms = self._effective_start_position_ms()
         try:
             self.stream.set_user_volume(self.volume(), self.window.audio_output.isMuted())
             info = self.stream.start_or_reconfigure(
                 source_path=source_path,
-                start_ms=self.player.position(),
+                start_ms=start_pos_ms,
                 profile=self.profile,
                 source_info=self._source_info,
                 gain_db=gain_db,
@@ -1188,7 +1196,7 @@ class AudioEffectsController(QObject):
         if state == QMediaPlayer.PlaybackState.PlayingState:
             if self._source_info is not None:
                 if self.stream.status_info().get('paused'):
-                    self.stream.resume(self.player.position())
+                    self.stream.resume(self._effective_start_position_ms())
                 elif not self.stream.is_active():
                     self._start_or_reconfigure_stream()
                 self._last_sync_at = time.monotonic()
@@ -1206,6 +1214,26 @@ class AudioEffectsController(QObject):
             return
         if self.stream.is_active():
             self._start_or_reconfigure_stream()
+
+    def _effective_start_position_ms(self) -> int:
+        pending_resume = getattr(self.window, '_pending_resume_seek_ms', None)
+        if pending_resume is not None and int(pending_resume) > 0:
+            return int(pending_resume)
+        settled_until = float(getattr(self.window, '_resume_settled_until', 0.0) or 0.0)
+        settled_target = int(getattr(self.window, '_resume_settled_target_ms', 0) or 0)
+        pos = int(self.player.position() or 0)
+        if settled_target > 1500 and pos < 1500 and time.monotonic() < settled_until:
+            return settled_target
+        return pos
+
+    def sync_resume_position(self, target_ms: int):
+        if self._closed or not self._use_stream_engine():
+            return
+        pos = max(0, int(target_ms))
+        self._last_pos_sample = (pos, time.monotonic())
+        self._last_sync_at = time.monotonic()
+        if self.stream.is_active() and abs(self.stream.position_ms() - pos) > 500:
+            self.stream.seek(pos)
 
     def _seek_requested(self, _position):
         if not self._closed and self._use_stream_engine():

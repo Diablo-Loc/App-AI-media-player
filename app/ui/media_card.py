@@ -389,3 +389,11 @@ class MediaCard(QFrame):
         if event.button() == Qt.LeftButton:
             self.clicked.emit(self.metadata)
         super().mouseReleaseEvent(event)
+
+    def contextMenuEvent(self, event):
+        win = self.window()
+        if win is not None and hasattr(win, "show_item_context_menu") and self.metadata is not None:
+            win.show_item_context_menu(self.metadata, event.globalPos())
+            event.accept()
+            return
+        super().contextMenuEvent(event)

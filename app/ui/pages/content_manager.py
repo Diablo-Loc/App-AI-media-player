@@ -5,8 +5,10 @@ from PySide6.QtCore import QTimer
 PAGE_HOME = 0
 PAGE_FORYOU = 1
 PAGE_LIBRARY = 2
-PAGE_DOWNLOAD = 3  # Tạm dùng Library làm Download
+PAGE_DOWNLOAD = 3
 PAGE_SETTINGS = 4
+PAGE_COLLECTIONS = 5
+PAGE_HISTORY = 6
 
 class ContentController:
     def __init__(self, main_window):
@@ -35,6 +37,8 @@ class ContentController:
         # 1. Chuyển Tab & State
         self.main.content_stack.setCurrentIndex(PAGE_HOME)
         self._set_video_mode("mini")
+        if hasattr(self.main, 'top_toolbar_container'):
+            self.main.top_toolbar_container.show()
             
         # 2. Load nội dung Home (Random 20 bài)
         sample_size = min(len(self.main.all_media_items), 20)
@@ -118,3 +122,18 @@ class ContentController:
         
         # 2. Set chế độ mini để playback bar hiển thị
         self._set_video_mode("mini")
+
+    def switch_to_collections(self):
+        """Chuyển tới trang Bộ sưu tập (Yêu thích, Playlist cá nhân & Đa thư mục)"""
+        self.main.content_stack.setCurrentIndex(PAGE_COLLECTIONS)
+        self._set_video_mode("mini")
+        if hasattr(self.main, "collections_page"):
+            self.main.collections_page.refresh_all()
+            self.main.collections_page.refresh_folders_ui()
+
+    def switch_to_history(self):
+        """Chuyển tới trang Lịch sử xem theo ngày"""
+        self.main.content_stack.setCurrentIndex(PAGE_HISTORY)
+        self._set_video_mode("mini")
+        if hasattr(self.main, "history_page"):
+            self.main.history_page.refresh_view()

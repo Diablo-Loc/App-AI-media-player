@@ -19,7 +19,21 @@ class ScanWorker(QThread):
             snapshot.lock = threading.RLock()
             snapshot.save = lambda: None
             snapshot._cancel_scan = self.isInterruptionRequested
-            self.result = snapshot.scan_folder(self.folder)
+            if isinstance(self.folder, (list, tuple)):
+                merged = []
+                seen_ids = set()
+                for single_folder in self.folder:
+                    if self.isInterruptionRequested():
+                        break
+                    if not single_folder:
+                        continue
+                    for item in snapshot.scan_folder(single_folder):
+                        if item.id not in seen_ids:
+                            seen_ids.add(item.id)
+                            merged.append(item)
+                self.result = merged
+            else:
+                self.result = snapshot.scan_folder(self.folder)
         except Exception as error:
             self.error = str(error)
 
