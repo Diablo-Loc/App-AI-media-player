@@ -80,6 +80,8 @@ class DraggableSubtitle(QLabel):
         self._render_cache = SubtitleRenderCache()
         self._song_stage_size: QSize | None = None
         self.sweep_row_groups = ()
+        self.phonetic_top_group: int | None = None
+        self._cached_phonetic_top: int | None = None
 
         self.update_style()
 
@@ -186,6 +188,7 @@ class DraggableSubtitle(QLabel):
             pad_right=pad_x,
             pad_top=pad_y,
             pad_bottom=pad_y,
+            phonetic_top_group=getattr(self, 'phonetic_top_group', None),
         )
         return QSize(w, h)
 
@@ -214,11 +217,12 @@ class DraggableSubtitle(QLabel):
         if not self._user_moved:
             self.center_at_bottom()
 
-    def _plan_for(self, curr_text: str, rect: QRect, size: QSize, row_groups: tuple[int, ...]):
+    def _plan_for(self, curr_text: str, rect: QRect, size: QSize, row_groups: tuple[int, ...], phonetic_top_group: int | None = None):
         bottom_align = getattr(self, '_song_stage_size', None) is not None
         plan_key = (
             curr_text,
             row_groups,
+            phonetic_top_group,
             self.font().key(),
             size.width(),
             size.height(),
@@ -227,7 +231,15 @@ class DraggableSubtitle(QLabel):
         )
         plan = self._render_cache.get_plan(plan_key)
         if plan is None:
-            plan = build_typography_plan(curr_text, self.font(), rect, row_groups, False, bottom_align=bottom_align)
+            plan = build_typography_plan(
+                curr_text,
+                self.font(),
+                rect,
+                row_groups,
+                False,
+                bottom_align=bottom_align,
+                phonetic_top_group=phonetic_top_group,
+            )
             self._render_cache.put_plan(plan_key, plan)
         return plan, plan_key
 
@@ -260,19 +272,22 @@ class DraggableSubtitle(QLabel):
         # 1. Re-use Path & TypographyPlan cache (Pre-warmed hit < 0.2ms)
         curr_text = self.text()
         row_groups = tuple(getattr(self, 'sweep_row_groups', ()) or ())
+        phon_top = getattr(self, 'phonetic_top_group', None)
         size = self.size()
         if (
             self._cached_plan is None
             or self._cached_text != curr_text
             or self._cached_size != size
             or self._cached_row_groups != row_groups
+            or getattr(self, '_cached_phonetic_top', None) != phon_top
         ):
-            plan, _ = self._plan_for(curr_text, self.contentsRect(), size, row_groups)
+            plan, _ = self._plan_for(curr_text, self.contentsRect(), size, row_groups, phon_top)
             self._cached_plan = plan
             self._cached_path = plan.full_path
             self._cached_text = curr_text
             self._cached_size = size
             self._cached_row_groups = row_groups
+            self._cached_phonetic_top = phon_top
         else:
             plan = self._cached_plan
 
@@ -297,6 +312,7 @@ class DraggableSubtitle(QLabel):
             'static',
             curr_text,
             row_groups,
+            phon_top,
             self.font().key(),
             size.width(),
             size.height(),
@@ -409,6 +425,12 @@ class SubtitleLayer(DraggableSubtitle):
         self.subtitles = []
         self._start_times = []
         self.mode = initial_mode
+        self.phonetic_enabled = False
+        self.word_karaoke_enabled = False
+        self._song_phonetic_script: str | None = None
+        self._raw_word_entries: list[dict] = []
+        self._cue_word_timings: dict[int, list[dict]] = {}
+        self._cue_curve_cache: dict[tuple, dict[int, tuple]] = {}
         self._current_ms_cache = -1
         self._prewarmed_idx = -1
         self._subtitle_effects = SubtitleEffects(self)
@@ -454,6 +476,7 @@ class SubtitleLayer(DraggableSubtitle):
         if self.fade_anim.endValue() == 0.0 and self._opacity <= 0.0:
             self._subtitle_effects.clear()
             self.sweep_row_groups = ()
+            self.phonetic_top_group = None
             self.hide()
 
     def set_fade_enabled(self, enabled: bool):
@@ -463,7 +486,43 @@ class SubtitleLayer(DraggableSubtitle):
             self.fade_anim.stop()
             self.set_opacity(1.0)
 
-    def load_subtitles(self, segments):
+    def set_phonetic_enabled(self, enabled: bool):
+        """Bật/tắt dòng Phiên âm trên cùng (Romaji / Pinyin / Hangul) tức thì trong RAM."""
+        new_val = bool(enabled)
+        if self.phonetic_enabled == new_val:
+            return
+        self.phonetic_enabled = new_val
+        if not new_val:
+            self.phonetic_top_group = None
+        self._prewarmed_idx = -1
+        self._cue_curve_cache.clear()
+        self._render_cache.clear()
+        self._cached_plan = None
+        self._song_stage_size = (
+            self._compute_song_stage_size()
+            if (self._presentation_guard is not None and self.subtitles and self.mode != SubtitleMode.OFF)
+            else None
+        )
+        cur_ms = self._current_ms_cache
+        self._current_ms_cache = -1
+        if cur_ms >= 0:
+            self.update_position(cur_ms)
+        else:
+            self.update()
+
+    def set_word_karaoke_enabled(self, enabled: bool):
+        """Bật/tắt Karaoke chuẩn từng chữ thật (khi tắt quay về 100% quét tuyến tính cũ)."""
+        new_val = bool(enabled)
+        if self.word_karaoke_enabled == new_val:
+            return
+        self.word_karaoke_enabled = new_val
+        if not new_val and hasattr(self, '_subtitle_effects'):
+            self._subtitle_effects.track_scan_progresses = None
+        if self._current_ms_cache >= 0:
+            self.update_position(self._current_ms_cache)
+        self.update()
+
+    def load_subtitles(self, segments, word_timings=None):
         if hasattr(self, '_prewarm_timer'):
             self._prewarm_timer.stop()
         self._prewarmed_idx = -1
@@ -471,6 +530,8 @@ class SubtitleLayer(DraggableSubtitle):
         self._render_cache.clear()
         self._subtitle_effects.clear()
         self.sweep_row_groups = ()
+        self.phonetic_top_group = None
+        self._cue_curve_cache.clear()
         self.subtitles = []
         for seg in segments:
             orig_text = seg.get('orig', '') or seg.get('jp', '') or seg.get('text', '')
@@ -485,6 +546,14 @@ class SubtitleLayer(DraggableSubtitle):
 
         self.subtitles.sort(key=lambda x: x['start'])
         self._start_times = [s['start'] for s in self.subtitles]
+        from subtitle.phonetics import detect_song_phonetic_script
+        from pipeline.word_karaoke import match_words_to_loaded_cues
+        self._song_phonetic_script = detect_song_phonetic_script(self.subtitles)
+        self._raw_word_entries = list(word_timings) if word_timings else []
+        self._cue_word_timings = (
+            match_words_to_loaded_cues(self.subtitles, self._raw_word_entries)
+            if self._raw_word_entries else {}
+        )
         if self._presentation_guard is not None and self.subtitles:
             self._song_stage_size = self._compute_song_stage_size()
 
@@ -520,20 +589,22 @@ class SubtitleLayer(DraggableSubtitle):
         value = str(getattr(self.mode, 'value', self.mode) or '')
         return tuple(part for part in value.split('_') if part and part != 'off')
 
-    def build_text_plan(self, sub_dict):
-        """Build display text and one stable sweep-group id per physical row."""
+    def build_text_plan_details(self, sub_dict):
+        """Return `(text, row_groups, phonetic_top_group, group_roles)` for live & export rendering."""
         if self.mode == SubtitleMode.OFF:
-            return "", ()
+            return "", (), None, {}
 
         rows = []
         row_groups = []
+        group_roles: dict[int, str] = {}
         safe_limit = 70
+        phonetic_safe_limit = 84
 
-        def smart_wrap(text):
+        def smart_wrap(text, limit=safe_limit):
             if not text:
                 return ""
             length = len(text)
-            if length <= safe_limit:
+            if length <= limit:
                 return text
             balanced_width = int(length / 2) + 6
             final_width = max(40, balanced_width)
@@ -542,8 +613,23 @@ class SubtitleLayer(DraggableSubtitle):
             )
 
         raw_orig = str(sub_dict.get('orig', '') or '').strip()
+        from pipeline.word_karaoke import normalize_lyric_for_match
+        orig_norm = normalize_lyric_for_match(raw_orig)
         emitted_orig = False
         next_group = 0
+        phonetic_top_group: int | None = None
+
+        if self.phonetic_enabled and raw_orig and self._song_phonetic_script is not None:
+            from subtitle.phonetics import transliterate_line
+            phon_text = transliterate_line(raw_orig, self._song_phonetic_script)
+            if phon_text:
+                wrapped_phon = smart_wrap(phon_text, limit=phonetic_safe_limit).split('\n')
+                rows.extend(wrapped_phon)
+                row_groups.extend([0] * len(wrapped_phon))
+                group_roles[0] = 'phonetic'
+                phonetic_top_group = 0
+                next_group = 1
+
         for requested_key in self._mode_language_keys():
             cue_key = 'orig' if requested_key in ('jp', 'ja') else requested_key
             if cue_key == 'en':
@@ -559,11 +645,73 @@ class SubtitleLayer(DraggableSubtitle):
             wrapped_rows = smart_wrap(phrase).split('\n')
             rows.extend(wrapped_rows)
             row_groups.extend([next_group] * len(wrapped_rows))
+            is_spoken_orig = (
+                cue_key == 'orig'
+                or (bool(orig_norm) and normalize_lyric_for_match(phrase) == orig_norm)
+            )
+            group_roles[next_group] = 'orig' if is_spoken_orig else 'trans'
             next_group += 1
             if cue_key == 'orig':
                 emitted_orig = True
 
-        return "\n".join(rows), tuple(row_groups)
+        if not rows:
+            return "", (), None, {}
+        return "\n".join(rows), tuple(row_groups), phonetic_top_group, group_roles
+
+    def build_text_plan(self, sub_dict):
+        """Build display text and one stable sweep-group id per physical row."""
+        text, groups, _phon_top, _roles = self.build_text_plan_details(sub_dict)
+        return text, groups
+
+    def cue_word_curves(self, cue_idx: int) -> dict[int, tuple] | None:
+        """Return `{group_id: unit_curve}` for spoken/phonetic rows of `cue_idx`, or None."""
+        if not self.word_karaoke_enabled or not (0 <= cue_idx < len(self.subtitles)):
+            return None
+        words_ms = self._cue_word_timings.get(cue_idx)
+        if not words_ms:
+            return None
+        cache_key = (cue_idx, bool(self.phonetic_enabled), str(getattr(self.mode, 'value', self.mode)))
+        cached = self._cue_curve_cache.get(cache_key)
+        if cached is not None:
+            return cached if cached else None
+
+        _txt, _groups, _phon_top, roles = self.build_text_plan_details(self.subtitles[cue_idx])
+        if not roles:
+            self._cue_curve_cache[cache_key] = {}
+            return None
+
+        from pipeline.word_karaoke import build_unit_curve
+        from subtitle.phonetics import transliterate_word_token
+
+        orig_curve = None
+        phon_curve = None
+        curves: dict[int, tuple] = {}
+        for g_id, role in roles.items():
+            if role == 'orig':
+                if orig_curve is None:
+                    orig_curve = build_unit_curve(words_ms)
+                if orig_curve:
+                    curves[g_id] = orig_curve
+            elif role == 'phonetic':
+                if phon_curve is None:
+                    script = self._song_phonetic_script
+                    phon_curve = build_unit_curve(
+                        words_ms,
+                        transform_token=lambda tok, sc=script: transliterate_word_token(tok, sc),
+                    )
+                if phon_curve:
+                    curves[g_id] = phon_curve
+
+        self._cue_curve_cache[cache_key] = curves
+        return curves if curves else None
+
+    def track_progresses_for_pts(self, cue_idx: int, pts_ms: float) -> dict[int, float] | None:
+        """Evaluate exact per-group word karaoke progress at `pts_ms` (`None` when OFF or no sidecar)."""
+        curves = self.cue_word_curves(cue_idx)
+        if not curves:
+            return None
+        from pipeline.word_karaoke import eval_unit_curve
+        return {g_id: eval_unit_curve(curve, pts_ms) for g_id, curve in curves.items()}
 
     def build_text(self, sub_dict):
         return self.build_text_plan(sub_dict)[0]
@@ -575,7 +723,7 @@ class SubtitleLayer(DraggableSubtitle):
         pad_x, pad_y = self._effective_padding()
         max_w, max_h = 0, 0
         for sub in self.subtitles[:240]:
-            text, groups = self.build_text_plan(sub)
+            text, groups, phon_top, _roles = self.build_text_plan_details(sub)
             text = text.strip()
             if not text:
                 continue
@@ -589,6 +737,7 @@ class SubtitleLayer(DraggableSubtitle):
                 pad_right=pad_x,
                 pad_top=pad_y,
                 pad_bottom=pad_y,
+                phonetic_top_group=phon_top,
             )
             if w > max_w:
                 max_w = w
@@ -619,7 +768,7 @@ class SubtitleLayer(DraggableSubtitle):
         target_idx = getattr(self, '_prewarm_next_idx', -1)
         while 0 <= target_idx < len(self.subtitles):
             sub = self.subtitles[target_idx]
-            text, groups = self.build_text_plan(sub)
+            text, groups, phon_top, _roles = self.build_text_plan_details(sub)
             text = text.strip()
             if text:
                 row_groups = tuple(groups) if len(groups) == len(text.split('\n')) else ()
@@ -633,6 +782,7 @@ class SubtitleLayer(DraggableSubtitle):
                     pad_right=pad_x,
                     pad_top=pad_y,
                     pad_bottom=pad_y,
+                    phonetic_top_group=phon_top,
                 )
                 screen = self.screen()
                 max_w = None
@@ -648,15 +798,16 @@ class SubtitleLayer(DraggableSubtitle):
                         w = min(w, max_w)
                 size = QSize(w, h)
                 contents = QRect(pad_x, pad_y, max(1, w - pad_x * 2), max(1, h - pad_y * 2))
-                plan, _ = self._plan_for(text, contents, size, row_groups)
+                plan, _ = self._plan_for(text, contents, size, row_groups, phon_top)
                 dpr = max(1.0, float(self.devicePixelRatioF()))
                 if self._subtitle_effects.options.get('enabled'):
-                    self._subtitle_effects.prewarm_plan(plan, text, size, dpr)
+                    self._subtitle_effects.prewarm_plan(plan, text, size, dpr, phon_top)
                 else:
                     sprite_key = (
                         'static',
                         text,
                         row_groups,
+                        phon_top,
                         self.font().key(),
                         size.width(),
                         size.height(),
@@ -744,7 +895,7 @@ class SubtitleLayer(DraggableSubtitle):
             self._smart_hide(instant=False)
             return
 
-        new_text, row_groups = self.build_text_plan(active_sub)
+        new_text, row_groups, phon_top, _roles = self.build_text_plan_details(active_sub)
         new_text = new_text.strip()
 
         if not new_text:
@@ -754,6 +905,7 @@ class SubtitleLayer(DraggableSubtitle):
         self.sweep_row_groups = (
             tuple(row_groups) if len(row_groups) == len(new_text.split('\n')) else ()
         )
+        self.phonetic_top_group = phon_top if self.sweep_row_groups else None
 
         # Nếu chữ giống hệt đang hiển thị -> đồng bộ tiến độ hiệu ứng & giữ nguyên
         if not self.isHidden() and self.text() == new_text:
@@ -762,6 +914,8 @@ class SubtitleLayer(DraggableSubtitle):
             if (self.fade_anim.state() == QAbstractAnimation.State.Running
                     and self.fade_anim.endValue() == 0.0):
                 self._smart_show(instant=False)
+            elif not self._subtitle_effects._particle_timer.isActive():
+                self.update()
             return
 
         prev_sub_end = self.subtitles[idx - 1]['end'] if idx > 0 else 0
@@ -827,6 +981,7 @@ class SubtitleLayer(DraggableSubtitle):
                 self.set_opacity(0.0)
                 self._subtitle_effects.clear()
                 self.sweep_row_groups = ()
+                self.phonetic_top_group = None
             return
 
         if not self.use_fade_effect or instant:
@@ -834,6 +989,7 @@ class SubtitleLayer(DraggableSubtitle):
             self.set_opacity(0.0)
             self._subtitle_effects.clear()
             self.sweep_row_groups = ()
+            self.phonetic_top_group = None
             self.hide()
             return
 

@@ -1,5 +1,6 @@
 """Wide zero-scroll subtitle VFX controls aligned with BoTube's Fluent Dark design system."""
 from PySide6.QtCore import Qt, Signal, QSignalBlocker
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QGroupBox,
     QVBoxLayout,
@@ -16,6 +17,7 @@ from ui.icons import INK, button_icon
 from ui.subtitle_effects import SubtitleEffects, ENTRANCES, COLORS, PRESETS, ALL_TRAILS as TRAILS, normalize_options
 from ui.subtitle_particles import INTENSITIES
 from ui.subtitle_kinetic import STRENGTHS, PARTS, KINETIC_MODES, CHOREO_EXIT_MODES
+from ui.subtitle_studio import KARAOKE_RECOMMENDED_COLORS, KARAOKE_RECOMMENDED_TRAILS
 
 
 class SubtitleEffectsPanel(QGroupBox):
@@ -173,7 +175,29 @@ class SubtitleEffectsPanel(QGroupBox):
         layout.addWidget(self.preview_button)
 
         self.sync_options(None)
+        self._orig_trail_texts = [self.trail.itemText(i) for i in range(self.trail.count())]
+        self._orig_color_texts = [self.color.itemText(i) for i in range(self.color.count())]
         self.toggled.connect(self._edited)
+
+    def set_karaoke_recommendations(self, active: bool):
+        """Highlight recommended Karaoke sweep trails & colors with Gold ★ markers when Karaoke Mode is ON."""
+        gold = QColor('#FDE68A')
+        for combo, orig_texts, rec_set in (
+            (self.trail, getattr(self, '_orig_trail_texts', ()), KARAOKE_RECOMMENDED_TRAILS),
+            (self.color, getattr(self, '_orig_color_texts', ()), KARAOKE_RECOMMENDED_COLORS),
+        ):
+            if not orig_texts:
+                continue
+            blocker = QSignalBlocker(combo)
+            for idx, base_txt in enumerate(orig_texts):
+                key = combo.itemData(idx)
+                if active and key in rec_set:
+                    combo.setItemText(idx, f"★ {base_txt}")
+                    combo.setItemData(idx, gold, Qt.ItemDataRole.ForegroundRole)
+                else:
+                    combo.setItemText(idx, base_txt)
+                    combo.setItemData(idx, None, Qt.ItemDataRole.ForegroundRole)
+            del blocker
 
     def _grid_choice(self, grid, row, col, title, choices, connect=True):
         box = QVBoxLayout()

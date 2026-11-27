@@ -220,6 +220,7 @@ class ParticlePainter:
         self.key = None
         self.rows = []
         self.tracks = []
+        self._track_group_ids = ()
         self._row_group_ids = ()
         self._sweep_cells = []
         self._sweep_prefix = []
@@ -237,6 +238,7 @@ class ParticlePainter:
         self.key = None
         self.rows = []
         self.tracks = []
+        self._track_group_ids = ()
         self._row_group_ids = ()
         self._sweep_cells = []
         self._sweep_prefix = []
@@ -260,6 +262,7 @@ class ParticlePainter:
             self.label.contentsRect().getRect(),
             duration_ms,
             row_groups,
+            getattr(self.label, 'phonetic_top_group', None),
             geom_sig,
         )
         if key != self.key:
@@ -273,6 +276,7 @@ class ParticlePainter:
                 if group not in order:
                     order.append(group)
             self.tracks = []
+            track_groups = []
             for group in order:
                 track = []
                 for row_index, row in enumerate(self.rows):
@@ -280,6 +284,8 @@ class ParticlePainter:
                         track.extend(row)
                 if track:
                     self.tracks.append(track)
+                    track_groups.append(group)
+            self._track_group_ids = tuple(track_groups)
             self._sweep_cells, self._sweep_prefix = [], []
 
     def _prepare_sweep(self):
@@ -323,20 +329,26 @@ class ParticlePainter:
             self._sweep_cells.append(cells)
             self._sweep_prefix.append(prefix)
 
-    def sweep_masks(self, progress):
-        """Pure media-time mask with the final cell handed to cue fade-out."""
-        progress = min(1.0, max(0.0, progress))
+    def sweep_masks(self, progress, track_progresses=None):
+        """Pure media-time mask with optional per-track word-level karaoke progress."""
+        base_p = min(1.0, max(0.0, progress))
         if not self._sweep_cells and self.rows:
             self._prepare_sweep()
         hidden, active = QRegion(), []
-        for cells, prefix in zip(self._sweep_cells, self._sweep_prefix):
+        for idx_t, (cells, prefix) in enumerate(zip(self._sweep_cells, self._sweep_prefix)):
             if not cells:
                 continue
-            if progress >= 1:
+            g_id = self._track_group_ids[idx_t] if idx_t < len(self._track_group_ids) else idx_t
+            tp = (
+                min(1.0, max(0.0, float(track_progresses[g_id])))
+                if (isinstance(track_progresses, dict) and g_id in track_progresses)
+                else base_p
+            )
+            if tp >= 1:
                 hidden = hidden.united(prefix[len(cells) - 1])
                 active.append((cells[-1], 1.0))
                 continue
-            position = progress * len(cells)
+            position = tp * len(cells)
             index = min(len(cells) - 1, int(position))
             local = min(1.0, position - index)
             hidden = hidden.united(prefix[index])
@@ -344,10 +356,17 @@ class ParticlePainter:
             active.append((cells[index], alpha))
         return hidden, active
 
-    def targets(self, progress):
+    def targets(self, progress, track_progresses=None):
         result = []
-        for track in self.tracks:
-            position = min(1.0, max(0.0, progress)) * len(track)
+        base_p = min(1.0, max(0.0, progress))
+        for idx_t, track in enumerate(self.tracks):
+            g_id = self._track_group_ids[idx_t] if idx_t < len(self._track_group_ids) else idx_t
+            tp = (
+                min(1.0, max(0.0, float(track_progresses[g_id])))
+                if (isinstance(track_progresses, dict) and g_id in track_progresses)
+                else base_p
+            )
+            position = tp * len(track)
             index = min(len(track) - 1, int(position))
             region = track[index]
             local = min(1.0, position - index)
@@ -356,12 +375,12 @@ class ParticlePainter:
             result.append((region, local, min(visible_right, max(visible_left, x))))
         return result
 
-    def morph_regions(self, progress, style, intensity):
+    def morph_regions(self, progress, style, intensity, track_progresses=None):
         if style != 'shuriken' or progress <= 0 or progress >= 1:
             return []
         strength = {'gentle': .3, 'normal': .5, 'rich': .65}[intensity]
         return [(region.rect, 1 - strength * math.sin(local * math.pi))
-                for region, local, _ in self.targets(progress)]
+                for region, local, _ in self.targets(progress, track_progresses)]
 
     def _paint_spotlight(self, painter, targets, envelope, intensity):
         radius_mul = {'gentle': 1.25, 'normal': 1.55, 'rich': 1.85}[intensity]
@@ -383,12 +402,12 @@ class ParticlePainter:
         # AMLL feathered karaoke sweep uses word spring lift instead of a heavy oval blob over glyphs
         return
 
-    def _paint_neon_pulse(self, painter, progress, envelope, intensity):
+    def _paint_neon_pulse(self, painter, progress, envelope, intensity, track_progresses=None):
         track_idx_map = {}
         for row_idx, r_group in enumerate(self._row_group_ids):
             track_idx_map.setdefault(r_group, []).extend(self.rows[row_idx])
         thickness = {'gentle': 2.0, 'normal': 2.4, 'rich': 3.0}[intensity]
-        targets = self.targets(progress)
+        targets = self.targets(progress, track_progresses)
         for _group_id, row_regions in track_idx_map.items():
             if not row_regions or self.last_draw_count >= MAX_PARTICLES:
                 continue
@@ -429,12 +448,12 @@ class ParticlePainter:
                 painter.drawEllipse(QPointF(front, bar_y), head_r, head_r)
                 self.last_draw_count += 1
 
-    def _paint_lyric_bar(self, painter, progress, envelope, intensity):
+    def _paint_lyric_bar(self, painter, progress, envelope, intensity, track_progresses=None):
         track_idx_map = {}
         for row_idx, r_group in enumerate(self._row_group_ids):
             track_idx_map.setdefault(r_group, []).extend(self.rows[row_idx])
         thickness = {'gentle': 2.0, 'normal': 2.6, 'rich': 3.2}[intensity]
-        targets = self.targets(progress)
+        targets = self.targets(progress, track_progresses)
         for _group_id, row_regions in track_idx_map.items():
             if not row_regions or self.last_draw_count >= MAX_PARTICLES:
                 continue
@@ -517,18 +536,21 @@ class ParticlePainter:
                 self.last_draw_count += 1
         painter.setPen(Qt.PenStyle.NoPen)
 
-    def paint(self, painter, progress, style, intensity, entry_progress=1.0, burst=False, beat_pulse=0.0):
+    def paint(self, painter, progress, style, intensity, entry_progress=1.0, burst=False, beat_pulse=0.0, track_progresses=None):
         self.last_draw_count = 0
         if (style == 'none' and not burst) or not self.rows:
             return
         progress = min(1.0, max(0.0, progress))
         envelope = min(1.0, progress * 14, (1 - progress) * 24)
+        if isinstance(track_progresses, dict) and track_progresses and progress < 0.996:
+            if any(0.004 < float(v) < 0.996 for v in track_progresses.values()):
+                envelope = max(envelope, min(1.0, (1.0 - progress) * 24.0))
         if burst and entry_progress < 1:
             envelope = max(envelope, math.sin(entry_progress * math.pi))
         if envelope <= 0:
             return
         budget = {'gentle': 8, 'normal': 16, 'rich': MAX_PARTICLES}[intensity]
-        targets = self.targets(progress)
+        targets = self.targets(progress, track_progresses)
         per_row = max(1, budget // len(targets))
         painter.save()
         # Use full widget rect (with 16x24px canvas headroom) instead of tight contentsRect
@@ -540,7 +562,7 @@ class ParticlePainter:
             painter.restore()
             return
         if style == 'neon_pulse' and not burst:
-            self._paint_neon_pulse(painter, progress, envelope, intensity)
+            self._paint_neon_pulse(painter, progress, envelope, intensity, track_progresses)
             painter.restore()
             return
         if style == 'spotlight' and not burst:
@@ -548,7 +570,7 @@ class ParticlePainter:
             painter.restore()
             return
         if style == 'lyric_bar' and not burst:
-            self._paint_lyric_bar(painter, progress, envelope, intensity)
+            self._paint_lyric_bar(painter, progress, envelope, intensity, track_progresses)
             painter.restore()
             return
         if style in VFX_TRAIL_KEYS and not burst:

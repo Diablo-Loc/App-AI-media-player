@@ -43,6 +43,7 @@ from ui.subtitle_studio import (
     build_typography_plan,
     draw_cinema_pill,
     draw_studio_text_layers,
+    make_phonetic_top_font,
     measure_box_size,
 )
 
@@ -901,6 +902,8 @@ class ExportCue:
     contents_width: int = 0
     contents_height: int = 0
     sweep_row_groups: tuple[int, ...] = ()
+    phonetic_top_group: int | None = None
+    word_curves: tuple[tuple[int, tuple[tuple[float, float, float, float], ...]], ...] = ()
 
 
 @dataclass(frozen=True)
@@ -951,10 +954,12 @@ def snapshot_from_window(window) -> ExportSnapshot:
 
     cues = []
     source_cues = tuple(getattr(layer, 'subtitles', ()) or ())
+    details_builder = getattr(layer, 'build_text_plan_details', None)
+    curve_builder = getattr(layer, 'cue_word_curves', None)
     for index, cue in enumerate(source_cues):
-        plan_builder = getattr(layer, 'build_text_plan', None)
-        if callable(plan_builder):
-            text, sweep_row_groups = plan_builder(cue)
+        phonetic_top_group = None
+        if callable(details_builder):
+            text, sweep_row_groups, phonetic_top_group, _roles = details_builder(cue)
             text = text.strip()
             sweep_row_groups = tuple(sweep_row_groups or ())
             if (len(sweep_row_groups) != len(text.split('\n'))
@@ -963,11 +968,24 @@ def snapshot_from_window(window) -> ExportSnapshot:
                 sweep_row_groups = subtitle_row_groups(
                     text, getattr(layer, 'mode', None), cue
                 )
+                phonetic_top_group = None
         else:
-            text = layer.build_text(cue).strip()
-            sweep_row_groups = subtitle_row_groups(
-                text, getattr(layer, 'mode', None), cue
-            )
+            plan_builder = getattr(layer, 'build_text_plan', None)
+            if callable(plan_builder):
+                text, sweep_row_groups = plan_builder(cue)
+                text = text.strip()
+                sweep_row_groups = tuple(sweep_row_groups or ())
+                if (len(sweep_row_groups) != len(text.split('\n'))
+                        or any(not isinstance(group, int) or isinstance(group, bool)
+                               for group in sweep_row_groups)):
+                    sweep_row_groups = subtitle_row_groups(
+                        text, getattr(layer, 'mode', None), cue
+                    )
+            else:
+                text = layer.build_text(cue).strip()
+                sweep_row_groups = subtitle_row_groups(
+                    text, getattr(layer, 'mode', None), cue
+                )
         if not text:
             continue
         start = float(cue.get('start', 0) or 0)
@@ -988,7 +1006,18 @@ def snapshot_from_window(window) -> ExportSnapshot:
         c_x, c_y = int(probe_contents.x()), int(probe_contents.y())
         c_w = max(1, int(probe_contents.width()))
         c_h = max(1, int(probe_contents.height()))
-        if getattr(layer, 'bilingual_hierarchy', False) and len(set(sweep_row_groups)) >= 2:
+        if phonetic_top_group is not None:
+            pad_x = max(0, c_x)
+            pad_y = max(0, c_y)
+            box_w, box_h = measure_box_size(
+                text, size_probe.font(),
+                sweep_row_groups, False,
+                pad_left=pad_x, pad_right=pad_x, pad_top=pad_y, pad_bottom=pad_y,
+                phonetic_top_group=phonetic_top_group,
+            )
+            c_w = max(1, box_w - pad_x * 2)
+            c_h = max(1, box_h - pad_y * 2)
+        elif getattr(layer, 'bilingual_hierarchy', False) and len(set(sweep_row_groups)) >= 2:
             pad_x = max(0, c_x)
             pad_y = max(0, c_y)
             box_w, box_h = measure_box_size(
@@ -998,6 +1027,11 @@ def snapshot_from_window(window) -> ExportSnapshot:
             )
             c_w = max(1, box_w - pad_x * 2)
             c_h = max(1, box_h - pad_y * 2)
+        word_curves = ()
+        if callable(curve_builder):
+            raw_curves = curve_builder(index)
+            if raw_curves:
+                word_curves = tuple(sorted((int(g), tuple(c)) for g, c in raw_curves.items()))
         cues.append(ExportCue(
             index, start, end, text, previous_source_end,
             box_width=box_w,
@@ -1007,6 +1041,8 @@ def snapshot_from_window(window) -> ExportSnapshot:
             contents_width=c_w,
             contents_height=c_h,
             sweep_row_groups=sweep_row_groups,
+            phonetic_top_group=phonetic_top_group,
+            word_curves=word_curves,
         ))
     size_probe.deleteLater()
 
@@ -1210,11 +1246,13 @@ class _RenderLabel(QObject):
         self.outline_color = style['outline_color']
         self.bilingual_hierarchy = False
         self.sweep_row_groups = ()
+        self.phonetic_top_group = None
         self._cached_plan = None
 
-    def configure(self, text, size, contents, sweep_row_groups=()):
+    def configure(self, text, size, contents, sweep_row_groups=(), phonetic_top_group=None):
         self._text, self._size, self._contents = text, QSize(size), QRect(contents)
         self.sweep_row_groups = tuple(sweep_row_groups or ())
+        self.phonetic_top_group = phonetic_top_group
 
     def text(self): return self._text
     def font(self): return self._font
@@ -1299,6 +1337,7 @@ class SubtitleBandRenderer:
         font.setPixelSize(max(8, int(style['font_size'])))
         self.style, self.font = style, font
         self.metrics = QFontMetrics(font)
+        self.phonetic_metrics = QFontMetrics(make_phonetic_top_font(font))
         self.bilingual_hierarchy = False
         self.pad_left = max(0, int(style.get('padding_left', 12)))
         self.pad_right = max(0, int(style.get('padding_right', 12)))
@@ -1329,7 +1368,7 @@ class SubtitleBandRenderer:
         )
         self._wrapped_cache = {}
         logical_band = max((
-            self._geometry(self._display_text(cue.text), cue)[0].height()
+            self._geometry(self._display_text(cue.text, cue), cue)[0].height()
             for cue in snapshot.cues
         ), default=16)
         logical_band = max(16, logical_band)
@@ -1359,11 +1398,12 @@ class SubtitleBandRenderer:
             overlay_y = min(max(overlay_y, self.safe_top), maximum_y)
         self.overlay_y = overlay_y
 
-    def _split_long_token(self, token):
+    def _split_long_token(self, token, metrics=None):
+        fm = metrics or self.metrics
         chunks, current = [], ''
         for cluster in _graphemes(token):
             candidate = current + cluster
-            if current and self.metrics.horizontalAdvance(candidate) > self.max_logical_text_width:
+            if current and fm.horizontalAdvance(candidate) > self.max_logical_text_width:
                 chunks.append(current)
                 current = cluster
             else:
@@ -1372,19 +1412,20 @@ class SubtitleBandRenderer:
             chunks.append(current)
         return chunks or ['']
 
-    def _wrap_line(self, line):
-        if not line or self.metrics.horizontalAdvance(line) <= self.max_logical_text_width:
+    def _wrap_line(self, line, metrics=None):
+        fm = metrics or self.metrics
+        if not line or fm.horizontalAdvance(line) <= self.max_logical_text_width:
             return [line]
         words = line.split()
         if len(words) <= 1:
-            return self._split_long_token(line)
+            return self._split_long_token(line, fm)
         rows, current = [], ''
         for word in words:
-            parts = ([word] if self.metrics.horizontalAdvance(word) <= self.max_logical_text_width
-                     else self._split_long_token(word))
+            parts = ([word] if fm.horizontalAdvance(word) <= self.max_logical_text_width
+                     else self._split_long_token(word, fm))
             for part in parts:
                 candidate = part if not current else current + ' ' + part
-                if current and self.metrics.horizontalAdvance(candidate) > self.max_logical_text_width:
+                if current and fm.horizontalAdvance(candidate) > self.max_logical_text_width:
                     rows.append(current)
                     current = part
                 else:
@@ -1393,18 +1434,22 @@ class SubtitleBandRenderer:
             rows.append(current)
         return rows or ['']
 
-    def _display_text(self, text):
-        cached = self._wrapped_cache.get(text)
+    def _display_text(self, text, cue=None):
+        phon_top = getattr(cue, 'phonetic_top_group', None) if cue is not None else None
+        groups = tuple(getattr(cue, 'sweep_row_groups', ()) or ()) if (cue is not None and phon_top is not None) else ()
+        cache_key = (text, phon_top, groups) if phon_top is not None else text
+        cached = self._wrapped_cache.get(cache_key)
         if cached is not None:
             return cached
         if not self.settings.safe_subtitles:
             result = text
         else:
             rows = []
-            for line in text.split('\n'):
-                rows.extend(self._wrap_line(line))
+            for idx, line in enumerate(text.split('\n')):
+                is_phon = (phon_top is not None and idx < len(groups) and groups[idx] == phon_top)
+                rows.extend(self._wrap_line(line, self.phonetic_metrics if is_phon else self.metrics))
             result = '\n'.join(rows)
-        self._wrapped_cache[text] = result
+        self._wrapped_cache[cache_key] = result
         return result
 
     def _display_row_groups(self, cue, display_text):
@@ -1414,9 +1459,11 @@ class SubtitleBandRenderer:
             return tuple(range(len(display_text.split('\n'))))
         if not self.settings.safe_subtitles:
             return groups
+        phon_top = getattr(cue, 'phonetic_top_group', None)
         expanded = []
         for index, line in enumerate(source_lines):
-            expanded.extend([groups[index]] * len(self._wrap_line(line)))
+            is_phon = (phon_top is not None and groups[index] == phon_top)
+            expanded.extend([groups[index]] * len(self._wrap_line(line, self.phonetic_metrics if is_phon else self.metrics)))
         if len(expanded) != len(display_text.split('\n')):
             return tuple(range(len(display_text.split('\n'))))
         return tuple(expanded)
@@ -1430,7 +1477,30 @@ class SubtitleBandRenderer:
                 QSize(cue.box_width, cue.box_height),
                 QRect(cue.contents_x, cue.contents_y, cue.contents_width, cue.contents_height),
             )
-        row_groups = tuple(cue.sweep_row_groups or ()) if cue is not None else ()
+        phon_top = getattr(cue, 'phonetic_top_group', None) if cue is not None else None
+        row_groups = self._display_row_groups(cue, text) if cue is not None else ()
+        if phon_top is not None and len(row_groups) == len(text.split('\n')):
+            w, h = measure_box_size(
+                text,
+                self.font,
+                row_groups,
+                False,
+                pad_left=self.pad_left,
+                pad_right=self.pad_right,
+                pad_top=self.pad_top,
+                pad_bottom=self.pad_bottom,
+                phonetic_top_group=phon_top,
+            )
+            max_logical_width = self.max_logical_text_width + self.pad_left + self.pad_right
+            width = min(max_logical_width, max(1, w))
+            height = max(1, h)
+            contents = QRect(
+                self.pad_left,
+                self.pad_top,
+                max(1, width - self.pad_left - self.pad_right),
+                max(1, height - self.pad_top - self.pad_bottom),
+            )
+            return QSize(width, height), contents
         if self.bilingual_hierarchy and len(set(row_groups)) >= 2 and len(row_groups) == len(text.split('\n')):
             w, h = measure_box_size(
                 text,
@@ -1468,17 +1538,20 @@ class SubtitleBandRenderer:
         )
         return QSize(width, height), contents
 
-    def _plan_for(self, text, size, contents, row_groups=()):
+    def _plan_for(self, text, size, contents, row_groups=(), phonetic_top_group=None):
         hierarchy = bool(self.bilingual_hierarchy)
-        key = (text, size.width(), size.height(), contents.getRect(), tuple(row_groups), hierarchy)
+        key = (text, size.width(), size.height(), contents.getRect(), tuple(row_groups), hierarchy, phonetic_top_group)
         if key == self._path_key:
             return self._path
-        plan = build_typography_plan(text, self.font, contents, tuple(row_groups), hierarchy)
+        plan = build_typography_plan(
+            text, self.font, contents, tuple(row_groups), hierarchy,
+            phonetic_top_group=phonetic_top_group,
+        )
         self._path_key, self._path = key, plan
         return plan
 
-    def _path_for(self, text, size, contents, row_groups=()):
-        return self._plan_for(text, size, contents, row_groups).full_path
+    def _path_for(self, text, size, contents, row_groups=(), phonetic_top_group=None):
+        return self._plan_for(text, size, contents, row_groups, phonetic_top_group).full_path
 
     def _cue_at(self, pts_ms):
         if not self.snapshot.cues:
@@ -1519,8 +1592,9 @@ class SubtitleBandRenderer:
         cue, opacity, active = self._cue_at(pts_ms)
         if cue is None or opacity <= 0:
             return self._blank_frame
-        display_text = self._display_text(cue.text)
+        display_text = self._display_text(cue.text, cue)
         display_row_groups = self._display_row_groups(cue, display_text)
+        phon_top = getattr(cue, 'phonetic_top_group', None)
 
         # Most subtitle time is static text.  Re-use the already rasterized
         # band once entry/fade motion is settled; animated trails/kinetics keep
@@ -1542,8 +1616,8 @@ class SubtitleBandRenderer:
 
         self.image.fill(Qt.GlobalColor.transparent)
         size, contents = self._geometry(display_text, cue)
-        self.label.configure(display_text, size, contents, display_row_groups)
-        plan = self._plan_for(display_text, size, contents, display_row_groups)
+        self.label.configure(display_text, size, contents, display_row_groups, phon_top)
+        plan = self._plan_for(display_text, size, contents, display_row_groups, phon_top)
         self.label._cached_plan = plan
         path = plan.full_path
         keep_erased_sweep = (
@@ -1562,6 +1636,14 @@ class SubtitleBandRenderer:
                 self.effects.scan_progress = min(
                     1.0, max(0.0, (pts_ms-cue.start)/max(1, cue.end-cue.start))
                 )
+                word_curves = getattr(cue, 'word_curves', ())
+                if word_curves:
+                    from pipeline.word_karaoke import eval_unit_curve
+                    self.effects.track_scan_progresses = {
+                        gid: eval_unit_curve(curve, pts_ms) for gid, curve in word_curves
+                    }
+                else:
+                    self.effects.track_scan_progresses = None
             else:
                 # Match the live SubtitleLayer fade-out contract: once an
                 # erase sweep has completed, keep its final mask while the
@@ -1570,10 +1652,12 @@ class SubtitleBandRenderer:
                 # glyphs back immediately before the next cue.
                 self.effects.progress = 1.0
                 self.effects.scan_progress = 1.0
+                self.effects.track_scan_progresses = None
         else:
             self.effects.cue = None
             self.effects.progress = 1.0
             self.effects.scan_progress = 1.0
+            self.effects.track_scan_progresses = None
 
         target_w = max(1, math.ceil(size.width()*self.scale))
         target_h = max(1, math.ceil(size.height()*self.scale))

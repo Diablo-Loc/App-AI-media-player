@@ -298,13 +298,21 @@ class AppController(QObject):
     # =========================================================
     def _load_subtitle_to_ui(self, media_id):
         segments = self.subtitle_mgr.get_segments_for_ui(media_id)
+        word_timings = (
+            self.subtitle_mgr.get_word_timings(media_id)
+            if hasattr(self.subtitle_mgr, "get_word_timings")
+            else []
+        )
 
         sub = getattr(self.window, "sub_layer", None)
         if not sub:
             logger.warning("⚠️ Không có sub_layer")
             return
 
-        sub.load_subtitles(segments)
+        try:
+            sub.load_subtitles(segments, word_timings=word_timings)
+        except TypeError:
+            sub.load_subtitles(segments)
         if not segments:
             sub.clear()
             sub._smart_hide(instant=True)

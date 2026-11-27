@@ -211,6 +211,8 @@ class MainWindow(QMainWindow):
         self.subsettings_panel.sync_ui(self.config)  # Đẩy config vào giao diện Settings
         if hasattr(self, 'sub_layer'):
             self.sub_layer.set_fade_enabled(self.config.get("fade_enabled", True))
+            self.sub_layer.set_phonetic_enabled(bool(self.config.get("phonetic_enabled", False)))
+            self.sub_layer.set_word_karaoke_enabled(bool(self.config.get("word_karaoke_enabled", False)))
         # Kết nối: Khi kéo slider ở popup -> chỉnh âm lượng thật
         self.vol_popup.volumeChanged.connect(self.update_volume_from_popup)
         
@@ -242,6 +244,8 @@ class MainWindow(QMainWindow):
         self.subsettings_panel.shadow_changed.connect(self._on_shadow_changed)
         self.subsettings_panel.reset_requested.connect(self._reset_defaults)
         self.subsettings_panel.fade_effect_changed.connect(self.set_fade_enabled)
+        self.subsettings_panel.phonetic_changed.connect(self.set_phonetic_enabled)
+        self.subsettings_panel.word_karaoke_changed.connect(self.set_word_karaoke_enabled)
         self.subsettings_panel.studio_profile_requested.connect(self._apply_studio_subtitle_profile)
         install_subtitle_effects(self)
         # Nút mở settings
@@ -965,10 +969,11 @@ class MainWindow(QMainWindow):
         self.sync_mini_player_state()
     
     def on_mini_player_focus_changed(self, has_focus):
-        """Handle spacebar shortcut enable/disable khi MiniPlayer focus thay đổi"""
+        """Handle spacebar & phonetic shortcut enable/disable khi MiniPlayer focus thay đổi"""
         if hasattr(self, 'spacebar_shortcut'):
             self.spacebar_shortcut.setEnabled(not has_focus)
-            # print(f"Spacebar shortcut: {'DISABLED' if has_focus else 'ENABLED'}")
+        if hasattr(self, 'phonetic_shortcut'):
+            self.phonetic_shortcut.setEnabled(not has_focus)
 
     def update_ui_state(self, state):
         is_playing = (state == QMediaPlayer.PlaybackState.PlayingState)
@@ -1120,6 +1125,9 @@ class MainWindow(QMainWindow):
         self.spacebar_shortcut.activated.connect(self.toggle_play_pause)
         
         QShortcut(QKeySequence(Qt.Key.Key_F), self).activated.connect(self.toggle_fullscreen)
+        self.phonetic_shortcut = QShortcut(QKeySequence(Qt.Key.Key_R), self)
+        self.phonetic_shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
+        self.phonetic_shortcut.activated.connect(self.toggle_phonetic_shortcut)
         QShortcut(QKeySequence(Qt.Key.Key_Escape), self).activated.connect(self._escape_shortcut)
         QShortcut(QKeySequence(Qt.Key.Key_Right), self).activated.connect(lambda: self.seek_relative(10000))
         QShortcut(QKeySequence(Qt.Key.Key_Left), self).activated.connect(lambda: self.seek_relative(-10000))
@@ -1581,6 +1589,8 @@ class MainWindow(QMainWindow):
         if hasattr(self, "sub_layer"):
             self.sub_layer.subtitles = []       # Xóa dữ liệu sub cũ
             self.sub_layer._start_times = []    # Xóa mốc thời gian
+            self.sub_layer._cue_word_timings = {}
+            self.sub_layer.phonetic_top_group = None
             self.sub_layer.setText("")          # Xóa text trên màn hình
             self.sub_layer.adjustSize()
             self.sub_layer.hide()               # Ẩn tạm thời
@@ -1916,6 +1926,10 @@ class MainWindow(QMainWindow):
             self.sub_layer.apply_style(**{key: value})
         elif key == "fade_enabled":
             self.sub_layer.set_fade_enabled(value)
+        elif key == "phonetic_enabled":
+            self.sub_layer.set_phonetic_enabled(bool(value))
+        elif key == "word_karaoke_enabled":
+            self.sub_layer.set_word_karaoke_enabled(bool(value))
         elif key == "lock_position":
             pass
         
@@ -1929,6 +1943,149 @@ class MainWindow(QMainWindow):
         
         # 2. Lưu vào config và ghi ra file settings.json
         self._save_setting("fade_enabled", enabled)
+
+    def set_phonetic_enabled(self, enabled: bool):
+        flag = bool(enabled)
+        if hasattr(self, 'sub_layer'):
+            self.sub_layer.set_phonetic_enabled(flag)
+        self._save_setting("phonetic_enabled", flag)
+
+    def set_word_karaoke_enabled(self, enabled: bool):
+        import copy as _copy
+        flag = bool(enabled)
+        if flag:
+            # Snapshot normal watching style once so turning Karaoke OFF restores exact user settings
+            if "_pre_karaoke_style" not in self.config:
+                self.config["_pre_karaoke_style"] = {
+                    "font_size": int(self.config.get("font_size", getattr(self.sub_layer, "current_font_size", 24))),
+                    "font_color": str(self.config.get("font_color", getattr(self.sub_layer, "current_color", "#FFFF00"))),
+                    "bg_color": str(self.config.get("bg_color", getattr(self.sub_layer, "current_bg_color", "#000000"))),
+                    "bg_opacity": float(self.config.get("bg_opacity", getattr(self.sub_layer, "current_bg_opacity", 0.5))),
+                    "outline_enabled": bool(self.config.get("outline_enabled", getattr(self.sub_layer, "use_outline", True))),
+                    "outline_width": int(self.config.get("outline_width", getattr(self.sub_layer, "outline_width", 4))),
+                    "outline_color": str(self.config.get("outline_color", getattr(self.sub_layer, "outline_color", "#000000"))),
+                    "shadow_enabled": bool(self.config.get("shadow_enabled", getattr(self.sub_layer, "use_shadow", True))),
+                    "shadow_alpha": int(self.config.get("shadow_alpha", getattr(self.sub_layer, "shadow_alpha", 160))),
+                    "fade_enabled": bool(self.config.get("fade_enabled", getattr(self.sub_layer, "use_fade_effect", True))),
+                    "phonetic_enabled": bool(self.config.get("phonetic_enabled", getattr(self.sub_layer, "phonetic_enabled", False))),
+                    "subtitle_effects": _copy.deepcopy(self.config.get("subtitle_effects")),
+                }
+            base_snap = self.config["_pre_karaoke_style"]
+            karaoke_size = min(56, max(int(base_snap.get("font_size", 24)) + 8, 32))
+            cur_fx = normalize_options(self.config.get("subtitle_effects"))
+            if not cur_fx.get("enabled") or cur_fx.get("trail") == "none":
+                spec = STUDIO_PROFILES["amll_silk_pro"]
+                fx_opts = normalize_options(dict(spec["subtitle_effects"], color="fire_gold"))
+                self.config["font_color"] = "#FEF08A"
+                self.config["bg_color"] = spec["bg_color"]
+                self.config["bg_opacity"] = 0.0
+                self.config["outline_enabled"] = True
+                self.config["outline_width"] = 3
+                self.config["outline_color"] = "#090D16"
+                self.config["shadow_enabled"] = True
+                self.config["shadow_alpha"] = 205
+                self.config["fade_enabled"] = True
+                self.config["subtitle_effects"] = fx_opts
+            self.config["font_size"] = karaoke_size
+            self.config["word_karaoke_enabled"] = True
+            self.config["phonetic_enabled"] = True
+            self.save_config()
+
+            if hasattr(self, "sub_layer"):
+                self.sub_layer.set_phonetic_enabled(True)
+                self.sub_layer.set_word_karaoke_enabled(True)
+                self.sub_layer.apply_style(
+                    font_size=self.config["font_size"],
+                    color=self.config.get("font_color", "#FEF08A"),
+                    bg_color=self.config.get("bg_color", "#0B1120"),
+                    bg_opacity=self.config.get("bg_opacity", 0.0),
+                    outline_enabled=self.config.get("outline_enabled", True),
+                    outline_width=self.config.get("outline_width", 3),
+                    outline_color=self.config.get("outline_color", "#090D16"),
+                    shadow_enabled=self.config.get("shadow_enabled", True),
+                    shadow_alpha=self.config.get("shadow_alpha", 205),
+                    fade_enabled=self.config.get("fade_enabled", True),
+                )
+                self.sub_layer._subtitle_effects.configure(self.config.get("subtitle_effects"))
+                self.sub_layer.update_position(self.sub_layer._current_ms_cache)
+                self.sub_layer.update()
+            if hasattr(self, "subsettings_panel"):
+                self.subsettings_panel.sync_ui(self.config)
+                if self.subsettings_panel.isVisible():
+                    self.subsettings_panel.effects_panel.play_preview()
+            if hasattr(self, "_show_status"):
+                self._show_status(f"🎤 Chế độ Karaoke: Bật (cỡ chữ {karaoke_size}px · hiệu ứng ★ Đề xuất)")
+        else:
+            prev = self.config.pop("_pre_karaoke_style", None)
+            restored_phonetic = bool(self.config.get("phonetic_enabled", False))
+            if isinstance(prev, dict):
+                for k in (
+                    "font_size", "font_color", "bg_color", "bg_opacity",
+                    "outline_enabled", "outline_width", "outline_color",
+                    "shadow_enabled", "shadow_alpha", "fade_enabled",
+                ):
+                    if k in prev:
+                        self.config[k] = prev[k]
+                if "phonetic_enabled" in prev:
+                    restored_phonetic = bool(prev["phonetic_enabled"])
+                    self.config["phonetic_enabled"] = restored_phonetic
+                if prev.get("subtitle_effects") is None:
+                    self.config.pop("subtitle_effects", None)
+                else:
+                    self.config["subtitle_effects"] = prev["subtitle_effects"]
+            self.config["word_karaoke_enabled"] = False
+            self.save_config()
+
+            if hasattr(self, "sub_layer"):
+                self.sub_layer.set_phonetic_enabled(restored_phonetic)
+                self.sub_layer.set_word_karaoke_enabled(False)
+                self.sub_layer.apply_style(
+                    font_size=self.config.get("font_size", 24),
+                    color=self.config.get("font_color", "#FFFF00"),
+                    bg_color=self.config.get("bg_color", "#000000"),
+                    bg_opacity=self.config.get("bg_opacity", 0.5),
+                    outline_enabled=self.config.get("outline_enabled", True),
+                    outline_width=self.config.get("outline_width", 4),
+                    outline_color=self.config.get("outline_color", "#000000"),
+                    shadow_enabled=self.config.get("shadow_enabled", True),
+                    shadow_alpha=self.config.get("shadow_alpha", 160),
+                    fade_enabled=self.config.get("fade_enabled", True),
+                )
+                self.sub_layer._subtitle_effects.configure(self.config.get("subtitle_effects"))
+                self.sub_layer.update_position(self.sub_layer._current_ms_cache)
+                self.sub_layer.update()
+            if hasattr(self, "subsettings_panel"):
+                self.subsettings_panel.sync_ui(self.config)
+            if hasattr(self, "_show_status"):
+                self._show_status("🎤 Chế độ Karaoke: Tắt (đã khôi phục phụ đề thường)")
+
+    def toggle_phonetic_shortcut(self):
+        # Chặn tuyệt đối khi thu nhỏ xuống Taskbar, Dynamic Island MiniPlayer, hoặc chế độ video góc nhỏ (mini)
+        if self.isMinimized() or not self.isVisible() or not self.isActiveWindow():
+            return
+        if getattr(self, "is_mini_mode", False):
+            return
+        if getattr(self, "video_mode", "mini") == "mini":
+            return
+        if QApplication.activeModalWidget() is not None or QApplication.activePopupWidget() is not None:
+            return
+        fw = QApplication.focusWidget()
+        if fw is not None and (
+            fw.__class__.__name__ in ("QLineEdit", "QTextEdit", "QPlainTextEdit", "QSpinBox", "QDoubleSpinBox")
+            or (fw.__class__.__name__ == "QComboBox" and getattr(fw, "isEditable", lambda: False)())
+        ):
+            return
+        cur = bool(getattr(getattr(self, "sub_layer", None), "phonetic_enabled", False))
+        new_flag = not cur
+        self.set_phonetic_enabled(new_flag)
+        panel = getattr(self, "subsettings_panel", None)
+        if panel is not None and hasattr(panel, "chk_phonetic"):
+            panel.chk_phonetic.blockSignals(True)
+            panel.chk_phonetic.setChecked(new_flag)
+            panel.chk_phonetic.blockSignals(False)
+        if hasattr(self, "_show_status"):
+            state_txt = "Bật" if new_flag else "Tắt"
+            self._show_status(f"🔤 Phiên âm trên cùng (Romaji / Pinyin): {state_txt}")
         
     def _apply_studio_subtitle_profile(self, profile_key: str):
         """Áp dụng trọn bộ cấu hình Studio Editor một chạm với cỡ chữ đồng nhất."""
@@ -2001,6 +2158,8 @@ class MainWindow(QMainWindow):
         )
         self.sub_layer.set_locked(defaults["lock_position"])
         self.sub_layer.set_fade_enabled(defaults["fade_enabled"])
+        self.sub_layer.set_phonetic_enabled(False)
+        self.sub_layer.set_word_karaoke_enabled(False)
         # Đồng bộ lại panel
         self.subsettings_panel.sync_ui(self.config)
 

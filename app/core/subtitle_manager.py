@@ -45,6 +45,7 @@ class SubtitleManager:
         self.dirs = {
             "ass": self.base_dir / "ass",
             "src_json": self.base_dir / "json",
+            "words": self.base_dir / "words",
             "temp": self.root / "temp",
         }
 
@@ -142,9 +143,27 @@ class SubtitleManager:
         if ext == "json":
             return self.dirs["src_json"] / f"{media_id}.json"
 
+        # 2b. File mốc giờ từng từ (Word-level karaoke sidecar - tách biệt hoàn toàn với json gốc)
+        if ext == "words":
+            return self.dirs["words"] / f"{media_id}.json"
+
         # 3. Các file tạm hoặc file nguồn import (srt, lrc...)
         # Thay vì cố tìm tên gốc, ta lưu tạm bằng ID luôn để tránh xung đột
         return self.dirs["temp"] / f"{media_id}.{ext}"
+
+    def get_word_timings(self, media_id: str) -> List[Dict[str, Any]]:
+        """Đọc mốc giờ từng chữ từ storage/subtitles/words/<media_id>.json (trả [] cho 600+ bài cũ)."""
+        if not media_id:
+            return []
+        from pipeline.word_karaoke import load_word_timings
+        return load_word_timings(self.dirs["words"], media_id)
+
+    def save_word_timings(self, media_id: str, entries: Optional[List[Dict[str, Any]]]) -> Optional[Path]:
+        """Ghi nguyên tử file words/<media_id>.json mà không chạm vào json/<media_id>.json hay ass."""
+        if not media_id:
+            return None
+        from pipeline.word_karaoke import save_word_timings
+        return save_word_timings(self.dirs["words"], media_id, entries)
 
     # ==================================================
     # MEDIA ID

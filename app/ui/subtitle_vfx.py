@@ -738,7 +738,7 @@ def paint_vfx_trail(
         bottom_y = max(r[0].rect.bottom() for r in non_empty)
         span = max(64.0, right_x - left_x)
         base_y = bottom_y + 12.0
-        front = targets[-1][2]
+        front = targets[0][2]
         n_bars = min(bars_total, max(6, max_particles - drawn))
         step = span / n_bars
         bar_w = max(3.0, min(8.0, step * 0.56))

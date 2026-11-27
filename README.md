@@ -91,9 +91,12 @@ Lựa chọn này áp dụng khi tạo hoặc dịch phụ đề. Đổi chế �
 
 Một batch Online thành công thông thường dùng một yêu cầu dịch. Nội dung dài được chia batch có giới hạn; chỉ lỗi tạm thời hoặc thiếu ID mới kích hoạt lượt phục hồi có giới hạn. Khi Online thất bại, app giữ luồng fallback Local; fallback vẫn cần bộ NLLB tương thích.
 
-### Phụ đề và xuất video
+### Phụ đề, Karaoke từng chữ & Xuất video
 
-Hiệu ứng chữ chỉ thay đổi cách trình bày, không sửa nội dung hoặc mốc thời gian đã lưu. Vệt quét chạy theo thời lượng câu, không phải căn karaoke từng từ theo giọng hát.
+Hiệu ứng chữ chỉ thay đổi cách trình bày, không sửa nội dung hoặc mốc thời gian phụ đề chính đã lưu (`storage/subtitles/json/`).
+- **Chế độ thường (mặc định):** vệt quét chạy mượt theo thời lượng câu.
+- **🎤 Chế độ Karaoke:** khi bật trong bảng **Phụ đề & Hiệu ứng**, phụ đề tự động phóng to, chuyển màu sáng sân khấu, làm nổi vàng (`★`) các hiệu ứng đề xuất và khớp **từng chữ/âm tiết thật** theo mốc giờ giọng hát (`storage/subtitles/words/`, bài cũ chưa có dữ liệu từ vẫn lướt mượt bình thường).
+- **Phiên âm trên cùng (`Phiên âm (R)`):** tạo tức thì dòng phiên âm Latinh màu xanh băng ở hàng trên cùng (Hepburn Romaji cho tiếng Nhật, Pinyin có dấu cho tiếng Trung, Revised Romanization cho tiếng Hàn; tự ẩn với bài tiếng Anh/Việt) hoàn toàn offline cho cả thư viện bài hát đã lưu sẵn.
 
 Trong cài đặt phụ đề, chọn **Xuất video + lyric** để tạo video có phụ đề gắn vào hình. Có thể chọn tỉ lệ nguồn, 16:9, 9:16, 1:1 và các canvas khác; tùy chỉnh cách fit/fill, kích thước, FPS, vùng an toàn và một số thiết lập hiển thị riêng khi xuất.
 
@@ -116,6 +119,7 @@ Khi cửa sổ trình phát nhận phím:
 | `Esc` | Thoát chế độ toàn màn hình đang hoạt động |
 | `←` / `→` | Tua lùi / tiến 10 giây |
 | `↑` / `↓` | Tăng / giảm âm lượng |
+| `R` | Bật / tắt nhanh dòng Phiên âm trên cùng (chỉ khi đang mở màn hình xem video chính) |
 
 ## Chạy từ mã nguồn
 

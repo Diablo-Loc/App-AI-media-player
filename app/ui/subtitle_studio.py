@@ -817,6 +817,7 @@ STUDIO_PROFILES = {
 }
 
 STUDIO_PROFILE_ORDER = (
+    'amll_silk_pro',
     'beat_char_pop',
     'scatter_leap',
     'char_orbit_snap',
@@ -826,7 +827,6 @@ STUDIO_PROFILE_ORDER = (
     'bass_drop_3d',
     'cyber_glitch_pro',
     'blackhole_warp',
-    'amll_silk_pro',
     'elastic_bounce_pro',
     'liquid_fire',
     'domino_3d',
@@ -836,6 +836,29 @@ STUDIO_PROFILE_ORDER = (
     'glass_shatter',
     'cinema_clean',
 )
+
+KARAOKE_RECOMMENDED_PROFILES = (
+    'amll_silk_pro',
+    'beat_char_pop',
+    'elastic_bounce_pro',
+    'liquid_fire',
+    'cyber_glitch_pro',
+)
+
+KARAOKE_RECOMMENDED_TRAILS = frozenset({
+    'karaoke_pro',
+    'neon_pulse',
+    'lyric_bar',
+    'spotlight',
+    'cyber_laser',
+})
+
+KARAOKE_RECOMMENDED_COLORS = frozenset({
+    'gold',
+    'fire_gold',
+    'cyber_neon',
+    'sakura_neon',
+})
 
 
 def detect_studio_profile(subtitle_effects: dict | None) -> str | None:
@@ -1008,6 +1031,18 @@ def _wrap_paragraphs(
     return rows
 
 
+def make_phonetic_top_font(base_font: QFont) -> QFont:
+    """Build a crisp ~76% DemiBold font for the optional top-line Romaji/Pinyin/Hangul row."""
+    pf = QFont(base_font)
+    base_px = base_font.pixelSize()
+    if base_px <= 0:
+        pt = base_font.pointSizeF()
+        base_px = max(16, int(round((pt if pt > 0 else 18.0) * 1.333)))
+    pf.setPixelSize(max(13, int(round(base_px * 0.76))))
+    pf.setWeight(QFont.Weight.DemiBold)
+    return pf
+
+
 def measure_box_size(
     text: str,
     base_font: QFont,
@@ -1017,8 +1052,9 @@ def measure_box_size(
     pad_right: int = 24,
     pad_top: int = 16,
     pad_bottom: int = 16,
+    phonetic_top_group: int | None = None,
 ) -> tuple[int, int]:
-    """Compute tight widget size around multi-line uniform typography."""
+    """Compute tight widget size around multi-line typography (with optional 76% phonetic top row)."""
     if not text:
         return pad_left + pad_right + 16, pad_top + pad_bottom + 24
     fm = QFontMetricsF(base_font)
@@ -1027,12 +1063,28 @@ def measure_box_size(
     total_h = 0.0
     line_gap = max(4.0, fm.lineSpacing() * 0.14)
     line_h = fm.lineSpacing()
-    for idx, line in enumerate(paragraphs):
-        if line:
-            max_w = max(max_w, _line_width(fm, line))
-        total_h += line_h
-        if idx + 1 < len(paragraphs):
-            total_h += line_gap
+    if phonetic_top_group is None:
+        for idx, line in enumerate(paragraphs):
+            if line:
+                max_w = max(max_w, _line_width(fm, line))
+            total_h += line_h
+            if idx + 1 < len(paragraphs):
+                total_h += line_gap
+    else:
+        pf_fm = QFontMetricsF(make_phonetic_top_font(base_font))
+        pf_line_h = pf_fm.lineSpacing()
+        pf_gap = max(3.0, pf_line_h * 0.12)
+        for idx, line in enumerate(paragraphs):
+            grp = row_groups[idx] if idx < len(row_groups) else idx
+            is_phon = (grp == phonetic_top_group)
+            cur_fm = pf_fm if is_phon else fm
+            cur_h = pf_line_h if is_phon else line_h
+            if line:
+                max_w = max(max_w, _line_width(cur_fm, line))
+            total_h += cur_h
+            if idx + 1 < len(paragraphs):
+                nxt_grp = row_groups[idx + 1] if (idx + 1) < len(row_groups) else (idx + 1)
+                total_h += pf_gap if (is_phon and nxt_grp == phonetic_top_group) else (pf_gap + 1.0 if is_phon else line_gap)
     width = int(math.ceil(max_w + pad_left + pad_right + 28))
     height = int(math.ceil(total_h + pad_top + pad_bottom + 6))
     return max(width, 64), max(height, 38)
@@ -1045,8 +1097,9 @@ def build_typography_plan(
     row_groups: tuple[int, ...] | list[int] = (),
     bilingual_hierarchy: bool = False,
     bottom_align: bool = False,
+    phonetic_top_group: int | None = None,
 ) -> TypographyPlan:
-    """Layout lines at 100% uniform size without eager QPainterPath flattening."""
+    """Layout lines at 100% uniform size (plus optional 76% top phonetic row) without eager QPainterPath flattening."""
     rect = QRectF(contents_rect)
     if not text:
         empty = QRectF(rect.center(), rect.center())
@@ -1064,7 +1117,30 @@ def build_typography_plan(
     ascent = fm.ascent()
     descent = fm.descent()
     line_gap = max(4.0, line_h * 0.14)
-    total_h = len(rows) * line_h + max(0, len(rows) - 1) * line_gap
+
+    if phonetic_top_group is None:
+        total_h = len(rows) * line_h + max(0, len(rows) - 1) * line_gap
+        pf_font = uniform_font
+        pf_fm = fm
+        pf_line_h = line_h
+        pf_ascent = ascent
+        pf_descent = descent
+        pf_gap = line_gap
+    else:
+        pf_font = make_phonetic_top_font(uniform_font)
+        pf_fm = QFontMetricsF(pf_font)
+        pf_line_h = pf_fm.lineSpacing()
+        pf_ascent = pf_fm.ascent()
+        pf_descent = pf_fm.descent()
+        pf_gap = max(3.0, pf_line_h * 0.12)
+        total_h = 0.0
+        for idx, (_lt, grp) in enumerate(rows):
+            is_phon = (grp == phonetic_top_group)
+            total_h += pf_line_h if is_phon else line_h
+            if idx + 1 < len(rows):
+                nxt_grp = rows[idx + 1][1]
+                total_h += pf_gap if (is_phon and nxt_grp == phonetic_top_group) else (pf_gap + 1.0 if is_phon else line_gap)
+
     if bottom_align:
         y_cursor = max(rect.top(), rect.bottom() - 4.0 - total_h)
     else:
@@ -1074,16 +1150,23 @@ def build_typography_plan(
     primary_bounds = QRectF()
     full_bounds = QRectF()
 
-    for line_text, group in rows:
-        adv_w = _line_width(fm, line_text) if line_text else 0.0
+    for idx, (line_text, group) in enumerate(rows):
+        is_phon = (phonetic_top_group is not None and group == phonetic_top_group)
+        cur_font = pf_font if is_phon else uniform_font
+        cur_fm = pf_fm if is_phon else fm
+        cur_h = pf_line_h if is_phon else line_h
+        cur_ascent = pf_ascent if is_phon else ascent
+        cur_descent = pf_descent if is_phon else descent
+
+        adv_w = _line_width(cur_fm, line_text) if line_text else 0.0
         x = rect.center().x() - adv_w / 2.0
-        baseline = y_cursor + ascent
+        baseline = y_cursor + cur_ascent
         if line_text:
-            tight = fm.tightBoundingRect(line_text)
+            tight = cur_fm.tightBoundingRect(line_text)
             glyph_left = min(x, x + tight.left())
             glyph_right = max(x + adv_w, x + tight.right())
             glyph_top = min(y_cursor, baseline + tight.top())
-            glyph_bottom = max(baseline + descent, baseline + tight.bottom())
+            glyph_bottom = max(baseline + cur_descent, baseline + tight.bottom())
             line_rect = QRectF(
                 glyph_left - 2.0,
                 glyph_top - 2.0,
@@ -1097,17 +1180,26 @@ def build_typography_plan(
             TypographyLine(
                 text=line_text,
                 group=group,
-                is_secondary=False,
-                font=uniform_font,
+                is_secondary=is_phon,
+                font=cur_font,
                 x=x,
                 y_top=y_cursor,
                 baseline=baseline,
-                line_height=line_h,
-                ascent=ascent,
+                line_height=cur_h,
+                ascent=cur_ascent,
                 width=adv_w,
             )
         )
-        y_cursor += line_h + line_gap
+        if idx + 1 < len(rows):
+            nxt_grp = rows[idx + 1][1]
+            step_gap = (
+                (pf_gap if nxt_grp == phonetic_top_group else pf_gap + 1.0)
+                if is_phon
+                else line_gap
+            )
+        else:
+            step_gap = line_gap
+        y_cursor += cur_h + step_gap
 
     return TypographyPlan(
         lines=tuple(lines),
@@ -1123,6 +1215,7 @@ def iter_visual_lines(label) -> tuple[TypographyLine, ...]:
     cached = getattr(label, '_cached_plan', None)
     text = label.text()
     rect = label.contentsRect()
+    phonetic_top = getattr(label, 'phonetic_top_group', None)
     if (
         cached is not None
         and getattr(label, '_cached_text', None) == text
@@ -1131,7 +1224,15 @@ def iter_visual_lines(label) -> tuple[TypographyLine, ...]:
         return cached.lines
     row_groups = tuple(getattr(label, 'sweep_row_groups', ()) or ())
     bottom_align = getattr(label, '_song_stage_size', None) is not None
-    return build_typography_plan(text, label.font(), rect, row_groups, False, bottom_align=bottom_align).lines
+    return build_typography_plan(
+        text,
+        label.font(),
+        rect,
+        row_groups,
+        False,
+        bottom_align=bottom_align,
+        phonetic_top_group=phonetic_top,
+    ).lines
 
 
 def accent_glow_color(color_mode: str, base_color: str | QColor) -> QColor:
@@ -1371,12 +1472,13 @@ def _compose_premul_accum16(
     accum16[:, :, a_idx] = src_a + ((accum16[:, :, a_idx] * inv_a) >> 8)
 
 
-def _draw_plan_text(painter: QPainter, plan: TypographyPlan, brush) -> None:
-    pen = QPen(brush, 0)
-    painter.setPen(pen)
+def _draw_plan_text(painter: QPainter, plan: TypographyPlan, brush, phonetic_brush=None) -> None:
+    main_pen = QPen(brush, 0)
+    phon_pen = QPen(phonetic_brush, 0) if phonetic_brush is not None else None
     for line in plan.lines:
         if not line.text:
             continue
+        painter.setPen(phon_pen if (phon_pen is not None and line.is_secondary) else main_pen)
         painter.setFont(line.font)
         painter.drawText(QPointF(line.x, line.baseline), line.text)
 
@@ -1438,7 +1540,9 @@ def draw_studio_text_layers(
 
     if draw_fill:
         fill = primary_brush(color_mode, bounds, font_color, progress)
-        _draw_plan_text(painter, plan, fill)
+        has_phon = any(l.is_secondary for l in plan.lines)
+        phon_fill = QColor('#BAE6FD') if has_phon else None
+        _draw_plan_text(painter, plan, fill, phonetic_brush=phon_fill)
 
     painter.restore()
 
@@ -1551,7 +1655,8 @@ def rasterize_studio_sprite(
     p.scale(dpr, dpr)
     p.translate(-origin)
     fill_brush = primary_brush(color_mode, plan.full_bounds, font_color, 1.0)
-    _draw_plan_text(p, plan, fill_brush)
+    phon_fill = QColor('#BAE6FD') if any(l.is_secondary for l in plan.lines) else None
+    _draw_plan_text(p, plan, fill_brush, phonetic_brush=phon_fill)
     p.end()
 
     fg_arr, fg_ptr = _rgba_view(fg)

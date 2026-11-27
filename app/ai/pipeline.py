@@ -168,6 +168,7 @@ def run_ai_pipeline(
     wav_duration = None
     used_fast_lyrics = False
     final_segments = None
+    word_pool_for_karaoke = []
     detected_lang = "en"
     coverage = {}
     try:
@@ -331,6 +332,11 @@ def run_ai_pipeline(
                                 elif fa_rep.get("errors", 0) == 0 and aligned_lrc:
                                     final_segments = aligned_lrc
                                     fa_applied = True
+                                    from pipeline.word_karaoke import collect_fa_word_pool
+                                    word_pool_for_karaoke = collect_fa_word_pool(
+                                        fa_rep.get("word_candidates"),
+                                        cues=aligned_lrc,
+                                    )
                                     print(
                                         f"⏱ Căn mốc Fast-Path (CUDA): {fa_rep['changed']}/{len(final_segments)} câu, "
                                         f"shift={fa_rep.get('global_shift', 0.0):+.2f}s, mad={fa_rep.get('median_abs_residual', 0.0):.2f}s, "
@@ -558,6 +564,9 @@ def run_ai_pipeline(
                     "words": words_data,
                 })
 
+            from pipeline.word_karaoke import collect_fa_word_pool, collect_whisper_word_pool
+            word_pool_for_karaoke = collect_whisper_word_pool(raw_segments)
+
             # ============================================================
             # 5️⃣ REFINE SEGMENTS & EXPORT RAW
             # ============================================================
@@ -608,6 +617,12 @@ def run_ai_pipeline(
                     final_segments, timing_report = align_lyric_onsets(
                         model, temp_wav_path, detected_lang, final_segments,
                         cancel_cb=cancel_cb, progress_cb=progress_cb)
+                    if timing_report.get("word_candidates"):
+                        word_pool_for_karaoke = collect_fa_word_pool(
+                            timing_report.get("word_candidates"),
+                            fallback_pool=word_pool_for_karaoke,
+                            cues=final_segments,
+                        )
                     print(f"⏱ Căn mốc local: {timing_report['changed']} câu, "
                           f"{timing_report['windows']} cửa sổ, {timing_report['seconds']:.2f}s.")
                     if timing_report["errors"] or timing_report["capped"]:
@@ -663,6 +678,9 @@ def run_ai_pipeline(
         if not final_segments:
             # A completed recognition pass can legitimately contain no lyrics.
             # Keep the usual result/export contracts, without loading translators.
+            if media_id:
+                from pipeline.word_karaoke import save_word_timings
+                save_word_timings(output_dir / "subtitles" / "words", str(media_id), [])
             _check_cancel(cancel_cb)
             _report(progress_cb, 100, "ℹ️ Hoàn tất: chưa nhận diện được lời (có thể là nhạc không lời).")
             return {"media_id": media_id, "segments": []}
@@ -732,6 +750,13 @@ def run_ai_pipeline(
         # ============================================================
         _report(progress_cb, 100, "✅ Hoàn tất AI")
         mark_final_timing(subs)
+        if media_id:
+            try:
+                from pipeline.word_karaoke import extract_and_align_cue_words, save_word_timings
+                word_entries = extract_and_align_cue_words(subs, word_pool_for_karaoke)
+                save_word_timings(output_dir / "subtitles" / "words", str(media_id), word_entries)
+            except Exception as wk_err:
+                print(f"⚠️ Không thể lưu mốc karaoke từng từ (giữ nguyên phụ đề chính): {wk_err}")
         #serialized_result = _serialize_subtitles(subs)
         return {
             "media_id": media_id,

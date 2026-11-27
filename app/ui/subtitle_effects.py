@@ -299,6 +299,7 @@ class SubtitleEffects(QObject):
         self.particles = ParticlePainter(label)
         self.kinetic = KineticPainter(label)
         self.scan_progress = 1.0
+        self.track_scan_progresses = None
         self._scan_ms = None
         self._native_raw = None
         self._smooth_pts_ms = None
@@ -374,6 +375,7 @@ class SubtitleEffects(QObject):
         self._native_raw = None
         self._smooth_pts_ms = None
         self.scan_progress = 1.0
+        self.track_scan_progresses = None
         self.settle()
 
     def clear(self):
@@ -389,6 +391,7 @@ class SubtitleEffects(QObject):
         if hasattr(self, 'kinetic'):
             self.kinetic.clear()
         self.scan_progress = 1.0
+        self.track_scan_progresses = None
         self._scan_ms = None
         self._native_raw = None
         self._smooth_pts_ms = None
@@ -462,6 +465,7 @@ class SubtitleEffects(QObject):
         self._scan_ms = None
         self._native_raw = None
         self.scan_progress = 1.0
+        self.track_scan_progresses = None
         self.settle()
         if changed:
             self.label.update()
@@ -638,6 +642,17 @@ class SubtitleEffects(QObject):
         next_id = 1 if (self.cue is None or self.cue[0] == 0) else 0
         self.sync((next_id, 0, 3000, new_txt), 0)
 
+    def _compute_track_progresses(self, pts_ms: float) -> dict[int, float] | None:
+        if self.cue is None:
+            return None
+        fn = getattr(self.label, 'track_progresses_for_pts', None)
+        if not callable(fn):
+            return None
+        try:
+            return fn(int(self.cue[0]), float(pts_ms))
+        except Exception:
+            return None
+
     def _sync_particles(self, pts_ms, reset_smooth=False):
         self._scan_ms = pts_ms
         self._native_raw = pts_ms
@@ -647,6 +662,7 @@ class SubtitleEffects(QObject):
             self._smooth_pts_ms = max(self._smooth_pts_ms, float(pts_ms))
         self._scan_clock.restart()
         self.scan_progress = min(1.0, max(0.0, (self._smooth_pts_ms - self.cue[1]) / max(1, self.cue[2] - self.cue[1])))
+        self.track_scan_progresses = self._compute_track_progresses(self._smooth_pts_ms)
         self._arm_particles()
 
     def _arm_particles(self):
@@ -679,6 +695,7 @@ class SubtitleEffects(QObject):
             native_ms = self._authoritative_pts_ms()
             if native_ms < self.cue[1] or native_ms > self.cue[2]:
                 self.scan_progress = 1.0
+                self.track_scan_progresses = None
                 self._particle_timer.stop()
                 self.label.update()
                 return
@@ -698,20 +715,33 @@ class SubtitleEffects(QObject):
             pts_ms = (self._scan_ms or 0) + self._scan_clock.elapsed()
             if pts_ms < self.cue[1] or pts_ms > self.cue[2]:
                 self.scan_progress = 1.0
+                self.track_scan_progresses = None
                 self._particle_timer.stop()
                 self.label.update()
                 return
             self._smooth_pts_ms = float(pts_ms)
         progress = min(1.0, max(0.0, (pts_ms - self.cue[1]) / max(1, self.cue[2] - self.cue[1])))
+        new_track_p = self._compute_track_progresses(pts_ms)
+        track_delta = False
+        if new_track_p != self.track_scan_progresses:
+            if new_track_p is None or self.track_scan_progresses is None:
+                track_delta = True
+            else:
+                track_delta = any(
+                    abs(float(new_track_p.get(k, -1.0)) - float(self.track_scan_progresses.get(k, -1.0))) >= 0.0012
+                    for k in set(new_track_p) | set(self.track_scan_progresses)
+                )
         if self._audio_beat > 0.005:
             self._audio_beat *= 0.86
-        if progress != self.scan_progress and (abs(progress - self.scan_progress) >= 0.0012 or progress >= 1.0):
+        if track_delta or (progress != self.scan_progress and (abs(progress - self.scan_progress) >= 0.0012 or progress >= 1.0)):
             self.scan_progress = progress
+            self.track_scan_progresses = new_track_p
             anim_running = self.animation.state() == QAbstractAnimation.State.Running
             if not anim_running and (progress >= 1.0 or not self._paint_throttle.isValid() or self._paint_throttle.elapsed() >= 11):
                 self._paint_throttle.restart()
                 self.label.update()
         if progress >= 1.0 and (not self.player or self._native_raw is None or self._native_raw >= self.cue[2]):
+            self.track_scan_progresses = None
             self._particle_timer.stop()
 
     def _use_studio_rendering(self) -> bool:
@@ -734,6 +764,7 @@ class SubtitleEffects(QObject):
                     tuple(getattr(self.label, 'sweep_row_groups', ()) or ()),
                     False,
                     bottom_align=getattr(self.label, '_song_stage_size', None) is not None,
+                    phonetic_top_group=getattr(self.label, 'phonetic_top_group', None),
                 )
             draw_studio_text_layers(
                 painter,
@@ -766,7 +797,7 @@ class SubtitleEffects(QObject):
         if self.options['color'] != 'shift':
             painter.fillPath(path, self._brush(bounds, QColor(self.label.current_color)))
 
-    def _sprite_cache_key(self, text, width, height, row_groups, dpr):
+    def _sprite_cache_key(self, text, width, height, row_groups, dpr, phonetic_top_group=None):
         vfx_style = sprite_vfx_style_for(self.options['entrance'], self.options['glow'])
         return (
             text,
@@ -783,16 +814,16 @@ class SubtitleEffects(QObject):
             self.options['glow'],
             vfx_style,
             row_groups,
-            False,
+            phonetic_top_group,
             round(float(dpr), 3),
         )
 
-    def prewarm_plan(self, plan, text, size, dpr):
+    def prewarm_plan(self, plan, text, size, dpr, phonetic_top_group=None):
         """Pre-render the next upcoming cue's static DPR sprite without mutating active state."""
         if not self.options['enabled']:
             return
         row_groups = tuple(line.group for line in plan.lines)
-        key = self._sprite_cache_key(text, size.width(), size.height(), row_groups, dpr)
+        key = self._sprite_cache_key(text, size.width(), size.height(), row_groups, dpr, phonetic_top_group)
         if key == self._sprite_key or key == self._prewarm_sprite_key:
             return
         studio_mode = self._use_studio_rendering()
@@ -834,6 +865,7 @@ class SubtitleEffects(QObject):
                 self.label.use_outline,
                 self.label.outline_width,
                 self.label.outline_color,
+                phonetic_top_group,
                 round(float(dpr), 3),
             )
             if u_key != self._unlit_sprite_key and u_key != self._prewarm_unlit_key:
@@ -863,6 +895,7 @@ class SubtitleEffects(QObject):
 
     def _ensure_unlit_sprite(self, path):
         dpr = self.label.devicePixelRatioF()
+        phon_top = getattr(self.label, 'phonetic_top_group', None)
         key = (
             self.label.text(),
             self.label.font().key(),
@@ -873,6 +906,7 @@ class SubtitleEffects(QObject):
             self.label.use_outline,
             self.label.outline_width,
             self.label.outline_color,
+            phon_top,
             round(float(dpr), 3),
         )
         if key == self._unlit_sprite_key and self._unlit_sprite is not None:
@@ -893,6 +927,7 @@ class SubtitleEffects(QObject):
                 tuple(getattr(self.label, 'sweep_row_groups', ()) or ()),
                 False,
                 bottom_align=getattr(self.label, '_song_stage_size', None) is not None,
+                phonetic_top_group=phon_top,
             )
         sprite, origin = rasterize_unlit_karaoke_sprite(
             plan,
@@ -917,6 +952,7 @@ class SubtitleEffects(QObject):
             self.label.size().height(),
             row_groups,
             dpr,
+            getattr(self.label, 'phonetic_top_group', None),
         )
         if key == self._sprite_key:
             return self._sprite
@@ -1212,17 +1248,22 @@ class SubtitleEffects(QObject):
                       and self.cue[2] - self.cue[1] >= 160)
         if decorative and self.cue is not None:
             self.particles.prepare(max(0, self.cue[2] - self.cue[1]))
+        track_prog = self.track_scan_progresses
         regions = [(QRegion(rect.toAlignedRect()), alpha) for rect, alpha in
             self.particles.morph_regions(self.scan_progress, trail,
-            self.options['intensity'])] if decorative else []
+            self.options['intensity'], track_prog)] if decorative else []
         hidden = QRegion()
         erase_sweep = decorative and trail != 'none' and self.options['erase_passed']
         if erase_sweep:
-            hidden, regions = self.particles.sweep_masks(self.scan_progress)
+            hidden, regions = self.particles.sweep_masks(self.scan_progress, track_prog)
 
+        any_karaoke_unlit = (
+            self.scan_progress < 1.0
+            or (isinstance(track_prog, dict) and any(float(v) < 1.0 for v in track_prog.values()))
+        )
         karaoke_sweep = (
             decorative and trail == 'karaoke_pro' and not erase_sweep
-            and self.scan_progress < 1.0 and bool(self.particles.rows)
+            and any_karaoke_unlit and bool(self.particles.rows)
         )
         unlit_sprite = None
         unlit_origin = QPointF()
@@ -1243,7 +1284,7 @@ class SubtitleEffects(QObject):
         def _paint_karaoke_split(crop=None):
             rows = self.particles.rows
             row_groups = self.particles._row_group_ids
-            targets = self.particles.targets(self.scan_progress)
+            targets = self.particles.targets(self.scan_progress, track_prog)
             w_full = float(self.label.size().width())
             h_full = float(self.label.size().height())
             track_order = []
@@ -1263,6 +1304,21 @@ class SubtitleEffects(QObject):
                         continue
 
                 g_id = row_groups[r_idx] if r_idx < len(row_groups) else r_idx
+                if isinstance(track_prog, dict) and g_id in track_prog:
+                    explicit_tp = float(track_prog[g_id])
+                    if explicit_tp <= 0.001:
+                        painter.save()
+                        painter.setClipRect(band, Qt.ClipOperation.IntersectClip)
+                        self._draw_sprite_crop(painter, unlit_sprite, unlit_origin, band)
+                        painter.restore()
+                        continue
+                    if explicit_tp >= 0.999:
+                        painter.save()
+                        painter.setClipRect(band, Qt.ClipOperation.IntersectClip)
+                        self._draw_sprite_crop(painter, sprite, self._sprite_origin, band)
+                        painter.restore()
+                        continue
+
                 active_tuple = None
                 if g_id in track_order:
                     t_i = track_order.index(g_id)
@@ -1512,11 +1568,14 @@ class SubtitleEffects(QObject):
 
         self.kinetic.last_draw_count = 0
         cue_span = max(0, self.cue[2] - self.cue[1]) if self.cue else 0
-        if erase_sweep and self.scan_progress >= 1.0:
+        all_erased = self.scan_progress >= 1.0 and (
+            not isinstance(track_prog, dict) or all(float(v) >= 1.0 for v in track_prog.values())
+        )
+        if erase_sweep and all_erased:
             # At sweep end skip all glyph passes so DPR glow outside contentsRect cannot survive.
             if decorative:
                 self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
-                                     p, burst=mode == 'burst', beat_pulse=0.0)
+                                     p, burst=mode == 'burst', beat_pulse=0.0, track_progresses=track_prog)
             painter.restore()
             return True
         if mode in PER_CHAR_MODES and cue_span >= 900:
@@ -1560,7 +1619,7 @@ class SubtitleEffects(QObject):
             draw_masked_letters()
         if decorative:
             self.particles.paint(painter, self.scan_progress, trail, self.options['intensity'],
-                                 p, burst=mode == 'burst', beat_pulse=beat_pulse)
+                                 p, burst=mode == 'burst', beat_pulse=beat_pulse, track_progresses=track_prog)
         painter.restore()
         return True
 

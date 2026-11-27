@@ -18,6 +18,7 @@ HIDDEN_IMPORTS = (
     'huggingface_hub', 'filelock', 'fsspec', 'pickletools', 'pickle', 'struct',
     'difflib', 'ast', 'cProfile', 'profile', 'pstats', 'modulefinder', 'pkgutil', 'importlib.metadata',
     'sounddevice', '_sounddevice_data', 'cffi', 'numpy',
+    'pykakasi', 'jaconv', 'deprecated', 'pypinyin',
 )
 
 
@@ -40,6 +41,7 @@ def build_plan(root=ROOT, dist_dir=None, stamp=None):
         f'--distpath={output}', f'--workpath={work}', f'--specpath={work}',
         f'--icon={root / "icon/app_icon.ico"}', f'--add-data={root / "app"};app']
     params += ['--hidden-import=' + name for name in HIDDEN_IMPORTS]
+    params += ['--collect-data=pykakasi', '--collect-data=pypinyin']
     return {'root': str(root), 'output': str(output / APP_NAME), 'work': str(work), 'params': params}
 
 

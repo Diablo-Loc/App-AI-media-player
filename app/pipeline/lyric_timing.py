@@ -159,6 +159,7 @@ def align_lyric_onsets(model, audio_path, language, cues, cancel_cb=None, budget
         check_cancel()
         output, changed = apply_onsets(cues, candidates, duration)
         report["changed"] = len(changed)
+        report["word_candidates"] = candidates
     except Exception:
         check_cancel()
         report["errors"] += 1
@@ -438,6 +439,7 @@ def align_lrc_ends(
         )
         report["changed"] = len(changed)
         report.update(diag)
+        report["word_candidates"] = candidates
     except Exception:
         check_cancel()
         report["errors"] += 1

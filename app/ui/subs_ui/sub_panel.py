@@ -18,7 +18,12 @@ from subtitle.mode import SubtitleMode
 from ui.icons import ACCENT, MUTED, button_icon, label_icon
 from ui.subtitle_effects import ENTRANCES
 from ui.subtitle_effects_panel import SubtitleEffectsPanel
-from ui.subtitle_studio import STUDIO_PROFILES, STUDIO_PROFILE_ORDER, detect_studio_profile
+from ui.subtitle_studio import (
+    KARAOKE_RECOMMENDED_PROFILES,
+    STUDIO_PROFILES,
+    STUDIO_PROFILE_ORDER,
+    detect_studio_profile,
+)
 
 QUICK_FONT_COLORS = (
     ('#FFFFFF', 'Trắng chuẩn điện ảnh'),
@@ -44,6 +49,8 @@ class SettingsPanel(QWidget):
     subtitle_mode_changed = Signal(object)
     lock_position_changed = Signal(bool)
     fade_effect_changed = Signal(bool)        # Bật/Tắt Hiệu ứng Fade In/Out
+    phonetic_changed = Signal(bool)           # Bật/Tắt dòng Phiên âm trên cùng (Romaji / Pinyin / Hangul)
+    word_karaoke_changed = Signal(bool)       # Bật/Tắt Karaoke chuẩn từng chữ thật
     studio_profile_requested = Signal(str)    # Áp nhanh bộ phong cách Studio Editor
 
     reset_requested = Signal()
@@ -98,6 +105,11 @@ class SettingsPanel(QWidget):
                 color: #C7E8F9;
                 background-color: #162636;
                 border-color: #2E5270;
+            }
+            QLabel#activeStatusBadge[tone="karaoke"] {
+                color: #FEF08A;
+                background-color: #38270E;
+                border-color: #F59E0B;
             }
             QLabel#sectionCaption {
                 font-size: 11px;
@@ -167,6 +179,25 @@ class SettingsPanel(QWidget):
                 border: 1px solid #77E0BE;
                 border-left: 3px solid #77E0BE;
                 color: #A9F1D9;
+                font-weight: 700;
+            }
+            QPushButton#studioProfileBtn[karaoke_rec="true"] {
+                background-color: #2A1F0D;
+                border: 1px solid #F59E0B;
+                border-left: 3px solid #FBBF24;
+                color: #FDE68A;
+                font-weight: 700;
+            }
+            QPushButton#studioProfileBtn[karaoke_rec="true"]:hover {
+                background-color: #382811;
+                border-color: #FBBF24;
+                color: #FEF9C3;
+            }
+            QPushButton#studioProfileBtn[karaoke_rec="true"][active="true"] {
+                background-color: #422E0E;
+                border: 1px solid #FDE047;
+                border-left: 3px solid #FEF08A;
+                color: #FEF9C3;
                 font-weight: 700;
             }
             QPushButton#speedPill {
@@ -245,6 +276,15 @@ class SettingsPanel(QWidget):
                 border: 2px solid #77E0BE;
                 background: qradialgradient(cx:0.5, cy:0.5, radius:0.46, fx:0.5, fy:0.5,
                     stop:0 #77E0BE, stop:0.72 #77E0BE, stop:0.76 #131A24, stop:1 #131A24);
+            }
+            QCheckBox#chkKaraokeMode:checked {
+                color: #FDE68A;
+                font-weight: 700;
+            }
+            QCheckBox#chkKaraokeMode::indicator:checked {
+                border: 2px solid #FBBF24;
+                background: qradialgradient(cx:0.5, cy:0.5, radius:0.46, fx:0.5, fy:0.5,
+                    stop:0 #FBBF24, stop:0.72 #FBBF24, stop:0.76 #131A24, stop:1 #131A24);
             }
             QScrollArea { border: none; background-color: #0D1118; }
             QScrollArea#profileStripScroll { border: none; background: transparent; }
@@ -346,8 +386,8 @@ class SettingsPanel(QWidget):
         left_card.setObjectName("subCoreCard")
         left_card.setFixedWidth(342)
         left = QVBoxLayout(left_card)
-        left.setSpacing(6)
-        left.setContentsMargins(12, 8, 12, 8)
+        left.setSpacing(5)
+        left.setContentsMargins(12, 6, 12, 6)
 
         sec_left = QLabel("Hiển thị & Kiểu chữ")
         sec_left.setObjectName("sectionCaption")
@@ -516,7 +556,7 @@ class SettingsPanel(QWidget):
             speed_layout.addWidget(btn, 1)
         left.addLayout(speed_layout)
 
-        # 6. Lock & Fade toggles side-by-side
+        # 6. Lock & Fade toggles side-by-side + Karaoke / Phonetics options
         other_row = QHBoxLayout()
         other_row.setSpacing(10)
         self.chk_lock = QCheckBox("Khóa vị trí sub")
@@ -528,6 +568,28 @@ class SettingsPanel(QWidget):
         other_row.addWidget(self.chk_fade)
         other_row.addStretch()
         left.addLayout(other_row)
+
+        karaoke_row = QHBoxLayout()
+        karaoke_row.setSpacing(10)
+        self.chk_word_karaoke = QCheckBox("🎤 Chế độ Karaoke")
+        self.chk_word_karaoke.setObjectName("chkKaraokeMode")
+        self.chk_word_karaoke.setChecked(False)
+        self.chk_word_karaoke.setToolTip(
+            "Bật chế độ Karaoke sân khấu: phóng to phụ đề, đổi màu sáng chữ theo từng từ thật (Anh/Việt/Nhật/Trung/Hàn + Romaji) và tô vàng ★ các hiệu ứng khuyên dùng"
+        )
+        self.chk_word_karaoke.toggled.connect(self._on_karaoke_toggled)
+
+        self.chk_phonetic = QCheckBox("Phiên âm (R)")
+        self.chk_phonetic.setChecked(False)
+        self.chk_phonetic.setToolTip(
+            "Hiện dòng phiên âm Latinh (Romaji Nhật / Pinyin Trung / Hangul Hàn) màu xanh băng ở trên cùng (Phím tắt khi xem video: R)"
+        )
+        self.chk_phonetic.toggled.connect(self.phonetic_changed.emit)
+
+        karaoke_row.addWidget(self.chk_word_karaoke)
+        karaoke_row.addWidget(self.chk_phonetic)
+        karaoke_row.addStretch()
+        left.addLayout(karaoke_row)
         left.addStretch()
 
         body.addWidget(left_card, 0)
@@ -573,6 +635,34 @@ class SettingsPanel(QWidget):
         if active_key and active_key in self.profile_btns and hasattr(self, "profile_scroll"):
             self.profile_scroll.ensureWidgetVisible(self.profile_btns[active_key], 0, 2)
 
+    def _on_karaoke_toggled(self, checked: bool):
+        self.set_karaoke_recommendations(bool(checked))
+        self.word_karaoke_changed.emit(bool(checked))
+
+    def set_karaoke_recommendations(self, enabled: bool):
+        """Highlight recommended Karaoke presets & dropdown options in Gold ★ when Karaoke Mode is ON."""
+        rec_set = set(KARAOKE_RECOMMENDED_PROFILES)
+        for key, btn in self.profile_btns.items():
+            spec = STUDIO_PROFILES[key]
+            is_rec = bool(enabled and key in rec_set)
+            base_lbl = spec['label']
+            target_lbl = f"★ {base_lbl}" if is_rec else base_lbl
+            if btn.text() != target_lbl:
+                btn.setText(target_lbl)
+            target_tip = (
+                f"★ Đề xuất chuẩn cho Karaoke từng chữ · {spec['tooltip']}"
+                if key in rec_set
+                else spec['tooltip']
+            )
+            btn.setToolTip(target_tip)
+            if btn.property("karaoke_rec") != is_rec:
+                btn.setProperty("karaoke_rec", is_rec)
+                btn.style().unpolish(btn)
+                btn.style().polish(btn)
+        if hasattr(self, "effects_panel") and hasattr(self.effects_panel, "set_karaoke_recommendations"):
+            self.effects_panel.set_karaoke_recommendations(bool(enabled))
+        self._sync_active_indicator()
+
     def _sync_active_indicator(self, subtitle_effects: dict | None = None):
         """Keep active quick-profile button & header badge synced across startup, edits, and resets."""
         opts = subtitle_effects if isinstance(subtitle_effects, dict) else self.effects_panel.options()
@@ -581,14 +671,17 @@ class SettingsPanel(QWidget):
         badge = getattr(self, "lbl_active_badge", None)
         if badge is None:
             return
+        karaoke_on = bool(hasattr(self, "chk_word_karaoke") and self.chk_word_karaoke.isChecked())
         if matched is not None:
-            badge.setText(f"Đang chọn: {STUDIO_PROFILES[matched]['label']}")
-            tone = "active"
+            prefix = "🎤 Karaoke · " if karaoke_on else "Đang chọn: "
+            badge.setText(f"{prefix}{STUDIO_PROFILES[matched]['label']}")
+            tone = "karaoke" if karaoke_on else "active"
         elif opts.get("enabled"):
             ent_key = opts.get("entrance", "none")
             ent_label = next((t.split(" · ")[0] for k, t in ENTRANCES if k == ent_key), ent_key)
-            badge.setText(f"Tùy chỉnh · {ent_label}")
-            tone = "custom"
+            prefix = "🎤 Karaoke · " if karaoke_on else "Tùy chỉnh · "
+            badge.setText(f"{prefix}{ent_label}")
+            tone = "karaoke" if karaoke_on else "custom"
         else:
             badge.setText("Hiệu ứng: Tắt")
             tone = "off"
@@ -685,6 +778,8 @@ class SettingsPanel(QWidget):
 
         self.chk_lock.setChecked(False)
         self.chk_fade.setChecked(True)
+        self.chk_phonetic.setChecked(False)
+        self.chk_word_karaoke.setChecked(False)
         self.speed_btns[2].setChecked(True)
 
         self.chk_outline.setChecked(True)
@@ -698,6 +793,7 @@ class SettingsPanel(QWidget):
         self.lbl_shadow_val.setText("160")
 
         self.blockSignals(False)
+        self.set_karaoke_recommendations(False)
 
         self.reset_requested.emit()
 
@@ -751,8 +847,13 @@ class SettingsPanel(QWidget):
 
         self.chk_lock.setChecked(config.get("lock_position", False))
         self.chk_fade.setChecked(config.get("fade_enabled", True))
+        self.chk_phonetic.setChecked(bool(config.get("phonetic_enabled", False)))
+        karaoke_flag = bool(config.get("word_karaoke_enabled", False))
+        self.chk_word_karaoke.setChecked(karaoke_flag)
 
         self.blockSignals(False)
+        self.set_karaoke_recommendations(karaoke_flag)
+        self._sync_active_indicator(saved_fx)
 
         self._emit_style_update()
 
