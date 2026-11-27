@@ -602,16 +602,36 @@ class ForYouPage(QWidget):
         self.artist_label.setText(getattr(media_item, "artist", "Unknown"))
     
     def update_playing_status(self, current_index, total_count):
-        self.lbl_count.setText(f"Bài hát - {current_index}/{total_count}")
+        from ui.i18n import translate_text
+        self._last_status_pair = (current_index, total_count)
+        self.lbl_count.setText(translate_text(f"Bài hát - {current_index}/{total_count}"))
 
     def set_playlist_header_title(self, playlist_name=None):
+        from ui.i18n import translate_text
         cleaned = str(playlist_name or "").strip()
+        self._raw_playlist_header = cleaned
         if cleaned:
-            self.lbl_pl_title.setText(cleaned)
-            self.lbl_pl_title.setToolTip(cleaned)
+            tr_name = translate_text(cleaned)
+            self.lbl_pl_title.setText(tr_name)
+            self.lbl_pl_title.setToolTip(tr_name)
         else:
-            self.lbl_pl_title.setText("Danh sách phát")
+            self.lbl_pl_title.setText(translate_text("Danh sách phát"))
             self.lbl_pl_title.setToolTip("")
+
+    def retranslate_ui(self, lang=None):
+        from ui.i18n import translate_text, translate_widget_tree
+        translate_widget_tree(self, lang)
+        raw_hdr = getattr(self, "_raw_playlist_header", "")
+        self.set_playlist_header_title(raw_hdr or None)
+        pair = getattr(self, "_last_status_pair", None)
+        if pair is not None:
+            self.lbl_count.setText(translate_text(f"Bài hát - {pair[0]}/{pair[1]}", lang))
+        self.btn_shuffle.setToolTip(
+            translate_text("Phát ngẫu nhiên: bật" if self.is_shuffle else "Phát ngẫu nhiên: tắt", lang)
+        )
+        self.btn_repeat.setToolTip(
+            translate_text("Lặp lại: bật" if self.is_repeat else "Lặp lại: tắt", lang)
+        )
 
     def toggle_shuffle(self):
         self.shuffle_req_signal.emit()

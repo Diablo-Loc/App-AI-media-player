@@ -394,9 +394,13 @@ class ExportPreviewWidget(QWidget):
     def _draw_source(self, painter, canvas):
         painter.fillRect(canvas, self._background_color())
         if self.source_image.isNull():
+            from ui.i18n import translate_text
             painter.setPen(QColor(MUTED))
-            painter.drawText(canvas, Qt.AlignmentFlag.AlignCenter,
-                             'Khung xem trước video\n(thumbnail chưa sẵn sàng)')
+            painter.drawText(
+                canvas,
+                Qt.AlignmentFlag.AlignCenter,
+                translate_text('Khung xem trước video\n(thumbnail chưa sẵn sàng)'),
+            )
             return
         mode = self.settings_value.fit_mode
         if mode == 'stretch':
@@ -509,11 +513,12 @@ class ExportPreviewWidget(QWidget):
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(safe)
 
+        from ui.i18n import translate_text
         painter.setPen(QColor(TEXT))
         painter.drawText(
             QRect(canvas.x(), canvas.bottom()+7, canvas.width(), 18),
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            'PREVIEW KHUNG XUẤT',
+            translate_text('PREVIEW KHUNG XUẤT'),
         )
 
 
@@ -997,15 +1002,20 @@ class VideoExportSettingsDialog(QDialog):
         return resolve_canvas(probe, settings)
 
     def _summary_text(self):
+        from ui.i18n import tr_pair
         settings = self.settings()
         if settings.resolution == 'custom':
             size = f'{settings.custom_width}×{settings.custom_height}'
         elif settings.resolution == 'source':
-            size = 'độ phân giải nguồn'
+            size = tr_pair('độ phân giải nguồn', 'source resolution')
         else:
             size = f'{settings.resolution}p'
-        fps = 'FPS nguồn' if settings.fps is None else f'{int(settings.fps)} FPS'
-        font = f' • chữ {settings.font_size}px' if settings.override_font_size else ''
+        fps = tr_pair('FPS nguồn', 'source FPS') if settings.fps is None else f'{int(settings.fps)} FPS'
+        font = (
+            tr_pair(f' • chữ {settings.font_size}px', f' • font {settings.font_size}px')
+            if settings.override_font_size
+            else ''
+        )
         cand_w, cand_h = self._estimated_canvas(settings)
         resolved_enc = resolve_video_encoder(
             settings, cand_w, cand_h, nvenc_available=self._nvenc_available
@@ -1019,10 +1029,19 @@ class VideoExportSettingsDialog(QDialog):
     def _refresh_preview(self, *_args):
         if not hasattr(self, 'preview'):
             return
+        from ui.i18n import tr_pair, translate_text
         settings = self.settings()
         self.preview.set_settings(settings)
-        fit_labels = {'contain': 'Vừa khung', 'cover': 'Lấp đầy', 'stretch': 'Kéo giãn'}
-        aspect = settings.aspect if settings.resolution != 'custom' else f'{settings.custom_width}:{settings.custom_height}'
+        fit_labels = {
+            'contain': translate_text('Vừa khung'),
+            'cover': translate_text('Lấp đầy'),
+            'stretch': translate_text('Kéo giãn'),
+        }
+        aspect = (
+            (tr_pair('source', 'Source') if settings.aspect == 'source' else settings.aspect)
+            if settings.resolution != 'custom'
+            else f'{settings.custom_width}:{settings.custom_height}'
+        )
         cand_w, cand_h = self._estimated_canvas(settings)
         resolved_enc = resolve_video_encoder(
             settings, cand_w, cand_h, nvenc_available=self._nvenc_available
@@ -1030,10 +1049,16 @@ class VideoExportSettingsDialog(QDialog):
         enc_badge = 'NVENC ⚡' if resolved_enc == 'h264_nvenc' else 'CPU x264'
         self.preview_status.setText(
             f'{aspect} • {fit_labels.get(settings.fit_mode, settings.fit_mode)} • '
-            f'{self.quality.currentText()} • {enc_badge}'
+            f'{translate_text(self.quality.currentText())} • {enc_badge}'
         )
-        self.output_summary.setText('Đầu ra: ' + self._summary_text())
+        self.output_summary.setText(tr_pair('Đầu ra: ', 'Output: ') + self._summary_text())
         self.background.setEnabled(settings.fit_mode == 'contain')
+
+    def retranslate_ui(self, lang: str | None = None):
+        from ui.i18n import translate_widget_tree
+        translate_widget_tree(self, lang)
+        self._refresh_preview()
+        self.preview.update()
 
     def settings(self):
         return ExportSettings(

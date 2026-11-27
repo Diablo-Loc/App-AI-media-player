@@ -44,6 +44,7 @@ from ui.collection_menus import (
     show_media_context_menu,
 )
 from ui.elided_label import ElidedLabel
+from ui.i18n import tr_pair, translate_text
 from ui.icons import ACCENT, HEART_COLOR, INK, MUTED, TEXT, button_icon, icon, label_icon
 from ui.pages.for_you import LazyThumb
 
@@ -334,7 +335,7 @@ class _CollectionTrackRow(QFrame):
         self.lbl_title.setText(getattr(media, "title", "Unknown"))
         artist = getattr(media, "artist", "Unknown Artist") or "Unknown Artist"
         if getattr(media, "path", "") and not os.path.exists(media.path):
-            artist = f"{artist}  ·  Thiếu file gốc"
+            artist = f"{artist}  ·  {translate_text('Thiếu file gốc')}"
         self.lbl_artist.setText(artist)
         dur = float(getattr(media, "duration", 0.0) or 0.0)
         self.lbl_duration.setText(format_duration_mmss(dur) if dur > 0 else "--:--")
@@ -342,18 +343,18 @@ class _CollectionTrackRow(QFrame):
         if top_view is not None:
             meta_parts: List[str] = []
             if top_view.total_listen_sec >= 5.0:
-                meta_parts.append(f"Đã nghe {format_listen_duration_vi(top_view.total_listen_sec)}")
+                meta_parts.append(translate_text(f"Đã nghe {format_listen_duration_vi(top_view.total_listen_sec)}"))
             if top_view.last_played_at > 0:
                 dt = datetime.fromtimestamp(top_view.last_played_at)
                 today = datetime.now().date()
                 if dt.date() == today:
-                    meta_parts.append(f"Hôm nay {dt.strftime('%H:%M')}")
+                    meta_parts.append(translate_text(f"Hôm nay {dt.strftime('%H:%M')}"))
                 else:
                     meta_parts.append(dt.strftime("%d/%m/%Y"))
             self.lbl_top_meta.setText("  ·  ".join(meta_parts))
             self.lbl_top_meta.setVisible(bool(meta_parts))
 
-            self.lbl_play_badge.setText(f"{top_view.play_count} lượt")
+            self.lbl_play_badge.setText(translate_text(f"{top_view.play_count} lượt"))
             bar_color = "#F5C451" if top_view.rank == 1 else "#77E0BE" if top_view.rank <= 3 else "#4A8F7C"
             txt_color = "#F5C451" if top_view.rank == 1 else "#DCE7F3"
             self.lbl_play_badge.setStyleSheet(f"color: {txt_color}; font-size: 12px; font-weight: 600;")
@@ -375,13 +376,14 @@ class _CollectionTrackRow(QFrame):
         button_icon(
             self.btn_fav,
             "heart-filled" if is_fav else "heart",
-            "Bỏ Yêu thích" if is_fav else "Yêu thích",
+            translate_text("Bỏ Yêu thích" if is_fav else "Yêu thích"),
             color=HEART_COLOR if is_fav else "#7C8FA4",
             size=16,
         )
+        self.btn_add.setToolTip(translate_text("Thêm vào Playlist khác"))
         self.btn_remove.setVisible(not in_favorites_view)
         self.btn_remove.setToolTip(
-            "Gỡ khỏi Bảng xếp hạng" if top_view is not None else "Gỡ khỏi danh sách"
+            translate_text("Gỡ khỏi Bảng xếp hạng" if top_view is not None else "Gỡ khỏi danh sách")
         )
 
     def _on_fav(self) -> None:
@@ -1042,7 +1044,7 @@ class PlaylistsPage(QWidget):
         fav_count = self.store.favorite_count()
         fav_item = QListWidgetItem(
             icon("heart-filled", HEART_COLOR),
-            f"Bài hát Yêu thích  ·  {fav_count}",
+            f"{translate_text('Bài hát Yêu thích')}  ·  {fav_count}",
         )
         fav_item.setData(Qt.ItemDataRole.UserRole, FAVORITES_COLLECTION_ID)
         self.collection_list.addItem(fav_item)
@@ -1050,7 +1052,7 @@ class PlaylistsPage(QWidget):
         top_count = self.store.play_stats_count()
         top_item = QListWidgetItem(
             icon("flame", FLAME_COLOR),
-            f"Nghe nhiều nhất  ·  {top_count}",
+            f"{translate_text('Nghe nhiều nhất')}  ·  {top_count}",
         )
         top_item.setData(Qt.ItemDataRole.UserRole, MOST_PLAYED_COLLECTION_ID)
         self.collection_list.addItem(top_item)
@@ -1093,19 +1095,21 @@ class PlaylistsPage(QWidget):
         self._top_views_full = []
         if is_fav:
             label_icon(self.lbl_hero_emblem, "heart-filled", size=24, color=HEART_COLOR)
-            self.lbl_collection_title.setText("Bài hát Yêu thích")
-            self.btn_play_all.setText("Phát tất cả")
+            self.lbl_collection_title.setText(translate_text("Bài hát Yêu thích"))
+            self.btn_play_all.setText(translate_text("Phát tất cả"))
             tracks = self.store.get_favorites(self.media_library)
             total_sec = sum(max(0.0, float(getattr(t, "duration", 0.0) or 0.0)) for t in tracks)
             self.lbl_collection_stats.setText(
-                f"{len(tracks)} bài hát  ·  Tổng thời lượng {format_duration_mmss(total_sec)}"
-                if total_sec > 0
-                else f"{len(tracks)} bài hát"
+                translate_text(
+                    f"{len(tracks)} bài hát  ·  Tổng thời lượng {format_duration_mmss(total_sec)}"
+                    if total_sec > 0
+                    else f"{len(tracks)} bài hát"
+                )
             )
         elif is_top:
             label_icon(self.lbl_hero_emblem, "trophy", size=24, color=FLAME_COLOR)
-            self.lbl_collection_title.setText("Top bài hát nghe nhiều nhất")
-            self.btn_play_all.setText("Phát Top")
+            self.lbl_collection_title.setText(translate_text("Top bài hát nghe nhiều nhất"))
+            self.btn_play_all.setText(translate_text("Phát Top"))
             self._top_views_full = self.store.get_top_tracks(
                 period=self.top_period, limit=100, media_library=self.media_library
             )
@@ -1117,28 +1121,32 @@ class PlaylistsPage(QWidget):
                 (lbl for lbl, key in TOP_PERIOD_OPTIONS if key == self.top_period), "Tất cả thời gian"
             )
             self.lbl_collection_stats.setText(
-                f"{len(tracks)} bài hát  ·  {period_label}  ·  Tính lượt khi nghe >50% bài"
+                translate_text(
+                    f"{len(tracks)} bài hát  ·  {period_label}  ·  Tính lượt khi nghe >50% bài"
+                )
             )
-            self.lbl_kpi_plays.setText(f"{summary['total_plays']} lượt")
-            self.lbl_kpi_time.setText(format_listen_duration_vi(summary["total_listen_sec"]))
+            self.lbl_kpi_plays.setText(translate_text(f"{summary['total_plays']} lượt"))
+            self.lbl_kpi_time.setText(translate_text(format_listen_duration_vi(summary["total_listen_sec"])))
             if summary["top_artist"]:
                 self.lbl_kpi_artist.setText(
-                    f"{summary['top_artist']}  ·  {summary['top_artist_plays']} lượt"
+                    f"{summary['top_artist']}  ·  {translate_text(str(summary['top_artist_plays']) + ' lượt')}"
                 )
             else:
-                self.lbl_kpi_artist.setText("Chưa có dữ liệu")
+                self.lbl_kpi_artist.setText(translate_text("Chưa có dữ liệu"))
             self.btn_reset_stats.setEnabled(self.store.play_stats_count() > 0)
         else:
             label_icon(self.lbl_hero_emblem, "list-music", size=24, color=ACCENT)
             pl_meta = self.store.get_playlist(self.selected_collection_id)
             self.lbl_collection_title.setText(pl_meta["name"] if pl_meta else "Playlist")
-            self.btn_play_all.setText("Phát tất cả")
+            self.btn_play_all.setText(translate_text("Phát tất cả"))
             tracks = self.store.get_playlist_items(self.selected_collection_id, self.media_library)
             total_sec = sum(max(0.0, float(getattr(t, "duration", 0.0) or 0.0)) for t in tracks)
             self.lbl_collection_stats.setText(
-                f"{len(tracks)} bài hát  ·  Tổng thời lượng {format_duration_mmss(total_sec)}"
-                if total_sec > 0
-                else f"{len(tracks)} bài hát"
+                translate_text(
+                    f"{len(tracks)} bài hát  ·  Tổng thời lượng {format_duration_mmss(total_sec)}"
+                    if total_sec > 0
+                    else f"{len(tracks)} bài hát"
+                )
             )
 
         self._full_tracks = tracks
@@ -1169,25 +1177,36 @@ class PlaylistsPage(QWidget):
             is_fav = self.selected_collection_id == FAVORITES_COLLECTION_ID
             if q and self._full_tracks:
                 label_icon(self.lbl_empty_icon, "search", size=34, color="#6B7D92")
-                self.lbl_empty_title.setText("Không tìm thấy bài hát phù hợp")
-                self.lbl_empty_desc.setText(f"Không có bài nào khớp với từ khóa “{q}”.")
+                self.lbl_empty_title.setText(translate_text("Không tìm thấy bài hát phù hợp"))
+                self.lbl_empty_desc.setText(
+                    tr_pair(
+                        f"Không có bài nào khớp với từ khóa “{q}”.",
+                        f"No tracks in this collection match “{q}”.",
+                    )
+                )
             elif is_fav:
                 label_icon(self.lbl_empty_icon, "heart", size=36, color=HEART_COLOR)
-                self.lbl_empty_title.setText("Chưa có bài hát Yêu thích")
+                self.lbl_empty_title.setText(translate_text("Chưa có bài hát Yêu thích"))
                 self.lbl_empty_desc.setText(
-                    "Bấm biểu tượng trái tim trên thanh phát nhạc hoặc chuột phải vào video bất kỳ để lưu vào đây."
+                    translate_text(
+                        "Bấm biểu tượng trái tim trên thanh phát nhạc hoặc chuột phải vào video bất kỳ để lưu vào đây."
+                    )
                 )
             elif is_top:
                 label_icon(self.lbl_empty_icon, "trophy", size=36, color=FLAME_COLOR)
-                self.lbl_empty_title.setText("Chưa có dữ liệu bảng xếp hạng")
+                self.lbl_empty_title.setText(translate_text("Chưa có dữ liệu bảng xếp hạng"))
                 self.lbl_empty_desc.setText(
-                    "Nghe trên 50% thời lượng bài hát (hoặc 4 phút với video dài) để BoTube ghi nhận 1 lượt nghe vào bảng xếp hạng."
+                    translate_text(
+                        "Nghe trên 50% thời lượng bài hát (hoặc 4 phút với video dài) để BoTube ghi nhận 1 lượt nghe vào bảng xếp hạng."
+                    )
                 )
             else:
                 label_icon(self.lbl_empty_icon, "list-music", size=36, color=ACCENT)
-                self.lbl_empty_title.setText("Playlist này chưa có bài hát")
+                self.lbl_empty_title.setText(translate_text("Playlist này chưa có bài hát"))
                 self.lbl_empty_desc.setText(
-                    "Bấm nút “Thêm bài” ở trên hoặc chuột phải vào bài hát bất kỳ ở Thư viện để thêm vào."
+                    translate_text(
+                        "Bấm nút “Thêm bài” ở trên hoặc chuột phải vào bài hát bất kỳ ở Thư viện để thêm vào."
+                    )
                 )
             self._viewport.set_items([], [])
             self.track_scroll.hide()
@@ -1207,7 +1226,7 @@ class PlaylistsPage(QWidget):
 
         folders = self.store.get_folders() if self.store is not None else []
         if not folders:
-            lbl_none = QLabel("Chưa thêm thư mục nguồn.")
+            lbl_none = QLabel(translate_text("Chưa thêm thư mục nguồn."))
             lbl_none.setStyleSheet("color: #63758A; font-size: 11.5px; padding: 6px 6px;")
             lbl_none.setWordWrap(True)
             self.folder_layout.addWidget(lbl_none)

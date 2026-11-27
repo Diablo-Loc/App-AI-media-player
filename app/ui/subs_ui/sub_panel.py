@@ -430,7 +430,7 @@ class SettingsPanel(QWidget):
         self.slider_size.valueChanged.connect(self._on_size_changed)
 
         self.btn_font_color = QPushButton("Màu")
-        self.btn_font_color.setFixedSize(46, 24)
+        self.btn_font_color.setFixedSize(56, 24)
         self.btn_font_color.setToolTip("Chọn màu chữ tùy ý")
         self.btn_font_color.clicked.connect(lambda: self._open_color_dialog("font"))
         self._set_btn_color(self.btn_font_color, "#FFFF00")
@@ -476,7 +476,7 @@ class SettingsPanel(QWidget):
         self.combo_opacity.currentIndexChanged.connect(self._on_opacity_changed)
 
         self.btn_bg_color = QPushButton("Nền")
-        self.btn_bg_color.setFixedSize(46, 24)
+        self.btn_bg_color.setFixedSize(56, 24)
         self.btn_bg_color.setToolTip("Chọn màu nền")
         self.btn_bg_color.clicked.connect(lambda: self._open_color_dialog("bg"))
         self._set_btn_color(self.btn_bg_color, "#000000", is_dark_bg=True)
@@ -506,7 +506,7 @@ class SettingsPanel(QWidget):
         self.lbl_outline_val.setObjectName("valueBadge")
 
         self.btn_out_color = QPushButton("Viền")
-        self.btn_out_color.setFixedSize(42, 22)
+        self.btn_out_color.setFixedSize(58, 22)
         self.btn_out_color.clicked.connect(lambda: self._open_color_dialog("outline"))
         self._set_btn_color(self.btn_out_color, self._current_outline_color, is_dark_bg=True)
 
@@ -641,20 +641,21 @@ class SettingsPanel(QWidget):
 
     def set_karaoke_recommendations(self, enabled: bool):
         """Highlight recommended Karaoke presets & dropdown options in Gold ★ when Karaoke Mode is ON."""
+        from ui.i18n import translate_text
         rec_set = set(KARAOKE_RECOMMENDED_PROFILES)
         for key, btn in self.profile_btns.items():
             spec = STUDIO_PROFILES[key]
             is_rec = bool(enabled and key in rec_set)
-            base_lbl = spec['label']
+            base_lbl = translate_text(spec['label'])
             target_lbl = f"★ {base_lbl}" if is_rec else base_lbl
             if btn.text() != target_lbl:
                 btn.setText(target_lbl)
-            target_tip = (
+            raw_tip = (
                 f"★ Đề xuất chuẩn cho Karaoke từng chữ · {spec['tooltip']}"
                 if key in rec_set
                 else spec['tooltip']
             )
-            btn.setToolTip(target_tip)
+            btn.setToolTip(translate_text(raw_tip))
             if btn.property("karaoke_rec") != is_rec:
                 btn.setProperty("karaoke_rec", is_rec)
                 btn.style().unpolish(btn)
@@ -665,6 +666,7 @@ class SettingsPanel(QWidget):
 
     def _sync_active_indicator(self, subtitle_effects: dict | None = None):
         """Keep active quick-profile button & header badge synced across startup, edits, and resets."""
+        from ui.i18n import translate_text
         opts = subtitle_effects if isinstance(subtitle_effects, dict) else self.effects_panel.options()
         matched = detect_studio_profile(opts)
         self._set_active_profile_btn(matched)
@@ -674,21 +676,27 @@ class SettingsPanel(QWidget):
         karaoke_on = bool(hasattr(self, "chk_word_karaoke") and self.chk_word_karaoke.isChecked())
         if matched is not None:
             prefix = "🎤 Karaoke · " if karaoke_on else "Đang chọn: "
-            badge.setText(f"{prefix}{STUDIO_PROFILES[matched]['label']}")
+            badge.setText(translate_text(f"{prefix}{STUDIO_PROFILES[matched]['label']}"))
             tone = "karaoke" if karaoke_on else "active"
         elif opts.get("enabled"):
             ent_key = opts.get("entrance", "none")
             ent_label = next((t.split(" · ")[0] for k, t in ENTRANCES if k == ent_key), ent_key)
             prefix = "🎤 Karaoke · " if karaoke_on else "Tùy chỉnh · "
-            badge.setText(f"{prefix}{ent_label}")
+            badge.setText(translate_text(f"{prefix}{ent_label}"))
             tone = "karaoke" if karaoke_on else "custom"
         else:
-            badge.setText("Hiệu ứng: Tắt")
+            badge.setText(translate_text("Hiệu ứng: Tắt"))
             tone = "off"
         if badge.property("tone") != tone:
             badge.setProperty("tone", tone)
             badge.style().unpolish(badge)
             badge.style().polish(badge)
+
+    def retranslate_ui(self, lang: str | None = None):
+        from ui.i18n import translate_widget_tree
+        translate_widget_tree(self, lang)
+        karaoke_on = bool(hasattr(self, "chk_word_karaoke") and self.chk_word_karaoke.isChecked())
+        self.set_karaoke_recommendations(karaoke_on)
 
     def set_active_studio_profile(self, key: str | None):
         self._set_active_profile_btn(key)

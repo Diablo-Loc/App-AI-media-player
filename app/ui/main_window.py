@@ -2971,14 +2971,16 @@ class MainWindow(QMainWindow):
         artist = media.artist or "Unknown Artist"
         safe_title = html.escape(display_title)
         safe_artist = html.escape(artist)
+        from ui.i18n import translate_text
+        resume_prompt = translate_text(f"▶ Bấm Phát để tiếp tục tại {pos_str}")
         self.playback_bar.lbl_song_info.setText(
             f"<div style='line-height: 120%;'>"
             f"<span style='font-size: 13px; font-weight: bold; color: #DCE7F3;'>{safe_title}</span><br>"
-            f"<span style='font-size: 11px; color: #77E0BE;'>▶ Bấm Phát để tiếp tục tại {pos_str} • {safe_artist}</span>"
+            f"<span style='font-size: 11px; color: #77E0BE;'>{resume_prompt} • {safe_artist}</span>"
             f"</div>"
         )
         self.playback_bar.lbl_song_info.setToolTip(
-            f"Phiên nghe gần nhất: {media.title}\nNghệ sĩ: {artist}\nDừng tại: {pos_str}"
+            translate_text(f"Phiên nghe gần nhất: {media.title}\nNghệ sĩ: {artist}\nDừng tại: {pos_str}")
         )
         est_dur_ms = int(round(float(getattr(media, "duration", 0.0) or 0.0) * 1000))
         if est_dur_ms > 0 and 0 < pos_ms < est_dur_ms:

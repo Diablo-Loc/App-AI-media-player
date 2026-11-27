@@ -42,6 +42,16 @@ class Sidebar(QListWidget):
         # Style Dark Mode (Giống YouTube)
         self.setStyleSheet(SIDEBAR_STYLE)
 
+    _EN_LABELS = {
+        "home": "Home",
+        "for_you": "For You",
+        "library": "Library",
+        "collections": "Collections",
+        "history": "History",
+        "download": "Downloads",
+        "settings": "Settings",
+    }
+
     def add_menu_items(self, items_list):
         """
         Nhận vào danh sách dạng ["🏠 Trang chủ", "🎶 For You"...]
@@ -87,14 +97,30 @@ class Sidebar(QListWidget):
                 "💾": "download",
                 "⚙️": "settings",
             }
+            pkey = page_keys.get(icon_text, label_text.lower())
             visual_label = label_text if icon_text in names else full_text
             item.setData(Qt.UserRole + 3, visual_label)
-            item.setData(Qt.UserRole + 4, page_keys.get(icon_text, visual_label.lower()))
+            item.setData(Qt.UserRole + 4, pkey)
+            item.setData(Qt.UserRole + 5, visual_label)  # Canonical Vietnamese visual label
             item.setIcon(icon(names.get(icon_text, "music")))
             item.setText("" if self._compact else visual_label)
             item.setToolTip(visual_label)
             
             self.addItem(item)
+
+    def retranslate(self, lang: str) -> None:
+        """Switch sidebar labels between Vietnamese and English without altering UserRole+1/+2/+4."""
+        is_en = str(lang or "").lower().startswith("en")
+        for i in range(self.count()):
+            item = self.item(i)
+            if item is None:
+                continue
+            pkey = str(item.data(Qt.UserRole + 4) or "")
+            vi_label = str(item.data(Qt.UserRole + 5) or item.data(Qt.UserRole + 3) or "")
+            new_label = self._EN_LABELS.get(pkey, vi_label) if is_en else vi_label
+            item.setData(Qt.UserRole + 3, new_label)
+            item.setToolTip(new_label)
+            item.setText("" if self._compact else new_label)
 
     def page_key_at(self, row: int) -> str:
         item = self.item(row)

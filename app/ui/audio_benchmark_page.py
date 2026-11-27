@@ -31,6 +31,7 @@ from core.audio_effects import source_signature
 from core.audio_profile import AudioProfile, adaptive_master_profile, preset_profile
 from core.audio_stream_engine import select_wasapi_device
 from ui.design_system import FORM_STYLE
+from ui.i18n import tr_pair, translate_text, translate_widget_tree
 from ui.icons import INK, MUTED, TEXT, button_icon
 
 COLOR_ORIG = '#F0B866'
@@ -372,7 +373,7 @@ class BenchmarkChartCanvas(QWidget):
 
         if not self._data:
             p.setPen(QColor('#64778B'))
-            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, 'Chọn nguồn âm thanh rồi bấm Đo kiểm.')
+            p.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, translate_text('Chọn nguồn âm thanh rồi bấm Đo kiểm.'))
             return
 
         if self._mode == 'transfer':
@@ -486,9 +487,9 @@ class BenchmarkChartCanvas(QWidget):
 
         legend = []
         if self._show_orig:
-            legend.append((COLOR_ORIG, 'Gốc (Pre)'))
+            legend.append((COLOR_ORIG, translate_text('Gốc (Pre)')))
         if self._show_proc:
-            legend.append((COLOR_PROC, 'Sau xử lý (Post)'))
+            legend.append((COLOR_PROC, translate_text('Sau xử lý (Post)')))
         self._paint_legend(p, w - pad_r, 14, legend, fm)
 
         if self._hover_pos is not None and pad_l <= self._hover_pos.x() <= (w - pad_r):
@@ -498,9 +499,13 @@ class BenchmarkChartCanvas(QWidget):
             f_txt = f'{freqs[idx] / 1000.0:.2f} kHz' if freqs[idx] >= 1000 else f'{freqs[idx]:.0f} Hz'
             d_val = delta[idx] if idx < len(delta) else 0.0
             dot_y = _y_top(proc[idx] if self._show_proc else orig[idx])
+            cross_lbl = tr_pair(
+                f'{f_txt}  |  Gốc {orig[idx]:.1f}  ·  Sau {proc[idx]:.1f} dB  (Δ {d_val:+.2f} dB)',
+                f'{f_txt}  |  Raw {orig[idx]:.1f}  ·  Post {proc[idx]:.1f} dB  (Δ {d_val:+.2f} dB)',
+            )
             self._paint_crosshair(
                 p, hx, pad_t, pad_t + top_h, dot_y,
-                f'{f_txt}  |  Gốc {orig[idx]:.1f}  ·  Sau {proc[idx]:.1f} dB  (Δ {d_val:+.2f} dB)',
+                cross_lbl,
                 pad_l, fm,
             )
 
@@ -571,10 +576,10 @@ class BenchmarkChartCanvas(QWidget):
 
         legend = []
         if self._show_orig:
-            legend.append((COLOR_ORIG, 'Gốc (0 dB)'))
+            legend.append((COLOR_ORIG, translate_text('Gốc (0 dB)')))
         if self._show_proc:
-            legend.append((COLOR_PROC, 'Biên độ |H(f)|'))
-            legend.append((COLOR_PHASE, 'Pha ∠H(f)'))
+            legend.append((COLOR_PROC, translate_text('Biên độ |H(f)|')))
+            legend.append((COLOR_PHASE, translate_text('Pha ∠H(f)')))
         self._paint_legend(p, w - pad_r, 14, legend, fm)
 
         if self._hover_pos is not None and pad_l <= self._hover_pos.x() <= (w - pad_r):
@@ -584,9 +589,13 @@ class BenchmarkChartCanvas(QWidget):
             f_txt = f'{freqs[idx] / 1000.0:.2f} kHz' if freqs[idx] >= 1000 else f'{freqs[idx]:.0f} Hz'
             ph_v = phase[idx] if idx < len(phase) else 0.0
             dot_y = _y_mag(mag[idx] if self._show_proc else 0.0)
+            cross_lbl = tr_pair(
+                f'{f_txt}  |  |H| {mag[idx]:+.2f} dB  ·  Pha {ph_v:+.1f}°  (Gốc 0.00 dB)',
+                f'{f_txt}  |  |H| {mag[idx]:+.2f} dB  ·  Phase {ph_v:+.1f}°  (Raw 0.00 dB)',
+            )
             self._paint_crosshair(
                 p, hx, pad_t, pad_t + top_h, dot_y,
-                f'{f_txt}  |  |H| {mag[idx]:+.2f} dB  ·  Pha {ph_v:+.1f}°  (Gốc 0.00 dB)',
+                cross_lbl,
                 pad_l, fm,
             )
 
@@ -664,11 +673,11 @@ class BenchmarkChartCanvas(QWidget):
                     p.drawEllipse(pt, 1.8, 1.8)
             p.setBrush(Qt.BrushStyle.NoBrush)
 
-        legend = [(COLOR_CLIP, 'Trần 0 dBTP')]
+        legend = [(COLOR_CLIP, translate_text('Trần 0 dBTP'))]
         if self._show_orig:
-            legend.append((COLOR_ORIG, 'Đỉnh gốc (Pre)'))
+            legend.append((COLOR_ORIG, translate_text('Đỉnh gốc (Pre)')))
         if self._show_proc:
-            legend.append((COLOR_PROC, 'Sau xử lý (Post)'))
+            legend.append((COLOR_PROC, translate_text('Sau xử lý (Post)')))
         self._paint_legend(p, w - pad_r, 14, legend, fm)
 
         if self._hover_pos is not None and pad_l <= self._hover_pos.x() <= (w - pad_r):
@@ -676,9 +685,13 @@ class BenchmarkChartCanvas(QWidget):
             idx = min(n_p - 1, max(0, int(round((hx - pad_l) / max(1.0, gw) * (n_p - 1)))))
             t_s = dur * (idx / float(max(1, n_p - 1)))
             dot_y = _y(proc_env[idx] if self._show_proc else orig_env[idx])
+            cross_lbl = tr_pair(
+                f'{t_s:.2f}s  |  Gốc {orig_env[idx]:+.2f} dBTP  ·  Sau {proc_env[idx]:+.2f} dBTP',
+                f'{t_s:.2f}s  |  Raw {orig_env[idx]:+.2f} dBTP  ·  Post {proc_env[idx]:+.2f} dBTP',
+            )
             self._paint_crosshair(
                 p, _x(idx, n_p), pad_t, pad_t + gh, dot_y,
-                f'{t_s:.2f}s  |  Gốc {orig_env[idx]:+.2f} dBTP  ·  Sau {proc_env[idx]:+.2f} dBTP',
+                cross_lbl,
                 pad_l, fm,
             )
 
@@ -738,10 +751,11 @@ class BenchmarkChartCanvas(QWidget):
 
         legend = []
         if self._show_orig and ref_vals:
-            legend.append((COLOR_ORIG, f'Gốc ({self._data.get("ref_bit_depth", 24)}-bit)'))
+            bits = self._data.get("ref_bit_depth", 24)
+            legend.append((COLOR_ORIG, tr_pair(f'Gốc ({bits}-bit)', f'Raw ({bits}-bit)')))
         if self._show_proc:
             fmt = '32-bit Int' if self._data.get('out_dtype') == 'int32' else '32-bit Float'
-            legend.append((COLOR_PROC, f'Sau xử lý ({fmt})'))
+            legend.append((COLOR_PROC, tr_pair(f'Sau xử lý ({fmt})', f'Processed ({fmt})')))
         self._paint_legend(p, w - pad_r, 14, legend, fm)
 
         if self._hover_pos is not None and pad_l <= self._hover_pos.x() <= (w - pad_r):
@@ -751,9 +765,13 @@ class BenchmarkChartCanvas(QWidget):
             f_txt = f'{freqs[idx] / 1000.0:.2f} kHz' if freqs[idx] >= 1000 else f'{freqs[idx]:.0f} Hz'
             ref_v = ref_vals[idx] if idx < len(ref_vals) else -144.0
             dot_y = _y(proc_vals[idx] if self._show_proc else ref_v)
+            cross_lbl = tr_pair(
+                f'{f_txt}  |  Gốc {ref_v:.1f} dBFS  ·  Sau xử lý {proc_vals[idx]:.1f} dBFS',
+                f'{f_txt}  |  Raw {ref_v:.1f} dBFS  ·  Processed {proc_vals[idx]:.1f} dBFS',
+            )
             self._paint_crosshair(
                 p, hx, pad_t, pad_t + gh, dot_y,
-                f'{f_txt}  |  Gốc {ref_v:.1f} dBFS  ·  Sau xử lý {proc_vals[idx]:.1f} dBFS',
+                cross_lbl,
                 pad_l, fm,
             )
 
@@ -1298,7 +1316,7 @@ class AudioBenchmarkPage(QWidget):
 
         self.busy_bar.show()
         self.btn_run.setEnabled(False)
-        self.lbl_source.setText(f'{Path(self._source_path).name} · Đang đo kiểm…')
+        self.lbl_source.setText(translate_text(f'{Path(self._source_path).name} · Đang đo kiểm…'))
 
         worker = AudioBenchmarkWorker(gen, self._source_path, prof, lufs, cached_info, cached_meas, self)
         worker.finished_ok.connect(self._on_benchmark_done)
@@ -1314,11 +1332,13 @@ class AudioBenchmarkPage(QWidget):
         self.busy_bar.hide()
         self.btn_run.setEnabled(True)
         self.lbl_source.setText(Path(self._source_path).name)
-        self.lbl_verdict_badge.setText('LỖI')
+        self.lbl_verdict_badge.setText(translate_text('LỖI'))
         self.lbl_verdict_badge.setProperty('tone', 'warn')
         self.lbl_verdict_badge.style().unpolish(self.lbl_verdict_badge)
         self.lbl_verdict_badge.style().polish(self.lbl_verdict_badge)
-        self.lbl_verdict_headline.setText(f'Không đo được file này: {msg}')
+        self.lbl_verdict_headline.setText(
+            tr_pair(f'Không đo được file này: {msg}', f'Could not analyze this file: {msg}')
+        )
 
     def _on_benchmark_done(self, generation: int, res: dict):
         if generation != self._generation:
@@ -1329,7 +1349,9 @@ class AudioBenchmarkPage(QWidget):
         self.btn_run.setEnabled(True)
         self.btn_copy_report.setEnabled(True)
         self.btn_audition_toggle.setEnabled(True)
+        self._render_benchmark_result(res)
 
+    def _render_benchmark_result(self, res: dict):
         info = res.get('source_info') or {}
         codec = str(info.get('codec_name') or '?').upper()
         kbps = int(round((info.get('bit_rate') or 0) / 1000.0))
@@ -1344,7 +1366,7 @@ class AudioBenchmarkPage(QWidget):
 
         verdict = res.get('verdict') or {}
         ls = verdict.get('listener_summary') or {}
-        p_tag = str(ls.get('overall_tag') or verdict.get('badge') or 'XONG')
+        p_tag = translate_text(str(ls.get('overall_tag') or verdict.get('badge') or 'XONG'))
         p_tone = str(ls.get('overall_tone') or 'good')
         if p_tone not in ('good', 'warn', 'neutral'):
             p_tone = 'neutral'
@@ -1352,29 +1374,34 @@ class AudioBenchmarkPage(QWidget):
         self.lbl_plain_badge.setProperty('tone', p_tone)
         self.lbl_plain_badge.style().unpolish(self.lbl_plain_badge)
         self.lbl_plain_badge.style().polish(self.lbl_plain_badge)
-        self.lbl_plain_conclusion.setText(str(ls.get('plain_conclusion') or verdict.get('headline') or ''))
+        self.lbl_plain_conclusion.setText(
+            translate_text(str(ls.get('plain_conclusion') or verdict.get('headline') or ''))
+        )
 
         pillar_colors = {'good': COLOR_PROC, 'warn': '#F08A88', 'neutral': COLOR_ORIG}
         for widgets, item in zip(self._pillar_widgets, ls.get('pillars') or ()):
             lbl_t, lbl_v, lbl_d = widgets
-            lbl_t.setText(str(item.get('title') or ''))
-            lbl_v.setText(str(item.get('verdict') or '—'))
+            lbl_t.setText(translate_text(str(item.get('title') or '')))
+            lbl_v.setText(translate_text(str(item.get('verdict') or '—')))
             lbl_v.setStyleSheet(
                 f'font-size: 12px; font-weight: 700; color: {pillar_colors.get(item.get("tone"), "#EDF3FA")};'
             )
-            lbl_d.setText(str(item.get('detail') or ''))
+            lbl_d.setText(translate_text(str(item.get('detail') or '')))
 
-        self.lbl_audition_hint.setText(
-            'Bấm "Nghe thử A/B" để nghe cùng một độ to giữa Bản gốc (A) và Sau xử lý (B).'
-        )
+        if self._audition.is_playing():
+            self._refresh_audition_hint()
+        else:
+            self.lbl_audition_hint.setText(
+                translate_text('Bấm "Nghe thử A/B" để nghe cùng một độ to giữa Bản gốc (A) và Sau xử lý (B).')
+            )
 
-        badge = str(verdict.get('badge') or 'XONG')
-        tone = 'warn' if 'LƯU Ý' in badge else ('neutral' if ('NGUYÊN GỐC' in badge or 'BYPASS' in badge) else 'good')
-        self.lbl_verdict_badge.setText(badge)
+        raw_badge = str(verdict.get('badge') or 'XONG')
+        tone = 'warn' if 'LƯU Ý' in raw_badge else ('neutral' if ('NGUYÊN GỐC' in raw_badge or 'BYPASS' in raw_badge) else 'good')
+        self.lbl_verdict_badge.setText(translate_text(raw_badge))
         self.lbl_verdict_badge.setProperty('tone', tone)
         self.lbl_verdict_badge.style().unpolish(self.lbl_verdict_badge)
         self.lbl_verdict_badge.style().polish(self.lbl_verdict_badge)
-        self.lbl_verdict_headline.setText(str(verdict.get('headline') or ''))
+        self.lbl_verdict_headline.setText(translate_text(str(verdict.get('headline') or '')))
 
         while self.findings_layout.count():
             w = self.findings_layout.takeAt(0).widget()
@@ -1398,8 +1425,8 @@ class AudioBenchmarkPage(QWidget):
             dot_wrap.addWidget(dot)
             dot_wrap.addStretch()
 
-            title_txt = html.escape(str(f.get('title', '')))
-            detail_txt = html.escape(str(f.get('detail', '')))
+            title_txt = html.escape(translate_text(str(f.get('title', ''))))
+            detail_txt = html.escape(translate_text(str(f.get('detail', ''))))
             lbl_line = QLabel(
                 f'<span style="color:#EDF3FA; font-weight:600;">{title_txt}:</span> '
                 f'<span style="color:#9AAABC;">{detail_txt}</span>'
@@ -1418,8 +1445,10 @@ class AudioBenchmarkPage(QWidget):
         bw_s = f'{cutoff_hz / 1000.0:.1f} kHz (Hi-Res)' if cutoff_hz >= 24000 else f'{cutoff_hz / 1000.0:.1f} kHz'
         noise_lbl = str(res.get('noise_floor_label') or f'-{float(res.get("snr_db", 144.0)):.1f} dBFS')
         self.lbl_spec_footer.setText(
-            f'Định dạng: {codec} ({rate_s}) · Băng thông thực: {bw_s} · '
-            f'Đầu ra: {fmt_s} {res["out_sr"] / 1000.0:g} kHz · Nền nhiễu số: {noise_lbl}'
+            translate_text(
+                f'Định dạng: {codec} ({rate_s}) · Băng thông thực: {bw_s} · '
+                f'Đầu ra: {fmt_s} {res["out_sr"] / 1000.0:g} kHz · Nền nhiễu số: {noise_lbl}'
+            )
         )
 
         while self.table_grid.count():
@@ -1429,23 +1458,29 @@ class AudioBenchmarkPage(QWidget):
 
         headers = ('Thông số', 'Gốc (Pre)', 'Sau xử lý (Post)', 'Đánh giá')
         for c, h_txt in enumerate(headers):
-            hl = QLabel(h_txt)
+            hl = QLabel(translate_text(h_txt))
             col_c = COLOR_ORIG if c == 1 else (COLOR_PROC if c == 2 else '#7F93A8')
             hl.setStyleSheet(f'font-size: 11px; font-weight: 600; color: {col_c}; padding-bottom: 2px;')
             self.table_grid.addWidget(hl, 0, c)
 
         status_colors = {'good': COLOR_PROC, 'warn': '#F08A88', 'neutral': '#AFC0D2'}
         for r_idx, row in enumerate(res.get('comparison_rows') or (), start=1):
-            c0 = QLabel(row['metric'])
+            c0 = QLabel(translate_text(row['metric']))
             c0.setStyleSheet('font-size: 12px; color: #D7E2EE;')
-            c1 = QLabel(row['orig'])
+            c1 = QLabel(translate_text(row['orig']))
             c1.setStyleSheet('font-size: 12px; color: #D9B477; font-family: Consolas;')
-            c2 = QLabel(row['proc'])
+            c2 = QLabel(translate_text(row['proc']))
             c2.setStyleSheet('font-size: 12px; color: #EDF3FA; font-family: Consolas;')
-            c3 = QLabel(row['status'])
+            c3 = QLabel(translate_text(row['status']))
             c3.setStyleSheet(f'font-size: 12px; font-weight: 600; color: {status_colors.get(row.get("tone"), "#AFC0D2")};')
             for col_i, w in enumerate((c0, c1, c2, c3)):
                 self.table_grid.addWidget(w, r_idx, col_i)
+
+    def retranslate_ui(self, lang: str | None = None):
+        translate_widget_tree(self, lang)
+        if self._last_result is not None:
+            self._render_benchmark_result(self._last_result)
+        self.canvas.update()
 
     def _current_output_volume(self) -> tuple[float, bool]:
         vol = float(self.controller.volume()) if hasattr(self.controller, 'volume') else 0.5
@@ -1480,9 +1515,9 @@ class AudioBenchmarkPage(QWidget):
             m_lufs = pair.get('matched_lufs')
             d_lu = float(pair.get('delta_loudness_db') or 0.0)
             extra = f' · Đang cân bằng {m_lufs:.1f} LUFS (chênh gốc {d_lu:+.1f} LU)' if m_lufs is not None else ''
-            self.lbl_audition_hint.setText(f'Đang phát {br}{extra}.')
+            self.lbl_audition_hint.setText(translate_text(f'Đang phát {br}{extra}.'))
         else:
-            self.lbl_audition_hint.setText(f'Đang phát {br} (chế độ âm lượng gốc, không bù dB).')
+            self.lbl_audition_hint.setText(translate_text(f'Đang phát {br} (chế độ âm lượng gốc, không bù dB).'))
 
     def toggle_audition(self):
         if self._audition.is_playing() or self._audition_worker is not None:
@@ -1575,11 +1610,11 @@ class AudioBenchmarkPage(QWidget):
         self._audition.stop()
         if hasattr(self, 'btn_audition_toggle'):
             self.btn_audition_toggle.setEnabled(bool(self._last_result))
-            self.btn_audition_toggle.setText('Nghe thử A/B')
-            button_icon(self.btn_audition_toggle, 'play', 'Nghe đối chiếu A/B', color=INK, size=13, icon_only=False)
+            self.btn_audition_toggle.setText(translate_text('Nghe thử A/B'))
+            button_icon(self.btn_audition_toggle, 'play', translate_text('Nghe đối chiếu A/B'), color=INK, size=13, icon_only=False)
             if self._last_result:
                 self.lbl_audition_hint.setText(
-                    'Bấm "Nghe thử A/B" để nghe cùng một độ to giữa Bản gốc (A) và Sau xử lý (B).'
+                    translate_text('Bấm "Nghe thử A/B" để nghe cùng một độ to giữa Bản gốc (A) và Sau xử lý (B).')
                 )
 
     def minimumSizeHint(self) -> QSize:

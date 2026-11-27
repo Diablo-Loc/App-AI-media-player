@@ -181,6 +181,8 @@ class SubtitleEffectsPanel(QGroupBox):
 
     def set_karaoke_recommendations(self, active: bool):
         """Highlight recommended Karaoke sweep trails & colors with Gold ★ markers when Karaoke Mode is ON."""
+        from ui.i18n import translate_text
+        self._karaoke_active = bool(active)
         gold = QColor('#FDE68A')
         for combo, orig_texts, rec_set in (
             (self.trail, getattr(self, '_orig_trail_texts', ()), KARAOKE_RECOMMENDED_TRAILS),
@@ -191,11 +193,12 @@ class SubtitleEffectsPanel(QGroupBox):
             blocker = QSignalBlocker(combo)
             for idx, base_txt in enumerate(orig_texts):
                 key = combo.itemData(idx)
+                tr_base = translate_text(base_txt)
                 if active and key in rec_set:
-                    combo.setItemText(idx, f"★ {base_txt}")
+                    combo.setItemText(idx, f"★ {tr_base}")
                     combo.setItemData(idx, gold, Qt.ItemDataRole.ForegroundRole)
                 else:
-                    combo.setItemText(idx, base_txt)
+                    combo.setItemText(idx, tr_base)
                     combo.setItemData(idx, None, Qt.ItemDataRole.ForegroundRole)
             del blocker
 
