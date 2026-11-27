@@ -1,12 +1,11 @@
 import os
 import sys
 import json
-import requests
 import subprocess
 from pathlib import Path
 from PySide6.QtWidgets import QMessageBox, QProgressDialog
 from PySide6.QtCore import Qt
-from paths import storage_dir, project_root, project_root
+from paths import storage_dir, project_root
 
 
 # URL mặc định trỏ tới file version.json trên GitHub
@@ -14,6 +13,7 @@ DEFAULT_VERSION_URL = "https://raw.githubusercontent.com/Diablo-Loc/App-AI-media
 
 
 def download_and_install(parent):
+    import requests
     """
     Tải và cài đặt bản cập nhật.
 

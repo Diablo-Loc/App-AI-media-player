@@ -1,9 +1,8 @@
-import os
 import subprocess
 import sys
-import yt_dlp  # Thư viện nhúng
 from PySide6.QtCore import QThread, Signal
 
+from .studio_download_engine import resolve_ytdlp_executable
 from .utils import sanitize_folder_name
 from .yt_dlp import ensure_ytdlp_exists
 from control.worker_lifecycle import OwnedProcesses
@@ -20,13 +19,7 @@ class GetTitleWorker(QThread):
         self._processes = OwnedProcesses()
         self.links = links
         self.is_running = True
-        import sys
-        
-        # Đường dẫn yt-dlp.exe - tương thích PyInstaller bundle
-        if getattr(sys, 'frozen', False):
-            self.ytdlp_exe = os.path.join(sys._MEIPASS, "yt-dlp.exe")
-        else:
-            self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
+        self.ytdlp_exe = str(resolve_ytdlp_executable())
 
     def run(self):
         try:
@@ -70,6 +63,7 @@ class GetTitleWorker(QThread):
                 self.log_signal.emit(f"⚠️ Cập nhật EXE lỗi: {e}")
 
         # 3. Cấu hình ydl_opts (Gom lại 1 lần duy nhất)
+        import yt_dlp
         ydl_opts = {
             'socket_timeout': 10,
             'quiet': True,

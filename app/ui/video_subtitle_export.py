@@ -22,7 +22,7 @@ import weakref
 from PySide6.QtCore import (
     QObject, QPoint, QPointF, QProcess, QRect, QRectF, QSize, Qt, QTextBoundaryFinder, QThread, Signal,
 )
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
 from PySide6.QtGui import QImage
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
@@ -34,7 +34,7 @@ from PySide6.QtWidgets import (
 from control.worker_lifecycle import OwnedProcesses
 from core.audio_effects import find_tool
 from ui.icons import button_icon
-from ui.design_system import ACCENT, BORDER, DIALOG_STYLE, MUTED, RAISED, SURFACE, TEXT
+from ui.design_system import ACCENT, BORDER, DIALOG_STYLE, MUTED, SURFACE, TEXT
 from ui.subtitle_effects import SubtitleEffects, normalize_options
 from ui.subtitle_kinetic import PER_CHAR_MODES
 from ui.subtitle_particles import subtitle_row_groups

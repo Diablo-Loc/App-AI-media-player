@@ -214,12 +214,14 @@ class TranslationWorker(QThread):
         self.settings = settings or {}
 
     def run(self):
+        clear_translator_fn = None
         try:
             if self.isInterruptionRequested():
                 return
             import sys
             from translate.pipeline import translate_pipeline, clear_translator
             from translate.online_logic import translate_online_pipeline
+            clear_translator_fn = clear_translator
 
             class TextContainer:
                 def __init__(self, text=""):
@@ -281,12 +283,6 @@ class TranslationWorker(QThread):
                         mode=translate_mode
                     )
 
-            clear_translator()
-            gc.collect()
-            torch_mod = sys.modules.get("torch")
-            if torch_mod is not None and hasattr(torch_mod, "cuda") and torch_mod.cuda.is_available():
-                torch_mod.cuda.empty_cache()
-
             updated_segments = []
             final_list = result_subs if result_subs else subs_list
 
@@ -340,3 +336,14 @@ class TranslationWorker(QThread):
             traceback.print_exc()
             if not self.isInterruptionRequested():
                 self.error_signal.emit(str(e))
+        finally:
+            if clear_translator_fn is not None:
+                try:
+                    clear_translator_fn()
+                except Exception:
+                    pass
+            gc.collect()
+            import sys as _sys
+            torch_mod = _sys.modules.get("torch")
+            if torch_mod is not None and hasattr(torch_mod, "cuda") and torch_mod.cuda.is_available():
+                torch_mod.cuda.empty_cache()

@@ -31,7 +31,7 @@ from core.audio_effects import source_signature
 from core.audio_profile import AudioProfile, adaptive_master_profile, preset_profile
 from core.audio_stream_engine import select_wasapi_device
 from ui.design_system import FORM_STYLE
-from ui.icons import ACCENT, INK, MUTED, TEXT, button_icon
+from ui.icons import INK, MUTED, TEXT, button_icon
 
 COLOR_ORIG = '#F0B866'
 COLOR_PROC = '#5ED9B8'

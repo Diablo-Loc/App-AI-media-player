@@ -12,13 +12,26 @@ from core.audio_profile import AudioProfile, build_realtime_filter_graph
 
 logger = logging.getLogger(__name__)
 
-# Prime-length 64-bit TPDF dither table (~2.0 MB RAM) with prime L/R decorrelation stride.
+# Prime-length 64-bit TPDF dither table (~2.1 MB RAM) lazily initialized only when
+# integer PCM quantization (16/24/32-bit) is actually requested; float32 WASAPI skips it.
 _TPDF_LEN = 262147
 _TPDF_R_STRIDE = 131071
-_TPDF_TABLE = (
-    np.random.default_rng(20261124).random(_TPDF_LEN, dtype=np.float64)
-    - np.random.default_rng(20261125).random(_TPDF_LEN, dtype=np.float64)
-)
+_TPDF_TABLE: np.ndarray | None = None
+_TPDF_LOCK = threading.Lock()
+
+
+def _get_tpdf_table() -> np.ndarray:
+    global _TPDF_TABLE
+    table = _TPDF_TABLE
+    if table is None:
+        with _TPDF_LOCK:
+            if _TPDF_TABLE is None:
+                _TPDF_TABLE = (
+                    np.random.default_rng(20261124).random(_TPDF_LEN, dtype=np.float64)
+                    - np.random.default_rng(20261125).random(_TPDF_LEN, dtype=np.float64)
+                )
+            table = _TPDF_TABLE
+    return table
 
 
 def is_stream_engine_available():
@@ -32,11 +45,12 @@ def is_stream_engine_available():
 
 
 def _tpdf_slice_1d(start: int, length: int) -> np.ndarray:
+    table = _get_tpdf_table()
     s = start % _TPDF_LEN
     if s + length <= _TPDF_LEN:
-        return _TPDF_TABLE[s:s + length]
+        return table[s:s + length]
     idx = (np.arange(length, dtype=np.int64) + s) % _TPDF_LEN
-    return _TPDF_TABLE[idx]
+    return table[idx]
 
 
 def _tpdf_slice(shape, offset: int) -> np.ndarray:

@@ -1,11 +1,9 @@
-import os
 import sys
 import ctypes
 import gc
-import tracemalloc
 from collections import deque
 
-from PySide6.QtCore import QObject, Signal, QTimer, QMetaObject, Qt
+from PySide6.QtCore import QObject, Signal, Qt
 
 # =========================================================
 # CALLBACK TYPES
@@ -436,13 +434,6 @@ class SystemMediaManager(QObject):
             if hasattr(self, "_debug_timer"):
                 self._debug_timer.stop()
 
-            gc.collect()
-            current, peak = tracemalloc.get_traced_memory()
-            print("\n========== FINAL ==========")
-            print("Python Current:", current/1024/1024)
-            print("Python Peak   :", peak/1024/1024)
-            print("===========================")
-
             self._pending_audio.clear()
             self._pending_logs.clear()
             self._flush_scheduled = False
@@ -460,8 +451,7 @@ class SystemMediaManager(QObject):
             self._log_cb = None
             self._media_cb = None
             self.lib = None
-            if tracemalloc.is_tracing():
-                tracemalloc.stop()
+            gc.collect()
         except Exception as e:
             print("CLOSE ERROR:", e)
 

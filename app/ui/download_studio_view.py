@@ -8,12 +8,11 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFormLayout,
-    QHBoxLayout,
     QPushButton,
 )
 
 from config import ConfigManager
-from download_core.download_options import ORIGINAL, QUALITIES, download_options
+from download_core.download_options import ORIGINAL, download_options
 from download_core.studio_download_engine import (
     StudioDownloadWorker,
     StudioTitleWorker,
@@ -22,7 +21,7 @@ from download_core.studio_download_engine import (
     normalize_quality_choice,
 )
 from paths import project_root
-from ui.icons import ACCENT, INK, MUTED, TEXT, button_icon
+from ui.icons import ACCENT, button_icon
 
 _COOKIE_CHOICES = (
     ("Tắt (Mặc định)", ""),

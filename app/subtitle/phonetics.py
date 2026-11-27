@@ -12,17 +12,6 @@ from collections import OrderedDict
 import re
 from typing import Iterable
 
-try:
-    import pykakasi as _pykakasi
-except Exception:  # pragma: no cover - optional runtime fallback
-    _pykakasi = None
-
-try:
-    from pypinyin import Style as _PinyinStyle, pinyin as _pypinyin_fn
-except Exception:  # pragma: no cover - optional runtime fallback
-    _PinyinStyle = None
-    _pypinyin_fn = None
-
 _RE_KANA = re.compile(r"[\u3040-\u309f\u30a0-\u30ff\u31f0-\u31ff\uff66-\uff9f]")
 _RE_HANGUL = re.compile(r"[\uac00-\ud7a3\u1100-\u11ff\u3130-\u318f]")
 _RE_CJK = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf\uf900-\ufaff]")
@@ -78,18 +67,31 @@ _KO_JONGSEONG = (
 )
 
 _KAKASI_INSTANCE = None
+_PYPINYIN_BUNDLE = None
 _LINE_CACHE: OrderedDict[tuple[str, str], str] = OrderedDict()
 _MAX_LINE_CACHE = 4096
 
 
 def _get_kakasi():
     global _KAKASI_INSTANCE
-    if _KAKASI_INSTANCE is None and _pykakasi is not None:
+    if _KAKASI_INSTANCE is None:
         try:
+            import pykakasi as _pykakasi
             _KAKASI_INSTANCE = _pykakasi.kakasi()
         except Exception:
             _KAKASI_INSTANCE = False
     return _KAKASI_INSTANCE if _KAKASI_INSTANCE else None
+
+
+def _get_pypinyin():
+    global _PYPINYIN_BUNDLE
+    if _PYPINYIN_BUNDLE is None:
+        try:
+            from pypinyin import Style as _PinyinStyle, pinyin as _pypinyin_fn
+            _PYPINYIN_BUNDLE = (_pypinyin_fn, _PinyinStyle)
+        except Exception:
+            _PYPINYIN_BUNDLE = False
+    return _PYPINYIN_BUNDLE if _PYPINYIN_BUNDLE else (None, None)
 
 
 def clear_phonetic_cache() -> None:
@@ -239,10 +241,11 @@ def _romaji_ja(text: str) -> str:
 
 
 def _pinyin_zh(text: str) -> str:
-    if _pypinyin_fn is None or _PinyinStyle is None:
+    pypinyin_fn, pinyin_style = _get_pypinyin()
+    if pypinyin_fn is None or pinyin_style is None:
         return ""
     # Pass non-CJK runs through intact while spacing syllables cleanly
-    raw_items = _pypinyin_fn(text, style=_PinyinStyle.TONE, errors="default", heteronym=False)
+    raw_items = pypinyin_fn(text, style=pinyin_style.TONE, errors="default", heteronym=False)
     pieces: list[str] = []
     for item in raw_items:
         syl = str(item[0] if item else "")

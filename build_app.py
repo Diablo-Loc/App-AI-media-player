@@ -20,6 +20,19 @@ HIDDEN_IMPORTS = (
     'sounddevice', '_sounddevice_data', 'cffi', 'numpy',
     'pykakasi', 'jaconv', 'deprecated', 'pypinyin',
 )
+# Exclude heavy unused Qt modules, dev/test/plotting packages, and external AI
+# frameworks (which live separately in app_resources/libs) so _internal stays lean.
+EXCLUDED_MODULES = (
+    'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtWebChannel',
+    'PySide6.QtQml', 'PySide6.QtQuick', 'PySide6.QtQuickWidgets', 'PySide6.QtQuickControls2',
+    'PySide6.Qt3DCore', 'PySide6.Qt3DRender', 'PySide6.Qt3DInput', 'PySide6.Qt3DExtras',
+    'PySide6.QtPdf', 'PySide6.QtPdfWidgets', 'PySide6.QtDesigner', 'PySide6.QtSql',
+    'PySide6.QtTest', 'PySide6.QtCharts', 'PySide6.QtDataVisualization', 'PySide6.QtSensors',
+    'tkinter', '_tkinter', 'matplotlib', 'scipy', 'PIL', 'IPython', 'jupyter', 'notebook',
+    'pytest', 'pydoc_data', 'torch', 'torchaudio', 'torchvision', 'transformers',
+    'faster_whisper', 'ctranslate2', 'onnxruntime',
+)
+_UNUSED_BIN_PATTERNS = ('ffplay.exe', '*.pdb', '__pycache__', '*.pyc')
 
 
 def build_plan(root=ROOT, dist_dir=None, stamp=None):
@@ -41,6 +54,7 @@ def build_plan(root=ROOT, dist_dir=None, stamp=None):
         f'--distpath={output}', f'--workpath={work}', f'--specpath={work}',
         f'--icon={root / "icon/app_icon.ico"}', f'--add-data={root / "app"};app']
     params += ['--hidden-import=' + name for name in HIDDEN_IMPORTS]
+    params += ['--exclude-module=' + name for name in EXCLUDED_MODULES]
     params += ['--collect-data=pykakasi', '--collect-data=pypinyin']
     return {'root': str(root), 'output': str(output / APP_NAME), 'work': str(work), 'params': params}
 
@@ -57,6 +71,28 @@ def validate_sources(plan):
         raise FileNotFoundError('Thiếu tài nguyên đóng gói: ' + ', '.join(missing))
 
 
+def _prune_packaged_internal_app(destination: Path) -> None:
+    """Remove duplicate binaries, bytecode caches and dev-only files from _internal/app."""
+    internal_app = destination / '_internal' / 'app'
+    if not internal_app.is_dir():
+        return
+    # yt-dlp.exe is already copied to destination/yt-dlp.exe (~22.5 MB saved)
+    dup_ytdlp = internal_app / 'download_core' / 'yt-dlp.exe'
+    if dup_ytdlp.is_file():
+        dup_ytdlp.unlink(missing_ok=True)
+    for rel in ('test', 'downloader.py', 'test_build_app.py'):
+        target = internal_app / rel
+        if target.is_dir():
+            shutil.rmtree(target, ignore_errors=True)
+        elif target.is_file():
+            target.unlink(missing_ok=True)
+    for cache_dir in list(internal_app.rglob('__pycache__')):
+        if cache_dir.is_dir():
+            shutil.rmtree(cache_dir, ignore_errors=True)
+    for pyc in list(internal_app.rglob('*.pyc')):
+        pyc.unlink(missing_ok=True)
+
+
 def copy_portable_resources(plan):
     root, destination = Path(plan['root']), Path(plan['output'])
     if not (destination / (APP_NAME + '.exe')).is_file():
@@ -64,11 +100,13 @@ def copy_portable_resources(plan):
     for name in ('icon', 'native', 'bin'):
         source = root / name
         if source.is_dir():
-            shutil.copytree(source, destination / name, dirs_exist_ok=True)
+            ignore = shutil.ignore_patterns(*_UNUSED_BIN_PATTERNS) if name == 'bin' else shutil.ignore_patterns('__pycache__', '*.pyc')
+            shutil.copytree(source, destination / name, dirs_exist_ok=True, ignore=ignore)
     # app/native is already included under _internal/app by --add-data.
     downloader = root / 'app/download_core/yt-dlp.exe'
     if downloader.is_file():
         shutil.copy2(downloader, destination / 'yt-dlp.exe')
+    _prune_packaged_internal_app(destination)
     (destination / 'app_resources/libs').mkdir(parents=True, exist_ok=True)
     # Models/libs and user storage remain separate, as in the existing portable build.
 

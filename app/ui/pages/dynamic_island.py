@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QGraphicsDropShadowEffect, QApplication
-from PySide6.QtCore import Qt, Signal, QTimer, QPoint
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QGraphicsDropShadowEffect
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QColor, QFont, QCursor, QGuiApplication,QPixmap,QPainter, QPainterPath
 from ..icons import button_icon, label_icon, ACCENT
 
@@ -109,7 +109,7 @@ class MiniPlayer(QWidget):
         self.drag_threshold = 5
         self.is_dragging = False
         self.click_count = 0
-        self.click_timer = QTimer()
+        self.click_timer = QTimer(self)
         self.click_timer.setSingleShot(True)
         self.click_timer.setInterval(400) # 400ms để phân biệt click và drag(tốc độ nhấn chuột)
         self.click_timer.timeout.connect(self.handle_click_logic)

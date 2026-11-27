@@ -1,12 +1,10 @@
 import os
-import sys
 import time
 import html
-import logging
 import json
-import psutil
 import random
-from pathlib import Path
+
+psutil = None  # Lazy-loaded on shutdown; kept as module attribute for isolated test mocks
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                              QFrame, QPushButton, QGridLayout, 
                              QFileDialog, QStackedWidget, QMessageBox, QSizePolicy,QApplication,QLineEdit,QLabel)
@@ -15,7 +13,7 @@ from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer, QAudioOutput
 from PySide6.QtGui import QShortcut, QKeySequence, QIcon
 from PySide6.QtMultimediaWidgets import QVideoWidget
 # Import UI components
-from paths import project_root, storage_dir, get_icon_path
+from paths import storage_dir, get_icon_path
 from ui.playback_bar import PlaybackBar
 from ui.icons import button_icon, icon
 from ui.design_system import apply_shell, ICON_BUTTON_STYLE
@@ -33,8 +31,6 @@ from pipeline.utils import TempFileManager
 import shutil
 # Import database components
 from config import ConfigManager
-
-from core.media_library import MediaLibrary
 from core.user_collections import (
     UserCollectionsStore,
     compute_play_count_threshold_sec,
@@ -55,9 +51,6 @@ from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
 from ui.system_media_manager import SystemMediaManager
 from ui.subs_ui.lyric_settings_dialog import SubtitleToolsDialog
-
-#Import updater
-from updater import download_and_install
 
 class InternalMediaPlayer(QObject):
     def __init__(self, parent=None):
@@ -289,11 +282,11 @@ class MainWindow(QMainWindow):
         self._connect_signals() # Các signal nội bộ khác của App
 
         # --- 8. TIMERS & FILTERS ---
-        self.resize_timer = QTimer()
+        self.resize_timer = QTimer(self)
         self.resize_timer.setSingleShot(True)
         self.resize_timer.timeout.connect(self.refresh_grid)
 
-        self.mouse_hide_timer = QTimer()
+        self.mouse_hide_timer = QTimer(self)
         self.mouse_hide_timer.setSingleShot(True)
         self.mouse_hide_timer.timeout.connect(self.hide_controls)
 
@@ -536,7 +529,10 @@ class MainWindow(QMainWindow):
 
             # --- BƯỚC 4: GIẾT FFmpeg CÒN SÓT ---
             try:
-                current_process = psutil.Process()
+                p_mod = psutil
+                if p_mod is None:
+                    import psutil as p_mod
+                current_process = p_mod.Process()
                 children = current_process.children(recursive=True)
                 for child in children:
                     if "ffmpeg" in child.name().lower():
@@ -610,18 +606,14 @@ class MainWindow(QMainWindow):
         # PHẦN 2: XỬ LÝ GRID DANH SÁCH (CHẠY TRỄ / DEBOUNCE)
         # ==============================================================
         if hasattr(self, 'grid_widgets') and self.grid_widgets:
-            
-            # Reset timer mỗi khi resize
-            if hasattr(self, '_resize_timer'):
-                self._resize_timer.stop()
-            else:
-                self._resize_timer = QTimer()
-                self._resize_timer.setSingleShot(True)
-                # Kết nối tới hàm refresh_grid
-                self._resize_timer.timeout.connect(self.refresh_grid)
-            
-            # Đợi 200ms sau khi ngừng kéo chuột mới tính toán lại cột
-            self._resize_timer.start(200)
+            # Tái sử dụng 1 QTimer(self) duy nhất để không tạo rác đối tượng khi kéo cửa sổ
+            timer = getattr(self, 'resize_timer', None)
+            if timer is None:
+                timer = QTimer(self)
+                timer.setSingleShot(True)
+                timer.timeout.connect(self.refresh_grid)
+                self.resize_timer = timer
+            timer.start(200)
 
     def update_song_display(self):
         """Cắt chữ thông minh dựa trên kích thước thực tế của vùng hiển thị"""
@@ -911,6 +903,10 @@ class MainWindow(QMainWindow):
             return
         player = getattr(getattr(self, 'media_player', None), 'player', None)
         if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            if sub.mode != SubtitleMode.OFF and sub.subtitles:
+                timer = getattr(self, '_sub_clock_timer', None)
+                if timer is not None and not timer.isActive():
+                    timer.start()
             sub.update_position(self.authoritative_subtitle_position_ms())
         else:
             sub.update_position(int(pos_ms))
@@ -919,7 +915,11 @@ class MainWindow(QMainWindow):
         timer = getattr(self, '_sub_clock_timer', None)
         if timer is None:
             return
-        if state == QMediaPlayer.PlaybackState.PlayingState:
+        sub = getattr(self, 'sub_layer', None)
+        has_active_subs = bool(
+            sub is not None and sub.mode != SubtitleMode.OFF and sub.subtitles
+        )
+        if state == QMediaPlayer.PlaybackState.PlayingState and has_active_subs:
             if not timer.isActive():
                 timer.start()
         else:
@@ -928,7 +928,12 @@ class MainWindow(QMainWindow):
 
     def _tick_subtitle_clock(self):
         sub = getattr(self, 'sub_layer', None)
-        if sub is None or not sub.enable_render or sub.mode == SubtitleMode.OFF or not sub.subtitles:
+        if sub is None or sub.mode == SubtitleMode.OFF or not sub.subtitles:
+            timer = getattr(self, '_sub_clock_timer', None)
+            if timer is not None and timer.isActive():
+                timer.stop()
+            return
+        if not sub.enable_render:
             return
         player = getattr(getattr(self, 'media_player', None), 'player', None)
         if player is None or player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
@@ -2414,21 +2419,23 @@ class MainWindow(QMainWindow):
             return
         print(f"🔄 Phát hiện thay đổi file tại: {path}")
         
-        # Dùng QTimer (Debounce) để tránh reload liên tục khi copy nhiều file
-        if hasattr(self, 'update_timer'):
-            self.update_timer.stop()
-        
-        self.update_timer = QTimer()
-        self.update_timer.setSingleShot(True)
-        # Đợi 1.5 giây sau khi ngừng copy mới quét lại
-        def _reload():
-            folders = self.user_collections.get_folders() if hasattr(self, "user_collections") else []
-            if len(folders) > 1:
-                self.load_folders_content(folders)
-            else:
-                self.load_folder_content(path)
-        self.update_timer.timeout.connect(_reload)
-        self.update_timer.start(1500)
+        # Dùng QTimer(self) duy nhất để debounce tránh rò rỉ đối tượng khi copy nhiều file
+        self._watched_changed_path = path
+        timer = getattr(self, 'update_timer', None)
+        if timer is None:
+            timer = QTimer(self)
+            timer.setSingleShot(True)
+
+            def _reload():
+                folders = self.user_collections.get_folders() if hasattr(self, "user_collections") else []
+                if len(folders) > 1:
+                    self.load_folders_content(folders)
+                else:
+                    self.load_folder_content(getattr(self, '_watched_changed_path', path))
+
+            timer.timeout.connect(_reload)
+            self.update_timer = timer
+        timer.start(1500)
     
     #Logic tìm kiếm 
     def filter_grid(self, text):

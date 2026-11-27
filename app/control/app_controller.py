@@ -1,5 +1,5 @@
 # app/control/app_controller.py
-from PySide6.QtCore import QObject, Slot, Signal, QUrl, QSettings, QFileInfo, QStandardPaths, QUrl, QTimer
+from PySide6.QtCore import QObject, Slot, Signal, QTimer
 from PySide6.QtMultimedia import QMediaPlayer
 import logging
 import gc

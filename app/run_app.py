@@ -5,7 +5,6 @@ import io
 import sys
 import logging
 import shutil
-from pathlib import Path
 
 if os.name == "nt":
     os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -73,7 +72,6 @@ else:
 # 3. FIX PyInstaller issue & Exception Handling
 # =====================================================================
 if sys.stdout is None:
-    import io
     sys.stdout = io.StringIO()
     sys.stderr = io.StringIO()
 

@@ -1,6 +1,6 @@
-import os
 import subprocess
 from PySide6.QtCore import QThread, Signal
+from .studio_download_engine import resolve_ytdlp_executable
 from .yt_dlp import ensure_ytdlp_exists
 from control.worker_lifecycle import OwnedProcesses
 from download_core.download_options import ORIGINAL, build_download_command, download_options, quality_note
@@ -25,14 +25,7 @@ class DownloadWorker(QThread):
             "auto_update": True
         }
         self.is_running = True
-        
-        import sys
-        
-        # Đường dẫn yt-dlp.exe - tương thích PyInstaller bundle
-        if getattr(sys, 'frozen', False):
-            self.ytdlp_exe = os.path.join(sys._MEIPASS, "yt-dlp.exe")
-        else:
-            self.ytdlp_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yt-dlp.exe")
+        self.ytdlp_exe = str(resolve_ytdlp_executable())
             
     def run(self):
         try:

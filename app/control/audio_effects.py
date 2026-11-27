@@ -6,24 +6,17 @@ import logging
 from pathlib import Path
 import time
 
-from PySide6.QtCore import QObject, QThread, QTimer, Signal, QUrl, Qt
+from PySide6.QtCore import QObject, QThread, QTimer, Signal
 from PySide6.QtMultimedia import QMediaDevices, QMediaPlayer
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSizePolicy, QVBoxLayout, QWidget
 
 from core.audio_profile import (
     AudioProfile,
     SCHEMA_VERSION,
-    TONE_PEAK_PAD_DB,
     adaptive_master_profile,
-    compute_mastering_gain_db,
-    custom_eq_peak_boost_db,
-    effective_eq_preamp_db,
     is_external_usb_dac,
-    preset_profile,
     normalize_peq_filters,
     resolve_profile_gain_db,
     resolve_restorer,
-    tone_peak_pad_db,
 )
 from core.audio_effects import (
     AudioPlaybackCache,
