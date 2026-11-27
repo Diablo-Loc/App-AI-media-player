@@ -72,7 +72,6 @@ def get_input_path(filename: str) -> Path:
 def init_folders() -> None:
     """Khởi tạo tất cả các thư mục cần thiết"""
     try:
-        input_dir()
         storage_dir()
     except Exception as e:
         # Safe print for PyInstaller (sys.stdout might be None)

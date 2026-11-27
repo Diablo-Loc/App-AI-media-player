@@ -84,6 +84,8 @@ Type: files; Name: "{app}\bin\ffplay.exe"
 Type: files; Name: "{app}\update_helper.bat"
 Type: files; Name: "{app}\update_helper.sh"
 Type: files; Name: "{app}\version.json"
+Type: dirifempty; Name: "{app}\input"
+Type: dirifempty; Name: "{app}\output"
 
 [Files]
 ; 1. Package complete PyInstaller portable directory (BoTube.exe, _internal, bin, icon, native, yt-dlp.exe)

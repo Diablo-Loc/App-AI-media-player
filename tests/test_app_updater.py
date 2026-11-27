@@ -311,6 +311,8 @@ class InstallerAndLegacyCleanupContractTests(unittest.TestCase):
         self.assertIsNotNone(m_del)
         del_block = m_del.group(1) if m_del else ''
         self.assertIn('{app}\\_internal', del_block)
+        self.assertIn('Type: dirifempty; Name: "{app}\\input"', del_block)
+        self.assertIn('Type: dirifempty; Name: "{app}\\output"', del_block)
         for line in del_block.splitlines():
             stripped = line.strip()
             if not stripped or stripped.startswith(';'):
