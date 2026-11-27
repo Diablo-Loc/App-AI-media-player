@@ -151,6 +151,8 @@ print('LAZY_STARTUP_OK')
             plan = build_app.build_plan(root, stamp='slim')
             self.assertIn('--exclude-module=PySide6.QtWebEngineCore', plan['params'])
             self.assertIn('--exclude-module=torch', plan['params'])
+            for stdlib_mod in ('timeit', 'filecmp', 'pipes', 'trace', 'unittest', 'wave'):
+                self.assertIn(f'--hidden-import={stdlib_mod}', plan['params'])
 
             out = Path(plan['output'])
             (out / '_internal/app/download_core/__pycache__').mkdir(parents=True, exist_ok=True)

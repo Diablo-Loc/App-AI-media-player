@@ -249,7 +249,14 @@ class AIProgressBar(QFrame):
         self._state = "error"
         self._elapsed_timer.stop()
         self._set_dot_color("#F87171")
-        short_msg = str(message or "Lỗi xử lý AI").splitlines()[0][:140]
+        raw = str(message or "Lỗi xử lý AI").strip()
+        lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+        if len(lines) > 1 and "Traceback (" in raw:
+            prefix = lines[0].split("Traceback (", 1)[0].strip()
+            tail = lines[-1]
+            short_msg = f"{prefix} {tail}".strip()[:160] if prefix else tail[:160]
+        else:
+            short_msg = (lines[0] if lines else "Lỗi xử lý AI")[:160]
         self.lbl_status.setText(short_msg)
         self.lbl_elapsed.setText(self._format_elapsed(elapsed))
         self.btn_cancel.hide()

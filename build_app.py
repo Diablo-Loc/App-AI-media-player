@@ -17,6 +17,10 @@ HIDDEN_IMPORTS = (
     'google.genai', 'av', 'psutil', 'cryptography', 'websockets', 'tenacity',
     'huggingface_hub', 'filelock', 'fsspec', 'pickletools', 'pickle', 'struct',
     'difflib', 'ast', 'cProfile', 'profile', 'pstats', 'modulefinder', 'pkgutil', 'importlib.metadata',
+    # Stdlib modules required at runtime by external AI libs loaded from app_resources/libs (torch/transformers/whisper/onnxruntime)
+    'timeit', 'filecmp', 'pipes', 'trace', 'unittest', 'unittest.mock', 'doctest', 'pdb',
+    'wave', 'py_compile', 'compileall', 'zipimport', 'sqlite3', 'shelve', 'tarfile',
+    'http.cookiejar', 'urllib.robotparser', 'webbrowser', 'code', 'codeop',
     'sounddevice', '_sounddevice_data', 'cffi', 'numpy',
     'pykakasi', 'jaconv', 'deprecated', 'pypinyin',
 )
