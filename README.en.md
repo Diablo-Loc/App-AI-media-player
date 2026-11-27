@@ -2,7 +2,7 @@
 
 # BoTube 6.0 · AI Media Player & Hi-Fi Audio Studio
 
-**Commercial-Grade Windows AI Media Player — 64-bit Float WASAPI Exclusive Audio, Whisper CUDA ASR, Multi-LLM Lyric Translation, Word-Level Karaoke, NVIDIA NVENC Video Export & SHA-256 Auto-Updater**
+**Next-Gen Windows AI Media Player — 64-bit Float WASAPI Exclusive Audio, Whisper CUDA ASR, Multi-LLM Lyric Translation, Word-Level Karaoke, NVIDIA NVENC Video Export & SHA-256 Auto-Updater**
 
 <p>
   <a href="https://diablo-loc.github.io/App-AI-media-player/"><img src="https://img.shields.io/badge/Official%20Website-BoTube%206.0-16332B?style=for-the-badge&logo=googlechrome&logoColor=77E0BE" alt="Official Website"/></a>
@@ -41,7 +41,7 @@
 | **NVIDIA NVENC Video + Lyrics Export** | Automatic **NVIDIA GPU `h264_nvenc` ⚡** hardware acceleration for burning displayed lyrics and optical effects into 16:9, 9:16 Shorts, 1:1, or 4K video — with seamless CPU `libx264` fallback and lossless audio stream-copy. |
 | **Collections, History & Smart Resume** | Dedicated **Collections** (Favorites, custom Playlists, Most Played statistics) and **Playback History** with timestamp-exact **Smart Resume**. |
 | **Studio Settings & 100% Live VI/EN UI** | Redesigned auto-saving Studio Settings and instant **Vietnamese ↔ English** switching across every page, popup, chart, and dialog without restarting or touching saved user data. |
-| **Commercial Auto-Updater & Lean Bundle** | Built-in **GitHub Releases + Inno Setup 6** updater with **SHA-256 verification**, UAC-safe silent in-place upgrades, automatic non-elevated relaunch, and a **>174 MB leaner** packaged footprint. |
+| **Auto-Updater & Lean Bundle** | Built-in **GitHub Releases + Inno Setup 6** updater with **SHA-256 verification**, UAC-safe silent in-place upgrades, automatic non-elevated relaunch, and a **>174 MB leaner** packaged footprint. |
 
 ---
 

@@ -2,7 +2,7 @@
 
 # BoTube 6.0 · AI Media Player & Hi-Fi Audio Studio
 
-**Trình phát Nhạc & Video AI chuẩn thương mại cho Windows — Âm thanh Hi-Fi 64-bit WASAPI Exclusive, Whisper AI CUDA, Dịch đa mô hình LLM, Karaoke từng chữ, Xuất video GPU NVENC & Cập nhật tự động**
+**Trình phát Nhạc & Video AI thế hệ mới cho Windows — Âm thanh Hi-Fi 64-bit WASAPI Exclusive, Whisper AI CUDA, Dịch đa mô hình LLM, Karaoke từng chữ, Xuất video GPU NVENC & Cập nhật tự động**
 
 <p>
   <a href="https://diablo-loc.github.io/App-AI-media-player/"><img src="https://img.shields.io/badge/Trang%20Web%20Ch%C3%ADnh%20Th%E1%BB%A9c-BoTube%206.0-16332B?style=for-the-badge&logo=googlechrome&logoColor=77E0BE" alt="Official Website"/></a>
@@ -41,7 +41,7 @@
 | **Xuất Video + Lyric bằng GPU NVIDIA** | Tự động tăng tốc phần cứng **NVIDIA NVENC (`h264_nvenc` ⚡)** khi xuất video kèm phụ đề + hiệu ứng quang học (16:9, 9:16 Shorts, 1:1, 4K), tự fallback sang `libx264` CPU khi cần và giữ nguyên luồng âm thanh gốc. |
 | **Bộ sưu tập, Lịch sử & Smart Resume** | Bổ sung trang **Bộ sưu tập** (Yêu thích, Playlist tùy biến, Nghe nhiều nhất) và **Lịch sử phát** tự ghi nhớ chính xác mốc thời gian nghe dở để tiếp tục chỉ bằng một cú bấm. |
 | **Cài đặt Studio & Song ngữ 100% VI/EN** | Giao diện **Cài đặt** mới gọn gàng tự động lưu; chuyển đổi tức thì **Tiếng Việt ↔ English** toàn bộ ứng dụng mà không cần khởi động lại hay thay đổi dữ liệu đã lưu. |
-| **Cập nhật tự động chuẩn thương mại** | Kiểm tra và nâng cấp trực tiếp qua **GitHub Releases API + Inno Setup 6**, xác thực chữ ký **SHA-256**, tự đóng mở lại ứng dụng an toàn không cần quyền Admin, giảm **>174 MB** dung lượng gói đóng gói. |
+| **Cập nhật tự động & Tối ưu dung lượng** | Kiểm tra và nâng cấp trực tiếp qua **GitHub Releases API + Inno Setup 6**, xác thực chữ ký **SHA-256**, tự đóng mở lại ứng dụng an toàn không cần quyền Admin, giảm **>174 MB** dung lượng gói đóng gói. |
 
 ---
 
