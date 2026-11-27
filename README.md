@@ -98,9 +98,9 @@ Hiệu ứng chữ chỉ thay đổi cách trình bày, không sửa nội dung 
 - **🎤 Chế độ Karaoke:** khi bật trong bảng **Phụ đề & Hiệu ứng**, phụ đề tự động phóng to, chuyển màu sáng sân khấu, làm nổi vàng (`★`) các hiệu ứng đề xuất và khớp **từng chữ/âm tiết thật** theo mốc giờ giọng hát (`storage/subtitles/words/`, bài cũ chưa có dữ liệu từ vẫn lướt mượt bình thường).
 - **Phiên âm trên cùng (`Phiên âm (R)`):** tạo tức thì dòng phiên âm Latinh màu xanh băng ở hàng trên cùng (Hepburn Romaji cho tiếng Nhật, Pinyin có dấu cho tiếng Trung, Revised Romanization cho tiếng Hàn; tự ẩn với bài tiếng Anh/Việt) hoàn toàn offline cho cả thư viện bài hát đã lưu sẵn.
 
-Trong cài đặt phụ đề, chọn **Xuất video + lyric** để tạo video có phụ đề gắn vào hình. Có thể chọn tỉ lệ nguồn, 16:9, 9:16, 1:1 và các canvas khác; tùy chỉnh cách fit/fill, kích thước, FPS, vùng an toàn và một số thiết lập hiển thị riêng khi xuất.
+Trong cài đặt phụ đề, chọn **Xuất video + lyric** để tạo video có phụ đề gắn vào hình. Có thể chọn tỉ lệ nguồn, 16:9, 9:16, 1:1 và các canvas khác; tùy chỉnh cách fit/fill, kích thước, FPS, chất lượng, bộ mã hóa (**Tự động ưu tiên GPU NVIDIA `h264_nvenc` ⚡** hoặc CPU `libx264`), vùng an toàn và một số thiết lập hiển thị riêng khi xuất.
 
-Gắn phụ đề vào hình cần mã hóa lại video. Âm thanh ưu tiên giữ luồng nguồn; MP4 có thể chuyển sang AAC để tương thích. Bản xuất là file mới, không ghi đè video nguồn.
+Gắn phụ đề vào hình cần mã hóa lại video: khi phát hiện GPU NVIDIA tương thích, app tự động dùng phần cứng **NVENC (`h264_nvenc`)** để tăng tốc xuất video nhiều lần và tự chuyển mượt về CPU `libx264` nếu phần cứng bận hoặc không hỗ trợ kích thước khung. Âm thanh ưu tiên giữ luồng nguồn; MP4 có thể chuyển sang AAC để tương thích. Bản xuất là file mới, không ghi đè video nguồn.
 
 ### Âm thanh
 

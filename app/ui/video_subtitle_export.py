@@ -63,9 +63,16 @@ ASPECT_RATIOS = {
 }
 RESOLUTION_SHORT_EDGE = {'source': None, '720': 720, '1080': 1080, '1440': 1440, '2160': 2160}
 QUALITY_CRF = {'very_high': 16, 'high': 18, 'balanced': 20, 'compact': 23}
+# NVENC VBR Constant Quality (-cq) maps ~3 QP steps higher than x264 CRF for
+# matching visual quality (VMAF) and file size without 2.5x bitrate bloat.
+NVENC_QUALITY_CQ = {'very_high': 19, 'high': 21, 'balanced': 23, 'compact': 26}
 FIT_MODES = frozenset({'contain', 'cover', 'stretch'})
 BACKGROUND_COLORS = {'black': 'black', 'dark': '#151A22', 'white': 'white'}
 EXPORT_SCALE_FLAGS = 'lanczos+accurate_rnd+full_chroma_int'
+ENCODER_MODES = ('auto', 'nvenc', 'cpu')
+NVENC_MIN_DIM = 256
+NVENC_MAX_DIM = 4096
+_NVENC_SUPPORT_CACHE: dict[str, bool] = {}
 
 
 @dataclass(frozen=True)
@@ -91,6 +98,129 @@ class ExportSettings:
     bg_opacity_percent: int = 50
     custom_width: int = 1920
     custom_height: int = 1080
+    encoder: str = 'auto'
+
+
+def can_use_nvenc_for_canvas(width: int, height: int) -> bool:
+    """Return True when even canvas dimensions fit H.264 NVENC ASIC limits (256..4096)."""
+    w, h = int(width), int(height)
+    return NVENC_MIN_DIM <= w <= NVENC_MAX_DIM and NVENC_MIN_DIM <= h <= NVENC_MAX_DIM
+
+
+def probe_nvenc_support(ffmpeg_path: str | None = None, *, use_cache: bool = True) -> bool:
+    """Verify that FFmpeg + NVIDIA driver can open a real h264_nvenc session."""
+    try:
+        ffmpeg = str(ffmpeg_path or find_tool('ffmpeg'))
+    except Exception:
+        return False
+    if use_cache and ffmpeg in _NVENC_SUPPORT_CACHE:
+        return _NVENC_SUPPORT_CACHE[ffmpeg]
+    supported = False
+    try:
+        completed = subprocess.run(
+            [
+                ffmpeg, '-hide_banner', '-loglevel', 'error',
+                '-f', 'lavfi', '-i', 'color=c=black:s=256x256:d=0.04',
+                '-frames:v', '1', '-pix_fmt', 'yuv420p',
+                '-c:v', 'h264_nvenc', '-f', 'null', '-',
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=4.0,
+            creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+            check=False,
+        )
+        supported = completed.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        supported = False
+    if use_cache:
+        _NVENC_SUPPORT_CACHE[ffmpeg] = supported
+    return supported
+
+
+def resolve_video_encoder(
+    settings: ExportSettings,
+    width: int,
+    height: int,
+    nvenc_available: bool | None = None,
+    ffmpeg_path: str | None = None,
+) -> str:
+    """Select 'h264_nvenc' or 'libx264' based on preference, canvas bounds and GPU probe."""
+    mode = str(getattr(settings, 'encoder', 'auto') or 'auto').strip().lower()
+    if mode == 'cpu' or not can_use_nvenc_for_canvas(width, height):
+        return 'libx264'
+    available = (
+        probe_nvenc_support(ffmpeg_path)
+        if nvenc_available is None
+        else bool(nvenc_available)
+    )
+    return 'h264_nvenc' if available else 'libx264'
+
+
+def video_encoder_arguments(encoder_name: str, quality: str, threads: int) -> list[str]:
+    """Return H.264 encoder arguments tuned for crisp lyric edges on GPU or CPU."""
+    if encoder_name == 'h264_nvenc':
+        cq = NVENC_QUALITY_CQ.get(quality, 21)
+        return [
+            '-c:v', 'h264_nvenc',
+            '-preset', 'p4',
+            '-tune', 'hq',
+            '-profile:v', 'high',
+            '-rc', 'vbr',
+            '-cq', str(cq),
+            '-b:v', '0',
+            '-spatial-aq', '1',
+            '-temporal-aq', '1',
+            '-aq-strength', '8',
+            '-pix_fmt', 'yuv420p',
+        ]
+    crf = QUALITY_CRF.get(quality, 18)
+    return [
+        '-c:v', 'libx264',
+        '-preset', 'medium',
+        '-crf', str(crf),
+        '-pix_fmt', 'yuv420p',
+        '-threads', str(max(1, int(threads))),
+    ]
+
+
+def build_export_ffmpeg_command(
+    ffmpeg: str,
+    snapshot_source: str,
+    canvas_width: int,
+    band_height: int,
+    fps: float,
+    filter_graph: str,
+    encoder_name: str,
+    quality: str,
+    threads: int,
+    audio_args: list[str],
+    output_path: Path,
+    partial_path: Path,
+) -> list[str]:
+    """Build the full FFmpeg command for RGBA pipe subtitle overlay + video encode.
+
+    Note: Source decode intentionally stays on multi-threaded SIMD CPU memory rather
+    than `-hwaccel auto` (D3D11VA), because the `yuv444p` subtitle blend runs in
+    system RAM; avoiding GPU->CPU D3D11 surface readback makes NVENC 3.6x faster.
+    """
+    command = [
+        str(ffmpeg), '-y', '-nostdin', '-hide_banner', '-loglevel', 'error',
+        '-f', 'rawvideo', '-pixel_format', 'rgba',
+        '-video_size', f'{int(canvas_width)}x{int(band_height)}',
+        '-framerate', f'{float(fps):.6f}',
+        '-i', 'pipe:0',
+        '-i', str(snapshot_source),
+        '-filter_complex', filter_graph,
+        '-map', '[v]', '-map', '1:a?', '-map_metadata', '1',
+        '-metadata:s:v:0', 'rotate=0',
+        *video_encoder_arguments(encoder_name, quality, threads),
+        *audio_args,
+    ]
+    if output_path.suffix.lower() == '.mp4':
+        command += ['-movflags', '+faststart']
+    command.append(str(partial_path))
+    return command
 
 
 def _even(value):
@@ -560,12 +690,23 @@ class VideoExportSettingsDialog(QDialog):
         form.addRow('Frame rate', self.fps)
 
         self.quality = QComboBox()
-        self.quality.addItem('Rất cao — CRF 16', 'very_high')
-        self.quality.addItem('Cao — CRF 18', 'high')
-        self.quality.addItem('Cân bằng — CRF 20', 'balanced')
-        self.quality.addItem('Nhẹ — CRF 23', 'compact')
+        self.quality.addItem('Rất cao — CRF 16 / CQ 19', 'very_high')
+        self.quality.addItem('Cao — CRF 18 / CQ 21', 'high')
+        self.quality.addItem('Cân bằng — CRF 20 / CQ 23', 'balanced')
+        self.quality.addItem('Nhẹ — CRF 23 / CQ 26', 'compact')
         self.quality.setCurrentIndex(1)
         form.addRow('Chất lượng', self.quality)
+
+        self._nvenc_available = probe_nvenc_support()
+        self.encoder = QComboBox()
+        if self._nvenc_available:
+            self.encoder.addItem('Tự động — Ưu tiên GPU NVIDIA (NVENC ⚡)', 'auto')
+            self.encoder.addItem('GPU NVIDIA — h264_nvenc (Siêu tốc ⚡)', 'nvenc')
+        else:
+            self.encoder.addItem('Tự động — CPU libx264 (Chưa có NVENC)', 'auto')
+            self.encoder.addItem('GPU NVIDIA — h264_nvenc (Tự chuyển CPU nếu thiếu)', 'nvenc')
+        self.encoder.addItem('CPU — libx264 (Chuẩn phần mềm)', 'cpu')
+        form.addRow('Bộ mã hóa', self.encoder)
         form_layout.addLayout(form)
 
         divider = QFrame()
@@ -688,7 +829,10 @@ class VideoExportSettingsDialog(QDialog):
         root.addLayout(body, 1)
 
         footer = QHBoxLayout()
-        footer_note = QLabel('Bản xuất re-encode hình để burn-in lyric; audio sẽ copy khi container hỗ trợ.')
+        footer_note = QLabel(
+            'Tự động tăng tốc bằng GPU NVIDIA (NVENC ⚡) khi khả dụng, tự chuyển sang CPU nếu cần; '
+            'audio sẽ copy khi container hỗ trợ.'
+        )
         footer_note.setObjectName('exportMuted')
         footer.addWidget(footer_note, 1)
         buttons = QDialogButtonBox(
@@ -708,7 +852,7 @@ class VideoExportSettingsDialog(QDialog):
         self.safe_subtitles.toggled.connect(self.safe_vertical.setEnabled)
         for control in (
             self.container, self.aspect, self.resolution, self.fit_mode,
-            self.background, self.fps, self.quality,
+            self.background, self.fps, self.quality, self.encoder,
         ):
             control.currentIndexChanged.connect(self._refresh_preview)
         for spin in (self.custom_width, self.custom_height, self.safe_horizontal, self.safe_vertical):
@@ -749,6 +893,7 @@ class VideoExportSettingsDialog(QDialog):
         self.background.setCurrentIndex(max(0, self.background.findData('black')))
         self.fps.setCurrentIndex(0)
         self.quality.setCurrentIndex(max(0, self.quality.findData('high')))
+        self.encoder.setCurrentIndex(max(0, self.encoder.findData('auto')))
         self.safe_subtitles.setChecked(True)
         self.safe_horizontal.setValue(0)
         self.safe_vertical.setValue(0)
@@ -843,6 +988,14 @@ class VideoExportSettingsDialog(QDialog):
         self.aspect.setEnabled(not enabled)
         self._refresh_preview()
 
+    def _estimated_canvas(self, settings: ExportSettings) -> tuple[int, int]:
+        source_img = getattr(getattr(self, 'preview', None), '_source_image', None)
+        if source_img is not None and not source_img.isNull():
+            probe = {'width': source_img.width(), 'height': source_img.height()}
+        else:
+            probe = {'width': 1920, 'height': 1080}
+        return resolve_canvas(probe, settings)
+
     def _summary_text(self):
         settings = self.settings()
         if settings.resolution == 'custom':
@@ -853,8 +1006,15 @@ class VideoExportSettingsDialog(QDialog):
             size = f'{settings.resolution}p'
         fps = 'FPS nguồn' if settings.fps is None else f'{int(settings.fps)} FPS'
         font = f' • chữ {settings.font_size}px' if settings.override_font_size else ''
-        return (f'{settings.container.upper()} • {size} • {fps} • '
-                f'CRF {QUALITY_CRF.get(settings.quality, 18)}{font}')
+        cand_w, cand_h = self._estimated_canvas(settings)
+        resolved_enc = resolve_video_encoder(
+            settings, cand_w, cand_h, nvenc_available=self._nvenc_available
+        )
+        if resolved_enc == 'h264_nvenc':
+            enc_label = f'GPU NVENC ⚡ • CQ {NVENC_QUALITY_CQ.get(settings.quality, 21)}'
+        else:
+            enc_label = f'CPU x264 • CRF {QUALITY_CRF.get(settings.quality, 18)}'
+        return f'{settings.container.upper()} • {size} • {fps} • {enc_label}{font}'
 
     def _refresh_preview(self, *_args):
         if not hasattr(self, 'preview'):
@@ -863,9 +1023,14 @@ class VideoExportSettingsDialog(QDialog):
         self.preview.set_settings(settings)
         fit_labels = {'contain': 'Vừa khung', 'cover': 'Lấp đầy', 'stretch': 'Kéo giãn'}
         aspect = settings.aspect if settings.resolution != 'custom' else f'{settings.custom_width}:{settings.custom_height}'
+        cand_w, cand_h = self._estimated_canvas(settings)
+        resolved_enc = resolve_video_encoder(
+            settings, cand_w, cand_h, nvenc_available=self._nvenc_available
+        )
+        enc_badge = 'NVENC ⚡' if resolved_enc == 'h264_nvenc' else 'CPU x264'
         self.preview_status.setText(
             f'{aspect} • {fit_labels.get(settings.fit_mode, settings.fit_mode)} • '
-            f'{self.quality.currentText()}'
+            f'{self.quality.currentText()} • {enc_badge}'
         )
         self.output_summary.setText('Đầu ra: ' + self._summary_text())
         self.background.setEnabled(settings.fit_mode == 'contain')
@@ -885,6 +1050,7 @@ class VideoExportSettingsDialog(QDialog):
             override_bg_opacity=self.override_bg_opacity.isChecked(),
             bg_opacity_percent=self.bg_opacity_value.value(),
             custom_width=self.custom_width.value(), custom_height=self.custom_height.value(),
+            encoder=str(self.encoder.currentData() or 'auto'),
         )
 
 
@@ -1589,6 +1755,13 @@ class SubtitleBandRenderer:
         return 1.0 if elapsed >= duration or not moving else min(1.0, elapsed/duration)
 
     def frame(self, pts_ms):
+        return self._render_frame(pts_ms, as_buffer=False)
+
+    def frame_buffer(self, pts_ms):
+        """Return a read-only buffer (bytes or zero-copy QImage view) for FFmpeg pipe writes."""
+        return self._render_frame(pts_ms, as_buffer=True)
+
+    def _render_frame(self, pts_ms, *, as_buffer: bool = False):
         cue, opacity, active = self._cue_at(pts_ms)
         if cue is None or opacity <= 0:
             return self._blank_frame
@@ -1661,7 +1834,11 @@ class SubtitleBandRenderer:
 
         target_w = max(1, math.ceil(size.width()*self.scale))
         target_h = max(1, math.ceil(size.height()*self.scale))
-        label_image = QImage(target_w, target_h, QImage.Format.Format_ARGB32_Premultiplied)
+        cached_label = getattr(self, '_label_image', None)
+        if cached_label is None or cached_label.width() != target_w or cached_label.height() != target_h:
+            cached_label = QImage(target_w, target_h, QImage.Format.Format_ARGB32_Premultiplied)
+            self._label_image = cached_label
+        label_image = cached_label
         label_image.fill(Qt.GlobalColor.transparent)
         painter = QPainter(label_image)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -1715,11 +1892,14 @@ class SubtitleBandRenderer:
         band = QPainter(self.image)
         band.drawImage(x, y, label_image)
         band.end()
-        result = self.image.bits().tobytes()
         if static_key is not None:
+            result = self.image.bits().tobytes()
             self._static_frame_key = static_key
             self._static_frame = result
-        return result
+            return result
+        if as_buffer:
+            return self.image.constBits()
+        return self.image.bits().tobytes()
 
 
 class VideoSubtitleExportWorker(QThread):
@@ -1751,6 +1931,83 @@ class VideoSubtitleExportWorker(QThread):
         if process.returncode:
             raise RuntimeError((err or b'ffprobe failed').decode('utf-8', errors='replace')[-1200:])
         return parse_probe(json.loads(out.decode('utf-8', errors='replace')))
+
+    def _encode_attempt(
+        self,
+        *,
+        ffmpeg: str,
+        encoder_name: str,
+        canvas_width: int,
+        renderer: SubtitleBandRenderer,
+        fps: float,
+        frame_count: int,
+        filter_graph: str,
+        threads: int,
+        audio_args: list[str],
+        output: Path,
+        partial: Path,
+        log_path: str,
+    ) -> int:
+        command = build_export_ffmpeg_command(
+            ffmpeg=ffmpeg,
+            snapshot_source=self.snapshot.source,
+            canvas_width=canvas_width,
+            band_height=renderer.band_height,
+            fps=fps,
+            filter_graph=filter_graph,
+            encoder_name=encoder_name,
+            quality=self.settings.quality,
+            threads=threads,
+            audio_args=audio_args,
+            output_path=output,
+            partial_path=partial,
+        )
+        creation = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+        if encoder_name != 'h264_nvenc':
+            creation |= getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
+        badge = 'GPU NVENC ⚡' if encoder_name == 'h264_nvenc' else 'CPU x264'
+        with open(log_path, 'wb') as handle:
+            process = self.processes.track(subprocess.Popen(
+                command,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=handle,
+                bufsize=4 * 1024 * 1024,
+                creationflags=creation,
+            ))
+            last_percent = -1
+            try:
+                for frame_index in range(frame_count):
+                    if self.isInterruptionRequested():
+                        self.processes.stop()
+                        break
+                    # Sample the visual state at the centre of the encoded
+                    # frame interval.  Sampling on the left edge can turn a
+                    # smooth 220 ms fade/entry into a larger first-step alpha
+                    # jump when the cue begins between two video frames.
+                    pts_ms = (frame_index + 0.5) * 1000.0 / fps
+                    process.stdin.write(renderer.frame_buffer(pts_ms))
+                    percent = min(97, int((frame_index + 1) * 98 / frame_count))
+                    if percent != last_percent:
+                        last_percent = percent
+                        self.progress.emit(
+                            percent, f'Đang dựng phụ đề và mã hóa video ({badge})… {percent}%'
+                        )
+                try:
+                    process.stdin.close()
+                except (BrokenPipeError, OSError):
+                    pass
+                if not self.isInterruptionRequested():
+                    self.progress.emit(98, f'Đang hoàn tất video ({badge})…')
+                return_code = process.wait()
+            except (BrokenPipeError, OSError):
+                return_code = process.wait()
+            finally:
+                # Keep a still-running process owned if rendering itself raised;
+                # the outer cleanup will stop/wait it before removing partials.
+                if process.poll() is not None:
+                    self.processes.release(process)
+        return return_code
 
     def run(self):
         partial = None
@@ -1784,63 +2041,63 @@ class VideoSubtitleExportWorker(QThread):
             # the final format conversion returns to broadly compatible 4:2:0.
             filter_graph = subtitle_composition_filter(base_filter, renderer.overlay_y)
             threads = max(1, min(8, (os.cpu_count() or 2)//2))
-            crf = QUALITY_CRF.get(self.settings.quality, 18)
-            command = [
-                ffmpeg, '-y', '-nostdin', '-hide_banner', '-loglevel', 'error',
-                '-f', 'rawvideo', '-pixel_format', 'rgba',
-                '-video_size', f"{canvas_width}x{renderer.band_height}",
-                '-framerate', f'{fps:.6f}', '-i', 'pipe:0', '-i', self.snapshot.source,
-                '-filter_complex', filter_graph, '-map', '[v]', '-map', '1:a?', '-map_metadata', '1',
-                '-metadata:s:v:0', 'rotate=0',
-                '-c:v', 'libx264', '-preset', 'medium', '-crf', str(crf), '-pix_fmt', 'yuv420p',
-                '-threads', str(threads), *audio_args,
-            ]
-            if output.suffix.lower() == '.mp4':
-                command += ['-movflags', '+faststart']
-            command.append(str(partial))
+            primary_encoder = resolve_video_encoder(
+                self.settings, canvas_width, canvas_height, ffmpeg_path=ffmpeg
+            )
 
-            handle = tempfile.NamedTemporaryFile(prefix='botube-video-export-', suffix='.log', delete=False)
-            log_path = handle.name
-            creation = getattr(subprocess, 'CREATE_NO_WINDOW', 0) | getattr(subprocess, 'BELOW_NORMAL_PRIORITY_CLASS', 0)
-            try:
-                process = self.processes.track(subprocess.Popen(
-                    command, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=handle,
-                    creationflags=creation,
-                ))
-            except Exception:
-                handle.close()
-                raise
-            last_percent = -1
-            try:
-                for frame_index in range(frame_count):
-                    if self.isInterruptionRequested():
-                        self.processes.stop()
-                        break
-                    # Sample the visual state at the centre of the encoded
-                    # frame interval.  Sampling on the left edge can turn a
-                    # smooth 220 ms fade/entry into a larger first-step alpha
-                    # jump when the cue begins between two video frames.
-                    pts_ms = (frame_index + 0.5)*1000.0/fps
-                    process.stdin.write(renderer.frame(pts_ms))
-                    percent = min(97, int((frame_index+1)*98/frame_count))
-                    if percent != last_percent:
-                        last_percent = percent
-                        self.progress.emit(percent, f'Đang dựng phụ đề và mã hóa video… {percent}%')
+            log_handle = tempfile.NamedTemporaryFile(
+                prefix='botube-video-export-', suffix='.log', delete=False
+            )
+            log_path = log_handle.name
+            log_handle.close()
+
+            return_code = self._encode_attempt(
+                ffmpeg=ffmpeg,
+                encoder_name=primary_encoder,
+                canvas_width=canvas_width,
+                renderer=renderer,
+                fps=fps,
+                frame_count=frame_count,
+                filter_graph=filter_graph,
+                threads=threads,
+                audio_args=audio_args,
+                output=output,
+                partial=partial,
+                log_path=log_path,
+            )
+
+            if self.isInterruptionRequested():
+                self.cancelled.emit(); return
+
+            nvenc_failed = (
+                primary_encoder == 'h264_nvenc'
+                and (return_code != 0 or not partial.is_file() or partial.stat().st_size <= 0)
+            )
+            if nvenc_failed and not self.isInterruptionRequested():
                 try:
-                    process.stdin.close()
-                except (BrokenPipeError, OSError):
+                    partial.unlink(missing_ok=True)
+                except OSError:
                     pass
-                if not self.isInterruptionRequested():
-                    self.progress.emit(98, 'Đang hoàn tất video…')
-                return_code = process.wait()
-            except (BrokenPipeError, OSError):
-                return_code = process.wait()
-            finally:
-                handle.close()
-                # Keep a still-running process owned if rendering itself raised;
-                # the outer cleanup will stop/wait it before removing partials.
-                if process.poll() is not None:
-                    self.processes.release(process)
+                self.progress.emit(
+                    1, 'GPU NVENC đang bận hoặc không tương thích — tự động chuyển sang CPU (libx264)…'
+                )
+                renderer = SubtitleBandRenderer(
+                    self.snapshot, canvas_width, canvas_height, self.settings, probe=probe
+                )
+                return_code = self._encode_attempt(
+                    ffmpeg=ffmpeg,
+                    encoder_name='libx264',
+                    canvas_width=canvas_width,
+                    renderer=renderer,
+                    fps=fps,
+                    frame_count=frame_count,
+                    filter_graph=filter_graph,
+                    threads=threads,
+                    audio_args=audio_args,
+                    output=output,
+                    partial=partial,
+                    log_path=log_path,
+                )
 
             if self.isInterruptionRequested():
                 self.cancelled.emit(); return
