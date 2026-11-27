@@ -1011,6 +1011,14 @@ def snapshot_from_window(window) -> ExportSnapshot:
     size_probe.deleteLater()
 
     anchor = layer._anchor_geometry() if hasattr(layer, '_anchor_geometry') else None
+    if anchor is not None and getattr(layer, '_anchor_rect_global', None) is None:
+        parent_widget = layer.parent() if hasattr(layer, 'parent') else None
+        if parent_widget is not None and hasattr(parent_widget, 'mapToGlobal') and not layer.isWindow():
+            try:
+                anchor_tl = parent_widget.mapToGlobal(anchor.topLeft())
+                anchor = QRect(anchor_tl.x(), anchor_tl.y(), anchor.width(), anchor.height())
+            except (AttributeError, RuntimeError):
+                pass
     anchor_x = int(anchor.x()) if anchor is not None else 0
     anchor_y = int(anchor.y()) if anchor is not None else 0
     anchor_width = int(anchor.width()) if anchor is not None else 0
@@ -1018,7 +1026,18 @@ def snapshot_from_window(window) -> ExportSnapshot:
     video_x = video_y = video_width = video_height = 0
     video_aspect_mode = 'contain'
     video = getattr(window, 'video_display', None)
+    mini_placeholder = getattr(getattr(window, 'playback_bar', None), 'video_mini_placeholder', None)
+    in_mini_dock = False
     if video is not None:
+        try:
+            video_parent = video.parentWidget() if hasattr(video, 'parentWidget') else None
+            in_mini_dock = bool(
+                (mini_placeholder is not None and video_parent is mini_placeholder)
+                or (int(video.width()) <= 200 and int(video.height()) <= 120)
+            )
+        except (AttributeError, RuntimeError):
+            in_mini_dock = False
+    if video is not None and not in_mini_dock:
         try:
             video_top_left = video.mapToGlobal(QPoint(0, 0))
             video_x, video_y = int(video_top_left.x()), int(video_top_left.y())
@@ -1033,8 +1052,16 @@ def snapshot_from_window(window) -> ExportSnapshot:
                 video_aspect_mode = 'cover'
         except (AttributeError, RuntimeError):
             pass
+        if (
+            not getattr(layer, '_user_moved', False)
+            and getattr(layer, '_anchor_rect_global', None) is None
+            and video_width > 1
+            and video_height > 1
+        ):
+            anchor_x = video_x
+            anchor_width = video_width
     if (video_width <= 0 or video_height <= 0) and (anchor_width < 160 or anchor_height < 120):
-        if video is not None:
+        if video is not None and not in_mini_dock:
             anchor_width = max(anchor_width, int(video.width()))
             anchor_height = max(anchor_height, int(video.height()))
 
@@ -1075,7 +1102,7 @@ def snapshot_from_window(window) -> ExportSnapshot:
     effects = copy.deepcopy(getattr(getattr(layer, '_subtitle_effects', None), 'options', {}))
     user_moved = bool(getattr(layer, '_user_moved', False))
     bottom_offset = (int(getattr(layer, '_rel_y_from_bottom', 0)) if user_moved
-                     else int(getattr(layer, '_current_margin', 40)))
+                     else (12 if in_mini_dock else int(getattr(layer, '_current_margin', 40))))
     return ExportSnapshot(
         source=source,
         cues=tuple(cues),

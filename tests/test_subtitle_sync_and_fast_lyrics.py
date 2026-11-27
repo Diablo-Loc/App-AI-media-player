@@ -1356,6 +1356,55 @@ class UniversalCommercialAsrTests(unittest.TestCase):
         self.assertAlmostEqual(p2, 2240.0, places=1)
         self.assertNotEqual(f1, f2)
 
+    def test_video_export_keeps_subtitles_centered_after_large_mini_and_foryou_transitions(self):
+        import numpy as np
+        from subtitle.mode import SubtitleMode
+        from tools.ui_preview import APPLICATION, isolated_window, pump
+        from ui.video_subtitle_export import ExportSettings, SubtitleBandRenderer, snapshot_from_window
+
+        with isolated_window() as pair:
+            mw = pair[0] if isinstance(pair, tuple) else pair
+            mw.showMaximized = lambda: None
+            mw.move(220, 100)
+            mw.resize(1280, 720)
+            mw.show()
+            mw.sub_layer.set_mode(SubtitleMode.EN_VI)
+            mw.sub_layer.load_subtitles([
+                {"start": 1000, "end": 4000, "orig": "Centered export", "en": "Centered export", "vi": "Căn giữa khi xuất"},
+            ])
+            pump(40)
+
+            def assert_centered(tag):
+                snap = snapshot_from_window(mw)
+                r = SubtitleBandRenderer(snap, 1920, 1080, ExportSettings(), probe={"width": 1920, "height": 1080})
+                self.assertAlmostEqual(r.center_x, 960.0, delta=2.0, msg=tag)
+                raw = r.frame(2000)
+                arr = np.frombuffer(raw, dtype=np.uint8).reshape(r.band_height, 1920, 4)
+                ys, xs = np.where(arr[:, :, 3] > 20)
+                self.assertGreater(len(xs), 0, tag)
+                cx = (int(xs.min()) + int(xs.max())) / 2.0
+                self.assertAlmostEqual(cx, 960.0, delta=3.0, msg=f"{tag}: px=[{xs.min()}..{xs.max()}]")
+
+            # 1. ForYou -> Large (sub.setParent(self) makes isWindow() == False -> previously shifted -361px left!)
+            mw.update_video_location("normal")
+            pump(50)
+            mw.update_video_location("large")
+            pump(50)
+            assert_centered("normal_to_large_windowed")
+
+            # 2. Mini/Home mode (140x80 dock -> previously exploded center_x to 5472px!)
+            mw.update_video_location("mini")
+            pump(50)
+            assert_centered("home_mini_dock")
+
+            # 3. ForYou with unset anchor_rect_global -> still centered on video stage
+            mw.sidebar.setCurrentRow(1)
+            mw.handle_sidebar_click(mw.sidebar.item(1))
+            pump(80)
+            mw.sub_layer.reset_anchor_state()
+            assert_centered("foryou_anchor_none")
+        APPLICATION.processEvents()
+
 
 if __name__ == "__main__":
     unittest.main()
