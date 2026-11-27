@@ -21,14 +21,15 @@ from download_core.studio_download_engine import (
     normalize_quality_choice,
 )
 from paths import project_root
+from ui.i18n import get_language, normalize_language, tr_pair, translate_widget_tree
 from ui.icons import ACCENT, button_icon
 
 _COOKIE_CHOICES = (
-    ("Tắt (Mặc định)", ""),
-    ("Microsoft Edge", "edge"),
-    ("Google Chrome", "chrome"),
-    ("Brave", "brave"),
-    ("Firefox", "firefox"),
+    ("Tắt (Mặc định)", "Off (Default)", ""),
+    ("Microsoft Edge", "Microsoft Edge", "edge"),
+    ("Google Chrome", "Google Chrome", "chrome"),
+    ("Brave", "Brave", "brave"),
+    ("Firefox", "Firefox", "firefox"),
 )
 
 
@@ -114,20 +115,27 @@ class DownloadStudioView(QObject):
         form = menu.findChild(QFormLayout)
         self.combo_cookies = QComboBox(menu)
         self.combo_cookies.setMinimumHeight(38)
-        for label, value in _COOKIE_CHOICES:
-            self.combo_cookies.addItem(label, value)
+        is_en = get_language() == "en"
+        for vi_label, en_label, value in _COOKIE_CHOICES:
+            self.combo_cookies.addItem(en_label if is_en else vi_label, value)
         saved_cookie = normalize_cookies_browser(dl.get("cookies_browser", ""))
         idx_c = self.combo_cookies.findData(saved_cookie)
         if idx_c >= 0:
             self.combo_cookies.setCurrentIndex(idx_c)
         self.combo_cookies.setToolTip(
-            "Chỉ bật khi tải nhạc YouTube Music Premium hoặc video giới hạn tuổi/chống bot. "
-            "Tắt mặc định để không đọc dữ liệu trình duyệt."
+            tr_pair(
+                "Chỉ bật khi tải nhạc YouTube Music Premium hoặc video giới hạn tuổi/chống bot. "
+                "Tắt mặc định để không đọc dữ liệu trình duyệt.",
+                "Enable only for YouTube Music Premium or age/bot-restricted streams. "
+                "Off by default to never read browser cookies.",
+            )
         )
         if form is not None:
-            form.addRow("Cookie trình duyệt:", self.combo_cookies)
+            form.addRow(tr_pair("Cookie trình duyệt:", "Browser Cookies:"), self.combo_cookies)
 
-        self.auto_refresh_cb = QCheckBox("Tự cập nhật Thư viện khi tải xong", menu)
+        self.auto_refresh_cb = QCheckBox(
+            tr_pair("Tự cập nhật Thư viện khi tải xong", "Auto-refresh Library after download"), menu
+        )
         self.auto_refresh_cb.setChecked(bool(dl.get("auto_refresh", True)))
         root_lay = menu.layout()
         if root_lay is not None:
@@ -137,8 +145,43 @@ class DownloadStudioView(QObject):
             else:
                 root_lay.addWidget(self.auto_refresh_cb)
 
+        # Unify SettingMenu popup styling with SettingsStudioView Obsidian-Slate + Mint card palette
+        menu.setStyleSheet(
+            menu.styleSheet()
+            + "QFrame { background: #131A24; border: 1px solid #263649; border-radius: 12px; }"
+            + "QComboBox { background: #151C26; border: 1px solid #273445; border-radius: 8px; }"
+            + "QComboBox:hover, QComboBox:focus { border-color: #77E0BE; }"
+        )
         menu.ensurePolished()
         menu.adjustSize()
+
+    def retranslate_ui(self, lang: str | None = None) -> None:
+        target = get_language() if lang is None else normalize_language(lang)
+        is_en = target == "en"
+        self.combo_cookies.blockSignals(True)
+        try:
+            for i, (vi_lbl, en_lbl, _val) in enumerate(_COOKIE_CHOICES):
+                if i < self.combo_cookies.count():
+                    self.combo_cookies.setItemText(i, en_lbl if is_en else vi_lbl)
+        finally:
+            self.combo_cookies.blockSignals(False)
+
+        self.page.txt_links.setPlaceholderText(
+            "Paste video or music URLs (one URL per line)..."
+            if is_en
+            else "Dán link video hoặc nhạc (mỗi dòng một link)..."
+        )
+        self.page.txt_names.setPlaceholderText(
+            "Leave blank to auto-fetch original titles on Start,\n"
+            "or click 'Fetch Titles' / enter custom names per line..."
+            if is_en
+            else "Để trống = Tự lấy tiêu đề gốc khi bấm Bắt đầu,\n"
+            "hoặc bấm 'Lấy tên' / tự nhập tên từng dòng..."
+        )
+        self._sync_hifi_pill()
+        self._update_target_hint_status()
+        translate_widget_tree(self.page.setting_menu, target)
+        translate_widget_tree(self.page, target)
 
     def _wire_signals(self):
         page = self.page
@@ -162,6 +205,12 @@ class DownloadStudioView(QObject):
 
         menu = page.setting_menu
         menu.settings_saved.connect(lambda *_: self._sync_hifi_pill())
+        for cb in (menu.format_combo, menu.quality_combo):
+            cb.currentTextChanged.connect(
+                lambda *_: QTimer.singleShot(
+                    0, lambda m=menu: translate_widget_tree(m, get_language()) if get_language() == "en" else None
+                )
+            )
         btn_save = menu.findChild(QPushButton, "btn_save")
         if btn_save is not None:
             btn_save.clicked.connect(lambda: QTimer.singleShot(0, self._persist_extended_menu_options))
@@ -213,14 +262,25 @@ class DownloadStudioView(QObject):
         if self.page.btn_toggle_path.isChecked():
             txt = self.page.combo_path.currentText().strip()
             self._set_status_style("ok")
-            self.page.lbl_status.setText(f"Lưu theo đường dẫn riêng: {txt}" if txt else "Chế độ: Lưu theo đường dẫn tùy chỉnh.")
+            if txt:
+                self.page.lbl_status.setText(
+                    tr_pair(f"Lưu theo đường dẫn riêng: {txt}", f"Custom save folder: {txt}")
+                )
+            else:
+                self.page.lbl_status.setText(
+                    tr_pair("Chế độ: Lưu theo đường dẫn tùy chỉnh.", "Mode: Save to custom folder.")
+                )
         else:
             resolved, _ = self._resolve_save_path()
             self._set_status_style("ok")
             if resolved:
-                self.page.lbl_status.setText(f"Chế độ: Lưu tại thư mục App ({resolved}).")
+                self.page.lbl_status.setText(
+                    tr_pair(f"Chế độ: Lưu tại thư mục App ({resolved}).", f"Mode: Save to App folder ({resolved}).")
+                )
             else:
-                self.page.lbl_status.setText("Chế độ: Lưu tại thư mục của App.")
+                self.page.lbl_status.setText(
+                    tr_pair("Chế độ: Lưu tại thư mục của App.", "Mode: Save to App folder.")
+                )
 
     def _sync_hifi_pill(self):
         dl = download_options(self.page.full_config)
@@ -230,12 +290,19 @@ class DownloadStudioView(QObject):
         short_fmt = "MKV" if "MKV" in fmt else ("Audio" if "Audio" in fmt else "MP4")
         short_q = "Orig" if q == ORIGINAL else q.split(" ")[0]
         label = f"{short_fmt} · {short_q}"
-        self.btn_hifi_preset.setText(f"Hi-Fi: {label}" if (fmt == "Video MKV" and q == ORIGINAL) else f"Chuẩn Hi-Fi")
+        default_pill = tr_pair("Chuẩn Hi-Fi", "Hi-Fi Master")
+        self.btn_hifi_preset.setText(f"Hi-Fi: {label}" if (fmt == "Video MKV" and q == ORIGINAL) else default_pill)
         full_tag = f"{short_fmt} · {'Original' if q == ORIGINAL else q.split(' ')[0]}" + (f" · {res}" if "Audio" not in fmt else "")
-        self.btn_hifi_preset.setToolTip(
-            f"Bấm để chọn ngay Video MKV + Original (Opus 48 kHz, 0% nén lại).\n"
-            f"Đang dùng: {full_tag} — {audio_advice_text(fmt, q)}"
-        )
+        if get_language() == "en":
+            self.btn_hifi_preset.setToolTip(
+                f"Click to apply Video MKV + Original (48 kHz Opus, 0% re-encode).\n"
+                f"Active: {full_tag}"
+            )
+        else:
+            self.btn_hifi_preset.setToolTip(
+                f"Bấm để chọn ngay Video MKV + Original (Opus 48 kHz, 0% nén lại).\n"
+                f"Đang dùng: {full_tag} — {audio_advice_text(fmt, q)}"
+            )
 
     def _persist_extended_menu_options(self):
         page = self.page

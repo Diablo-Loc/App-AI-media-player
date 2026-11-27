@@ -16,7 +16,7 @@
 
 BoTube is a next-generation Windows media player seamlessly combining local media organization, online media downloading, neural speech-to-text subtitle generation, multi-LLM translation, and professional subtitle editing. Featuring a modern interface built with Python and PySide6, BoTube can be easily installed via `BoTube_Setup.exe`, with AI models and acceleration libraries modularly managed in Settings.
 
-This README describes the latest version with **Lyrics** and **Dialogue / Film** modes. Older releases may not include all the features below. The application interface currently uses Vietnamese; instructions include the corresponding button labels where needed.
+This README describes the latest version with **Lyrics** and **Dialogue / Film** modes. You can switch the application interface live between **Tiếng Việt** and **English** at any time in **Settings → Appearance & Language**.
 
 ![BoTube interface preview: navigation, the For You page, and playback controls](docs/images/botube-interface.png)
 
@@ -31,6 +31,7 @@ This README describes the latest version with **Lyrics** and **Dialogue / Film**
 - **Subtitle editing:** edit text and timestamps; import/export JSON, SRT, and ASS. The AI generation flow also exports the original transcription as SRT and LRC.
 - **Video export with subtitles:** burn the displayed subtitles into a video, with controls for canvas, aspect ratio, resolution, FPS, and export quality.
 - **Audio:** remembered volume, loudness normalization between tracks, and optional sound presets, including headphone presets.
+- **Bilingual interface (`Tiếng Việt` / `English`):** switch the entire application UI live in **Settings → Appearance & Language** without restarting or altering saved user data.
 - **Video and music downloads:** powered by yt-dlp, with format and quality selection in the download interface.
 
 The library currently scans `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov`, and `.avi` files. Playback of a particular file also depends on its codecs and available decoders.

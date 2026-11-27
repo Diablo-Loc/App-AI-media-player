@@ -35,6 +35,7 @@ from ui.collection_menus import (
     show_media_context_menu,
 )
 from ui.elided_label import ElidedLabel
+from ui.i18n import tr_pair, translate_text
 from ui.icons import ACCENT, HEART_COLOR, INK, button_icon, icon, label_icon
 from ui.pages.for_you import LazyThumb
 
@@ -143,8 +144,8 @@ class _HistorySectionHeader(QFrame):
         layout.addWidget(self.lbl_count)
 
     def bind(self, section_label: str, item_count: int) -> None:
-        self.lbl_title.setText(section_label.upper())
-        self.lbl_count.setText(f"{item_count} video")
+        self.lbl_title.setText(translate_text(section_label.upper()))
+        self.lbl_count.setText(translate_text(f"{item_count} video"))
 
 
 class _HistoryTrackRow(QFrame):
@@ -287,9 +288,9 @@ class _HistoryTrackRow(QFrame):
         if media.duration and media.duration > 0:
             parts.append(dur_str)
         if item_view.watch_count > 1:
-            parts.append(f"Xem {item_view.watch_count} lần")
+            parts.append(translate_text(f"Xem {item_view.watch_count} lần"))
         if media.path and not os.path.exists(media.path):
-            parts.append("Thiếu file gốc")
+            parts.append(translate_text("Thiếu file gốc"))
         self.lbl_meta.setText("  ·  ".join(parts))
         self.lbl_meta.setVisible(bool(parts))
 
@@ -303,10 +304,12 @@ class _HistoryTrackRow(QFrame):
         button_icon(
             self.btn_fav,
             "heart-filled" if is_fav else "heart",
-            "Bỏ Yêu thích" if is_fav else "Yêu thích",
+            translate_text("Bỏ Yêu thích" if is_fav else "Yêu thích"),
             color=HEART_COLOR if is_fav else "#7C8FA4",
             size=16,
         )
+        self.btn_add.setToolTip(translate_text("Thêm vào Playlist"))
+        self.btn_remove.setToolTip(translate_text("Xóa khỏi lịch sử"))
 
     def _on_fav(self) -> None:
         if self.view_item is not None:
@@ -835,7 +838,8 @@ class HistoryPage(QWidget):
             self.resume_banner.hide()
             return
         pos_text = format_duration_mmss(pos_ms / 1000.0)
-        self.lbl_resume_text.setText(f"{media.title}  ·  {media.artist}  ·  Dừng tại {pos_text}")
+        pause_lbl = translate_text(f"Dừng tại {pos_text}")
+        self.lbl_resume_text.setText(f"{media.title}  ·  {media.artist}  ·  {pause_lbl}")
         self.resume_thumb.item_data = media
         self.resume_thumb._build_cache_key()
         if self._resume_thumb_key != self.resume_thumb.cache_key:
@@ -867,7 +871,7 @@ class HistoryPage(QWidget):
             return
 
         total_count = self.store.history_count()
-        self.lbl_total_badge.setText(f"{total_count} video")
+        self.lbl_total_badge.setText(translate_text(f"{total_count} video"))
         self.btn_clear_all.setEnabled(total_count > 0)
 
         query = self.search_input.text().strip()
@@ -878,12 +882,19 @@ class HistoryPage(QWidget):
 
         if not grouped:
             if query and total_count > 0:
-                self.lbl_empty_title.setText("Không tìm thấy kết quả phù hợp")
-                self.lbl_empty_desc.setText(f"Không có video nào trong lịch sử khớp với từ khóa “{query}”.")
-            else:
-                self.lbl_empty_title.setText("Chưa có lịch sử xem")
+                self.lbl_empty_title.setText(translate_text("Không tìm thấy kết quả phù hợp"))
                 self.lbl_empty_desc.setText(
-                    "Mỗi khi bạn phát một video hoặc bài hát, thời điểm xem sẽ tự động lưu tại đây theo từng ngày."
+                    tr_pair(
+                        f"Không có video nào trong lịch sử khớp với từ khóa “{query}”.",
+                        f"No items in your playback history match “{query}”.",
+                    )
+                )
+            else:
+                self.lbl_empty_title.setText(translate_text("Chưa có lịch sử xem"))
+                self.lbl_empty_desc.setText(
+                    translate_text(
+                        "Mỗi khi bạn phát một video hoặc bài hát, thời điểm xem sẽ tự động lưu tại đây theo từng ngày."
+                    )
                 )
             self._viewport.set_grouped_data([])
             self.scroll_area.hide()

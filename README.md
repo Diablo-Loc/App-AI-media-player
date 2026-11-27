@@ -31,6 +31,7 @@ README này mô tả bản mới nhất có hai chế độ **Lời bài hát** 
 - **Chỉnh sửa phụ đề:** sửa nội dung và mốc thời gian, nhập/xuất JSON, SRT, ASS; luồng tạo AI còn xuất lời gốc thành SRT và LRC.
 - **Xuất video kèm phụ đề:** ghi phụ đề đang hiển thị vào video, chọn canvas, tỉ lệ, độ phân giải, FPS và chất lượng xuất.
 - **Âm thanh:** ghi nhớ âm lượng, cân bằng độ lớn giữa các bài và các preset chất âm tùy chọn, bao gồm chế độ cho tai nghe.
+- **Giao diện song ngữ (`Tiếng Việt` / `English`):** chuyển đổi tức thì ngôn ngữ toàn bộ giao diện ứng dụng trong **Cài đặt → Giao diện & Ngôn ngữ** mà không cần khởi động lại hay thay đổi dữ liệu đã lưu.
 - **Tải video và âm nhạc:** dùng yt-dlp, chọn định dạng và chất lượng trong giao diện tải xuống.
 
 Thư viện hiện quét các đuôi `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov` và `.avi`. Khả năng phát một file cụ thể còn phụ thuộc codec và bộ giải mã.

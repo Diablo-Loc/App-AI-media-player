@@ -311,7 +311,7 @@ class AudioEffectsPanel(QWidget):
         row.setSpacing(10)
         lbl = QLabel(label_text)
         lbl.setObjectName('formLabel')
-        lbl.setFixedWidth(78)
+        lbl.setFixedWidth(84)
         lbl.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         if isinstance(widget, QComboBox):
             widget.setFixedHeight(32)
@@ -320,12 +320,23 @@ class AudioEffectsPanel(QWidget):
         parent_layout.addLayout(row)
 
     def _toggle_advanced(self):
+        from ui.i18n import translate_text
         opening = self.advanced_box.isHidden()
         self.advanced_box.setVisible(opening)
-        self.btn_advanced.setText('Tùy chọn nâng cao  ▴' if opening else 'Tùy chọn nâng cao  ▾')
+        self.btn_advanced.setText(translate_text('Tùy chọn nâng cao  ▴' if opening else 'Tùy chọn nâng cao  ▾'))
         self.adjustSize()
         if self.isVisible() and self._anchor_button is not None:
             self.open_at(self._anchor_button)
+
+    def retranslate_ui(self, lang: str | None = None):
+        from ui.i18n import translate_text, translate_widget_tree
+        translate_widget_tree(self, lang)
+        opening = not self.advanced_box.isHidden()
+        self.btn_advanced.setText(translate_text('Tùy chọn nâng cao  ▴' if opening else 'Tùy chọn nâng cao  ▾', lang))
+        self._refresh_eq_button()
+        sig = getattr(self, '_last_signal_args', None)
+        if sig is not None:
+            self.set_signal_path(*sig)
 
     def _on_device_selected(self, *_):
         self._output_device = str(self.device_combo.currentData() or '')
@@ -371,16 +382,17 @@ class AudioEffectsPanel(QWidget):
         self.open_benchmark_requested.emit()
 
     def _refresh_eq_button(self):
+        from ui.i18n import translate_text
         active = bool(self._eq_state.get('eq_enabled'))
         peq = normalize_peq_filters(self._eq_state.get('eq_peq_filters'))
         self.btn_open_eq.setProperty('eqActive', active)
         self.btn_open_eq.style().unpolish(self.btn_open_eq)
         self.btn_open_eq.style().polish(self.btn_open_eq)
         if active and peq:
-            self.btn_open_eq.setText(f'Equalizer  ·  PEQ {len(peq)} dải')
+            self.btn_open_eq.setText(translate_text(f'Equalizer  ·  PEQ {len(peq)} dải'))
             button_icon(self.btn_open_eq, 'sliders-horizontal', color=ACCENT, size=15, icon_only=False)
         elif active:
-            self.btn_open_eq.setText('Equalizer  ·  Đang bật')
+            self.btn_open_eq.setText(translate_text('Equalizer  ·  Đang bật'))
             button_icon(self.btn_open_eq, 'sliders-horizontal', color=ACCENT, size=15, icon_only=False)
         else:
             self.btn_open_eq.setText('Equalizer')
@@ -554,15 +566,20 @@ class AudioEffectsPanel(QWidget):
         self._sync_preset_combo()
 
     def set_signal_path(self, source_text: str, dsp_text: str, output_text: str, tooltip: str = ''):
-        self.signal_path.setText(f'{source_text}  ›  {dsp_text}  ›  {output_text}')
-        self.signal_path.setToolTip(tooltip or f'Nguồn: {source_text}\nXử lý: {dsp_text}\nĐầu ra: {output_text}')
+        from ui.i18n import translate_text
+        self._last_signal_args = (source_text, dsp_text, output_text, tooltip)
+        raw_line = f'{source_text}  ›  {dsp_text}  ›  {output_text}'
+        raw_tip = tooltip or f'Nguồn: {source_text}\nXử lý: {dsp_text}\nĐầu ra: {output_text}'
+        self.signal_path.setText(translate_text(raw_line))
+        self.signal_path.setToolTip(translate_text(raw_tip))
         is_active = dsp_text not in ('Nguyên gốc', 'Tắt', 'Bypass')
         self.signal_dot.setProperty('active', bool(is_active))
         self.signal_dot.style().unpolish(self.signal_dot)
         self.signal_dot.style().polish(self.signal_dot)
 
     def set_status(self, text, busy=False):
-        self.status.setText(text)
+        from ui.i18n import translate_text
+        self.status.setText(translate_text(text) if text else '')
         self.busy.setVisible(busy)
 
     def open_at(self, button):

@@ -83,8 +83,12 @@ class SubtitleTableModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
         if role == Qt.DisplayRole and orientation == Qt.Horizontal:
-            return self.HEADERS[section]
+            from ui.i18n import translate_text
+            return translate_text(self.HEADERS[section])
         return super().headerData(section, orientation, role)
+
+    def retranslate_headers(self, _lang=None):
+        self.headerDataChanged.emit(Qt.Horizontal, 0, len(self.HEADERS) - 1)
 
     def flags(self, index):
         if not index.isValid():
