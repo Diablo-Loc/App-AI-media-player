@@ -30,6 +30,7 @@ from ui.i18n import (
     translate_widget_tree,
 )
 from ui.icons import ACCENT, INK, MUTED, TEXT, button_icon
+from version import APP_VERSION
 
 _PORTAL_LINKS = {
     'Google Gemini': ('Google AI Studio', 'https://aistudio.google.com/apikey'),
@@ -60,6 +61,10 @@ _GENIUS_MODE_ITEMS = (
     ('Tắt (Nhanh)', 'Tắt — Dịch trực tiếp tốc độ cao', 'Off — Direct fast translation'),
     ('Bật (Chính xác cao)', 'Bật — Đối chiếu lời gốc chuẩn trên Genius', 'On — Verify with official Genius lyrics'),
 )
+_AUTO_UPDATE_ITEMS = (
+    ('on', 'Bật — Kiểm tra tự động mỗi ngày', 'On — Check daily automatically'),
+    ('off', 'Tắt — Chỉ kiểm tra thủ công', 'Off — Manual checks only'),
+)
 _AUDIO_PRESET_ITEMS = (
     ('master_hifi', 'Chuẩn Hi-Fi (Hợp nhất)', 'Hi-Fi Master (Unified)'),
     ('studio_dawn_aria2', 'Dawn Pro 2 · Aria 2', 'Dawn Pro 2 · Aria 2'),
@@ -86,6 +91,9 @@ _STUDIO_STYLE = FORM_STYLE + '''
     QLabel#studioSavePill { background: #142B24; color: #77E0BE; border: 1px solid #2A5649;
         border-radius: 12px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
     QLabel#studioLink { font-size: 11px; color: #8FA2B7; }
+    QLabel#studioUpdateStatus { font-size: 11px; font-weight: 600; color: #8FA2B7; }
+    QLabel#studioUpdateStatus[tone="good"] { color: #77E0BE; }
+    QLabel#studioUpdateStatus[tone="error"] { color: #FF9EA9; }
     QFrame#studioDivider { background: #1C2635; max-height: 1px; min-height: 1px; border: none; }
     QPushButton#studioSubBtn { background: #1A232E; color: #EDF3FA; border: 1px solid #283648;
         border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 600; }
@@ -242,6 +250,7 @@ class SettingsStudioView(QObject):
         self._build_audio_card()
         self._build_asr_card()
         self._build_translation_card()
+        self._build_update_card()
 
         self.scroll.setWidget(self.scroll_host)
         root.addWidget(self.scroll, stretch=1)
@@ -261,6 +270,7 @@ class SettingsStudioView(QObject):
                     getattr(self, 'audio_card', None),
                     getattr(self, 'asr_card', None),
                     getattr(self, 'translation_card', None),
+                    getattr(self, 'update_card', None),
                 )
                 if c is not None
             ]
@@ -751,6 +761,117 @@ class SettingsStudioView(QObject):
         self._update_genius_portal_label()
         self.cards_layout.addWidget(self.translation_card)
 
+    def _build_update_card(self):
+        self._update_status_state = 'idle'
+        self._update_status_pair: tuple[str, str] = ('', '')
+        self.lbl_version_badge = QLabel(f'v{APP_VERSION}')
+        self.lbl_version_badge.setObjectName('studioBadge')
+        self.lbl_version_badge.setProperty('tone', 'neutral')
+        self.update_card, lay = self._make_card(
+            'Cập nhật ứng dụng',
+            'Software Updates',
+            self.lbl_version_badge,
+        )
+
+        self.auto_update_combo = self._make_proxy_combo(_AUTO_UPDATE_ITEMS)
+        upd_ctrl = getattr(self.controller.window, 'update_controller', None)
+        auto_on = upd_ctrl.auto_check_enabled() if upd_ctrl is not None else True
+        idx = self.auto_update_combo.findData('on' if auto_on else 'off')
+        self.auto_update_combo.setCurrentIndex(max(0, idx))
+        self.auto_update_combo.currentIndexChanged.connect(self._on_auto_update_changed)
+        self._add_card_row(
+            lay,
+            'Tự động kiểm tra bản mới',
+            'Automatic Update Checks',
+            'Tự động kiểm tra bản phát hành mới trên GitHub mỗi ngày khi mở app (chỉ tải và cài khi bạn xác nhận).',
+            'Check GitHub Releases once a day on startup (never downloads or installs without your confirmation).',
+            self.auto_update_combo,
+        )
+
+        self.btn_check_updates = QPushButton(tr_pair('Kiểm tra cập nhật ngay', 'Check for Updates'))
+        self.btn_check_updates.setObjectName('studioSubBtn')
+        self.btn_check_updates.setFixedWidth(340)
+        self.btn_check_updates.setFixedHeight(36)
+        self.btn_check_updates.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(
+            self.btn_check_updates,
+            'refresh-cw',
+            'Kiểm tra phiên bản mới nhất trên GitHub Releases',
+            color=ACCENT,
+            size=14,
+            icon_only=False,
+        )
+        self.btn_check_updates.clicked.connect(self._on_check_updates_clicked)
+
+        self.lbl_update_status = QLabel('')
+        self.lbl_update_status.setObjectName('studioUpdateStatus')
+        self.lbl_update_status.setWordWrap(True)
+        self.lbl_update_status.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lbl_update_status.hide()
+
+        self._add_card_row(
+            lay,
+            'Phiên bản hiện tại',
+            'Current Version',
+            f'BoTube v{APP_VERSION} · Cập nhật chính thức qua GitHub Releases (giữ nguyên 100% thư viện, phụ đề và mô hình AI).',
+            f'BoTube v{APP_VERSION} · Official updates via GitHub Releases (preserves 100% of your library, subtitles, and AI models).',
+            self.btn_check_updates,
+            footer_widget=self.lbl_update_status,
+        )
+
+        if upd_ctrl is not None:
+            upd_ctrl.status_changed.connect(self._on_update_status_changed)
+            st, vi_m, en_m = upd_ctrl.last_status()
+            if st != 'idle' and (vi_m or en_m):
+                self._on_update_status_changed(st, vi_m, en_m)
+
+        self.cards_layout.addWidget(self.update_card)
+
+    def _on_auto_update_changed(self, *_args) -> None:
+        enabled = str(self.auto_update_combo.currentData() or 'on') == 'on'
+        upd_ctrl = getattr(self.controller.window, 'update_controller', None)
+        if upd_ctrl is not None:
+            upd_ctrl.set_auto_check_enabled(enabled)
+        else:
+            self.page.settings.setValue('auto_check_updates', enabled)
+        self._show_save_pill('✓ Đã lưu tùy chọn cập nhật', '✓ Update preference saved')
+
+    def _on_check_updates_clicked(self) -> None:
+        upd_ctrl = getattr(self.controller.window, 'update_controller', None)
+        if upd_ctrl is not None:
+            upd_ctrl.check_now(manual=True)
+
+    def _on_update_status_changed(self, state: str, vi_msg: str, en_msg: str) -> None:
+        self._update_status_state = state
+        self._update_status_pair = (vi_msg, en_msg)
+        is_en = get_language() == 'en'
+        if state == 'checking':
+            self.btn_check_updates.setEnabled(False)
+            self.btn_check_updates.setText('Checking...' if is_en else 'Đang kiểm tra...')
+            self.lbl_update_status.setProperty('tone', 'neutral')
+        else:
+            self.btn_check_updates.setEnabled(True)
+            self.btn_check_updates.setText('Check for Updates' if is_en else 'Kiểm tra cập nhật ngay')
+            if state in ('up_to_date', 'available'):
+                self.lbl_update_status.setProperty('tone', 'good')
+                self.lbl_version_badge.setProperty('tone', 'good')
+            elif state == 'error':
+                self.lbl_update_status.setProperty('tone', 'error')
+            else:
+                self.lbl_update_status.setProperty('tone', 'neutral')
+            self.lbl_version_badge.style().unpolish(self.lbl_version_badge)
+            self.lbl_version_badge.style().polish(self.lbl_version_badge)
+
+        msg = en_msg if is_en else vi_msg
+        if msg:
+            self.lbl_update_status.setText(msg)
+            self.lbl_update_status.show()
+        else:
+            self.lbl_update_status.hide()
+        self.lbl_update_status.style().unpolish(self.lbl_update_status)
+        self.lbl_update_status.style().polish(self.lbl_update_status)
+        self._sync_scroll_geometry()
+
     def _wire_proxy_sync(self) -> None:
         page = self.page
         # Initial sync from underlying SettingsPage combos -> Studio proxies
@@ -1033,6 +1154,16 @@ class SettingsStudioView(QObject):
         self._retranslate_proxy_combo(self.compute_device_combo, _COMPUTE_DEVICE_ITEMS, target)
         self._retranslate_proxy_combo(self.online_ai_combo, _ONLINE_PROVIDER_ITEMS, target)
         self._retranslate_proxy_combo(self.genius_mode_combo, _GENIUS_MODE_ITEMS, target)
+        if hasattr(self, 'auto_update_combo'):
+            self._retranslate_proxy_combo(self.auto_update_combo, _AUTO_UPDATE_ITEMS, target)
+        if hasattr(self, 'btn_check_updates'):
+            if getattr(self, '_update_status_state', 'idle') == 'checking':
+                self.btn_check_updates.setText('Checking...' if is_en else 'Đang kiểm tra...')
+            else:
+                self.btn_check_updates.setText('Check for Updates' if is_en else 'Kiểm tra cập nhật ngay')
+        if hasattr(self, 'lbl_update_status') and self.lbl_update_status.isVisible():
+            vi_m, en_m = getattr(self, '_update_status_pair', ('', ''))
+            self.lbl_update_status.setText(en_m if is_en else vi_m)
 
         self.page.btn_reset.setText('Reset Defaults' if is_en else 'Đặt lại mặc định')
         self.page.btn_save.setText('Save Settings' if is_en else 'Lưu cài đặt')

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0B1017">
+  <meta name="description" content="BoTube 6.0 — Trình phát nhạc & video AI chuẩn Hi-Fi 64-bit cho Windows: WASAPI Exclusive, Whisper CUDA, Karaoke từng chữ, Phiên âm tức thì, xuất video NVENC và cập nhật tự động.">
+  <meta property="og:title" content="BoTube 6.0 — AI Media Player & Hi-Fi Audio Studio for Windows">
+  <meta property="og:description" content="64-bit Float Hi-Fi Audio, Neural Whisper ASR, Multi-LLM Translation, AMLL Word Karaoke, NVENC Video Export & Auto-Updater for Windows.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="images/botube-interface.png">
+  <title>BoTube 6.0 — AI Media Player &amp; Hi-Fi Audio Studio</title>
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
+</head>
+<body>
+  <div id="scroll-progress" class="scroll-progress" aria-hidden="true"></div>
+
+  <a href="#main-heading" class="skip-link visually-hidden" data-i18n="skip">Chuyển thẳng tới nội dung chính</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="BoTube 6.0">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <rect width="32" height="32" rx="8" fill="#132924"/>
+            <rect x="0.75" y="0.75" width="30.5" height="30.5" rx="7.25" stroke="#77E0BE" stroke-opacity="0.45" stroke-width="1.5"/>
+            <path d="M12 9.8v12.4c0 .9 1 1.45 1.77.98l9.8-6.2a1.15 1.15 0 0 0 0-1.96l-9.8-6.2A1.15 1.15 0 0 0 12 9.8Z" fill="#77E0BE"/>
+          </svg>
+        </span>
+        <span class="brand-name">BoTube</span>
+        <span class="version-chip" id="nav-version-chip">v6.0.0</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary">
+        <ul>
+          <li><a href="#features" data-i18n="nav_features">Tính năng</a></li>
+          <li><a href="#whats-new" data-i18n="nav_whats_new">Điểm mới 6.0</a></li>
+          <li><a href="#install" data-i18n="nav_install">Cài đặt</a></li>
+          <li><a href="https://github.com/Diablo-Loc/App-AI-media-player" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+        </ul>
+      </nav>
+
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" class="lang-btn is-active" data-lang-btn="vi" aria-pressed="true">VI</button>
+          <button type="button" class="lang-btn" data-lang-btn="en" aria-pressed="false">EN</button>
+        </div>
+        <a
+          class="btn btn-primary btn-sm js-download-link"
+          href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe"
+          data-i18n="nav_download"
+        >Tải Windows</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            <span class="eyebrow-dot" aria-hidden="true"></span>
+            <span id="hero-release-badge" data-i18n="hero_badge">Phiên bản lớn 6.0.0 · Chuẩn thương mại Windows 10/11</span>
+          </p>
+
+          <h1 id="main-heading" tabindex="-1" data-i18n="hero_title">
+            Trình phát Media AI &amp; Phòng thu Âm thanh Hi-Fi 64-bit
+          </h1>
+
+          <p class="hero-lead" data-i18n="hero_lead">
+            Kết hợp phát nhạc Bit-Pure WASAPI Exclusive, nhận diện lời Whisper AI, dịch đa mô hình LLM, Karaoke khớp từng chữ, phiên âm tức thì và xuất video tăng tốc GPU NVIDIA NVENC — tất cả trong một ứng dụng desktop siêu mượt.
+          </p>
+
+          <div class="hero-cta-row">
+            <a
+              class="btn btn-primary btn-lg js-download-link"
+              href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span data-i18n="hero_dl_btn">Tải BoTube_Setup.exe</span>
+            </a>
+
+            <a
+              class="btn btn-secondary btn-lg js-release-page-link"
+              href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="hero_releases_btn"
+            >Xem bản phát hành</a>
+          </div>
+
+          <ul class="trust-pills" role="list">
+            <li id="release-meta-pill" data-i18n="pill_platform">Windows 10 / 11 64-bit</li>
+            <li data-i18n="pill_sha">Xác thực SHA-256 &amp; Auto-Update</li>
+            <li data-i18n="pill_upgrade">Nâng cấp 5.0 → 6.0 giữ 100% dữ liệu</li>
+            <li data-i18n="pill_bilingual">Song ngữ Việt / Anh tức thì</li>
+          </ul>
+        </div>
+
+        <!-- INTERACTIVE STUDIO STAGE -->
+        <div class="hero-stage">
+          <div class="stage-chrome">
+            <div class="stage-dots" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="stage-tabs" role="tablist" aria-label="BoTube Preview Views">
+              <button type="button" class="stage-tab is-active" role="tab" id="tab-karaoke" aria-selected="true" aria-controls="panel-karaoke" data-stage-tab="karaoke" data-i18n="tab_karaoke">Karaoke &amp; Hi-Fi</button>
+              <button type="button" class="stage-tab" role="tab" id="tab-ui" aria-selected="false" aria-controls="panel-ui" data-stage-tab="ui" data-i18n="tab_ui">Giao diện thực tế</button>
+              <button type="button" class="stage-tab" role="tab" id="tab-audio" aria-selected="false" aria-controls="panel-audio" data-stage-tab="audio" data-i18n="tab_audio">Chuỗi âm thanh</button>
+            </div>
+          </div>
+
+          <!-- Panel 1: Live Interactive Karaoke & Spectrum Demo -->
+          <div class="stage-panel is-active" id="panel-karaoke" role="tabpanel" aria-labelledby="tab-karaoke">
+            <div class="studio-canvas">
+              <div class="studio-topbar">
+                <span class="studio-pill studio-pill-mint">WASAPI Exclusive · 32-bit Float · 48 kHz</span>
+                <span class="studio-pill studio-pill-gold">AMLL Sing · Karaoke</span>
+              </div>
+
+              <div class="lyric-showcase" aria-live="off">
+                <p class="lyric-phonetic" lang="ja-Latn">Yozora wo koete hibiku merodii</p>
+                <p class="lyric-main" id="demo-lyric-line" lang="ja">
+                  <span class="word is-sung">夜空を</span>
+                  <span class="word is-sung">越えて</span>
+                  <span class="word is-active">響く</span>
+                  <span class="word">メロディー</span>
+                </p>
+                <p class="lyric-vi" data-i18n="demo_sub_vi">Giai điệu vang xa vượt qua bầu trời đêm đầy sao</p>
+              </div>
+
+              <div class="spectrum-bars" id="demo-spectrum" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+
+              <div class="studio-controls">
+                <button type="button" class="demo-toggle-btn" id="demo-motion-btn" data-i18n="demo_pause">Tạm dừng mô phỏng</button>
+                <span class="studio-metric">−14.0 LUFS · 0.0 dBTP · 0 clip</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 2: Real Application Screenshot -->
+          <div class="stage-panel" id="panel-ui" role="tabpanel" aria-labelledby="tab-ui" hidden>
+            <figure class="screenshot-frame">
+              <img
+                src="images/botube-interface.png"
+                alt="Giao diện ứng dụng BoTube trên Windows với thanh điều hướng bên trái, khu vực phát video For You và thanh điều khiển phát nhạc"
+                width="1280"
+                height="750"
+                fetchpriority="low"
+                loading="lazy"
+              >
+              <figcaption data-i18n="screenshot_caption">
+                Giao diện Dark Studio thực tế dựng bằng PySide6 / Qt6 với thanh phát nhạc, hàng đợi thông minh và điều khiển phụ đề trực tiếp.
+              </figcaption>
+            </figure>
+          </div>
+
+          <!-- Panel 3: 64-bit Hi-Fi Signal Chain -->
+          <div class="stage-panel" id="panel-audio" role="tabpanel" aria-labelledby="tab-audio" hidden>
+            <div class="signal-chain">
+              <p class="chain-label" data-i18n="chain_title">Đường truyền tín hiệu Bit-Pure 64-bit Float</p>
+              <ol class="chain-steps">
+                <li>
+                  <strong>Decode</strong>
+                  <span data-i18n="chain_1">Giải mã chuẩn xác không nén lại (FLAC, WAV, AAC, Opus, MP3)</span>
+                </li>
+                <li>
+                  <strong>64-bit Float DSP</strong>
+                  <span data-i18n="chain_2">Chuẩn hóa EBU R128 (−14 LUFS), 10-Band / PEQ Squiglink &amp; chống vỡ đỉnh 0 dBTP</span>
+                </li>
+                <li>
+                  <strong>WASAPI Exclusive</strong>
+                  <span data-i18n="chain_3">Xuất thẳng tới USB DAC rời, bỏ qua bộ trộn Windows (hỗ trợ Audio Lab A/B)</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS STRIP -->
+    <section class="stats-strip">
+      <div class="container stats-grid">
+        <h2 class="visually-hidden" data-i18n="stats_heading">Thông số nổi bật</h2>
+        <div class="stat-item">
+          <strong>64-bit</strong>
+          <span data-i18n="stat_dsp">Xử lý âm thanh Float DSP &amp; WASAPI Exclusive</span>
+        </div>
+        <div class="stat-item">
+          <strong>&lt; 1s</strong>
+          <span data-i18n="stat_lyrics">Lấy lời nhanh LRCLIB &amp; căn nhịp giọng hát</span>
+        </div>
+        <div class="stat-item">
+          <strong>NVENC</strong>
+          <span data-i18n="stat_nvenc">Xuất video kèm phụ đề tăng tốc phần cứng GPU</span>
+        </div>
+        <div class="stat-item">
+          <strong>100%</strong>
+          <span data-i18n="stat_safe">Giữ trọn thư viện, phụ đề &amp; model AI khi cập nhật</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CORE FEATURES BENTO GRID -->
+    <section id="features" class="section deferred-section">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker" data-i18n="feat_kicker">KIẾN TRÚC PHÒNG THU TOÀN DIỆN</p>
+          <h2 data-i18n="feat_heading">Mọi công cụ nghe nhìn AI chuyên sâu trong một ứng dụng duy nhất</h2>
+          <p class="section-sub" data-i18n="feat_sub">
+            Thiết kế tối ưu tài nguyên CPU/RAM, khởi động tức thì và ưu tiên trải nghiệm cục bộ riêng tư trên Windows.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <div class="card-icon card-icon-mint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f1_title">Âm thanh Hi-Fi 64-bit &amp; Audio Lab</h3>
+            <p data-i18n="f1_desc">
+              Chuẩn hóa âm lượng EBU R128 (−14 LUFS) khử sạch clip vượt trần, 10-Band &amp; Parametric EQ chuẩn Squiglink/APO, hỗ trợ WASAPI Exclusive cho DAC rời và phòng đo phổ RTA đối chiếu A/B trực tiếp.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>WASAPI Exclusive</li>
+              <li>−14 LUFS</li>
+              <li>PEQ / Audio Lab</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="card-icon card-icon-sky" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f2_title">Whisper AI CUDA &amp; Fast Synced Lyrics</h3>
+            <p data-i18n="f2_desc">
+              Ưu tiên lấy lời chuẩn LRCLIB / sidecar căn nhịp siêu tốc (&lt; 1 giây), tự động chuyển sang Faster-Whisper (Tiny → Large-v3) trên GPU NVIDIA CUDA hoặc CPU với hai chế độ Lời bài hát &amp; Hội thoại/Phim.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>Faster-Whisper</li>
+              <li>CUDA GPU</li>
+              <li>Lyrics &amp; Film</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="card-icon card-icon-gold" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f3_title">Dịch đa mô hình AI &amp; Đối soát Genius</h3>
+            <p data-i18n="f3_desc">
+              Dịch offline miễn phí bằng NLLB-200 hoặc dịch lời nhạc mượt mà qua Google Gemini, OpenAI (GPT-4o / GPT-5) và Anthropic Claude — kết hợp đối chiếu Genius có kiểm định độ khớp từng câu.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>NLLB-200 Offline</li>
+              <li>Gemini / GPT / Claude</li>
+              <li>Genius Verify</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="card-icon card-icon-mint" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f4_title">Karaoke từng chữ, Phiên âm &amp; Hiệu ứng</h3>
+            <p data-i18n="f4_desc">
+              Hiệu ứng AMLL Sing mượt như Apple Music, khớp từng chữ/âm tiết, tạo dòng phiên âm Romaji / Pinyin / Hàn ngữ hoàn toàn offline (phím tắt R) cùng bộ hiệu ứng hạt và typography chuyên nghiệp.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>Word Karaoke</li>
+              <li>Romaji / Pinyin</li>
+              <li>Kinetic FX</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="card-icon card-icon-sky" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="14" x="3" y="5" rx="2"/><polygon points="10 9 15 12 10 15 10 9"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f5_title">Xuất Video + Lyric tăng tốc NVENC</h3>
+            <p data-i18n="f5_desc">
+              Gắn phụ đề kèm đầy đủ hiệu ứng quang học vào video với canvas 16:9, 9:16 Shorts, 1:1 hoặc 4K. Tự động tăng tốc phần cứng GPU NVIDIA h264_nvenc, giữ nguyên luồng âm thanh gốc không suy hao.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>h264_nvenc ⚡</li>
+              <li>16:9 / 9:16 / 4K</li>
+              <li>Audio Copy</li>
+            </ul>
+          </article>
+
+          <article class="feature-card">
+            <div class="card-icon card-icon-gold" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>
+              </svg>
+            </div>
+            <h3 data-i18n="f6_title">Cập nhật tự động &amp; Bộ sưu tập thông minh</h3>
+            <p data-i18n="f6_desc">
+              Cập nhật thẳng qua GitHub Releases có kiểm định SHA-256 và tự khởi động lại an toàn. Tích hợp Yêu thích, Playlist tùy biến, Lịch sử phát thông minh (Smart Resume), tải yt-dlp chất lượng gốc và giao diện song ngữ VI/EN.
+            </p>
+            <ul class="card-tags" role="list">
+              <li>SHA-256 Updater</li>
+              <li>Smart Resume</li>
+              <li>VI / EN Live</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT'S NEW IN 6.0 TABLE -->
+    <section id="whats-new" class="section section-alt deferred-section">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker" data-i18n="new_kicker">BƯỚC NHẢY VỌT PHÁT HÀNH LỚN</p>
+          <h2 data-i18n="new_heading">Có gì mới từ BoTube 5.0 lên 6.0?</h2>
+          <p class="section-sub" data-i18n="new_sub">
+            Máy đang cài BoTube 5.0 chỉ cần chạy BoTube_Setup.exe bản 6.0 — trình cài đặt tự nâng cấp đè sạch sẽ và giữ nguyên 100% dữ liệu.
+          </p>
+        </div>
+
+        <div class="table-wrap">
+          <table class="compare-table">
+            <caption class="visually-hidden" data-i18n="table_caption">So sánh cải tiến giữa BoTube 5.0 và BoTube 6.0</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="th_area">Hạng mục</th>
+                <th scope="col">BoTube 5.0</th>
+                <th scope="col" class="col-highlight">BoTube 6.0</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row" data-i18n="r1_k">Âm thanh &amp; Đo kiểm</th>
+                <td data-i18n="r1_old">Preset cơ bản &amp; cân bằng âm lượng</td>
+                <td class="col-highlight" data-i18n="r1_new">Hi-Fi 64-bit Float DSP, WASAPI Exclusive DAC, PEQ 10-band &amp; phòng đo Audio Lab A/B</td>
+              </tr>
+              <tr>
+                <th scope="row" data-i18n="r2_k">Phụ đề &amp; Karaoke</th>
+                <td data-i18n="r2_old">Quét theo câu, hiệu ứng cơ bản</td>
+                <td class="col-highlight" data-i18n="r2_new">Karaoke khớp từng chữ thật, AMLL Sing, Phiên âm Romaji/Pinyin/Hàn offline (phím R)</td>
+              </tr>
+              <tr>
+                <th scope="row" data-i18n="r3_k">Xuất Video + Lyric</th>
+                <td data-i18n="r3_old">Mã hóa CPU libx264</td>
+                <td class="col-highlight" data-i18n="r3_new">Tự động tăng tốc phần cứng GPU NVIDIA h264_nvenc ⚡ + fallback CPU mượt mà</td>
+              </tr>
+              <tr>
+                <th scope="row" data-i18n="r4_k">Quản lý thư viện</th>
+                <td data-i18n="r4_old">Home, For You, Library</td>
+                <td class="col-highlight" data-i18n="r4_new">Thêm Bộ sưu tập (Yêu thích / Playlist / Nghe nhiều nhất) &amp; Lịch sử Smart Resume</td>
+              </tr>
+              <tr>
+                <th scope="row" data-i18n="r5_k">Cài đặt &amp; Ngôn ngữ</th>
+                <td data-i18n="r5_old">Chỉ Tiếng Việt, lưu thủ công</td>
+                <td class="col-highlight" data-i18n="r5_new">Studio Settings tự động lưu &amp; chuyển đổi song ngữ 100% Việt ↔ Anh tức thì</td>
+              </tr>
+              <tr>
+                <th scope="row" data-i18n="r6_k">Cập nhật &amp; Tối ưu</th>
+                <td data-i18n="r6_old">Cài thủ công, gói đóng gói cồng kềnh</td>
+                <td class="col-highlight" data-i18n="r6_new">Auto-Updater GitHub Releases + SHA-256 + Inno Setup êm ái, giảm &gt;174 MB gói cài</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3-STEP INSTALL & UPGRADE -->
+    <section id="install" class="section deferred-section">
+      <div class="container">
+        <div class="section-head">
+          <p class="section-kicker" data-i18n="inst_kicker">BẮT ĐẦU TRONG 2 PHÚT</p>
+          <h2 data-i18n="inst_heading">Cài mới hoặc nâng cấp từ 5.0 chỉ với 3 bước</h2>
+        </div>
+
+        <ol class="steps-grid">
+          <li class="step-card">
+            <span class="step-num" aria-hidden="true">01</span>
+            <h3 data-i18n="s1_title">Tải BoTube_Setup.exe</h3>
+            <p data-i18n="s1_desc">
+              Tải bộ cài chính thức từ GitHub Releases. Nếu máy đã cài bản 5.0, chỉ cần chạy trực tiếp bộ cài mới — toàn bộ thư viện, phụ đề và mô hình AI được giữ nguyên 100%.
+            </p>
+          </li>
+          <li class="step-card">
+            <span class="step-num" aria-hidden="true">02</span>
+            <h3 data-i18n="s2_title">Chuẩn bị gói AI tùy chọn</h3>
+            <p data-i18n="s2_desc">
+              Nghe nhạc Hi-Fi, tải video và xem phụ đề có sẵn hoạt động ngay lập tức. Khi cần tạo phụ đề tự động, mở Cài đặt → Tải / Cập nhật mô hình AI để tải Whisper / NLLB.
+            </p>
+          </li>
+          <li class="step-card">
+            <span class="step-num" aria-hidden="true">03</span>
+            <h3 data-i18n="s3_title">Luôn tự động lên bản mới</h3>
+            <p data-i18n="s3_desc">
+              Từ bản 6.0 trở đi, BoTube tự kiểm tra bản phát hành mới trên GitHub Releases, xác thực SHA-256 và nâng cấp chỉ bằng một cú bấm ngay trong ứng dụng.
+            </p>
+          </li>
+        </ol>
+
+        <div class="cta-banner">
+          <div>
+            <h3 data-i18n="cta_title">Sẵn sàng nâng cấp lên BoTube 6.0?</h3>
+            <p data-i18n="cta_desc">Miễn phí, tối ưu cho Windows 10/11 64-bit, bảo vệ tuyệt đối dữ liệu cục bộ của bạn.</p>
+          </div>
+          <div class="cta-actions">
+            <a
+              class="btn btn-primary btn-lg js-download-link"
+              href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe"
+              data-i18n="cta_btn_dl"
+            >Tải BoTube 6.0 ngay</a>
+            <a
+              class="btn btn-secondary btn-lg"
+              href="https://github.com/Diablo-Loc/App-AI-media-player"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-i18n="cta_btn_src"
+            >Xem mã nguồn GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <strong>BoTube Studio</strong>
+        <span data-i18n="footer_copy">Trình phát Media AI &amp; Âm thanh Hi-Fi cho Windows · Phát hành chính thức qua GitHub Releases.</span>
+      </div>
+      <nav class="footer-nav" aria-label="Footer">
+        <ul>
+          <li><a href="https://github.com/Diablo-Loc/App-AI-media-player" target="_blank" rel="noopener noreferrer">Repository</a></li>
+          <li><a href="https://github.com/Diablo-Loc/App-AI-media-player/releases" target="_blank" rel="noopener noreferrer">Releases</a></li>
+          <li><a href="https://github.com/Diablo-Loc/App-AI-media-player/issues" target="_blank" rel="noopener noreferrer">Issues</a></li>
+        </ul>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>

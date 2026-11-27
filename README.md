@@ -1,132 +1,119 @@
-# BoTube · AI Media Player
+<div align="center">
 
-<p align="center">
-  <strong>Next-Gen AI Media Player for Windows with Neural ASR, Multi-LLM Translation & Kinetic Subtitle Engine</strong>
+# BoTube 6.0 · AI Media Player & Hi-Fi Audio Studio
+
+**Trình phát Nhạc & Video AI chuẩn thương mại cho Windows — Âm thanh Hi-Fi 64-bit WASAPI Exclusive, Whisper AI CUDA, Dịch đa mô hình LLM, Karaoke từng chữ, Xuất video GPU NVENC & Cập nhật tự động**
+
+<p>
+  <a href="https://diablo-loc.github.io/App-AI-media-player/"><img src="https://img.shields.io/badge/Trang%20Web%20Ch%C3%ADnh%20Th%E1%BB%A9c-BoTube%206.0-16332B?style=for-the-badge&logo=googlechrome&logoColor=77E0BE" alt="Official Website"/></a>
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe"><img src="https://img.shields.io/badge/T%E1%BA%A3i%20Windows%2064--bit-BoTube__Setup.exe-77E0BE?style=for-the-badge&logo=windows&logoColor=0B1017" alt="Download Windows Installer"/></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=0078D4&label=Latest%20Release" alt="Latest Release"/></a>
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
-  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.11"/>
+<p>
+  <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=1F6FEB&label=Latest%20Release" alt="Latest Release"/></a>
+  <img src="https://img.shields.io/badge/Version-6.0.0-2EA043?style=flat-square" alt="Version 6.0.0"/>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
   <img src="https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6 / Qt6"/>
-  <img src="https://img.shields.io/badge/AI_Engine-Faster--Whisper%20%2B%20CUDA-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA"/>
+  <img src="https://img.shields.io/badge/Audio-64--bit%20Float%20WASAPI-77E0BE?style=flat-square" alt="64-bit Float WASAPI"/>
+  <img src="https://img.shields.io/badge/AI%20%26%20Export-Whisper%20CUDA%20%2B%20NVENC-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="Whisper CUDA + NVENC"/>
 </p>
 
-**Tiếng Việt** · [English](README.en.md)
+**Tiếng Việt** · [English](README.en.md) · [🌐 Trang giới thiệu BoTube 6.0](https://diablo-loc.github.io/App-AI-media-player/) · [📦 Tải BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)
 
-BoTube là ứng dụng phát nhạc và video thế hệ mới trên Windows, kết hợp toàn diện giữa thư viện media cục bộ, tải nội dung trực tuyến, tạo phụ đề tự động bằng AI, dịch thuật đa mô hình và biên tập phụ đề chuyên nghiệp. Giao diện hiện đại được xây dựng tối ưu bằng Python và PySide6. Người dùng có thể cài đặt dễ dàng bằng `BoTube_Setup.exe`; các mô hình AI và thư viện tăng tốc được tải linh hoạt trong phần Cài đặt.
+</div>
 
-README này mô tả bản mới nhất có hai chế độ **Lời bài hát** và **Hội thoại / Phim**. Các bản cũ có thể chưa có đầy đủ tính năng bên dưới.
+---
+
+**BoTube 6.0** là ứng dụng phát nhạc, video và tạo phụ đề AI thế hệ mới dành cho Windows 10/11 64-bit. Toàn bộ trải nghiệm nghe nhìn cao cấp — từ bộ xử lý âm thanh **Hi-Fi 64-bit Float + WASAPI Exclusive**, nhận diện giọng nói **Faster-Whisper CUDA**, dịch lời nhạc đa mô hình **NLLB / Gemini / OpenAI / Claude**, **Karaoke khớp từng chữ kèm phiên âm offline**, đến **xuất video tăng tốc GPU NVIDIA NVENC** và **cập nhật tự động chuẩn SHA-256** — được hội tụ gọn gàng trong một ứng dụng desktop cục bộ siêu mượt, riêng tư tuyệt đối.
 
 ![Minh họa giao diện BoTube: thanh điều hướng, trang For You và điều khiển phát](docs/images/botube-interface.png)
 
-*Minh họa được dựng từ các thành phần giao diện thật với danh sách phát trống; không sử dụng thư viện nhạc hoặc dữ liệu cá nhân.*
+*Minh họa được dựng từ các thành phần giao diện thật của ứng dụng với danh sách phát trống; không chứa dữ liệu cá nhân.*
 
-## Tính năng
+---
 
-- **Phát media:** thư viện theo thư mục, tìm kiếm, trang For You, hàng đợi phát, shuffle, lặp, toàn màn hình và mini player.
-- **Tạo phụ đề AI:** nhận dạng ngôn ngữ và nội dung bằng faster-whisper, hỗ trợ CPU hoặc GPU NVIDIA.
-- **Dịch thuật:** dịch Local bằng NLLB-200 hoặc Online qua Google Gemini, OpenAI và Claude; chọn model theo nhà cung cấp trong Settings.
-- **Hiển thị phụ đề:** chọn nội dung gốc, tiếng Anh, tiếng Việt hoặc kết hợp; chỉnh font, màu, vị trí và hiệu ứng chữ. Các hiệu ứng phi tiêu, sao, cánh hoa, typography và ẩn chữ sau vệt quét là tùy chọn.
-- **Chỉnh sửa phụ đề:** sửa nội dung và mốc thời gian, nhập/xuất JSON, SRT, ASS; luồng tạo AI còn xuất lời gốc thành SRT và LRC.
-- **Xuất video kèm phụ đề:** ghi phụ đề đang hiển thị vào video, chọn canvas, tỉ lệ, độ phân giải, FPS và chất lượng xuất.
-- **Âm thanh:** ghi nhớ âm lượng, cân bằng độ lớn giữa các bài và các preset chất âm tùy chọn, bao gồm chế độ cho tai nghe.
-- **Giao diện song ngữ (`Tiếng Việt` / `English`):** chuyển đổi tức thì ngôn ngữ toàn bộ giao diện ứng dụng trong **Cài đặt → Giao diện & Ngôn ngữ** mà không cần khởi động lại hay thay đổi dữ liệu đã lưu.
-- **Tải video và âm nhạc:** dùng yt-dlp, chọn định dạng và chất lượng trong giao diện tải xuống.
+## Điểm đột phá trên BoTube 6.0
 
-Thư viện hiện quét các đuôi `.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov` và `.avi`. Khả năng phát một file cụ thể còn phụ thuộc codec và bộ giải mã.
+| Hạng mục | Nâng cấp chính trên BoTube 6.0 |
+| --- | --- |
+| **Âm thanh Hi-Fi 64-bit & Audio Lab** | Động cơ xử lý 64-bit Float, chuẩn hóa âm lượng **EBU R128 (−14 LUFS)** chống vỡ đỉnh 0 dBTP, **10-Band & Parametric EQ** (tương thích Squiglink/AutoEQ), **WASAPI Exclusive** cho USB DAC rời và phòng đo phổ tần số RTA đối chiếu **A/B trực tiếp**. |
+| **Karaoke từng chữ & Phiên âm tức thì** | Chế độ **AMLL Sing** mượt như Apple Music, khớp **từng chữ/âm tiết thật** theo giọng hát; tạo dòng phiên âm Latinh (**Romaji, Pinyin, Revised Romanization**) hoàn toàn offline bằng phím tắt `R`. |
+| **Xuất Video + Lyric bằng GPU NVIDIA** | Tự động tăng tốc phần cứng **NVIDIA NVENC (`h264_nvenc` ⚡)** khi xuất video kèm phụ đề + hiệu ứng quang học (16:9, 9:16 Shorts, 1:1, 4K), tự fallback sang `libx264` CPU khi cần và giữ nguyên luồng âm thanh gốc. |
+| **Bộ sưu tập, Lịch sử & Smart Resume** | Bổ sung trang **Bộ sưu tập** (Yêu thích, Playlist tùy biến, Nghe nhiều nhất) và **Lịch sử phát** tự ghi nhớ chính xác mốc thời gian nghe dở để tiếp tục chỉ bằng một cú bấm. |
+| **Cài đặt Studio & Song ngữ 100% VI/EN** | Giao diện **Cài đặt** mới gọn gàng tự động lưu; chuyển đổi tức thì **Tiếng Việt ↔ English** toàn bộ ứng dụng mà không cần khởi động lại hay thay đổi dữ liệu đã lưu. |
+| **Cập nhật tự động chuẩn thương mại** | Kiểm tra và nâng cấp trực tiếp qua **GitHub Releases API + Inno Setup 6**, xác thực chữ ký **SHA-256**, tự đóng mở lại ứng dụng an toàn không cần quyền Admin, giảm **>174 MB** dung lượng gói đóng gói. |
 
-## Bắt đầu sử dụng
+---
 
-### Cài đặt bằng BoTube_Setup.exe
+## Tính năng toàn diện
 
-**[Tải BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)** · [Xem các bản phát hành](https://github.com/Diablo-Loc/App-AI-media-player/releases)
+- **Phát media & Thư viện thông minh:** quét thư mục siêu tốc (`.mp3`, `.mp4`, `.mkv`, `.wav`, `.mov`, `.avi`), tìm kiếm tức thì, trang **For You**, hàng đợi phát, **Bộ sưu tập** (Yêu thích / Playlist / Nghe nhiều nhất), **Lịch sử phát (Smart Resume)**, toàn màn hình và **Mini Player (Dynamic Island)**.
+- **Âm thanh phòng thu Hi-Fi:** ghi nhớ âm lượng phát, chuẩn hóa độ lớn giữa các bài mà không làm thay đổi file gốc, các preset tối ưu cho tai nghe & DAC rời, bộ lọc PEQ 64-bit và phòng đo phổ **Audio Lab**.
+- **Nhận diện lời AI & Lấy lời nhanh:** ưu tiên sub có sẵn (`.lrc`/`.srt`/`.ass`) hoặc lời chuẩn **LRCLIB** căn nhịp giọng hát **< 1 giây**; tự chuyển sang **Faster-Whisper** (`tiny` → `large-v3`, CPU hoặc NVIDIA CUDA) với 2 chế độ **Lời bài hát** và **Hội thoại / Phim**.
+- **Dịch thuật AI & Đối soát Genius:** chạy miễn phí hoàn toàn offline bằng **NLLB-200**, hoặc dịch trực tuyến chuẩn văn phong qua **Google Gemini**, **OpenAI (GPT-4o / GPT-5)** và **Anthropic Claude** kèm đối chiếu lời gốc **Genius** có bộ lọc độ tin cậy từng câu.
+- **Hiển thị phụ đề, Karaoke & Biên tập:** chọn hiển thị Gốc / Anh / Việt hoặc song ngữ, hiệu ứng **AMLL Sing**, phi tiêu, sao, cánh hoa, typography, **🎤 Chế độ Karaoke** khớp từng chữ, phiên âm trên cùng (`Phiên âm (R)`), cùng trình chỉnh sửa phụ đề hỗ trợ nhập/xuất `JSON`, `SRT`, `ASS`, `LRC`.
+- **Xuất video kèm phụ đề:** chọn tỉ lệ nguồn, `16:9`, `9:16`, `1:1`, `4:5`, `21:9`, độ phân giải lên tới 4K, FPS, vùng an toàn chống cắt chữ và mã hóa ưu tiên GPU **NVENC**.
+- **Tải video & nhạc chất lượng gốc:** tích hợp `yt-dlp` tối ưu giữ nguyên chất lượng nguồn âm thanh AAC/Opus hoặc MP3 320 kbps, hỗ trợ nối tải dở dang.
 
-1. Vào **Releases**, chọn bản muốn dùng và tải `BoTube_Setup.exe` trong phần **Assets**.
-2. Chạy bộ cài, hoàn tất các bước cài đặt Windows như thông thường, rồi mở BoTube từ shortcut đã tạo.
-3. **Trước lần tạo sub AI đầu tiên**, mở **Tùy chỉnh → Tải / Cập nhật Resource AI (Thư viện & Model)**. Chọn model Whisper và bấm **Bắt đầu cài đặt tự động**; chờ thư viện và model tải/cài xong.
-4. Nếu muốn dịch Local, chọn tải kèm **Model dịch thuật NLLB Offline**. Dịch Online vẫn cần Whisper trên máy để nhận dạng lời; NLLB cũng cần thiết nếu muốn dùng fallback Local khi API lỗi.
-5. Quay lại Settings, chọn **Whisper Model** đã tải, **Compute Device** (`cpu` hoặc `cuda`) và **Loại nội dung** phù hợp, rồi **Lưu cài đặt**.
-6. Chọn **Local Default** hoặc dịch vụ Online. Với Online, chọn model dịch và nhập API key của bạn.
-7. Chọn thư mục chứa media, chọn bài/video và tạo phụ đề AI; mở công cụ phụ đề để kiểm tra, sửa hoặc xuất kết quả.
+---
 
-Người dùng bản cài đặt không cần clone repository hoặc tự build ứng dụng. Cài xong app và chuẩn bị xong tài nguyên AI là hai bước riêng; cần kết nối mạng khi tải tài nguyên lần đầu.
+## Cài đặt & Nâng cấp (Từ bản 5.0 lên 6.0 an toàn 100%)
+
+### Cài mới hoặc nâng cấp bằng `BoTube_Setup.exe`
+
+**[🌐 Mở trang giới thiệu BoTube 6.0](https://diablo-loc.github.io/App-AI-media-player/)** · **[⬇️ Tải BoTube_Setup.exe](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest/download/BoTube_Setup.exe)** · **[📋 Tất cả bản phát hành](https://github.com/Diablo-Loc/App-AI-media-player/releases)**
+
+1. Tải **`BoTube_Setup.exe`** từ trang [Releases](https://github.com/Diablo-Loc/App-AI-media-player/releases/latest) và chạy trình cài đặt Windows.
+   - **Nếu máy đang cài BoTube 5.0:** bộ cài giữ nguyên `AppId`, tự nâng cấp đè đúng thư mục cũ, tự dọn sạch file runtime thừa của bản 5.0 và **giữ nguyên 100% thư viện, playlist, phụ đề (`storage/`) và toàn bộ mô hình AI (`app_resources/`)**.
+2. Mở BoTube từ shortcut vừa tạo. Nghe nhạc Hi-Fi, tải video và xem phụ đề có sẵn hoạt động ngay lập tức.
+3. **Trước lần tạo phụ đề AI đầu tiên**, mở **Cài đặt → Tải / Cập nhật mô hình & thư viện AI** để chọn model Whisper (khuyên dùng `large-v3` nếu có GPU NVIDIA) và bấm **Bắt đầu cài đặt tự động**.
+4. Nếu muốn dịch hoàn toàn ngoại tuyến (hoặc làm dự phòng khi API lỗi), chọn tải kèm **NLLB-200 Offline**.
+5. Chọn thiết bị tính toán (`CUDA` hoặc `CPU`), **Loại nội dung** và dịch vụ dịch thuật trong **Cài đặt** (tự động lưu tức thì).
 
 ![Các bước cài BoTube, tải tài nguyên AI, chọn cấu hình và tạo phụ đề](docs/images/botube-setup-flow.svg)
 
-### Nếu dùng bản portable
+### Cơ chế cập nhật tự động (từ bản 6.0.0 trở đi)
 
-Giải nén toàn bộ gói vào thư mục có quyền ghi, chạy `BoTube.exe`, rồi chuẩn bị tài nguyên AI và chọn cấu hình theo hướng dẫn ở trên.
-
-Giữ nguyên cả thư mục portable, đặc biệt `_internal/`, `bin/`, `icon/` và tài nguyên AI đi kèm. Không chạy hoặc phân phối riêng mỗi file EXE.
-
-Phát media từ bản EXE dùng bộ runtime đóng gói. **Cài mới thư viện AI từ trình tải tài nguyên trong EXE hiện cần Python trong PATH**; nên dùng Python 3.11 64-bit. Nếu gói đã kèm bộ thư viện/model AI tương thích thì không cần bước cài mới đó.
+BoTube 6.0 tích hợp bộ cập nhật trực tiếp từ **GitHub Releases**:
+- Tự động kiểm tra bản phát hành mới tối đa 1 lần/ngày khi khởi động (có thể bật/tắt hoặc kiểm tra thủ công bất cứ lúc nào trong **Cài đặt → Cập nhật ứng dụng**).
+- Tải `BoTube_Setup.exe` từ nguồn HTTPS chính thức của GitHub, kiểm tra định dạng thực thi (`MZ`) và **xác thực mã băm SHA-256** trước khi cài đặt.
+- Tự gọi Inno Setup ở chế độ nâng cấp gọn nhẹ (`/SILENT /CLOSEAPPLICATIONS`), đóng app an toàn, cài đè sạch sẽ và tự mở lại BoTube ở quyền người dùng thường.
+- Dữ liệu cá nhân (`storage/`) và kho model AI (`app_resources/`) luôn được bảo toàn nguyên vẹn.
 
 ### Lưu ý dung lượng ổ đĩa
 
-**Dung lượng bộ cài không phải tổng dung lượng sau khi chuẩn bị AI.** Bộ cài v5.0.0 hiện khoảng **306 MiB**; thư viện AI, Whisper, NLLB và cache được lưu thêm sau đó. Xem kích thước bộ cài của từng bản trong [Releases](https://github.com/Diablo-Loc/App-AI-media-player/releases).
+**Dung lượng bộ cài không phải tổng dung lượng sau khi cài thêm gói AI offline:**
+- Bộ cài `BoTube_Setup.exe` gọn nhẹ (chỉ gồm ứng dụng, runtime và FFmpeg/yt-dlp).
+- Nếu tải thêm một model Whisper lớn (`large-v3`) cùng bộ dịch offline `NLLB-200` và thư viện PyTorch/CUDA, nên dự trù khoảng **15–20 GB dung lượng trống** trên ổ chứa thư mục cài đặt (`app_resources/`).
+- Cache âm thanh xử lý (`storage/audio-playback-cache/`) có ngân sách mặc định khoảng **1 GiB**.
 
-- Nên dự trù khoảng **15–20 GB trống** nếu dùng một model Whisper lớn và NLLB Local, để có chỗ cho dữ liệu tải tạm và giải nén. Đây là mức dự trù, không phải dung lượng cố định hoặc yêu cầu tối thiểu cho mọi cấu hình.
-- Model Whisper nhỏ cần ít dung lượng hơn; tải thêm nhiều model sẽ cộng dồn dung lượng. Bộ thư viện AI riêng cũng có thể chiếm nhiều GB.
-- Tài nguyên nằm trong `app_resources/` cạnh ứng dụng, nên ổ chứa thư mục cài đặt cần đủ chỗ trống và quyền ghi.
-- Cache âm thanh xử lý có ngân sách khoảng **1 GiB**. Video tải xuống và video xuất kèm sub cần thêm dung lượng tại thư mục lưu bạn chọn; file kết quả có thể lớn hơn file nguồn.
-
-Dung lượng ghi trong giao diện là ước lượng; dung lượng tải và dung lượng sau giải nén có thể khác nhau. Xem lưu ý dung lượng ở trên trước khi cài bộ AI lớn.
-
-### Chọn loại nội dung
+### Chọn loại nội dung AI
 
 | Chế độ | Phù hợp | Cách xử lý |
 | --- | --- | --- |
-| **Lời bài hát** · mặc định | Nhạc, MV, lyric video | Giữ luồng xử lý lyric: kiểm tra intro/thiếu lời, chia câu, căn mốc và prompt dịch lời hát. Genius có thể dùng để tham chiếu nếu bật. |
-| **Hội thoại / Phim** | Hội thoại trong video hoặc phim | Chia câu theo từ, dấu câu và khoảng nghỉ; dùng mốc ASR, bỏ các bộ lọc credit/intro dành cho nhạc và Genius; dịch theo văn phong lời thoại. |
+| **Lời bài hát** · mặc định | Nhạc, MV, lyric video | Giữ luồng chuyên biệt cho nhạc: lọc intro/credit, nhóm câu theo nhịp, căn chữ Karaoke và dịch theo văn phong lời bài hát (hỗ trợ đối soát Genius). |
+| **Hội thoại / Phim** | Video, phim, podcast | Chia câu theo từ, dấu câu và khoảng nghỉ tự nhiên; bỏ qua bộ lọc nhạc/Genius và dịch theo văn phong hội thoại. |
 
-Lựa chọn này áp dụng khi tạo hoặc dịch phụ đề. Đổi chế độ không tự chuyển đổi hoặc căn lại phụ đề đã lưu. Chế độ hội thoại dùng chung Whisper, dịch vụ dịch và trình phát; chưa có tính năng nhận diện, gán nhãn riêng từng người nói.
+---
 
-### Chọn model và dịch vụ dịch
-
-- **Whisper:** có `tiny`, `base`, `small`, `medium`, `large-v2` và `large-v3`. Model lớn thường cần nhiều tài nguyên hơn. Với lyric nhiều ngôn ngữ và ưu tiên chất lượng, có thể bắt đầu bằng `large-v3` nếu máy đáp ứng.
-- **CPU / CUDA:** CPU dùng được khi không có GPU phù hợp; CUDA cần GPU NVIDIA và bộ thư viện/driver tương thích. Chọn CPU nếu gặp lỗi CUDA hoặc thiếu VRAM.
-- **Local Default:** dùng NLLB-200 trên máy, không cần API key. Chỉ hoạt động offline khi thư viện và model cần thiết đã có sẵn.
-- **Online:** nội dung phụ đề được gửi tới nhà cung cấp đã chọn. API key, quyền truy cập model, hạn mức và chi phí thuộc tài khoản của bạn; model có trong danh sách ứng dụng chưa chắc còn khả dụng cho mọi tài khoản.
-- **Genius:** tùy chọn dành cho lời bài hát, dùng **Client Access Token**. Chỉ những tham chiếu vượt qua kiểm tra độ khớp mới được dùng; không có tham chiếu đủ tin cậy thì app tiếp tục dịch từ lời máy.
-
-Một batch Online thành công thông thường dùng một yêu cầu dịch. Nội dung dài được chia batch có giới hạn; chỉ lỗi tạm thời hoặc thiếu ID mới kích hoạt lượt phục hồi có giới hạn. Khi Online thất bại, app giữ luồng fallback Local; fallback vẫn cần bộ NLLB tương thích.
-
-### Phụ đề, Karaoke từng chữ & Xuất video
-
-Hiệu ứng chữ chỉ thay đổi cách trình bày, không sửa nội dung hoặc mốc thời gian phụ đề chính đã lưu (`storage/subtitles/json/`).
-- **Chế độ thường (mặc định):** vệt quét chạy mượt theo thời lượng câu.
-- **🎤 Chế độ Karaoke:** khi bật trong bảng **Phụ đề & Hiệu ứng**, phụ đề tự động phóng to, chuyển màu sáng sân khấu, làm nổi vàng (`★`) các hiệu ứng đề xuất và khớp **từng chữ/âm tiết thật** theo mốc giờ giọng hát (`storage/subtitles/words/`, bài cũ chưa có dữ liệu từ vẫn lướt mượt bình thường).
-- **Phiên âm trên cùng (`Phiên âm (R)`):** tạo tức thì dòng phiên âm Latinh màu xanh băng ở hàng trên cùng (Hepburn Romaji cho tiếng Nhật, Pinyin có dấu cho tiếng Trung, Revised Romanization cho tiếng Hàn; tự ẩn với bài tiếng Anh/Việt) hoàn toàn offline cho cả thư viện bài hát đã lưu sẵn.
-
-Trong cài đặt phụ đề, chọn **Xuất video + lyric** để tạo video có phụ đề gắn vào hình. Có thể chọn tỉ lệ nguồn, 16:9, 9:16, 1:1 và các canvas khác; tùy chỉnh cách fit/fill, kích thước, FPS, chất lượng, bộ mã hóa (**Tự động ưu tiên GPU NVIDIA `h264_nvenc` ⚡** hoặc CPU `libx264`), vùng an toàn và một số thiết lập hiển thị riêng khi xuất.
-
-Gắn phụ đề vào hình cần mã hóa lại video: khi phát hiện GPU NVIDIA tương thích, app tự động dùng phần cứng **NVENC (`h264_nvenc`)** để tăng tốc xuất video nhiều lần và tự chuyển mượt về CPU `libx264` nếu phần cứng bận hoặc không hỗ trợ kích thước khung. Âm thanh ưu tiên giữ luồng nguồn; MP4 có thể chuyển sang AAC để tương thích. Bản xuất là file mới, không ghi đè video nguồn.
-
-### Âm thanh
-
-Cân bằng âm lượng và preset chất âm là tùy chọn; nguồn media gốc được giữ nguyên. Cân bằng âm lượng khi không bật EQ dùng gain trên đường phát hiện có. EQ có bước chuẩn bị nguồn phát riêng: đổi preset giữa bài có thể làm nạp lại nguồn và ngắt ngắn.
-
-Cache nguồn phát đã xử lý nằm trong `storage/audio-playback-cache/`, có ngân sách khoảng 1 GiB; file đang dùng được bảo vệ nên mức chiếm dụng thực tế có thể vượt ngân sách. Cache này giúp tái sử dụng kết quả xử lý, không phải model AI hay bản sửa của file nhạc gốc.
-
-## Phím tắt
-
-Khi cửa sổ trình phát nhận phím:
+## Phím tắt trình phát
 
 | Phím | Thao tác |
 | --- | --- |
-| `Space` | Phát / tạm dừng |
-| `F` | Bật / tắt toàn màn hình |
-| `Esc` | Thoát chế độ toàn màn hình đang hoạt động |
+| `Space` | Phát / Tạm dừng |
+| `F` | Bật / Tắt toàn màn hình |
+| `Esc` | Thoát chế độ toàn màn hình |
 | `←` / `→` | Tua lùi / tiến 10 giây |
-| `↑` / `↓` | Tăng / giảm âm lượng |
-| `R` | Bật / tắt nhanh dòng Phiên âm trên cùng (chỉ khi đang mở màn hình xem video chính) |
+| `↑` / `↓` | Tăng / Giảm âm lượng |
+| `R` | Bật / Tắt nhanh dòng **Phiên âm (Romaji / Pinyin / Hàn)** khi đang xem video |
 
-## Chạy từ mã nguồn
+---
 
-Môi trường mục tiêu là **Windows 64-bit, Python 3.11**. Chuẩn bị [FFmpeg và FFprobe](https://ffmpeg.org/download.html): đặt `ffmpeg.exe`, `ffprobe.exe` trong `bin/` ở gốc dự án; khi chạy từ source, app cũng hỗ trợ tìm trong `app_resources/bin/` hoặc PATH.
+## Chạy từ mã nguồn & Đóng gói bản phát hành
 
-Mở PowerShell tại gốc repository:
+Môi trường mục tiêu: **Windows 10/11 64-bit, Python 3.11**. Đặt `ffmpeg.exe` và `ffprobe.exe` trong `bin/` ở gốc dự án (hoặc `app_resources/bin/` / PATH).
+
+### 1. Chạy từ mã nguồn
 
 ```powershell
 py -3.11 -m venv venv
@@ -134,82 +121,60 @@ py -3.11 -m venv venv
 .\venv\Scripts\python.exe app/run_app.py
 ```
 
-`requirements.txt` chứa dependencies ứng dụng; thư viện AI portable và các model cần được chuẩn bị riêng qua trình tải tài nguyên. Sau khi cài tài nguyên, lưu lựa chọn model/device trong Settings rồi tạo phụ đề.
+### 2. Đóng gói bản Portable & Bộ cài `BoTube_Setup.exe` (1 lệnh)
 
-Entry point hiện tại là `app/run_app.py`. Các thư mục tài nguyên lớn như `bin/`, `app_resources/` và media mẫu không đi kèm một bản clone mã nguồn thông thường.
+Yêu cầu đã cài `PyInstaller` (`pip install -r requirements-build.txt`) và **Inno Setup 6**:
 
-## Dữ liệu và tài nguyên
+```powershell
+# Đóng gói PyInstaller portable -> tự biên dịch Inno Setup 6 -> xuất BoTube_Setup.exe & .sha256
+.\packaging\build_release_installer.ps1 -BuildPortable
+```
+
+- Lệnh trên đọc phiên bản duy nhất từ `app/version.py` (`6.0.0`), chạy `build_app.py` (không ghi đè bản build cũ trong `dist/`), biên dịch `packaging/BoTube_Setup.iss` và xuất sẵn `Installer\BoTube_Setup.exe` kèm `Installer\BoTube_Setup.exe.sha256`.
+- Nếu chỉ muốn kiểm tra cấu hình build mà không đóng gói: `.\venv\Scripts\python.exe build_app.py --dry-run`.
+
+### 3. Cấu trúc dữ liệu người dùng
 
 ```text
 BoTube/
-├── BoTube.exe                    # Có trong bản đóng gói
-├── _internal/                    # Runtime của bản đóng gói
+├── BoTube.exe                    # Tệp thực thi chính
+├── _internal/                    # Runtime PyInstaller (tự làm sạch khi nâng cấp)
 ├── bin/                          # FFmpeg, FFprobe
-├── icon/
-├── app_resources/
-│   ├── libs/                     # Thư viện AI portable
-│   ├── whisper_models/           # Model Whisper đã tải
-│   └── translation_models/
-│       └── nllb-200/             # Model dịch Local
-└── storage/                      # Thư viện, phụ đề, tùy chỉnh và cache
+├── icon/ & resources/            # Biểu tượng ứng dụng
+├── app_resources/                # Thư viện AI portable, Whisper & NLLB models (bảo toàn 100%)
+└── storage/                      # Thư viện, playlist, phụ đề, tùy chỉnh & cache (bảo toàn 100%)
 ```
 
-Khi chạy từ source, `storage/` và `app_resources/` nằm ở gốc dự án; khi chạy EXE, chúng nằm cạnh EXE. Một phần tùy chỉnh AI/API được lưu bằng **QSettings của Windows**, nên sao chép thư mục portable sang máy khác không đồng nghĩa mọi setting và API key cũng được chuyển theo.
+---
 
-Sao lưu `storage/` và giữ media nguồn trước khi đổi bản phát hành. Có thể tái sử dụng `app_resources/` nếu bộ tài nguyên tương thích với bản app mới. Không đưa API key, token, dữ liệu cá nhân hoặc bộ model/cache lên GitHub.
+## Kiểm thử & Phát triển
 
-## Đóng gói EXE
-
-Build trên Windows, từ đúng mã nguồn của phiên bản muốn phát hành. Cần có FFmpeg/FFprobe trong `bin/`, icon, native DLL và các tài nguyên giao diện mà script kiểm tra.
+Mã nguồn ứng dụng nằm trong `app/` (`core/`, `ui/`, `control/`, `ai/`, `pipeline/`, `translate/`, `subtitle/`, `download_core/`).
 
 ```powershell
-.\venv\Scripts\python.exe -m pip install -r requirements-build.txt
-.\venv\Scripts\python.exe build_app.py --dry-run
-.\venv\Scripts\python.exe build_app.py
+$env:PYTHONPATH=".;app"; $env:KMP_DUPLICATE_LIB_OK="TRUE"; $env:QT_QPA_PLATFORM="offscreen"
+.\venv\Scripts\python.exe -m unittest `
+  tests.test_app_updater `
+  tests.test_ui_settings_and_i18n `
+  tests.test_app_optimization `
+  tests.test_hifi_audio_engine `
+  tests.test_subtitle_studio `
+  tests.test_nvenc_video_export `
+  tests.test_word_karaoke_and_phonetics `
+  tests.test_playlists_favorites_history `
+  tests.test_download_studio -v
 ```
 
-Script xuất dạng **onedir**:
-
-- Lần đầu: `dist/BoTube/BoTube.exe`.
-- Nếu `dist/BoTube/` đã tồn tại: xuất vào `dist/release-<timestamp>/BoTube/BoTube.exe`, giữ bản cũ.
-- Có thể dùng `--dist-dir` để chọn một thư mục xuất mới. Script in đường dẫn kết quả cuối cùng.
-
-Build chỉ chuẩn bị thư mục AI rời, **không tự sao chép toàn bộ thư viện/model trong `app_resources/` vào gói phát hành**. Nếu muốn gói dùng AI ngay hoặc offline, bổ sung bộ tài nguyên tương thích vào thư mục BoTube trước khi phân phối. Không kèm `storage/` cá nhân.
-
-Trước khi phát hành, chạy EXE từ thư mục đã đóng gói và thử phát media, tạo/lưu/mở lại sub ở hai chế độ, dịch Local/Online cần dùng và xuất video. `--dry-run` kiểm tra cấu hình/tài nguyên, không thay thế việc thử EXE thật.
-
-## Cập nhật
-
-Ứng dụng có chức năng kiểm tra cập nhật qua metadata `version.json` trên GitHub. Cơ chế này phụ thuộc gói cập nhật và helper tương ứng của bản phát hành; chạy build ứng dụng không tự tạo hoặc đăng gói cập nhật.
-
-Với bản portable mới, có thể giải nén sang thư mục riêng và chuyển dữ liệu/tài nguyên tương thích sau khi sao lưu. Hướng dẫn hot-patch của các bản cũ không phải quy trình đóng gói bản ứng dụng hiện tại.
+Xem thêm [tài liệu dự án](docs/README.md), [hợp đồng tính năng](docs/FEATURE_PARITY.md), [hướng dẫn kiểm thử](tests/README.md) và [quy tắc phát triển](AGENTS.md).
 
 ## Giới hạn hiện tại
 
-- AI có thể nhận sai, thiếu chữ hoặc lệch mốc thời gian khi hát nhanh, luyến, nhạc nền lớn, giọng nhỏ hoặc nhiều người nói chồng nhau. Phụ đề tạo tự động cần được kiểm tra trước khi xuất bản.
-- Chế độ hội thoại đã có kiểm tra chức năng và bảo toàn nhánh nhạc, nhưng chưa có benchmark phim thật đủ rộng để bảo đảm mọi tình huống.
-- Chất lượng dịch phụ thuộc lời máy, ngôn ngữ và model/provider; tham chiếu Genius không thay thế việc kiểm tra kết quả.
-- Tải nội dung và dịch Online phụ thuộc mạng, nguồn nội dung và dịch vụ bên ngoài. Lỗi 503 có thể là lỗi tạm thời; 401/404 cần kiểm tra key hoặc model thay vì chỉ chờ và gọi lại.
-- Preset âm thanh không phục hồi chi tiết đã mất do nén codec. Khả năng offline, GPU và hiệu năng phụ thuộc bộ tài nguyên và phần cứng thực tế.
+- Nhận diện giọng nói AI có thể lệch từ hoặc mốc thời gian khi hát quá nhanh, nhạc nền rất lớn hoặc nhiều giọng chồng nhau — nên xem lại bằng trình sửa phụ đề trước khi xuất bản.
+- Dịch Online và tải nội dung phụ thuộc mạng, giới hạn API và chính sách dịch vụ bên thứ ba; hãy giữ bí mật API key và Genius token cục bộ trên máy.
+- Bộ preset âm thanh tối ưu hóa độ sạch, độ cân bằng và loại bỏ clip kỹ thuật số, không thể tái tạo chi tiết gốc đã bị mất do file nguồn nén chất lượng thấp.
 
-## Phát triển và kiểm thử
+## Giấy phép & Tài nguyên bên thứ ba
 
-Mã nguồn chính nằm trong `app/`: `ai/` và `pipeline/` xử lý nhận dạng; `translate/` xử lý dịch; `subtitle/` và `core/` quản lý dữ liệu; `ui/`, `control/`, `download_core/` phục vụ giao diện, điều khiển và tải nội dung.
-
-```powershell
-# Kiểm tra tập trung cho chế độ nội dung và timing hiển thị
-.\venv\Scripts\python.exe -m unittest tests.test_dialogue_mode tests.test_subtitle_display_timing -v
-
-# Chạy toàn bộ bộ kiểm tra
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-Bộ kiểm tra còn chứa snapshot và hợp đồng từ các giai đoạn trước; không mặc định coi toàn bộ suite đã xanh. Unit test, kiểm tra Qt và benchmark từng mẫu không thay thế kiểm thử GPU, API, media thực tế và EXE.
-
-Xem [tài liệu dự án](docs/README.md), [hợp đồng tính năng](docs/FEATURE_PARITY.md), [hướng dẫn kiểm thử](tests/README.md) và [quy tắc phát triển](AGENTS.md). Khi gửi báo lỗi, nêu phiên bản/commit, model/device, loại nội dung, bước tái hiện và mốc thời gian bị lỗi; loại bỏ key/token khỏi log.
-
-## Giấy phép và tài nguyên bên thứ ba
-
-Thư viện, model, bộ giải mã và icon có giấy phép riêng. Icon Lucide đi kèm theo [ISC License](app/ui/assets/icons/LICENSE). Model Local [NLLB-200 distilled 600M](https://huggingface.co/facebook/nllb-200-distilled-600M) được công bố theo **CC-BY-NC-4.0**; cần xem điều kiện của model khi dự định sử dụng hoặc phân phối thương mại.
-
-Hiện repository chưa có tệp `LICENSE` ở gốc cho toàn bộ mã nguồn BoTube.
+- Biểu tượng Lucide đi kèm theo [ISC License](app/ui/assets/icons/LICENSE).
+- Model dịch cục bộ [NLLB-200 distilled 600M](https://huggingface.co/facebook/nllb-200-distilled-600M) phát hành theo **CC-BY-NC-4.0**; cần kiểm tra điều kiện sử dụng khi phân phối thương mại.
+- Các thư viện, FFmpeg, yt-dlp và model AI tuân theo giấy phép riêng của từng dự án gốc.
