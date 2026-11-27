@@ -172,6 +172,24 @@ print('LAZY_STARTUP_OK')
             self.assertFalse((out / '_internal/app/download_core/__pycache__').exists())
             self.assertFalse((out / '_internal/app/test').exists())
 
+    def test_ai_resource_pip_command_drops_unused_vision_audio_and_supports_lean_cpu_mode(self):
+        from download_core.download_source_app import build_ai_pip_command
+
+        gpu_cmd = build_ai_pip_command('python', 'libs', 'gpu')
+        cpu_cmd = build_ai_pip_command('python', 'libs', 'cpu')
+
+        for cmd in (gpu_cmd, cpu_cmd):
+            joined = ' '.join(cmd)
+            self.assertIn('--no-cache-dir', cmd)
+            self.assertIn('torch==2.4.0', cmd)
+            self.assertIn('faster-whisper==1.0.2', cmd)
+            self.assertIn('soundfile>=0.12.1', cmd)
+            self.assertNotIn('torchvision', joined)
+            self.assertNotIn('torchaudio', joined)
+
+        self.assertIn('https://download.pytorch.org/whl/cu121', gpu_cmd)
+        self.assertIn('https://download.pytorch.org/whl/cpu', cpu_cmd)
+
 
 if __name__ == '__main__':
     unittest.main()

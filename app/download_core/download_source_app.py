@@ -22,7 +22,48 @@ PORTABLE_LIBS_DIR = os.path.join(APP_ROOT, "app_resources", "libs")
 MODEL_BASE_DIR = os.path.join(APP_ROOT, "app_resources", "whisper_models")
 TRANS_MODEL_DIR = os.path.join(APP_ROOT, "app_resources", "translation_models") # Thư mục dịch thuật local
 
-MAJOR_PACKAGES = ["torch", "torchvision", "torchaudio", "faster-whisper", "transformers", "ctranslate2", "soundfile", "numpy", "huggingface_hub"]
+MAJOR_PACKAGES = ["torch", "faster-whisper", "transformers", "ctranslate2", "soundfile", "numpy", "huggingface_hub"]
+
+
+def detect_nvidia_gpu() -> bool:
+    """Return True when an NVIDIA GPU driver (nvidia-smi) is available on this machine."""
+    exe = shutil.which("nvidia-smi")
+    if not exe:
+        return False
+    try:
+        kwargs = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL, "timeout": 3}
+        if sys.platform == "win32":
+            kwargs["creationflags"] = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        return subprocess.run([exe, "-L"], **kwargs).returncode == 0
+    except Exception:
+        return False
+
+
+def build_ai_pip_command(python_exe: str, target_dir: str, hardware_mode: str = "gpu") -> list[str]:
+    """Build lean pip install command for external AI runtime (excludes unused torchvision/torchaudio)."""
+    use_cpu_only = str(hardware_mode or "gpu").strip().lower() == "cpu"
+    index_url = (
+        "https://download.pytorch.org/whl/cpu"
+        if use_cpu_only
+        else "https://download.pytorch.org/whl/cu121"
+    )
+    return [
+        python_exe, "-m", "pip", "install",
+        "--target", target_dir,
+        "--no-cache-dir",
+        "--progress-bar", "off",
+        "--trusted-host", "pypi.org",
+        "--trusted-host", "files.pythonhosted.org",
+        "--trusted-host", "download.pytorch.org",
+        "torch==2.4.0",
+        "huggingface_hub>=0.19.0",
+        "faster-whisper==1.0.2",
+        "transformers>=4.35.2",
+        "ctranslate2>=4.0.0",
+        "soundfile>=0.12.1",
+        "numpy<2.0.0",
+        "--extra-index-url", index_url,
+    ]
 
 # ==========================================================
 # RESOURCE STATUS
@@ -164,23 +205,7 @@ class PipDownloadWorker(QThread):
                 else:
                     python_exe = sys.executable
 
-                cmd = [
-                    python_exe, "-m", "pip", "install", 
-                    "--target", PORTABLE_LIBS_DIR,
-                    "--no-cache-dir",
-                    "--progress-bar", "off", 
-                    "--trusted-host", "pypi.org",
-                    "--trusted-host", "files.pythonhosted.org",
-                    "--trusted-host", "download.pytorch.org",
-                    "torch==2.4.0", "torchvision==0.19.0", "torchaudio==2.4.0",
-                    "huggingface_hub>=0.19.0",
-                    "faster-whisper==1.0.2", 
-                    "transformers>=4.35.2",
-                    "ctranslate2>=4.0.0",
-                    "soundfile>=0.12.1",
-                    "numpy<2.0.0",
-                    "--extra-index-url", "https://download.pytorch.org/whl/cu121"
-                ]
+                cmd = build_ai_pip_command(python_exe, PORTABLE_LIBS_DIR, self.hardware_mode)
 
                 startupinfo = None
                 if sys.platform == "win32":
@@ -286,11 +311,14 @@ class PipDownloadWorker(QThread):
             from huggingface_hub import snapshot_download
             self.progress_text_signal.emit(f"📥 Đang tải các file Core của Model {self.model_name.upper()}...")
             
+            whisper_target = os.path.join(MODEL_BASE_DIR, self.model_name)
             snapshot_download(
                 repo_id=f"Systran/faster-whisper-{self.model_name}",
-                local_dir=os.path.join(MODEL_BASE_DIR, self.model_name),
-                local_dir_use_symlinks=False
+                local_dir=whisper_target,
+                local_dir_use_symlinks=False,
+                ignore_patterns=["*.md", ".gitattributes"],
             )
+            shutil.rmtree(os.path.join(whisper_target, ".cache"), ignore_errors=True)
 
             # ---------------------------------------------------------
             # BƯỚC 4: TẢI THÊM MODEL DỊCH THUẬT NLLB LOCAL (NẾU ĐƯỢC CHỌN)
@@ -306,8 +334,10 @@ class PipDownloadWorker(QThread):
                 snapshot_download(
                     repo_id="facebook/nllb-200-distilled-600M",
                     local_dir=nllb_target_path,
-                    local_dir_use_symlinks=False
+                    local_dir_use_symlinks=False,
+                    ignore_patterns=["*.h5", "*.msgpack", "*.ot", "flax_*", "tf_*", "*.md", ".gitattributes"],
                 )
+                shutil.rmtree(os.path.join(nllb_target_path, ".cache"), ignore_errors=True)
                 self.progress_text_signal.emit("✅ Đồng bộ kho dịch thuật Offline thành công!")
                 self.msleep(300)
 
@@ -347,7 +377,7 @@ class ResourceDownloadDialog(QDialog):
     def init_ui(self):
         self.setWindowTitle("Trình cài đặt Core AI tự động")
         self.setFixedSize(580, 440) # Mở rộng nhẹ chiều cao để tối ưu giao diện
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint & ~Qt.WindowCloseButtonHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
 
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(25, 25, 25, 25)
@@ -369,11 +399,14 @@ class ResourceDownloadDialog(QDialog):
         form_layout.setSpacing(16)
 
         layout_hw = QHBoxLayout()
-        lbl_hw = QLabel("Chế độ kiểm thử:")
+        lbl_hw = QLabel("Gói thư viện:")
         lbl_hw.setObjectName("FormLabel")
         lbl_hw.setFixedWidth(110)
         self.cbo_hardware = QComboBox()
-        self.cbo_hardware.addItem("Cài đặt bộ thư viện lai (Hỗ trợ cả CPU & GPU NVidia)", "gpu")
+        self.cbo_hardware.addItem("GPU NVIDIA (CUDA + CPU · ~4.5 GB)", "gpu")
+        self.cbo_hardware.addItem("Chỉ CPU siêu nhẹ (Không cần card rời · ~700 MB)", "cpu")
+        if not detect_nvidia_gpu():
+            self.cbo_hardware.setCurrentIndex(1)
         layout_hw.addWidget(lbl_hw)
         layout_hw.addWidget(self.cbo_hardware)
         form_layout.addLayout(layout_hw)
@@ -407,7 +440,7 @@ class ResourceDownloadDialog(QDialog):
         options_layout = QVBoxLayout()
         options_layout.setSpacing(8)
 
-        self.chk_download_trans = QCheckBox("Tải kèm Model dịch thuật NLLB Offline (Facebook ~1.2GB để dịch không cần mạng)")
+        self.chk_download_trans = QCheckBox("Tải kèm Model dịch thuật NLLB Offline (Facebook ~2.4 GB để dịch không cần mạng)")
         self.chk_download_trans.setObjectName("TransCheckbox")
         options_layout.addWidget(self.chk_download_trans)
 

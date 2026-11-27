@@ -364,10 +364,15 @@ VI_TO_EN: dict[str, str] = {
     'Ứng dụng tự động thiết lập bộ thư viện dùng chung cho cả CPU & GPU. Vui lòng chọn phiên bản Model:':
         'Automatically configures unified CPU & NVIDIA GPU runtimes. Select a Whisper model package:',
     'Chế độ kiểm thử:': 'Runtime Mode:',
+    'Gói thư viện:': 'Runtime Package:',
     'Cài đặt bộ thư viện lai (Hỗ trợ cả CPU & GPU NVidia)': 'Hybrid Runtime (Supports both CPU & NVIDIA CUDA GPU)',
+    'GPU NVIDIA (CUDA + CPU · ~4.5 GB)': 'NVIDIA GPU (CUDA + CPU · ~4.5 GB)',
+    'Chỉ CPU siêu nhẹ (Không cần card rời · ~700 MB)': 'Lightweight CPU-Only (No NVIDIA GPU · ~700 MB)',
     'Phiên bản Model:': 'Whisper Package:',
     'Tải kèm Model dịch thuật NLLB Offline (Facebook ~1.2GB để dịch không cần mạng)':
         'Include Offline NLLB-200 Translation Model (~1.2 GB for 100% offline lyric translation)',
+    'Tải kèm Model dịch thuật NLLB Offline (Facebook ~2.4 GB để dịch không cần mạng)':
+        'Include Offline NLLB-200 Translation Model (~2.4 GB for 100% offline lyric translation)',
     'Xóa sạch tài nguyên cũ cài lại từ đầu (Khuyên dùng nếu đã dính lỗi mạng cũ)':
         'Clean reinstall from scratch (recommended if a previous download was interrupted)',
     'Bắt đầu cài đặt tự động': 'Start Automated Installation',
