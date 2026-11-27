@@ -11,7 +11,7 @@
 
 <p>
   <a href="https://github.com/Diablo-Loc/App-AI-media-player/releases/latest"><img src="https://img.shields.io/github/v/release/Diablo-Loc/App-AI-media-player?style=flat-square&color=1F6FEB&label=Latest%20Release" alt="Latest Release"/></a>
-  <img src="https://img.shields.io/badge/Version-6.0.0-2EA043?style=flat-square" alt="Version 6.0.0"/>
+  <img src="https://img.shields.io/badge/Version-6.0.1-2EA043?style=flat-square" alt="Version 6.0.1"/>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20x64-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Platform Windows"/>
   <img src="https://img.shields.io/badge/GUI-PySide6%20%2F%20Qt6-41CD52?style=flat-square&logo=qt&logoColor=white" alt="PySide6 / Qt6"/>
   <img src="https://img.shields.io/badge/Audio-64--bit%20Float%20WASAPI-77E0BE?style=flat-square" alt="64-bit Float WASAPI"/>
