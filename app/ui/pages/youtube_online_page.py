@@ -19,6 +19,7 @@ import random
 import re
 import shutil
 import tempfile
+import time
 from typing import Any, Callable
 import weakref
 
@@ -2023,6 +2024,9 @@ class YouTubeOnlinePage(QWidget):
         self._sub_style_initialized = False
         self._window_filter_host: QObject | None = None
         self._shutting_down = False
+        self._yt_cookie_cache: dict[str, tuple[float, list[OnlineVideoItem]]] = {}
+        self._yt_cookie_loading: set[str] = set()
+        self._yt_cookie_error: dict[str, str] = {}
 
         # Worker tracking with generation counters
         self._workers: dict[str, _TaskWorker] = {}
@@ -3072,7 +3076,7 @@ class YouTubeOnlinePage(QWidget):
         self.btn_lib_sync_yt_liked.setObjectName("ytActionPill")
         self.btn_lib_sync_yt_liked.setFixedHeight(32)
         self.btn_lib_sync_yt_liked.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_lib_sync_yt_liked.clicked.connect(self._sync_youtube_liked_into_library)
+        self.btn_lib_sync_yt_liked.clicked.connect(self._refresh_active_cookie_section)
         self.btn_lib_sync_yt_liked.hide()
 
         top.addWidget(self.btn_lib_import_pl)
@@ -3195,14 +3199,24 @@ class YouTubeOnlinePage(QWidget):
             if self.btn_audio_mode.isChecked()
             else tr_pair("🎬 Video + Hi-Fi", "🎬 Video + Hi-Fi", lg)
         )
-        has_ck = has_active_cookie_source(
-            str(self.profile.get_pref("cookies_browser", "") or ""),
-            str(self.profile.get_pref("cookies_file", "") or ""),
-        )
+        has_ck = self._has_cookie_connected()
         self.btn_account.setText(
             tr_pair("● Tài khoản YouTube", "● YouTube Connected", lg)
             if has_ck
             else tr_pair("👤 Tài khoản", "👤 Account", lg)
+        )
+        self.btn_account.setToolTip(
+            tr_pair(
+                "Đã tự động nạp Két Cookie YouTube — Trang chủ, Playlist, Đã thích, Xem sau & Kênh đăng ký tự đọc trực tiếp từ tài khoản YouTube.",
+                "YouTube Cookie Vault loaded automatically — Home, Playlists, Liked, Watch Later & Subscriptions sync directly from your YouTube account.",
+                lg,
+            )
+            if has_ck
+            else tr_pair(
+                "Kết nối Cookie YouTube (mã hóa Windows DPAPI) để đọc Playlist, Đã thích & Xem sau tự động.",
+                "Connect YouTube Cookies (Windows DPAPI encrypted) to auto-load Playlists, Liked & Watch Later.",
+                lg,
+            )
         )
 
         nav_labels = {
@@ -3297,7 +3311,7 @@ class YouTubeOnlinePage(QWidget):
         self.btn_lib_new_pl.setText(tr_pair("+ Tạo Playlist", "+ New Playlist", lg))
         self.btn_lib_play_all.setText(tr_pair("▶ Phát tất cả", "▶ Play All", lg))
         self.btn_lib_shuffle.setText(tr_pair("🔀 Trộn bài", "🔀 Shuffle", lg))
-        self.btn_lib_sync_yt_liked.setText(tr_pair("↻ Đồng bộ Đã thích YouTube", "↻ Sync YouTube Liked", lg))
+        self.btn_lib_sync_yt_liked.setText(tr_pair("↻ Làm mới từ YouTube", "↻ Refresh from YouTube", lg))
         self.btn_lib_clear_hist.setText(tr_pair("🗑 Xóa lịch sử", "🗑 Clear History", lg))
         self.btn_mini_open.setText(tr_pair("Mở trình phát", "Open Player", lg))
 
@@ -3332,6 +3346,7 @@ class YouTubeOnlinePage(QWidget):
 
     def on_tab_activated(self) -> None:
         """Called lazily when user clicks the YouTube Online sidebar tab."""
+        self.retranslate(get_language())
         if not self._initialized_feed:
             self._initialized_feed = True
             self._show_view(self.VIEW_HOME, record_nav=True)
@@ -3477,7 +3492,9 @@ class YouTubeOnlinePage(QWidget):
             self.open_channel(self._active_channel.channel_id, self._active_channel.name)
         elif idx == self.VIEW_LIBRARY:
             active_lib = next((k for k, b in self.lib_tab_btns.items() if b.isChecked()), "playlists")
-            self._render_library_section(active_lib)
+            if active_lib in self._COOKIE_SECTION_TARGETS and self._has_cookie_connected():
+                self._ensure_cookie_section_loaded(active_lib, force=True)
+            self._render_library_section(active_lib, trigger_cookie_sync=False)
 
     def _on_search_text_edited(self, text: str) -> None:
         q = text.strip()
@@ -3602,11 +3619,20 @@ class YouTubeOnlinePage(QWidget):
 
     def _load_home_feed(self, topic_key: str, *, force_refresh: bool = False) -> None:
         lang = get_language()
+        cookies_br, cookies_file = self._cookie_creds()
         self._run_async(
             "feed",
-            lambda: self.client.fetch_home_feed(topic_key, lang=lang, force_refresh=force_refresh),
+            lambda procs: self.client.fetch_home_feed(
+                topic_key,
+                lang=lang,
+                force_refresh=force_refresh,
+                cookies_browser=cookies_br,
+                cookies_file=cookies_file,
+                processes=procs,
+            ),
             on_ok=self._populate_home_grid,
             on_err=self._on_feed_error,
+            pass_processes=True,
             busy_text=tr_pair("Đang tải đề xuất YouTube…", "Loading YouTube feed…"),
         )
 
@@ -5226,11 +5252,20 @@ class YouTubeOnlinePage(QWidget):
             self.status_message.emit(tr_pair("Đã sao chép đường dẫn YouTube!", "Copied YouTube URL!"))
 
     def _open_account_dialog(self) -> None:
+        before_sig = (*self._cookie_creds(), has_cookie_vault())
         dlg = _YouTubeAccountDialog(self.profile, client=self.client, parent=self)
         dlg.playlist_import_requested.connect(lambda u, t: self.open_playlist(u, title_hint=t))
         dlg.exec()
         self.refresh_ai_availability()
         self.retranslate(get_language())
+        after_sig = (*self._cookie_creds(), has_cookie_vault())
+        if after_sig != before_sig:
+            self._invalidate_cookie_caches()
+            cur = self.stack.currentIndex()
+            if cur == self.VIEW_LIBRARY:
+                self._render_library_section(self._active_lib_section, trigger_cookie_sync=True)
+            elif cur == self.VIEW_HOME and not self._current_search_query and self._current_topic == "all":
+                self._load_home_feed("all", force_refresh=True)
 
     # =================================================================
     # CHANNEL, PLAYLIST & ONLINE LIBRARY VIEWS
@@ -5373,7 +5408,105 @@ class YouTubeOnlinePage(QWidget):
         )
         self.status_message.emit(tr_pair("Đã lưu Playlist vào Thư viện Online!", "Pinned playlist to Online Library!"))
 
-    def _render_library_section(self, section: str) -> None:
+    _COOKIE_SECTION_TARGETS: dict[str, tuple[str, int]] = {
+        "playlists": ("https://www.youtube.com/feed/playlists", 60),
+        "liked": (":ytfav", 120),
+        "watch_later": (":ytwatchlater", 120),
+        "subscriptions": (":ytsubs", 60),
+    }
+    _COOKIE_CACHE_TTL_SEC: float = 300.0
+
+    def _cookie_creds(self) -> tuple[str, str]:
+        return (
+            str(self.profile.get_pref("cookies_browser", "") or "").strip(),
+            str(self.profile.get_pref("cookies_file", "") or "").strip(),
+        )
+
+    def _has_cookie_connected(self) -> bool:
+        cb, cf = self._cookie_creds()
+        return has_active_cookie_source(cb, cf)
+
+    def _invalidate_cookie_caches(self) -> None:
+        self._yt_cookie_cache.clear()
+        self._yt_cookie_error.clear()
+        self._yt_cookie_loading.clear()
+        if hasattr(self.client, "_cache") and hasattr(self.client, "_cache_lock"):
+            with self.client._cache_lock:
+                for k in [k for k in self.client._cache if k.startswith("home:")]:
+                    self.client._cache.pop(k, None)
+
+    def _ensure_cookie_section_loaded(self, section: str, *, force: bool = False) -> None:
+        spec = self._COOKIE_SECTION_TARGETS.get(section)
+        if spec is None or not self._has_cookie_connected():
+            return
+        now = time.monotonic()
+        cached = self._yt_cookie_cache.get(section)
+        if not force and cached is not None and (now - cached[0]) < self._COOKIE_CACHE_TTL_SEC:
+            return
+        if section in self._yt_cookie_loading:
+            return
+
+        target, max_items = spec
+        cookies_br, cookies_file = self._cookie_creds()
+        self._yt_cookie_loading.add(section)
+        self._yt_cookie_error.pop(section, None)
+
+        def _on_ok(payload: tuple[str, list[OnlineVideoItem]]) -> None:
+            _title, yt_items = payload
+            self._yt_cookie_loading.discard(section)
+            self._yt_cookie_error.pop(section, None)
+            self._yt_cookie_cache[section] = (time.monotonic(), list(yt_items or []))
+            if self._active_lib_section == section and self.stack.currentIndex() == self.VIEW_LIBRARY:
+                self._render_library_section(section, trigger_cookie_sync=False)
+
+        def _on_err(msg: str) -> None:
+            self._yt_cookie_loading.discard(section)
+            self._yt_cookie_error[section] = str(msg or "Unknown error")
+            if self._active_lib_section == section and self.stack.currentIndex() == self.VIEW_LIBRARY:
+                self._render_library_section(section, trigger_cookie_sync=False)
+
+        self._run_async(
+            f"yt_cookie_{section}",
+            lambda procs: self.client.fetch_playlist(
+                target,
+                cookies_browser=cookies_br,
+                cookies_file=cookies_file,
+                processes=procs,
+                max_items=max_items,
+            ),
+            on_ok=_on_ok,
+            on_err=_on_err,
+            pass_processes=True,
+            busy_text=tr_pair("Đang đọc tài khoản YouTube từ Két Cookie…", "Loading YouTube account via Cookie Vault…"),
+        )
+
+    def _merged_lib_items(self, section: str) -> list[OnlineVideoItem]:
+        if section == "history":
+            return self.profile.list_watch_history()
+        yt_entry = self._yt_cookie_cache.get(section)
+        yt_items = list(yt_entry[1]) if yt_entry is not None else []
+        if section == "liked":
+            local_items = self.profile.list_liked()
+        elif section == "watch_later":
+            local_items = self.profile.list_watch_later()
+        elif section == "subscriptions":
+            return [it for it in yt_items if it.video_id]
+        else:
+            return yt_items
+
+        merged: list[OnlineVideoItem] = []
+        seen: set[str] = set()
+        for it in local_items:
+            if it.video_id and it.video_id not in seen:
+                seen.add(it.video_id)
+                merged.append(it)
+        for it in yt_items:
+            if it.video_id and it.video_id not in seen:
+                seen.add(it.video_id)
+                merged.append(it)
+        return merged
+
+    def _render_library_section(self, section: str, *, trigger_cookie_sync: bool = True) -> None:
         self._active_lib_section = section
         for k, b in self.lib_tab_btns.items():
             b.setChecked(k == section)
@@ -5388,28 +5521,116 @@ class YouTubeOnlinePage(QWidget):
             target_nav = lib_nav_map.get(section, "library")
             for k, b in self.nav_buttons.items():
                 b.setChecked(k == target_nav)
+
+        has_ck = self._has_cookie_connected()
+        if trigger_cookie_sync and has_ck and section in self._COOKIE_SECTION_TARGETS:
+            self._ensure_cookie_section_loaded(section, force=False)
+
         self.btn_lib_import_pl.setVisible(section == "playlists")
         self.btn_lib_new_pl.setVisible(section == "playlists")
         self.btn_lib_clear_hist.setVisible(section == "history")
-        self.btn_lib_sync_yt_liked.setVisible(section == "liked")
-        is_playable_list = section in ("liked", "watch_later", "history")
+        self.btn_lib_sync_yt_liked.setVisible(section in self._COOKIE_SECTION_TARGETS)
+        is_playable_list = section in ("liked", "watch_later", "history", "subscriptions")
         self.btn_lib_play_all.setVisible(is_playable_list)
         self.btn_lib_shuffle.setVisible(is_playable_list)
         self._clear_layout(self.lib_lay)
 
+        # Inline live cookie sync status banner (loading or expired-cookie recovery)
+        if section in self._yt_cookie_loading:
+            banner = QLabel(
+                tr_pair(
+                    "⏳ Đang tự động tải danh sách từ tài khoản YouTube qua Két Cookie mã hóa (Windows DPAPI)…",
+                    "⏳ Automatically loading your YouTube account list via encrypted Cookie Vault (Windows DPAPI)…",
+                )
+            )
+            banner.setWordWrap(True)
+            banner.setStyleSheet(
+                "color: #8DE7CA; background: #102520; border: 1px solid #2A5C4D; border-radius: 8px; "
+                "font-size: 12px; font-weight: 600; padding: 10px 14px;"
+            )
+            self.lib_lay.addWidget(banner)
+        elif section in self._yt_cookie_error:
+            err_box = QFrame()
+            err_box.setStyleSheet("background: #23181C; border: 1px solid #59333C; border-radius: 8px;")
+            el = QHBoxLayout(err_box)
+            el.setContentsMargins(12, 8, 12, 8)
+            el.setSpacing(10)
+            lbl_e = QLabel(f"⚠️ {self._yt_cookie_error[section]}")
+            lbl_e.setWordWrap(True)
+            lbl_e.setStyleSheet("color: #F2A7A7; font-size: 12px; border: none; background: transparent;")
+            btn_acc = QPushButton(tr_pair("🔑 Mở Tài khoản", "🔑 Open Account"))
+            btn_acc.setObjectName("ytActionPill")
+            btn_acc.setFixedHeight(30)
+            btn_acc.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_acc.clicked.connect(self._open_account_dialog)
+            el.addWidget(lbl_e, 1)
+            el.addWidget(btn_acc)
+            self.lib_lay.addWidget(err_box)
+
         if section == "playlists":
-            playlists = self.profile.list_playlists()
-            if not playlists:
+            yt_pl_entry = self._yt_cookie_cache.get("playlists")
+            yt_pls = list(yt_pl_entry[1]) if yt_pl_entry is not None else []
+            local_pls = self.profile.list_playlists()
+
+            if yt_pls:
+                hdr_yt = QLabel(
+                    tr_pair(
+                        f"📺 Playlist từ tài khoản YouTube ({len(yt_pls)} danh sách · tự đọc từ Két Cookie)",
+                        f"📺 Your YouTube Account Playlists ({len(yt_pls)} playlists · loaded via Cookie Vault)",
+                    )
+                )
+                hdr_yt.setStyleSheet("color: #8DE7CA; font-size: 13px; font-weight: 700; padding: 4px 2px;")
+                self.lib_lay.addWidget(hdr_yt)
+                for it in yt_pls:
+                    card = QFrame()
+                    card.setObjectName("ytPanel")
+                    row = QHBoxLayout(card)
+                    row.setContentsMargins(14, 10, 14, 10)
+                    col = QVBoxLayout()
+                    pid = it.playlist_id or it.video_id
+                    pretty_name = it.title
+                    if pid.upper() == "LL":
+                        pretty_name = tr_pair("❤️ Video đã thích (YouTube)", "❤️ Liked Videos (YouTube)")
+                    elif pid.upper() == "WL":
+                        pretty_name = tr_pair("🕒 Xem sau (Watch Later)", "🕒 Watch Later")
+                    t = QLabel(pretty_name)
+                    t.setStyleSheet("color: #EDF3FA; font-size: 14px; font-weight: 700;")
+                    sub = QLabel(it.channel_name or "YouTube Account Playlist")
+                    sub.setStyleSheet("color: #8EA0B5; font-size: 12px;")
+                    col.addWidget(t)
+                    col.addWidget(sub)
+                    row.addLayout(col, 1)
+
+                    btn_open = QPushButton(tr_pair("▶ Mở Playlist", "▶ Open Playlist"))
+                    btn_open.setObjectName("ytPrimaryPill")
+                    btn_open.setFixedHeight(32)
+                    btn_open.setCursor(Qt.CursorShape.PointingHandCursor)
+                    btn_open.clicked.connect(
+                        lambda _c=False, p_id=pid, nm=pretty_name: self.open_playlist(p_id, title_hint=nm)
+                    )
+                    row.addWidget(btn_open)
+                    self.lib_lay.addWidget(card)
+
+            if local_pls:
+                hdr_loc = QLabel(
+                    tr_pair(
+                        f"📌 Playlist đã lưu cục bộ trong BoTube ({len(local_pls)})",
+                        f"📌 Local BoTube Saved Playlists ({len(local_pls)})",
+                    )
+                )
+                hdr_loc.setStyleSheet("color: #C7D7E7; font-size: 13px; font-weight: 700; padding: 8px 2px 2px 2px;")
+                self.lib_lay.addWidget(hdr_loc)
+            elif not yt_pls and section not in self._yt_cookie_loading:
                 lbl = QLabel(
                     tr_pair(
-                        "Chưa có Playlist Online nào. Bấm “+ Nhập URL Playlist” để dán link YouTube nghe ngay, hoặc vào “Tài khoản” để mở Video đã thích!",
-                        "No Online Playlists yet. Click “+ Import Playlist URL” to play any YouTube playlist, or open “Account” for Liked Videos!",
+                        "Chưa có Playlist Online nào. Bấm “+ Nhập URL Playlist” để dán link YouTube nghe ngay, hoặc kết nối Cookie trong “Tài khoản” để tự tải toàn bộ Playlist YouTube của bạn!",
+                        "No Online Playlists yet. Click “+ Import Playlist URL” to play any YouTube playlist, or connect Cookies in “Account” to auto-load all your YouTube playlists!",
                     )
                 )
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 20px;")
                 self.lib_lay.addWidget(lbl)
-            for pl in playlists:
+            for pl in local_pls:
                 card = QFrame()
                 card.setObjectName("ytPanel")
                 row = QHBoxLayout(card)
@@ -5448,20 +5669,18 @@ class YouTubeOnlinePage(QWidget):
                 row.addWidget(btn_del)
                 self.lib_lay.addWidget(card)
         elif section in ("liked", "history", "watch_later"):
+            items = self._merged_lib_items(section)
             if section == "liked":
-                items = self.profile.list_liked()
-                q_title = tr_pair("Video Online đã thích", "Liked Online Videos")
+                q_title = tr_pair("Video đã thích (YouTube)", "Liked Videos (YouTube)")
             elif section == "watch_later":
-                items = self.profile.list_watch_later()
-                q_title = tr_pair("Xem sau (YouTube Online)", "Watch Later (YouTube Online)")
+                q_title = tr_pair("Xem sau (YouTube)", "Watch Later (YouTube)")
             else:
-                items = self.profile.list_watch_history()
                 q_title = tr_pair("Lịch sử xem Online", "Online Watch History")
-            if not items:
-                if section == "liked":
+            if not items and section not in self._yt_cookie_loading:
+                if section in ("liked", "watch_later") and not has_ck:
                     empty_msg = tr_pair(
-                        "Danh sách đã thích đang trống. Bấm “🤍 Thích” trên video bất kỳ hoặc bấm “↻ Đồng bộ Đã thích YouTube” ở góc phải trên để nhập danh sách đã thích từ tài khoản YouTube của bạn!",
-                        "Liked list is empty. Click “🤍 Like” on any video or click “↻ Sync YouTube Liked” above to import your YouTube Liked Videos!",
+                        "Danh sách đang trống. Hãy kết nối Cookie trong mục “Tài khoản” (1 lần duy nhất) để BoTube tự động đọc danh sách từ YouTube mỗi khi mở app!",
+                        "This list is empty. Connect Cookies in “Account” once so BoTube automatically loads your YouTube list on every launch!",
                     )
                 else:
                     empty_msg = tr_pair("Danh sách đang trống.", "This list is empty.")
@@ -5470,14 +5689,47 @@ class YouTubeOnlinePage(QWidget):
                 lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 20px;")
                 self.lib_lay.addWidget(lbl)
             else:
-                for idx, it in enumerate(items[:80]):
+                if section in ("liked", "watch_later") and self._yt_cookie_cache.get(section):
+                    hdr_cnt = QLabel(
+                        tr_pair(
+                            f"✓ Đã tự động nạp {len(items)} video từ tài khoản YouTube (Két Cookie)",
+                            f"✓ Automatically loaded {len(items)} videos from your YouTube account (Cookie Vault)",
+                        )
+                    )
+                    hdr_cnt.setStyleSheet("color: #8DE7CA; font-size: 12px; font-weight: 600; padding: 2px 4px;")
+                    self.lib_lay.addWidget(hdr_cnt)
+                for idx, it in enumerate(items[:100]):
                     row = _CompactRelatedRow(it, self._thumbs, index_num=idx + 1)
-                    row.clicked.connect(lambda item_obj, i=idx: self.play_video_item(item_obj, queue=items[:80], queue_index=i, queue_title=q_title))
+                    row.clicked.connect(lambda item_obj, i=idx, arr=items[:100], qt=q_title: self.play_video_item(item_obj, queue=arr, queue_index=i, queue_title=qt))
                     self.lib_lay.addWidget(row)
         elif section == "subscriptions":
+            yt_subs_videos = self._merged_lib_items("subscriptions")
             subs = self.profile.list_subscriptions()
-            if not subs:
-                lbl = QLabel(tr_pair("Bạn chưa đăng ký kênh nào trong BoTube. Bấm “Đăng ký” ở bất kỳ kênh nào hoặc nhập subscriptions.csv trong Tài khoản.", "No subscriptions yet. Click “Subscribe” on any channel or import subscriptions.csv via Account."))
+            if yt_subs_videos:
+                hdr_sv = QLabel(
+                    tr_pair(
+                        f"📺 Video mới từ kênh bạn đã đăng ký trên YouTube ({len(yt_subs_videos)} video · tự đọc từ Két Cookie)",
+                        f"📺 Latest Videos from Your YouTube Subscriptions ({len(yt_subs_videos)} videos · loaded via Cookie Vault)",
+                    )
+                )
+                hdr_sv.setStyleSheet("color: #8DE7CA; font-size: 13px; font-weight: 700; padding: 4px 2px;")
+                self.lib_lay.addWidget(hdr_sv)
+                q_title = tr_pair("Kênh đăng ký (YouTube)", "Subscriptions (YouTube)")
+                for idx, it in enumerate(yt_subs_videos[:60]):
+                    row = _CompactRelatedRow(it, self._thumbs, index_num=idx + 1)
+                    row.clicked.connect(lambda item_obj, i=idx, arr=yt_subs_videos[:60], qt=q_title: self.play_video_item(item_obj, queue=arr, queue_index=i, queue_title=qt))
+                    self.lib_lay.addWidget(row)
+            if subs:
+                hdr_lc = QLabel(tr_pair(f"⭐ Kênh đã lưu cục bộ ({len(subs)})", f"⭐ Locally Saved Channels ({len(subs)})"))
+                hdr_lc.setStyleSheet("color: #C7D7E7; font-size: 13px; font-weight: 700; padding: 8px 2px 2px 2px;")
+                self.lib_lay.addWidget(hdr_lc)
+            elif not yt_subs_videos and section not in self._yt_cookie_loading:
+                lbl = QLabel(
+                    tr_pair(
+                        "Chưa có kênh đăng ký nào. Kết nối Cookie trong “Tài khoản” để tự tải nguồn cấp Kênh đăng ký YouTube, hoặc bấm “Đăng ký” ở bất kỳ kênh nào.",
+                        "No subscriptions yet. Connect Cookies in “Account” to auto-load your YouTube Subscriptions feed, or subscribe to any channel.",
+                    )
+                )
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 20px;")
                 self.lib_lay.addWidget(lbl)
@@ -5504,11 +5756,11 @@ class YouTubeOnlinePage(QWidget):
 
     def _delete_saved_playlist(self, pid: str) -> None:
         self.profile.delete_playlist(pid)
-        self._render_library_section("playlists")
+        self._render_library_section("playlists", trigger_cookie_sync=False)
 
     def _unsub_from_list(self, cid: str, name: str) -> None:
         self.profile.toggle_subscription(cid, name)
-        self._render_library_section("subscriptions")
+        self._render_library_section("subscriptions", trigger_cookie_sync=False)
 
     def _prompt_import_playlist_url(self) -> None:
         url, ok = QInputDialog.getText(
@@ -5527,25 +5779,22 @@ class YouTubeOnlinePage(QWidget):
         )
         if ok and name.strip():
             self.profile.create_playlist(name.strip())
-            self._render_library_section("playlists")
+            self._render_library_section("playlists", trigger_cookie_sync=False)
 
     def _clear_online_history(self) -> None:
         self.profile.clear_watch_history()
-        self._render_library_section("history")
+        self._render_library_section("history", trigger_cookie_sync=False)
 
     def _play_active_lib_section(self, *, shuffle: bool = False) -> None:
         sec = self._active_lib_section
-        if sec == "liked":
-            items = self.profile.list_liked()
-            q_title = tr_pair("Video Online đã thích", "Liked Online Videos")
-        elif sec == "watch_later":
-            items = self.profile.list_watch_later()
-            q_title = tr_pair("Xem sau (YouTube Online)", "Watch Later (YouTube Online)")
-        elif sec == "history":
-            items = self.profile.list_watch_history()
-            q_title = tr_pair("Lịch sử xem Online", "Online Watch History")
-        else:
-            return
+        items = self._merged_lib_items(sec)
+        title_map = {
+            "liked": tr_pair("Video đã thích (YouTube)", "Liked Videos (YouTube)"),
+            "watch_later": tr_pair("Xem sau (YouTube)", "Watch Later (YouTube)"),
+            "history": tr_pair("Lịch sử xem Online", "Online Watch History"),
+            "subscriptions": tr_pair("Kênh đăng ký (YouTube)", "Subscriptions (YouTube)"),
+        }
+        q_title = title_map.get(sec, "YouTube Online")
         if not items:
             self.status_message.emit(tr_pair("Danh sách đang trống.", "List is empty."))
             return
@@ -5553,49 +5802,25 @@ class YouTubeOnlinePage(QWidget):
             random.shuffle(items)
         self.play_video_item(items[0], queue=items[:100], queue_index=0, queue_title=q_title)
 
-    def _sync_youtube_liked_into_library(self) -> None:
-        """Import/sync YouTube Liked Videos (:ytfav) directly into BoTube's isolated 'Đã thích' list."""
-        cookies_br = str(self.profile.get_pref("cookies_browser", "") or "")
-        cookies_file = str(self.profile.get_pref("cookies_file", "") or "")
-        if not has_active_cookie_source(cookies_br, cookies_file):
+    def _refresh_active_cookie_section(self) -> None:
+        sec = self._active_lib_section
+        if not self._has_cookie_connected():
             self.status_message.emit(
                 tr_pair(
-                    "Hãy chọn Firefox hoặc nạp cookies.txt trong Tài khoản để đồng bộ Video đã thích trên YouTube!",
-                    "Select Firefox or load cookies.txt in Account to sync your YouTube Liked Videos!",
+                    "Hãy chọn Firefox hoặc nạp cookies.txt trong Tài khoản (1 lần duy nhất) để BoTube tự đọc dữ liệu YouTube!",
+                    "Select Firefox or load cookies.txt in Account once so BoTube auto-reads your YouTube account!",
                 )
             )
             self._open_account_dialog()
             return
+        if sec in self._COOKIE_SECTION_TARGETS:
+            self._ensure_cookie_section_loaded(sec, force=True)
+            self._render_library_section(sec, trigger_cookie_sync=False)
 
-        def _on_liked_synced(payload: tuple[str, list[OnlineVideoItem]]) -> None:
-            _title, yt_items = payload
-            added = 0
-            for it in reversed(yt_items or []):
-                if it.video_id and not self.profile.is_liked(it.video_id):
-                    self.profile.toggle_like(it)
-                    added += 1
-            self._render_library_section("liked")
-            self.status_message.emit(
-                tr_pair(
-                    f"✅ Đã đồng bộ Video đã thích YouTube ({len(yt_items)} video, thêm mới {added})!",
-                    f"✅ Synced YouTube Liked Videos ({len(yt_items)} videos, {added} newly added)!",
-                )
-            )
-
-        self._run_async(
-            "sync_yt_liked",
-            lambda procs: self.client.fetch_playlist(
-                ":ytfav",
-                cookies_browser=cookies_br,
-                cookies_file=cookies_file,
-                processes=procs,
-                max_items=150,
-            ),
-            on_ok=_on_liked_synced,
-            on_err=lambda m: self.status_message.emit(tr_pair(f"⚠️ Đồng bộ Đã thích thất bại: {m}", f"⚠️ Sync Liked failed: {m}")),
-            pass_processes=True,
-            busy_text=tr_pair("Đang đồng bộ danh sách Đã thích từ YouTube…", "Syncing YouTube Liked Videos…"),
-        )
+    def _sync_youtube_liked_into_library(self) -> None:
+        """Backward-compatible entry point to force-sync YouTube Liked Videos (:ytfav)."""
+        self._active_lib_section = "liked"
+        self._refresh_active_cookie_section()
 
     # =================================================================
     # EVENTS & SHUTDOWN

@@ -1300,6 +1300,11 @@ class YouTubeOnlineProfileStore:
                             state["preferences"] = merged
                 except Exception as err:
                     logger.warning("Failed to load YouTube online profile: %s", err)
+            # Auto-recover encrypted DPAPI vault on startup/reboot if vault exists on disk
+            prefs = state["preferences"]
+            if not str(prefs.get("cookies_file") or "").strip() and not str(prefs.get("cookies_browser") or "").strip():
+                if has_cookie_vault(self.path.parent / "youtube-cookies.vault"):
+                    prefs["cookies_file"] = COOKIE_VAULT_SENTINEL
             self._data = state
 
     def save(self) -> None:
@@ -1708,9 +1713,19 @@ class YouTubeOnlineClient:
         return items
 
     # --- 3. Home / Topic Discovery Feed ---
-    def fetch_home_feed(self, topic_key: str = "all", *, lang: str = "vi", force_refresh: bool = False) -> list[OnlineVideoItem]:
+    def fetch_home_feed(
+        self,
+        topic_key: str = "all",
+        *,
+        lang: str = "vi",
+        force_refresh: bool = False,
+        cookies_browser: str = "",
+        cookies_file: str = "",
+        processes: OwnedProcesses | None = None,
+    ) -> list[OnlineVideoItem]:
         key = str(topic_key or "all").strip().lower()
-        cache_key = f"home:{lang}:{key}"
+        has_ck = has_active_cookie_source(cookies_browser, cookies_file)
+        cache_key = f"home:{lang}:{key}:{'auth' if has_ck else 'anon'}"
         if not force_refresh:
             cached = self._cache_get(cache_key)
             if cached is not None:
@@ -1735,8 +1750,21 @@ class YouTubeOnlineClient:
             if len(items) < 12:
                 _append_unique(self.search("official music video 2026" if lang == "en" else "nhạc trẻ mới hay nhất official mv", filter_key="videos", lang=lang, limit=24))
         elif key == "all":
-            # Blend user's local online profile recommendations + fresh Music/Discovery feed!
-            if self.profile is not None:
+            # When user has a saved YouTube Cookie (DPAPI Vault / Firefox), auto-load their real YouTube Home feed!
+            if has_ck:
+                try:
+                    _rec_title, rec_items = self.fetch_playlist(
+                        ":ytrecommended",
+                        cookies_browser=cookies_browser,
+                        cookies_file=cookies_file,
+                        processes=processes,
+                        max_items=28,
+                    )
+                    _append_unique(rec_items)
+                except Exception as err:
+                    logger.debug("Personalized :ytrecommended feed fallback to public discovery: %s", err)
+            # Blend user's local online profile recommendations + fresh Music/Discovery feed if needed!
+            if len(items) < 16 and self.profile is not None:
                 hist = self.profile.list_watch_history()
                 if hist:
                     try:
@@ -1752,12 +1780,13 @@ class YouTubeOnlineClient:
                         _append_unique(ch.items[:4])
                     except Exception:
                         pass
-            # Supplement with fresh trending music/videos
-            try:
-                seed_q = "top trending music videos official" if lang == "en" else "nhạc trẻ thịnh hành official mv"
-                _append_unique(self.search(seed_q, filter_key="videos", lang=lang, limit=24))
-            except Exception:
-                pass
+            # Supplement with fresh trending music/videos if still short
+            if len(items) < 16:
+                try:
+                    seed_q = "top trending music videos official" if lang == "en" else "nhạc trẻ thịnh hành official mv"
+                    _append_unique(self.search(seed_q, filter_key="videos", lang=lang, limit=24))
+                except Exception:
+                    pass
             if len(items) < 16:
                 try:
                     data = self._innertube_post("browse", {**self._context(lang), "browseId": _MUSIC_HUB_CHANNEL_ID})
@@ -2213,6 +2242,7 @@ class YouTubeOnlineClient:
         data = json.loads(stdout)
         title = str(data.get("title") or "YouTube Playlist").strip()
         pl_id_out = str(data.get("id") or "").strip()
+        video_pl_id = "" if pl_id_out.lower() in ("recommended", "subscriptions", "history", "playlists", "ytrecommended", "ytsubs", "ythistory") else pl_id_out
         entries = data.get("entries") or []
         items: list[OnlineVideoItem] = []
         for e in entries:
@@ -2230,7 +2260,7 @@ class YouTubeOnlineClient:
                     thumbnail_url=_best_thumb_url(e.get("thumbnails"), vid),
                     duration_text=format_seconds_mmss(dur_s) if dur_s > 0 else "",
                     duration_sec=dur_s,
-                    playlist_id=pl_id_out,
+                    playlist_id=video_pl_id,
                     item_type="video",
                 ))
             elif "list=" in e_url or vid.startswith(("PL", "OLAK", "RD", "UU", "LL", "WL")):

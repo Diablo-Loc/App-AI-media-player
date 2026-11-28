@@ -694,6 +694,13 @@ class MainWindow(QMainWindow):
                 if home_row >= 0:
                     self.sidebar.setCurrentRow(home_row)
                     self.handle_sidebar_click(self.sidebar.item(home_row))
+            else:
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.setVisible(cur_idx in (0, 2))
         elif m == "online":
             if hasattr(self, "playback_bar"):
                 self.playback_bar.hide()
@@ -707,9 +714,14 @@ class MainWindow(QMainWindow):
                     self.sidebar.setCurrentRow(yt_row)
                     self.handle_sidebar_click(self.sidebar.item(yt_row))
         else:
-            # 'both': restore playback bar if currently on a non-YouTube tab
-            if cur_idx != 7 and hasattr(self, "playback_bar"):
-                self.playback_bar.show()
+            # 'both': restore playback bar & shell if currently on a non-YouTube tab
+            if cur_idx != 7:
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.setVisible(cur_idx in (0, 2))
 
         # If user started in Online-only mode (deferred offline scan) and now switches to Both/Offline, load their folders!
         if m != "online" and getattr(self, "_deferred_offline_folders", None):
@@ -2987,6 +2999,12 @@ class MainWindow(QMainWindow):
             else:
                 self.content_ctrl.set_new_data(self.all_media_items)
                 self.sidebar.setCurrentRow(0)
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
 
         # Nạp dữ liệu vào hàng chờ (SAU KHI ĐÃ CLEAR GRID)
         #self.pending_items = self.media_items.copy()
@@ -3342,6 +3360,11 @@ class MainWindow(QMainWindow):
         index = self._PAGE_KEY_TO_STACK.get(page_key, row)
         prev_index = self.content_stack.currentIndex()
         if index == prev_index:
+            if index != 7 and getattr(self, "_workspace_mode", "both") != "online" and not self.isFullScreen():
+                if hasattr(self, "playback_bar") and self.playback_bar.isHidden():
+                    self.playback_bar.show()
+                if index in (0, 2) and hasattr(self, "top_toolbar_container") and self.top_toolbar_container.isHidden():
+                    self.top_toolbar_container.show()
             return
         if prev_index == 7:
             self._yt_benchmark_armed = False

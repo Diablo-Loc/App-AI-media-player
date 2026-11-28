@@ -719,6 +719,24 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             from types import SimpleNamespace
             window._folder_scan_completed([SimpleNamespace(mtime=1, id="m1", title="Local", artist="Artist", path="x.mp3", duration=10, thumbnail=None)])
             self.assertEqual(window.content_stack.currentIndex(), 7)
+
+            # Switching Online -> Offline while sitting in Settings (index 4) MUST immediately restore playback_bar & Home toolbar!
+            r_st_on = window.sidebar.row_for_page("settings")
+            window.sidebar.setCurrentRow(r_st_on)
+            window.handle_sidebar_click(window.sidebar.item(r_st_on))
+            pump(25)
+            self.assertEqual(window.content_stack.currentIndex(), 4)
+            self.assertTrue(window.playback_bar.isHidden())
+            window.apply_workspace_mode("offline", navigate=False)
+            pump(25)
+            self.assertFalse(window.playback_bar.isHidden())
+            # Deferred folder scan completing into Home (index 0) must keep playback_bar & top_toolbar visible!
+            window._folder_scan_completed([SimpleNamespace(mtime=1, id="m1", title="Local", artist="Artist", path="x.mp3", duration=10, thumbnail=None)])
+            pump(25)
+            self.assertEqual(window.content_stack.currentIndex(), 0)
+            self.assertFalse(window.playback_bar.isHidden())
+            self.assertFalse(window.top_toolbar_container.isHidden())
+
             window.apply_workspace_mode("both", navigate=False)
             self.assertEqual(window.sidebar.row_for_page("home"), 0)
             self.assertEqual(window.sidebar.row_for_page("youtube_online"), window.sidebar.row_for_page("settings") - 1)
@@ -751,6 +769,35 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 self.assertTrue(acc_dlg.btn_migrate_vault.isHidden())
                 self.assertEqual(yt.profile.get_pref("cookies_file"), COOKIE_VAULT_SENTINEL)
                 self.assertTrue(has_cookie_vault())
+
+                # Auto-recovery on cold restart: even if profile JSON had empty cookies_file, existing DPAPI vault is auto-loaded!
+                yt.profile.set_pref("cookies_file", "")
+                reloaded_prof = YouTubeOnlineProfileStore(yt.profile.path)
+                self.assertEqual(reloaded_prof.get_pref("cookies_file"), COOKIE_VAULT_SENTINEL)
+                yt.profile.set_pref("cookies_file", COOKIE_VAULT_SENTINEL)
+
+                # Opening Liked / Watch Later / Playlists tabs auto-reads from saved DPAPI vault WITHOUT opening Account dialog!
+                fetched_targets: list[str] = []
+                def _fake_fetch_pl(target, **_kw):
+                    fetched_targets.append(target)
+                    if "playlists" in target:
+                        return ("playlists", [OnlineVideoItem(video_id="", title="My Anime OST", playlist_id="PL999", item_type="playlist")])
+                    return ("Liked videos", [OnlineVideoItem(video_id="dQw4w9WgXcQ", title="Synced From Cookie", channel_name="YT")])
+
+                yt._invalidate_cookie_caches()
+                yt._show_view(yt.VIEW_LIBRARY, record_nav=False)
+                with patch.object(yt.client, "fetch_playlist", side_effect=_fake_fetch_pl):
+                    yt._render_library_section("liked")
+                    pump(120)
+                    yt._render_library_section("watch_later")
+                    pump(120)
+                    yt._render_library_section("playlists")
+                    pump(120)
+                self.assertIn(":ytfav", fetched_targets)
+                self.assertIn(":ytwatchlater", fetched_targets)
+                self.assertIn("https://www.youtube.com/feed/playlists", fetched_targets)
+                self.assertEqual(len(yt._merged_lib_items("liked")), 1)
+                self.assertEqual(yt._merged_lib_items("liked")[0].title, "Synced From Cookie")
 
                 # Clear wipes encrypted vault cleanly
                 acc_dlg._clear_cookie_file()
