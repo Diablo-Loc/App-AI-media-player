@@ -439,9 +439,20 @@ class MainWindow(QMainWindow):
         if hasattr(self, "toggle_subsettings_panel"):
             self.toggle_subsettings_panel()
 
-    def _open_audio_panel_for_youtube_online(self, anchor_widget):
-        """Open BoTube's existing Audio Studio panel anchored cleanly to the YouTube Online button."""
+    def _yt_before_exclusive(self):
         fx = getattr(self, "audio_effects", None)
+        if fx is not None and hasattr(fx, "_pause_smtc_for_exclusive"):
+            fx._pause_smtc_for_exclusive()
+
+    def _yt_after_exclusive(self):
+        fx = getattr(self, "audio_effects", None)
+        if fx is not None and hasattr(fx, "_resume_smtc_after_exclusive"):
+            fx._resume_smtc_after_exclusive()
+
+    def _open_audio_panel_for_youtube_online(self, anchor_widget):
+        """Open BoTube's existing Audio Studio panel anchored cleanly & synced with YouTube Hi-Fi status."""
+        fx = getattr(self, "audio_effects", None)
+        yt = getattr(self, "youtube_online_page", None)
         if fx is None or getattr(fx, "panel", None) is None:
             return
         if fx.panel.isVisible():
@@ -451,6 +462,8 @@ class MainWindow(QMainWindow):
             self.vol_popup.hide()
         if hasattr(fx, "_update_signal_path"):
             fx._update_signal_path()
+        if yt is not None and hasattr(yt, "sync_to_audio_panel"):
+            yt.sync_to_audio_panel(fx.panel)
         fx.panel.open_at(anchor_widget)
         # When anchored near the top bar, flip popover neatly below & right-aligned with the button
         try:
@@ -464,6 +477,29 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
 
+    def _on_open_benchmark_from_youtube(self):
+        """Restore BoTube shell, release YouTube WASAPI Exclusive & measure active YouTube track in Benchmark Lab."""
+        if not self._is_on_youtube_online_tab():
+            return
+        yt = getattr(self, "youtube_online_page", None)
+        fx = getattr(self, "audio_effects", None)
+        if yt is not None:
+            if getattr(yt, "_is_fullscreen_stage", False):
+                yt.exit_fullscreen_stage()
+            if getattr(yt, "_is_pill_mode", False) and hasattr(yt, "exit_pill_mode"):
+                yt.exit_pill_mode()
+            yt.pause_if_playing()
+        if hasattr(self, "sidebar_container"):
+            self.sidebar_container.show()
+        if hasattr(self, "playback_bar"):
+            self.playback_bar.show()
+        if hasattr(self, "grid_main_page") and self.grid_main_page.layout() is not None:
+            self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
+        self._restore_clean_window_cursor()
+        if yt is not None and fx is not None and getattr(fx, "benchmark_page", None) is not None:
+            if hasattr(yt, "prepare_benchmark_audio_for"):
+                QTimer.singleShot(120, lambda bp=fx.benchmark_page: yt.prepare_benchmark_audio_for(bp))
+
     def _wire_youtube_online_audio_sync(self):
         """Forward live Audio Studio profile & 10-band EQ changes to YouTube Online."""
         fx = getattr(self, "audio_effects", None)
@@ -471,7 +507,13 @@ class MainWindow(QMainWindow):
         if fx is None or yt is None or getattr(fx, "panel", None) is None:
             return
         panel = fx.panel
-        notify = lambda *_args: QTimer.singleShot(45, yt.on_audio_profile_changed)
+
+        def _sync_audio_and_panel(*_args):
+            yt.on_audio_profile_changed()
+            if self._is_on_youtube_online_tab() and hasattr(yt, "sync_to_audio_panel"):
+                QTimer.singleShot(160, lambda: yt.sync_to_audio_panel(panel))
+
+        notify = lambda *_args: QTimer.singleShot(45, _sync_audio_and_panel)
         for sig_name in (
             "settings_changed",
             "level_changed",
@@ -482,6 +524,20 @@ class MainWindow(QMainWindow):
             sig = getattr(panel, sig_name, None)
             if sig is not None:
                 sig.connect(notify)
+        if hasattr(panel, "open_benchmark_requested"):
+            panel.open_benchmark_requested.connect(self._on_open_benchmark_from_youtube)
+        if getattr(fx, "benchmark_page", None) is not None and hasattr(fx.benchmark_page, "back_requested"):
+            def _ensure_shell_visible():
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar"):
+                    self.playback_bar.show()
+                self._restore_clean_window_cursor()
+            fx.benchmark_page.back_requested.connect(_ensure_shell_visible)
+        if hasattr(yt, "player") and hasattr(yt.player, "audio_status_changed"):
+            yt.player.audio_status_changed.connect(
+                lambda _txt: yt.sync_to_audio_panel(panel) if self._is_on_youtube_online_tab() else None
+            )
 
         def _hook_eq_dialog():
             dlg = getattr(fx, "eq_dialog", None)
@@ -962,6 +1018,8 @@ class MainWindow(QMainWindow):
             audio_panel_opener=self._open_audio_panel_for_youtube_online,
             sub_settings_opener=self._open_sub_settings_for_youtube_online,
             sub_style_provider=lambda: dict(getattr(self, "config", {}) or {}),
+            on_before_exclusive=self._yt_before_exclusive,
+            on_after_exclusive=self._yt_after_exclusive,
         )
         self.youtube_online_page.playback_starting.connect(self._pause_offline_for_youtube_online)
         self.youtube_online_page.download_requested.connect(self._queue_download_from_youtube_online)

@@ -244,15 +244,24 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         self.assertIn("+nobuffer", cmd)
 
     def test_ai_subtitle_disk_cache_roundtrip_and_bilingual_formatting(self):
+        from subtitle.model import Subtitle, SubtitleLine
         segments = [
-            {"start": 1.25, "end": 4.5, "orig": "Stay with me", "vi": "Ở lại bên anh", "en": "Stay with me"},
+            Subtitle(
+                start=1.25,
+                end=4.5,
+                top=SubtitleLine(text="Stay with me", lang="en", style="EN"),
+                middle=SubtitleLine(text="Stay with me", lang="en", style="EN"),
+                bottom=SubtitleLine(text="Ở lại bên anh", lang="vi", style="VI"),
+            ),
             {"start": 5.0, "end": 8.0, "text": "Forever tonight", "vi": "Mãi mãi đêm nay", "en": "Forever tonight"},
         ]
         cues = serialize_ai_segments_to_cues(segments)
         self.assertEqual(len(cues), 2)
         self.assertEqual(cues[0].start_ms, 1250)
         self.assertEqual(cues[0].end_ms, 4500)
+        self.assertEqual(cues[0].orig, "Stay with me")
         self.assertEqual(cues[0].vi, "Ở lại bên anh")
+        self.assertEqual(cues[1].start_ms, 5000)
 
         with tempfile.TemporaryDirectory() as td:
             cache_root = Path(td)
@@ -266,6 +275,14 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
                 self.assertEqual(reloaded[0].orig, "Stay with me")
                 self.assertEqual(reloaded[0].vi, "Ở lại bên anh")
                 self.assertEqual(reloaded[1].en, "Forever tonight")
+
+                # Broken legacy cache (every cue stuck at 0..200ms) is rejected cleanly
+                broken = [
+                    OnlineSubtitleCue(start_ms=0, end_ms=200, text="Line 1"),
+                    OnlineSubtitleCue(start_ms=0, end_ms=200, text="Line 2"),
+                ]
+                save_cached_ai_subtitles("5d0lbdl58ME", broken, title="Broken Legacy")
+                self.assertEqual(load_cached_ai_subtitles("5d0lbdl58ME"), [])
 
         # Verify bilingual normal + fullscreen HTML formatting
         surface = OnlineVideoSurface()
@@ -532,7 +549,7 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 self.assertEqual(yt.lbl_sub_overlay.objectName(), "ytSubOverlay")
                 self.assertFalse(yt.player._sub_fullscreen)
 
-            # 6b. Isolated Floating PiP Mini-Player reparents & restores stage_frame cleanly
+            # 6b. Isolated Floating PiP Mini-Player + BoTube Signature Dynamic Island Pill
             yt.toggle_mini_player()
             pump(30)
             self.assertTrue(yt._is_pip_mode)
@@ -543,11 +560,28 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             self.assertFalse(yt._is_pip_mode)
             self.assertEqual(yt._watch_left_lay.indexOf(yt.stage_frame), 0)
 
-            # 6c. AI-disabled gray-out & auto-run AI Sub on new uncached video when enabled
+            yt.toggle_pill_mode()
+            pump(30)
+            self.assertTrue(yt._is_pill_mode)
+            self.assertIsNotNone(yt._pill_window)
+            yt.exit_pill_mode()
+            pump(30)
+            self.assertFalse(yt._is_pill_mode)
+
+            # 6c. Conditional BoTube Subtitle Style button (hidden on Off/CC, visible ONLY on AI modes)
+            yt.combo_sub_mode.setCurrentIndex(yt.combo_sub_mode.findData("off"))
+            pump(15)
+            self.assertTrue(yt.btn_sub_style.isHidden())
+            yt.combo_sub_mode.setCurrentIndex(yt.combo_sub_mode.findData("youtube_cc"))
+            pump(15)
+            self.assertTrue(yt.btn_sub_style.isHidden())
+
+            # 6d. AI-disabled gray-out & auto-run AI Sub on new uncached video when enabled
             yt.profile.set_pref("allow_ai_sub", False)
             yt.refresh_ai_availability()
             self.assertFalse(yt.btn_ai_sub_gen.isEnabled())
             self.assertFalse(yt.combo_sub_mode.model().item(2).isEnabled())
+            self.assertTrue(yt.btn_sub_style.isHidden())
             yt.profile.set_pref("allow_ai_sub", True)
             with patch("core.youtube_online_client.is_bo_ai_subtitle_available", return_value=(True, "ready")), \
                  patch("ui.pages.youtube_online_page.is_bo_ai_subtitle_available", return_value=(True, "ready")):
@@ -563,10 +597,35 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                      patch.object(yt, "_start_ai_subtitle_generation") as mock_auto_ai:
                     yt._on_stream_resolved(ResolvedStream(video_id=sample_item.video_id, title=sample_item.title))
                     mock_auto_ai.assert_called_once_with(force_regen=False)
+                self.assertFalse(yt.btn_sub_style.isHidden())
 
-            # 6d. Subtitle appearance style sync from BoTube config
+            # 6e. Subtitle appearance style sync + Audio Panel live status + Benchmark handoff (never traps!)
             yt.apply_subtitle_style({"font_size": 26, "font_color": "#FEF08A", "bg_color": "#000000", "bg_opacity": 0.6})
             self.assertIn("#FEF08A", yt.lbl_sub_overlay.styleSheet())
+            yt.sync_to_audio_panel(window.audio_effects.panel)
+            self.assertIn("YouTube", window.audio_effects.panel.signal_path.text())
+            window._on_open_benchmark_from_youtube()
+            self.assertFalse(window.sidebar_container.isHidden())
+            self.assertFalse(window.playback_bar.isHidden())
+
+            # 6f. Smooth Seek Slider drag preview -> commit ONCE on release
+            from PySide6.QtCore import QPointF, Qt as _Qt
+            from PySide6.QtGui import QMouseEvent
+            previews, commits = [], []
+            yt.seek_slider.setRange(0, 100000)
+            yt.seek_slider.resize(200, 20)
+            yt.seek_slider.drag_preview.connect(previews.append)
+            yt.seek_slider.seek_requested.connect(commits.append)
+            ev_p = QMouseEvent(QMouseEvent.Type.MouseButtonPress, QPointF(40, 10), QPointF(40, 10), _Qt.MouseButton.LeftButton, _Qt.MouseButton.LeftButton, _Qt.KeyboardModifier.NoModifier)
+            ev_m = QMouseEvent(QMouseEvent.Type.MouseMove, QPointF(120, 10), QPointF(120, 10), _Qt.MouseButton.NoButton, _Qt.MouseButton.LeftButton, _Qt.KeyboardModifier.NoModifier)
+            ev_r = QMouseEvent(QMouseEvent.Type.MouseButtonRelease, QPointF(120, 10), QPointF(120, 10), _Qt.MouseButton.LeftButton, _Qt.MouseButton.NoButton, _Qt.KeyboardModifier.NoModifier)
+            yt.seek_slider.mousePressEvent(ev_p)
+            yt.seek_slider.mouseMoveEvent(ev_m)
+            self.assertEqual(len(commits), 0)
+            self.assertGreaterEqual(len(previews), 2)
+            yt.seek_slider.mouseReleaseEvent(ev_r)
+            self.assertEqual(len(commits), 1)
+            self.assertAlmostEqual(commits[0], 60000, delta=1000)
 
             # 7. Audio Studio live sync wiring & panel opener
             with patch.object(yt, "on_audio_profile_changed") as mock_reapply:

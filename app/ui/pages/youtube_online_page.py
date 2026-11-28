@@ -169,7 +169,7 @@ QWidget#youtubeOnlineRoot QPushButton#ytAudioToggle {
     color: #DCE6F2;
     border: 1px solid #2C3E55;
     border-radius: 17px;
-    padding: 6px 14px;
+    padding: 5px 11px;
     font-size: 12px;
     font-weight: 600;
 }
@@ -187,7 +187,7 @@ QWidget#youtubeOnlineRoot QPushButton#ytAccountBtn {
     color: #EDF3FA;
     border: 1px solid #2C3E55;
     border-radius: 17px;
-    padding: 6px 14px;
+    padding: 5px 11px;
     font-size: 12px;
     font-weight: 600;
 }
@@ -744,8 +744,9 @@ class _OnlineThumbnailLoader(QObject):
 # =====================================================================
 
 class _ClickSeekSlider(QSlider):
-    """YouTube-style progress bar supporting instant click-to-seek and chapter hover tooltips."""
+    """YouTube-style progress bar supporting smooth drag scrubbing, click-to-seek & chapter tooltips."""
 
+    drag_preview = Signal(int)
     seek_requested = Signal(int)
 
     def __init__(self, parent: QWidget | None = None):
@@ -754,6 +755,7 @@ class _ClickSeekSlider(QSlider):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMouseTracking(True)
         self._chapters: list[OnlineChapter] = []
+        self._dragging = False
 
     def set_chapters(self, chapters: list[OnlineChapter]) -> None:
         self._chapters = list(chapters or [])
@@ -765,9 +767,10 @@ class _ClickSeekSlider(QSlider):
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton and self.maximum() > 0:
+            self._dragging = True
             val = self._value_at_x(event.position().x())
             self.setValue(val)
-            self.seek_requested.emit(val)
+            self.drag_preview.emit(val)
             event.accept()
             return
         super().mousePressEvent(event)
@@ -775,6 +778,11 @@ class _ClickSeekSlider(QSlider):
     def mouseMoveEvent(self, event) -> None:
         if self.maximum() > 0:
             val_ms = self._value_at_x(event.position().x())
+            if self._dragging and (event.buttons() & Qt.MouseButton.LeftButton):
+                self.setValue(val_ms)
+                self.drag_preview.emit(val_ms)
+                event.accept()
+                return
             sec = val_ms / 1000.0
             tip = format_seconds_mmss(sec)
             for ch in self._chapters:
@@ -783,6 +791,16 @@ class _ClickSeekSlider(QSlider):
                     break
             self.setToolTip(tip)
         super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        if self._dragging and event.button() == Qt.MouseButton.LeftButton:
+            self._dragging = False
+            val = self._value_at_x(event.position().x())
+            self.setValue(val)
+            self.seek_requested.emit(val)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
 
 
 def _elide_two_lines(text: str, max_chars_per_line: int = 38) -> str:
@@ -1478,6 +1496,157 @@ class _YouTubeMiniPlayerWindow(QWidget):
         self.restore_requested.emit()
 
 
+class _YouTubePillWindow(QWidget):
+    """BoTube's signature Dynamic Island Pill (Viên thuốc) adapted exclusively for YouTube Online."""
+
+    prev_requested = Signal()
+    play_pause_requested = Signal()
+    next_requested = Signal()
+    pip_switch_requested = Signal()
+    restore_requested = Signal()
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(
+            parent,
+            Qt.WindowType.Window
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool,
+        )
+        self.setObjectName("ytPillWindow")
+        self.setFixedSize(472, 68)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.container = QWidget(self)
+        self.container.setObjectName("ytPillContainer")
+        self.container.setGeometry(10, 4, 452, 60)
+        self.container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+
+        self.setStyleSheet(
+            "QWidget#ytPillWindow { background: transparent; }"
+            "QWidget#ytPillContainer { background: #101722; border: 1px solid #3D546D; border-radius: 30px; "
+            "font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; }"
+            "QLabel#ytPillTitle { color: #F2F6FC; font-size: 12px; font-weight: 700; background: transparent; border: none; }"
+            "QLabel#ytPillSub { color: #8DE7CA; font-size: 10px; font-weight: 600; background: transparent; border: none; }"
+            "QPushButton#ytPillBtn { background: transparent; border: none; border-radius: 14px; color: #DCE6F2; }"
+            "QPushButton#ytPillBtn:hover { background: #223044; }"
+            "QPushButton#ytPillPlay { background: #77E0BE; border: none; border-radius: 15px; }"
+            "QPushButton#ytPillPlay:hover { background: #98EED3; }"
+        )
+
+        lay = QHBoxLayout(self.container)
+        lay.setContentsMargins(12, 6, 12, 6)
+        lay.setSpacing(8)
+
+        self.lbl_art = QLabel()
+        self.lbl_art.setFixedSize(42, 42)
+        self.lbl_art.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_art.setStyleSheet("background: #1B2738; border-radius: 21px; border: 1px solid #2D4058;")
+        lay.addWidget(self.lbl_art)
+
+        info = QVBoxLayout()
+        info.setContentsMargins(0, 0, 0, 0)
+        info.setSpacing(2)
+        info.addStretch(1)
+        self.lbl_title = QLabel("YouTube Hi-Fi")
+        self.lbl_title.setObjectName("ytPillTitle")
+        self.lbl_title.setFixedWidth(210)
+        self.lbl_sub = QLabel("WASAPI · Ready")
+        self.lbl_sub.setObjectName("ytPillSub")
+        self.lbl_sub.setFixedWidth(210)
+        info.addWidget(self.lbl_title)
+        info.addWidget(self.lbl_sub)
+        info.addStretch(1)
+        lay.addLayout(info)
+        lay.addStretch(1)
+
+        self.btn_prev = QPushButton()
+        self.btn_prev.setObjectName("ytPillBtn")
+        self.btn_prev.setFixedSize(28, 28)
+        self.btn_prev.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_prev, "skip-back", "Previous", color=TEXT, size=15)
+        self.btn_prev.clicked.connect(self.prev_requested.emit)
+
+        self.btn_play = QPushButton()
+        self.btn_play.setObjectName("ytPillPlay")
+        self.btn_play.setFixedSize(30, 30)
+        self.btn_play.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_play, "pause", "Play / Pause", color=INK, size=15)
+        self.btn_play.clicked.connect(self.play_pause_requested.emit)
+
+        self.btn_next = QPushButton()
+        self.btn_next.setObjectName("ytPillBtn")
+        self.btn_next.setFixedSize(28, 28)
+        self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_next, "skip-forward", "Next", color=TEXT, size=15)
+        self.btn_next.clicked.connect(self.next_requested.emit)
+
+        self.btn_to_pip = QPushButton()
+        self.btn_to_pip.setObjectName("ytPillBtn")
+        self.btn_to_pip.setFixedSize(28, 28)
+        self.btn_to_pip.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_to_pip, "picture-in-picture-2", tr_pair("Mở khung Video PiP", "Open Video PiP"), color=ACCENT, size=14)
+        self.btn_to_pip.clicked.connect(self.pip_switch_requested.emit)
+
+        self.btn_restore = QPushButton()
+        self.btn_restore.setObjectName("ytPillBtn")
+        self.btn_restore.setFixedSize(28, 28)
+        self.btn_restore.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_restore, "maximize", tr_pair("Mở lại cửa sổ YouTube", "Restore YouTube Window"), color=TEXT, size=14)
+        self.btn_restore.clicked.connect(self.restore_requested.emit)
+
+        for b in (self.btn_prev, self.btn_play, self.btn_next, self.btn_to_pip, self.btn_restore):
+            lay.addWidget(b)
+
+        self._drag_start: QPoint | None = None
+        self._win_start: QPoint | None = None
+        self._dragging = False
+
+    def update_meta(self, title: str, subtitle: str, playing: bool) -> None:
+        t = " ".join(str(title or "YouTube Hi-Fi").split())
+        s = " ".join(str(subtitle or "YouTube Hi-Fi").split())
+        self.lbl_title.setText(t[:30] + ("…" if len(t) > 30 else ""))
+        self.lbl_sub.setText(s[:36] + ("…" if len(s) > 36 else ""))
+        button_icon(self.btn_play, "pause" if playing else "play", "Play / Pause", color=INK, size=15)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._drag_start = event.globalPosition().toPoint()
+            self._win_start = self.frameGeometry().topLeft()
+            self._dragging = False
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._drag_start is not None and (event.buttons() & Qt.MouseButton.LeftButton):
+            delta = event.globalPosition().toPoint() - self._drag_start
+            if not self._dragging and (delta.x() ** 2 + delta.y() ** 2) >= 25:
+                self._dragging = True
+            if self._dragging and self._win_start is not None:
+                self.move(self._win_start + delta)
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event) -> None:
+        self._drag_start = None
+        self._dragging = False
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.restore_requested.emit()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
+
+    def closeEvent(self, event) -> None:
+        event.ignore()
+        self.restore_requested.emit()
+
+
 # =====================================================================
 # MAIN COMMERCIAL YOUTUBE ONLINE STUDIO PAGE
 # =====================================================================
@@ -1504,6 +1673,8 @@ class YouTubeOnlinePage(QWidget):
         audio_panel_opener: Callable[[QWidget], None] | None = None,
         sub_settings_opener: Callable[[], None] | None = None,
         sub_style_provider: Callable[[], dict[str, Any]] | None = None,
+        on_before_exclusive: Callable[[], None] | None = None,
+        on_after_exclusive: Callable[[], None] | None = None,
         profile_store: YouTubeOnlineProfileStore | None = None,
         client: YouTubeOnlineClient | None = None,
         parent: QWidget | None = None,
@@ -1515,6 +1686,8 @@ class YouTubeOnlinePage(QWidget):
         self._audio_panel_opener = audio_panel_opener
         self._sub_settings_opener = sub_settings_opener
         self._sub_style_provider = sub_style_provider
+        self._on_before_exclusive = on_before_exclusive
+        self._on_after_exclusive = on_after_exclusive
         self._sub_style_cfg: dict[str, Any] = {}
         self.profile = profile_store or YouTubeOnlineProfileStore()
         self.client = client or YouTubeOnlineClient(profile_store=self.profile)
@@ -1545,6 +1718,10 @@ class YouTubeOnlinePage(QWidget):
         self._is_fullscreen_stage = False
         self._is_pip_mode = False
         self._pip_window: _YouTubeMiniPlayerWindow | None = None
+        self._is_pill_mode = False
+        self._pill_window: _YouTubePillWindow | None = None
+        self._bench_temp_dir: str | None = None
+        self._pending_seek_target: int | None = None
         self._stream_recovery_vid = ""
         self._active_lib_section = "playlists"
         self._pre_fs_view_idx = self.VIEW_WATCH
@@ -1574,6 +1751,8 @@ class YouTubeOnlinePage(QWidget):
         self.player = YouTubeOnlinePlaybackController(
             self.video_widget,
             profile_provider=profile_provider,
+            on_before_exclusive=on_before_exclusive,
+            on_after_exclusive=on_after_exclusive,
             parent=self,
         )
         self.player.set_volume(float(self.profile.get_pref("volume", 0.7) or 0.7))
@@ -1604,6 +1783,12 @@ class YouTubeOnlinePage(QWidget):
         self._fs_hide_timer.setSingleShot(True)
         self._fs_hide_timer.setInterval(2200)
         self._fs_hide_timer.timeout.connect(self._hide_fs_controls_if_idle)
+
+        # Smooth 55ms seek coalescer (prevents rapid click/scrubbing jitter)
+        self._seek_coalesce_timer = QTimer(self)
+        self._seek_coalesce_timer.setSingleShot(True)
+        self._seek_coalesce_timer.setInterval(55)
+        self._seek_coalesce_timer.timeout.connect(self._flush_coalesced_seek)
 
         # Restore saved UI preferences & sync AI availability + BoTube Subtitle style
         self._sync_pref_controls()
@@ -1680,8 +1865,8 @@ class YouTubeOnlinePage(QWidget):
         self.search_input = QLineEdit()
         self.search_input.setObjectName("ytSearchInput")
         self.search_input.setFixedHeight(36)
-        self.search_input.setMinimumWidth(200)
-        self.search_input.setMaximumWidth(540)
+        self.search_input.setMinimumWidth(140)
+        self.search_input.setMaximumWidth(520)
         self.search_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_input.setClearButtonEnabled(True)
         self.search_input.returnPressed.connect(self._on_search_submitted)
@@ -1694,6 +1879,15 @@ class YouTubeOnlinePage(QWidget):
         self.btn_search.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_search, "search", "Search", color=TEXT, size=15)
         self.btn_search.clicked.connect(self._on_search_submitted)
+
+        # BoTube signature Dynamic Island Pill (Chế độ Viên thuốc) quick button
+        self.btn_top_pill = QPushButton()
+        self.btn_top_pill.setObjectName("ytAccountBtn")
+        self.btn_top_pill.setFixedHeight(34)
+        self.btn_top_pill.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.btn_top_pill.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_top_pill, "disc-3", "Dynamic Island Pill", color=ACCENT, size=15, icon_only=False)
+        self.btn_top_pill.clicked.connect(self.toggle_pill_mode)
 
         # BoTube Audio Studio (EQ / DAC / WASAPI Exclusive) quick button
         self.btn_top_audio_fx = QPushButton()
@@ -1733,6 +1927,7 @@ class YouTubeOnlinePage(QWidget):
         top_lay.addWidget(self.search_input, 4)
         top_lay.addWidget(self.btn_search)
         top_lay.addStretch(1)
+        top_lay.addWidget(self.btn_top_pill)
         top_lay.addWidget(self.btn_top_audio_fx)
         top_lay.addWidget(self.btn_audio_mode)
         top_lay.addWidget(self.btn_account)
@@ -1950,9 +2145,8 @@ class YouTubeOnlinePage(QWidget):
         self.lbl_pos_time.setStyleSheet("color: #DCE6F2; font-size: 12px; font-family: Consolas;")
         self.seek_slider = _ClickSeekSlider()
         self.seek_slider.setRange(0, 0)
+        self.seek_slider.drag_preview.connect(self._on_seek_drag_preview)
         self.seek_slider.seek_requested.connect(self._on_seek_requested)
-        self.seek_slider.sliderPressed.connect(lambda: setattr(self, "_user_dragging_seek", True))
-        self.seek_slider.sliderReleased.connect(self._on_seek_slider_released)
         self.lbl_dur_time = QLabel("0:00")
         self.lbl_dur_time.setFixedWidth(44)
         self.lbl_dur_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
@@ -2023,8 +2217,9 @@ class YouTubeOnlinePage(QWidget):
         self.btn_sub_style.setObjectName("ytIconBtn")
         self.btn_sub_style.setFixedSize(28, 28)
         self.btn_sub_style.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_sub_style, "captions", tr_pair("Cài đặt giao diện Phụ đề BoTube", "BoTube Subtitle Style Settings"), color=TEXT, size=15)
+        button_icon(self.btn_sub_style, "captions", tr_pair("Cài đặt giao diện Phụ đề BoTube", "BoTube Subtitle Style Settings"), color=ACCENT, size=15)
         self.btn_sub_style.clicked.connect(self._open_sub_settings)
+        self.btn_sub_style.hide()
 
         # Quality Selector (Audio Hi-Fi + 4K/2K/1080p/720p/480p/360p)
         self.combo_quality = QComboBox()
@@ -2131,6 +2326,9 @@ class YouTubeOnlinePage(QWidget):
         self.lbl_audio_badge = QLabel("Hi-Fi 64-bit · Ready")
         self.lbl_audio_badge.setObjectName("ytAudioBadge")
         self.lbl_audio_badge.setFixedHeight(26)
+        self.lbl_audio_badge.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.lbl_audio_badge.setToolTip(tr_pair("Bấm để mở BoTube Audio Studio (WASAPI Exclusive / EQ / DAC)", "Click to open BoTube Audio Studio (WASAPI Exclusive / EQ / DAC)"))
+        self.lbl_audio_badge.installEventFilter(self)
         self.lbl_audio_badge.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         title_row.addWidget(self.lbl_watch_title, 1)
         title_row.addWidget(self.lbl_audio_badge, 0, Qt.AlignmentFlag.AlignTop)
@@ -2639,6 +2837,8 @@ class YouTubeOnlinePage(QWidget):
         )
         self.btn_back_botube.setText("BoTube")
         self.btn_back_botube.setToolTip(tr_pair("Quay về Thư viện Offline BoTube", "Return to BoTube Offline Library", lg))
+        self.btn_top_pill.setText(tr_pair("Viên thuốc", "Pill", lg))
+        self.btn_top_pill.setToolTip(tr_pair("Chế độ Viên thuốc (Dynamic Island) độc quyền BoTube", "BoTube Signature Dynamic Island Pill Mode", lg))
         self.btn_top_audio_fx.setText(tr_pair("Âm thanh", "Audio EQ", lg))
         self.btn_top_audio_fx.setToolTip(tr_pair("Chỉnh Âm thanh Hi-Fi, EQ & DAC BoTube", "BoTube Hi-Fi Audio Studio, EQ & DAC", lg))
         self.btn_audio_mode.setText(
@@ -2761,6 +2961,7 @@ class YouTubeOnlinePage(QWidget):
             self.combo_sub_mode.setCurrentIndex(idx)
             self.combo_sub_mode.blockSignals(False)
         self.combo_sub_lang.setVisible(sub_mode == "youtube_cc")
+        self.btn_sub_style.setVisible(sub_mode in ("ai_bilingual", "ai_vi", "ai_en"))
 
     # =================================================================
     # LIFECYCLE & WORKER RUNNER
@@ -3576,6 +3777,7 @@ class YouTubeOnlinePage(QWidget):
         button_icon(self.btn_mini_play, ico, "Play / Pause", color=INK, size=17)
         if self._pip_window is not None:
             self._pip_window.set_playing(playing)
+        self._sync_pill_meta()
         self._update_mini_bar_visibility()
 
     def seek_relative(self, delta_ms: int) -> None:
@@ -3628,12 +3830,22 @@ class YouTubeOnlinePage(QWidget):
             pass_processes=True,
         )
 
-    def _on_seek_requested(self, pos_ms: int) -> None:
-        self.player.seek(pos_ms)
+    def _on_seek_drag_preview(self, pos_ms: int) -> None:
+        self._user_dragging_seek = True
+        self.lbl_pos_time.setText(format_seconds_mmss(max(0, int(pos_ms)) / 1000.0))
 
-    def _on_seek_slider_released(self) -> None:
+    def _on_seek_requested(self, pos_ms: int) -> None:
         self._user_dragging_seek = False
-        self.player.seek(self.seek_slider.value())
+        target = max(0, int(pos_ms))
+        self._pending_seek_target = target
+        self.lbl_pos_time.setText(format_seconds_mmss(target / 1000.0))
+        self._seek_coalesce_timer.start()
+
+    def _flush_coalesced_seek(self) -> None:
+        target = self._pending_seek_target
+        self._pending_seek_target = None
+        if target is not None:
+            self.player.seek(target)
 
     def _on_volume_changed(self, value: int) -> None:
         vol = max(0.0, min(1.0, value / 100.0))
@@ -3731,6 +3943,65 @@ class YouTubeOnlinePage(QWidget):
                     self.combo_sub_mode.blockSignals(False)
                 self.player.set_subtitles_enabled(False)
                 self.lbl_sub_overlay.hide()
+        cur_after = str(self.combo_sub_mode.currentData() or "off")
+        self.btn_sub_style.setVisible(bool(ai_ok and cur_after in ("ai_bilingual", "ai_vi", "ai_en")))
+
+    def sync_to_audio_panel(self, panel) -> None:
+        """Display YouTube Online's live Hi-Fi / WASAPI Exclusive status inside BoTube's Audio Studio panel."""
+        if panel is None:
+            return
+        try:
+            info = self.player.live_signal_path_info()
+            if hasattr(panel, "set_signal_path"):
+                panel.set_signal_path(info["source"], info["dsp"], info["output"])
+            if hasattr(panel, "set_status"):
+                panel.set_status(info["status"], busy=False)
+        except Exception:
+            pass
+
+    def prepare_benchmark_audio_for(self, benchmark_page) -> None:
+        """Fetch compact temp audio of the active YouTube song so Benchmark Lab measures this exact track."""
+        stream = self._current_stream
+        item = self._current_item
+        if benchmark_page is None or stream is None or item is None or not item.video_id:
+            return
+        self._cleanup_bench_temp_dir()
+        tmp_dir = tempfile.mkdtemp(prefix=f"botube-yt-bench-{item.video_id}-")
+        self._bench_temp_dir = tmp_dir
+        cookies_br = str(self.profile.get_pref("cookies_browser", "") or "")
+        cookies_file = str(self.profile.get_pref("cookies_file", "") or "")
+        vid = item.video_id
+        title = item.title or vid
+
+        def _on_bench_audio_ready(audio_path: Any) -> None:
+            p = str(audio_path or "").strip()
+            if p and hasattr(benchmark_page, "set_source_file"):
+                benchmark_page.set_source_file(p, auto_run=True)
+
+        self._run_async(
+            "bench_audio",
+            lambda procs: self.client.download_temp_audio_for_ai(
+                vid,
+                stream,
+                tmp_dir,
+                title=title,
+                cookies_browser=cookies_br,
+                cookies_file=cookies_file,
+                processes=procs,
+            ),
+            on_ok=_on_bench_audio_ready,
+            on_err=lambda _m: None,
+            pass_processes=True,
+        )
+
+    def _cleanup_bench_temp_dir(self) -> None:
+        tmp = self._bench_temp_dir
+        self._bench_temp_dir = None
+        if tmp:
+            try:
+                shutil.rmtree(tmp, ignore_errors=True)
+            except Exception:
+                pass
 
     def on_audio_profile_changed(self) -> None:
         """Seamlessly re-apply live BoTube Audio Studio profile (EQ / Preset / DAC / Exclusive)."""
@@ -3749,6 +4020,7 @@ class YouTubeOnlinePage(QWidget):
             )
             return
         self.profile.set_pref("subtitle_mode", mode)
+        self.btn_sub_style.setVisible(mode in ("ai_bilingual", "ai_vi", "ai_en"))
         if mode == "off":
             self.combo_sub_lang.hide()
             self.player.set_subtitles_enabled(False)
@@ -3855,8 +4127,21 @@ class YouTubeOnlinePage(QWidget):
             worker.finished.connect(worker.deleteLater)
             self._ai_worker = worker
             worker.start()
+            # Keep Whisper/NLLB at BELOW_NORMAL CPU priority so live 1080p video + WASAPI audio never stutter!
+            QTimer.singleShot(450, lambda w=worker: self._lower_ai_worker_priority(w))
         except Exception as err:
             self._on_ai_sub_failed(str(err))
+
+    @staticmethod
+    def _lower_ai_worker_priority(worker) -> None:
+        try:
+            proc = getattr(worker, "_process", None)
+            pid = getattr(proc, "pid", None)
+            if pid:
+                import psutil
+                psutil.Process(int(pid)).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+        except Exception:
+            pass
 
     def _on_ai_sub_progress(self, percent: int, message: str) -> None:
         pct = max(20, min(99, int(percent or 20)))
@@ -3888,6 +4173,7 @@ class YouTubeOnlinePage(QWidget):
                     self.combo_sub_mode.blockSignals(False)
                 self.profile.set_pref("subtitle_mode", cur_mode)
             self.combo_sub_lang.hide()
+            self.btn_sub_style.setVisible(True)
             self._apply_ai_cues_for_mode(cur_mode)
             self.retranslate(get_language())
         self.status_message.emit(
@@ -3979,6 +4265,7 @@ class YouTubeOnlinePage(QWidget):
         self.lbl_audio_badge.style().polish(self.lbl_audio_badge)
         if self._current_item is not None:
             self.lbl_mini_sub.setText(f"{self._current_item.channel_name or 'YouTube'} · {label}")
+        self._sync_pill_meta()
 
     def _on_buffering_changed(self, buffering: bool) -> None:
         if buffering:
@@ -4007,11 +4294,75 @@ class YouTubeOnlinePage(QWidget):
         self.watch_right_panel.setVisible(not checked)
         self.stage_frame.setMaximumHeight(700 if checked else 580)
 
+    def _sync_pill_meta(self) -> None:
+        if self._pill_window is None:
+            return
+        title = self._current_item.title if self._current_item else "YouTube Hi-Fi"
+        badge = self.lbl_audio_badge.text() or (self._current_item.channel_name if self._current_item else "YouTube")
+        self._pill_window.update_meta(title, badge, self.player.is_playing)
+        if self._current_item and self._current_item.thumbnail_url:
+            self._thumbs.load(self._current_item.thumbnail_url, self._pill_window.lbl_art, QSize(42, 42), radius=21)
+
+    def toggle_pill_mode(self) -> None:
+        """Toggle BoTube's signature Dynamic Island Pill (Viên thuốc) for YouTube Online."""
+        if self._is_pill_mode:
+            self.exit_pill_mode()
+            return
+        if self._is_fullscreen_stage:
+            self.exit_fullscreen_stage()
+        if self._is_pip_mode:
+            self.exit_mini_player()
+        if self._pill_window is None:
+            pill = _YouTubePillWindow(None)
+            pill.prev_requested.connect(self.play_previous)
+            pill.play_pause_requested.connect(self.toggle_play_pause)
+            pill.next_requested.connect(self.play_next)
+            pill.pip_switch_requested.connect(self._switch_pill_to_pip)
+            pill.restore_requested.connect(self.exit_pill_mode)
+            self._pill_window = pill
+
+        self._is_pill_mode = True
+        self._sync_pill_meta()
+        scr = QGuiApplication.primaryScreen()
+        if scr is not None:
+            geo = scr.availableGeometry()
+            self._pill_window.move(
+                geo.left() + (geo.width() - self._pill_window.width()) // 2,
+                geo.top() + 14,
+            )
+        win = self.window()
+        if win is not None and win.isVisible():
+            win.hide()
+        self._pill_window.show()
+        self._pill_window.raise_()
+
+    def _switch_pill_to_pip(self) -> None:
+        self.exit_pill_mode()
+        self.toggle_mini_player()
+
+    def exit_pill_mode(self) -> None:
+        if not self._is_pill_mode:
+            return
+        self._is_pill_mode = False
+        if self._pill_window is not None:
+            self._pill_window.hide()
+        win = self.window()
+        if win is not None:
+            win.show()
+            if win.isMinimized():
+                win.showNormal()
+            win.unsetCursor()
+            win.setCursor(Qt.CursorShape.ArrowCursor)
+            win.raise_()
+            win.activateWindow()
+
     def toggle_mini_player(self) -> None:
         """Toggle isolated floating always-on-top YouTube PiP Mini-Player (zero video/audio drop!)."""
         if self._is_pip_mode:
             self.exit_mini_player()
             return
+        if self._is_pill_mode:
+            self.exit_pill_mode()
         if self._is_fullscreen_stage:
             self.exit_fullscreen_stage()
         if self._pip_window is None:
@@ -4578,8 +4929,11 @@ class YouTubeOnlinePage(QWidget):
     # =================================================================
 
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        if obj is self.search_input and event.type() == QEvent.Type.FocusOut:
+        if obj is getattr(self, "search_input", None) and event.type() == QEvent.Type.FocusOut:
             QTimer.singleShot(150, self._hide_suggest_if_unfocused)
+        elif obj is getattr(self, "lbl_audio_badge", None) and event.type() == QEvent.Type.MouseButtonRelease:
+            self._open_audio_studio(self.lbl_audio_badge)
+            return True
         elif self._is_fullscreen_stage and event.type() in (QEvent.Type.MouseMove, QEvent.Type.HoverMove):
             self._wake_fs_controls()
         return super().eventFilter(obj, event)
@@ -4607,7 +4961,13 @@ class YouTubeOnlinePage(QWidget):
         self._suggest_timer.stop()
         self._grid_resize_timer.stop()
         self._fs_hide_timer.stop()
+        self._seek_coalesce_timer.stop()
         self._cancel_ai_subtitle_job()
+        self._cleanup_bench_temp_dir()
+        self.exit_pill_mode()
+        if self._pill_window is not None:
+            self._pill_window.deleteLater()
+            self._pill_window = None
         self.exit_mini_player()
         if self._pip_window is not None:
             self._pip_window.deleteLater()

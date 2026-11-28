@@ -217,6 +217,9 @@ def load_cached_ai_subtitles(video_id: str) -> list[OnlineSubtitleCue]:
                     phonetic=phon,
                 ))
         cues.sort(key=lambda c: c.start_ms)
+        # Guard against legacy broken cache files where every Subtitle had start_ms=0/end_ms=200
+        if len(cues) > 1 and all(c.start_ms == 0 and c.end_ms <= 250 for c in cues):
+            return []
         return cues
     except Exception as err:
         logger.warning("Failed to load cached YouTube AI subs for %s: %s", vid, err)
@@ -224,19 +227,29 @@ def load_cached_ai_subtitles(video_id: str) -> list[OnlineSubtitleCue]:
 
 
 def serialize_ai_segments_to_cues(segments: list[Any]) -> list[OnlineSubtitleCue]:
-    """Convert BoTube AIWorker output segments (`SubtitleItem` or dict) into `OnlineSubtitleCue` list."""
+    """Convert BoTube AIWorker output (`Subtitle` dataclass with float seconds OR dict) into `OnlineSubtitleCue` list."""
     cues: list[OnlineSubtitleCue] = []
     for seg in segments or []:
         if isinstance(seg, dict):
-            s_ms = int(seg.get("start_ms") or round(float(seg.get("start") or 0.0) * 1000))
-            e_ms = int(seg.get("end_ms") or round(float(seg.get("end") or 0.0) * 1000))
+            raw_s_ms = seg.get("start_ms")
+            raw_e_ms = seg.get("end_ms")
+            s_ms = int(raw_s_ms) if raw_s_ms is not None else int(round(float(seg.get("start") or 0.0) * 1000))
+            e_ms = int(raw_e_ms) if raw_e_ms is not None else int(round(float(seg.get("end") or 0.0) * 1000))
             orig = str(seg.get("orig") or seg.get("text") or seg.get("jp") or "").strip()
             en = str(seg.get("en") or "").strip()
             vi = str(seg.get("vi") or "").strip()
             phon = str(seg.get("phonetic") or seg.get("romaji") or "").strip()
         else:
-            s_ms = int(getattr(seg, "start_ms", 0) or 0)
-            e_ms = int(getattr(seg, "end_ms", 0) or 0)
+            raw_s_ms = getattr(seg, "start_ms", None)
+            raw_e_ms = getattr(seg, "end_ms", None)
+            if raw_s_ms is not None:
+                s_ms = int(raw_s_ms)
+            else:
+                s_ms = int(round(float(getattr(seg, "start", 0.0) or 0.0) * 1000))
+            if raw_e_ms is not None:
+                e_ms = int(raw_e_ms)
+            else:
+                e_ms = int(round(float(getattr(seg, "end", 0.0) or 0.0) * 1000))
             top = getattr(seg, "top", None)
             mid = getattr(seg, "middle", None)
             bot = getattr(seg, "bottom", None)
@@ -245,9 +258,11 @@ def serialize_ai_segments_to_cues(segments: list[Any]) -> list[OnlineSubtitleCue
             vi = str(getattr(seg, "vi", "") or getattr(bot, "text", None) or (bot if isinstance(bot, str) else "") or "").strip()
             phon = str(getattr(seg, "phonetic", "") or getattr(seg, "romaji", "") or "").strip()
         if orig or en or vi:
+            s_clean = max(0, s_ms)
+            e_clean = max(s_clean + 200, e_ms)
             cues.append(OnlineSubtitleCue(
-                start_ms=max(0, s_ms),
-                end_ms=max(max(0, s_ms) + 200, e_ms),
+                start_ms=s_clean,
+                end_ms=e_clean,
                 text=orig or vi or en,
                 orig=orig,
                 en=en,

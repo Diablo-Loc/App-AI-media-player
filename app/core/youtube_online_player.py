@@ -17,7 +17,7 @@ from typing import Callable
 
 from PySide6.QtCore import QObject, QRectF, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QColor, QPainter, QPainterPath
-from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QVideoFrame, QVideoSink
+from PySide6.QtMultimedia import QAudioOutput, QMediaDevices, QMediaPlayer, QVideoFrame, QVideoSink
 from PySide6.QtWidgets import QWidget
 
 from core.audio_effects import find_tool
@@ -248,12 +248,15 @@ class YouTubeOnlinePlaybackController(QObject):
     buffering_changed = Signal(bool)
     error_occurred = Signal(str)
     stream_recovery_needed = Signal(str)   # video_id when video URL fails with 403/ResourceError
+    _hifi_op_completed = Signal(int, object, object, str)  # (gen, status_dict, stream_obj, err_str)
 
     def __init__(
         self,
         video_widget: QWidget,
         *,
         profile_provider: Callable[[], AudioProfile] | None = None,
+        on_before_exclusive: Callable[[], None] | None = None,
+        on_after_exclusive: Callable[[], None] | None = None,
         parent: QObject | None = None,
     ):
         super().__init__(parent)
@@ -273,7 +276,23 @@ class YouTubeOnlinePlaybackController(QObject):
 
         self._hifi_engine: OnlineAudioStreamEngine | None = None
         if is_stream_engine_available():
-            self._hifi_engine = OnlineAudioStreamEngine()
+            self._hifi_engine = OnlineAudioStreamEngine(
+                on_before_exclusive=on_before_exclusive,
+                on_after_exclusive=on_after_exclusive,
+            )
+
+        # Serialized non-blocking background audio op dispatcher (0ms UI freeze on Pause/Seek/WASAPI/EQ!)
+        self._op_cond = threading.Condition()
+        self._op_gen = 0
+        self._pending_op: tuple[int, str, dict] | None = None
+        self._op_closed = False
+        self._op_thread = threading.Thread(
+            target=self._audio_op_worker_loop,
+            name="BoTube-YT-AudioOps",
+            daemon=True,
+        )
+        self._op_thread.start()
+        self._hifi_op_completed.connect(self._on_hifi_op_completed)
 
         self._stream: ResolvedStream | None = None
         self._audio_only = False
@@ -288,9 +307,13 @@ class YouTubeOnlinePlaybackController(QObject):
         self._duration_ms = 0
         self._last_pos_ms = 0
         self._last_buffering = False
+        self._buf_since_mono = 0.0
         self._eof_emitted = False
         self._video_start_pending_ms: int | None = None
         self._last_video_seek_mono = 0.0
+        self._seek_settle_until = 0.0
+        self._last_hifi_status: dict = {}
+        self._hifi_profile_dirty = False
 
         # Subtitle cue cache (fast O(log N) binary lookup, zero GUI allocations)
         self._sub_enabled = False
@@ -317,6 +340,150 @@ class YouTubeOnlinePlaybackController(QObject):
                 pass
         return AudioProfile()
 
+    @staticmethod
+    def _resolve_preferred_device(prof: AudioProfile) -> str:
+        explicit = str(getattr(prof, "output_device", "") or "").strip()
+        if explicit:
+            return explicit
+        try:
+            return str(QMediaDevices.defaultAudioOutput().description() or "").strip()
+        except Exception:
+            return ""
+
+    def _dispatch_hifi_op(self, kind: str, payload: dict | None = None) -> int:
+        """Queue ONLY the latest blocking WASAPI/FFmpeg operation off the GUI thread (0ms UI stall!)."""
+        eng = self._hifi_engine
+        if eng is None:
+            return 0
+        data = dict(payload or {})
+        # Unit-test mocks run synchronously so assertions stay deterministic
+        if not isinstance(eng, OnlineAudioStreamEngine):
+            self._execute_hifi_op(0, kind, data, emit_signal=False)
+            return 0
+        with self._op_cond:
+            self._op_gen += 1
+            gen = self._op_gen
+            self._pending_op = (gen, kind, data)
+            self._op_cond.notify()
+            return gen
+
+    def _audio_op_worker_loop(self) -> None:
+        while True:
+            with self._op_cond:
+                while self._pending_op is None and not self._op_closed:
+                    self._op_cond.wait()
+                if self._op_closed:
+                    return
+                gen, kind, data = self._pending_op
+                self._pending_op = None
+            self._execute_hifi_op(gen, kind, data, emit_signal=True)
+
+    def _execute_hifi_op(self, gen: int, kind: str, data: dict, *, emit_signal: bool) -> None:
+        eng = self._hifi_engine
+        if eng is None:
+            return
+        stream_obj = data.get("stream")
+        try:
+            if kind == "start":
+                eng.set_http_headers(stream_obj.http_headers)
+                eng.set_user_volume(data["volume"], data["muted"])
+                status = eng.start_or_reconfigure(
+                    stream_obj.audio_url,
+                    int(data["pos_ms"]),
+                    data["profile"],
+                    data["src_info"],
+                    0.0,
+                    playback_rate=float(data["rate"]),
+                    track=0,
+                    preferred_device_name=str(data["pref_dev"]),
+                    paused=False,
+                )
+                if emit_signal:
+                    self._hifi_op_completed.emit(gen, status, stream_obj, "")
+                else:
+                    self._last_hifi_status = dict(status or {})
+                    self._emit_audio_badge(status, stream_obj)
+            elif kind == "pause":
+                eng.pause()
+            elif kind == "stop":
+                eng.stop(release_exclusive=bool(data.get("release_exclusive", True)))
+        except Exception as err:
+            if emit_signal:
+                self._hifi_op_completed.emit(gen, {}, stream_obj, str(err))
+            else:
+                logger.warning("Online Hi-Fi op (%s) failed: %s", kind, err)
+
+    def _on_hifi_op_completed(self, gen: int, status: dict, stream_obj: ResolvedStream | None, err_str: str) -> None:
+        if gen != self._op_gen or self._stream is None:
+            return
+        if err_str:
+            logger.warning("Online Hi-Fi async op failed: %s", err_str)
+            if self._is_playing and not self._is_paused and self._using_hifi and stream_obj is self._stream:
+                # Fallback gracefully to QtMultimedia audio if WASAPI device completely failed
+                fallback_url = stream_obj.progressive_url or stream_obj.audio_url
+                if fallback_url:
+                    self._using_hifi = False
+                    self._qt_audio.setMuted(self._muted)
+                    self._qt_audio.setVolume(self._volume)
+                    if not self._qt_player.source().isValid():
+                        self._qt_player.setSource(QUrl(fallback_url))
+                        self._qt_player.play()
+                    self.audio_status_changed.emit("Standard Audio · Fallback")
+            return
+        if isinstance(status, dict) and status and stream_obj is not None:
+            self._last_hifi_status = dict(status)
+            self._emit_audio_badge(status, stream_obj)
+
+    def live_signal_path_info(self) -> dict[str, str]:
+        """Return real active YouTube Hi-Fi signal-path strings for BoTube Audio Studio panel."""
+        stream = self._stream
+        st = self._last_hifi_status or (self._hifi_engine.status_info() if self._hifi_engine else {})
+        prof = self._current_audio_profile()
+        if stream is None:
+            return {"source": "YouTube Online", "dsp": "Sẵn sàng", "output": "Chưa phát", "status": "Sẵn sàng"}
+        codec = (stream.audio_codec or "OPUS").split(".")[0].upper()
+        src_sr = int(stream.audio_sr or 48000)
+        abr = f" · {int(round(stream.audio_abr))}k" if stream.audio_abr > 0 else ""
+        source_txt = f"YouTube {codec} {src_sr // 1000} kHz{abr}"
+
+        dsp_parts = ["64-bit"]
+        if getattr(prof, "eq_enabled", False):
+            dsp_parts.append("EQ")
+        if getattr(prof, "tone", "off") != "off":
+            dsp_parts.append(str(prof.tone))
+        if getattr(prof, "upsample", "off") != "off":
+            dsp_parts.append("Hi-Res")
+        if getattr(prof, "dac_phase", "linear") == "minimum":
+            dsp_parts.append("Min-Phase")
+        dsp_txt = " · ".join(dsp_parts)
+
+        mode = str(st.get("output_mode") or "shared")
+        sr = int(st.get("sample_rate") or 48000)
+        dtype = str(st.get("dtype") or "float32")
+        sr_txt = f"{sr / 1000.0:.1f} kHz" if sr % 1000 else f"{sr // 1000} kHz"
+        bits = {"int24": "24-bit", "int32": "32-bit", "int16": "16-bit"}.get(dtype, "32-bit")
+        dev = str(st.get("device_name") or "").strip()
+        if mode == "exclusive":
+            out_txt = f"WASAPI Exclusive · {sr_txt} {bits}"
+            status_txt = f"Exclusive {sr_txt}"
+        else:
+            out_txt = f"WASAPI Shared · {sr_txt} {bits}"
+            status_txt = f"Hi-Fi {sr_txt}"
+        if dev:
+            dev_short = dev if len(dev) <= 34 else (dev[:31].rstrip() + "…")
+            out_txt = f"{out_txt} ({dev_short})"
+        return {"source": source_txt, "dsp": dsp_txt, "output": out_txt, "status": status_txt}
+
+    def _build_src_info(self, stream: ResolvedStream) -> dict:
+        return {
+            "codec_name": stream.audio_codec or "opus",
+            "sample_rate": int(stream.audio_sr or 48000),
+            "channels": 2,
+            "bit_rate": int(round(float(stream.audio_abr or 128.0) * 1000)),
+            "duration": float(stream.duration_sec or 0.0),
+            "track": 0,
+        }
+
     @property
     def is_playing(self) -> bool:
         return self._is_playing and not self._is_paused
@@ -330,8 +497,13 @@ class YouTubeOnlinePlaybackController(QObject):
         return "Audio Hi-Fi" if self._audio_only else (self._active_quality or self._quality)
 
     def position_ms(self) -> int:
+        # While a seek or async start is still settling, keep reporting our authoritative target position
         if self._using_hifi and self._hifi_engine is not None:
+            if time.monotonic() < self._seek_settle_until and self._hifi_engine.is_buffering():
+                return max(0, self._last_pos_ms)
             pos = int(self._hifi_engine.position_ms())
+            if pos == 0 and self._last_pos_ms > 500 and time.monotonic() < self._seek_settle_until:
+                return max(0, self._last_pos_ms)
             if self._duration_ms > 0:
                 return min(self._duration_ms, max(0, pos))
             return max(0, pos)
@@ -378,6 +550,9 @@ class YouTubeOnlinePlaybackController(QObject):
         pos_ms = max(0, int(start_ms))
         self._last_pos_ms = pos_ms
         self._eof_emitted = False
+        self._seek_settle_until = time.monotonic() + 2.0
+        self._buf_since_mono = 0.0
+        self._hifi_profile_dirty = False
 
         want_hifi = (
             self._hifi_engine is not None
@@ -387,35 +562,23 @@ class YouTubeOnlinePlaybackController(QObject):
 
         hifi_ok = False
         if want_hifi and self._hifi_engine is not None:
-            try:
-                prof = self._current_audio_profile()
-                self._hifi_engine.set_http_headers(stream.http_headers)
-                self._hifi_engine.set_user_volume(self._volume, self._muted)
-                src_info = {
-                    "codec_name": stream.audio_codec or "opus",
-                    "sample_rate": int(stream.audio_sr or 48000),
-                    "channels": 2,
-                    "bit_rate": int(round(float(stream.audio_abr or 128.0) * 1000)),
-                    "duration": float(stream.duration_sec or 0.0),
-                    "track": 0,
-                }
-                status = self._hifi_engine.start_or_reconfigure(
-                    stream.audio_url,
-                    pos_ms,
-                    prof,
-                    src_info,
-                    0.0,
-                    playback_rate=self._playback_rate,
-                    track=0,
-                    preferred_device_name=str(getattr(prof, "output_device", "") or ""),
-                    paused=False,
-                )
-                hifi_ok = True
-                self._using_hifi = True
-                self._emit_audio_badge(status, stream)
-            except Exception as err:
-                logger.warning("Online Hi-Fi stream fallback to QtMultimedia: %s", err)
-                hifi_ok = False
+            prof = self._current_audio_profile()
+            pref_dev = self._resolve_preferred_device(prof)
+            self._using_hifi = True
+            hifi_ok = True
+            self._dispatch_hifi_op(
+                "start",
+                {
+                    "stream": stream,
+                    "pos_ms": pos_ms,
+                    "profile": prof,
+                    "src_info": self._build_src_info(stream),
+                    "rate": self._playback_rate,
+                    "pref_dev": pref_dev,
+                    "volume": self._volume,
+                    "muted": self._muted,
+                },
+            )
 
         if self._audio_only:
             self._qt_player.stop()
@@ -501,13 +664,12 @@ class YouTubeOnlinePlaybackController(QObject):
         if self._eof_emitted:
             pos_ms = 0
             self._eof_emitted = False
+        self._seek_settle_until = time.monotonic() + 1.8
+        self._buf_since_mono = 0.0
         if self._using_hifi and self._hifi_engine is not None:
-            try:
-                self._hifi_engine.resume(pos_ms)
-            except Exception:
-                self._start_playback_at(pos_ms)
-                return
+            self._reconfigure_hifi_only(pos_ms)
             if not self._audio_only and self._qt_player.source().isValid():
+                self._qt_player.setPlaybackRate(self._playback_rate)
                 self._qt_player.setPosition(pos_ms)
                 self._qt_player.play()
         else:
@@ -525,8 +687,10 @@ class YouTubeOnlinePlaybackController(QObject):
             return
         self._last_pos_ms = self.position_ms()
         self._is_paused = True
+        # 0ms instant silence & GUI responsiveness — release WASAPI/FFmpeg cleanly off the GUI thread!
         if self._using_hifi and self._hifi_engine is not None:
-            self._hifi_engine.pause()
+            self._hifi_engine.set_user_volume(self._volume, True)
+            self._dispatch_hifi_op("pause")
         if self._qt_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             self._qt_player.pause()
         self._clock_timer.stop()
@@ -545,12 +709,19 @@ class YouTubeOnlinePlaybackController(QObject):
             target = min(self._duration_ms, target)
         self._last_pos_ms = target
         self._eof_emitted = False
-        self._last_video_seek_mono = time.monotonic()
+        now_m = time.monotonic()
+        self._last_video_seek_mono = now_m
+        self._seek_settle_until = now_m + 2.0
+        self._buf_since_mono = 0.0
         if self._using_hifi and self._hifi_engine is not None:
-            self._hifi_engine.seek(target)
+            if self.is_playing:
+                # Non-blocking async FFmpeg HTTP seek (0ms GUI freeze, coalesces rapid clicks!)
+                self._reconfigure_hifi_only(target)
         if not self._audio_only and self._qt_player.source().isValid():
             self._qt_player.setPlaybackRate(self._playback_rate)
             self._qt_player.setPosition(target)
+            if self.is_playing and self._qt_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+                self._qt_player.play()
         elif not self._using_hifi and self._qt_player.source().isValid():
             self._qt_player.setPosition(target)
         self._sync_subtitle_for_pos(target)
@@ -590,41 +761,36 @@ class YouTubeOnlinePlaybackController(QObject):
             self._reconfigure_hifi_only(pos)
 
     def _reconfigure_hifi_only(self, pos_ms: int) -> None:
-        """Seamlessly reconfigure ONLY the Hi-Fi audio pipe (for instant speed/EQ changes without reloading video)."""
+        """Seamlessly reconfigure ONLY the Hi-Fi audio pipe off the GUI thread (instant speed/EQ/WASAPI!)."""
         stream = self._stream
         if stream is None or self._hifi_engine is None or not stream.audio_url:
             return
-        try:
-            prof = self._current_audio_profile()
-            self._hifi_engine.set_http_headers(stream.http_headers)
-            self._hifi_engine.set_user_volume(self._volume, self._muted)
-            src_info = {
-                "codec_name": stream.audio_codec or "opus",
-                "sample_rate": int(stream.audio_sr or 48000),
-                "channels": 2,
-                "bit_rate": int(round(float(stream.audio_abr or 128.0) * 1000)),
-                "duration": float(stream.duration_sec or 0.0),
-                "track": 0,
-            }
-            status = self._hifi_engine.start_or_reconfigure(
-                stream.audio_url,
-                max(0, int(pos_ms)),
-                prof,
-                src_info,
-                0.0,
-                playback_rate=self._playback_rate,
-                track=0,
-                preferred_device_name=str(getattr(prof, "output_device", "") or ""),
-                paused=False,
-            )
-            self._emit_audio_badge(status, stream)
-        except Exception as err:
-            logger.warning("Online Hi-Fi live reconfigure failed: %s", err)
+        prof = self._current_audio_profile()
+        pref_dev = self._resolve_preferred_device(prof)
+        self._hifi_profile_dirty = False
+        self._dispatch_hifi_op(
+            "start",
+            {
+                "stream": stream,
+                "pos_ms": max(0, int(pos_ms)),
+                "profile": prof,
+                "src_info": self._build_src_info(stream),
+                "rate": self._playback_rate,
+                "pref_dev": pref_dev,
+                "volume": self._volume,
+                "muted": self._muted,
+            },
+        )
 
     def reapply_audio_profile(self) -> None:
-        """Re-apply BoTube's live AudioProfile (EQ/DAC/Exclusive) seamlessly without reloading video!"""
-        if self._stream is not None and self._using_hifi and self.is_playing:
+        """Re-apply BoTube's live AudioProfile (EQ/DAC/WASAPI Exclusive) seamlessly without reloading video!"""
+        if self._stream is None or not self._using_hifi:
+            return
+        if self.is_playing:
+            self._seek_settle_until = time.monotonic() + 1.6
             self._reconfigure_hifi_only(self.position_ms())
+        else:
+            self._hifi_profile_dirty = True
 
     def set_audio_only(self, audio_only: bool) -> None:
         flag = bool(audio_only)
@@ -774,39 +940,45 @@ class YouTubeOnlinePlaybackController(QObject):
                 self._last_buffering = buf
                 self.buffering_changed.emit(buf)
 
-            # Smooth, non-thrashing A/V sync: never abort HTTP buffering with rapid seeks!
+            # Smooth, anti-stutter A/V sync: never ping-pong pause/play or thrash HTTP seeks!
             if not self._audio_only and self._qt_player.source().isValid():
+                now_m = time.monotonic()
                 status = self._qt_player.mediaStatus()
                 in_flight = status in (
                     QMediaPlayer.MediaStatus.LoadingMedia,
                     QMediaPlayer.MediaStatus.BufferingMedia,
                 )
                 if buf:
-                    if self._qt_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
-                        self._qt_player.pause()
-                elif not in_flight:
-                    if self._qt_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
-                        if status not in (
-                            QMediaPlayer.MediaStatus.EndOfMedia,
-                            QMediaPlayer.MediaStatus.InvalidMedia,
-                        ):
-                            self._qt_player.setPlaybackRate(self._playback_rate)
-                            self._qt_player.play()
-                    elif status == QMediaPlayer.MediaStatus.BufferedMedia:
-                        now_m = time.monotonic()
-                        v_pos = int(self._qt_player.position())
-                        drift = pos_ms - v_pos  # positive = video lagging behind Hi-Fi audio
-                        if abs(drift) > 750 and (now_m - self._last_video_seek_mono) >= 2.5:
-                            self._last_video_seek_mono = now_m
-                            self._qt_player.setPlaybackRate(self._playback_rate)
-                            self._qt_player.setPosition(pos_ms)
-                        elif 180 < drift <= 750:
-                            self._qt_player.setPlaybackRate(min(2.2, self._playback_rate * 1.05))
-                        elif -750 <= drift < -180:
-                            self._qt_player.setPlaybackRate(max(0.45, self._playback_rate * 0.95))
-                        elif abs(drift) <= 120:
-                            if abs(float(self._qt_player.playbackRate()) - self._playback_rate) > 0.005:
+                    if self._buf_since_mono <= 0.0:
+                        self._buf_since_mono = now_m
+                    # Only pause video if audio genuinely stalls >380ms (prevents micro-stutter on seeks/AI load)
+                    if (now_m - self._buf_since_mono) > 0.38:
+                        if self._qt_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+                            self._qt_player.pause()
+                else:
+                    self._buf_since_mono = 0.0
+                    if not in_flight:
+                        if self._qt_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+                            if status not in (
+                                QMediaPlayer.MediaStatus.EndOfMedia,
+                                QMediaPlayer.MediaStatus.InvalidMedia,
+                            ):
                                 self._qt_player.setPlaybackRate(self._playback_rate)
+                                self._qt_player.play()
+                        elif status == QMediaPlayer.MediaStatus.BufferedMedia and now_m >= self._seek_settle_until:
+                            v_pos = int(self._qt_player.position())
+                            drift = pos_ms - v_pos  # positive = video lagging behind Hi-Fi audio
+                            if abs(drift) > 950 and (now_m - self._last_video_seek_mono) >= 4.0:
+                                self._last_video_seek_mono = now_m
+                                self._qt_player.setPlaybackRate(self._playback_rate)
+                                self._qt_player.setPosition(pos_ms)
+                            elif 220 < drift <= 950:
+                                self._qt_player.setPlaybackRate(min(2.15, self._playback_rate * 1.035))
+                            elif -950 <= drift < -220:
+                                self._qt_player.setPlaybackRate(max(0.47, self._playback_rate * 0.965))
+                            elif abs(drift) <= 140:
+                                if abs(float(self._qt_player.playbackRate()) - self._playback_rate) > 0.005:
+                                    self._qt_player.setPlaybackRate(self._playback_rate)
 
             # Reliable EOF detection for Hi-Fi audio stream
             if not self._eof_emitted and self._hifi_engine.has_reached_eof():
@@ -849,13 +1021,17 @@ class YouTubeOnlinePlaybackController(QObject):
             logger.warning("Online video ResourceError (%s) -> requesting automatic stream refresh", error_string)
             self.stream_recovery_needed.emit(self._stream.video_id)
 
-    def stop(self, release_exclusive: bool = True) -> None:
+    def stop(self, release_exclusive: bool = True, *, sync: bool = False) -> None:
         self._clock_timer.stop()
         self._is_playing = False
         self._is_paused = False
         self._video_start_pending_ms = None
         if self._hifi_engine is not None:
-            self._hifi_engine.stop(release_exclusive=release_exclusive)
+            self._hifi_engine.set_user_volume(self._volume, True)
+            if sync or not isinstance(self._hifi_engine, OnlineAudioStreamEngine):
+                self._hifi_engine.stop(release_exclusive=release_exclusive)
+            else:
+                self._dispatch_hifi_op("stop", {"release_exclusive": release_exclusive})
         self._qt_player.stop()
         self._qt_player.setSource(QUrl())
         if hasattr(self.video_widget, "clear_frame"):
@@ -866,6 +1042,12 @@ class YouTubeOnlinePlaybackController(QObject):
         self.subtitle_text_changed.emit("")
 
     def shutdown(self) -> None:
-        self.stop(release_exclusive=True)
+        with self._op_cond:
+            self._op_closed = True
+            self._pending_op = None
+            self._op_cond.notify_all()
+        if self._op_thread.is_alive():
+            self._op_thread.join(timeout=1.2)
+        self.stop(release_exclusive=True, sync=True)
         if self._hifi_engine is not None:
             self._hifi_engine.shutdown()
