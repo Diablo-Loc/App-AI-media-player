@@ -9,6 +9,7 @@ PAGE_DOWNLOAD = 3
 PAGE_SETTINGS = 4
 PAGE_COLLECTIONS = 5
 PAGE_HISTORY = 6
+PAGE_YOUTUBE_ONLINE = 7
 
 class ContentController:
     def __init__(self, main_window):
@@ -137,3 +138,10 @@ class ContentController:
         self._set_video_mode("mini")
         if hasattr(self.main, "history_page"):
             self.main.history_page.refresh_view()
+
+    def switch_to_youtube_online(self):
+        """Chuyển tới trang YouTube Online độc lập (không tác động luồng phát offline)"""
+        self.main.content_stack.setCurrentIndex(PAGE_YOUTUBE_ONLINE)
+        self._set_video_mode("mini")
+        if hasattr(self.main, "youtube_online_page"):
+            self.main.youtube_online_page.on_tab_activated()

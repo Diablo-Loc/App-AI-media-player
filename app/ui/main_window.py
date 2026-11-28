@@ -47,6 +47,7 @@ from ui.pages.playlists_page import PlaylistsPage
 from ui.pages.history_page import HistoryPage
 from ui.pages.download import DownloadPage
 from ui.pages.settings import SettingsPage
+from ui.pages.youtube_online_page import YouTubeOnlinePage
 from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
 from ui.system_media_manager import SystemMediaManager
@@ -383,8 +384,59 @@ class MainWindow(QMainWindow):
                 sig.connect(slot, Qt.ConnectionType.QueuedConnection)
         self._hw_media_connected_mgr = manager
 
+    def _is_youtube_online_controlling_media(self) -> bool:
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is None:
+            return False
+        if yt.is_playing_active():
+            return True
+        return bool(
+            hasattr(self, "content_stack")
+            and self.content_stack.currentWidget() is yt
+            and yt.player.is_loaded
+        )
+
+    def _pause_offline_for_youtube_online(self):
+        """Pause offline playback & release WASAPI Exclusive before YouTube Online opens audio."""
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            player.pause()
+        fx = getattr(self, "audio_effects", None)
+        if fx is not None:
+            stream = getattr(fx, "stream", None)
+            if stream is not None and hasattr(stream, "pause"):
+                stream.pause()
+        self.sync_mini_player_state()
+
+    def _pause_youtube_online_if_playing(self):
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and hasattr(yt, "pause_if_playing"):
+            yt.pause_if_playing()
+
+    def _queue_download_from_youtube_online(self, url: str, title: str):
+        """1-click handoff from YouTube Online -> existing BoTube Studio Download page (0 edits to DownloadPage)."""
+        clean_url = str(url or "").strip()
+        if not clean_url or not hasattr(self, "download_page"):
+            return
+        clean_title = " ".join(str(title or clean_url).splitlines()).strip() or clean_url
+        dp = self.download_page
+        cur_links = dp.txt_links.toPlainText().strip()
+        cur_names = dp.txt_names.toPlainText().strip()
+        dp.txt_links.setPlainText((cur_links + "\n" + clean_url) if cur_links else clean_url)
+        dp.txt_names.setPlainText((cur_names + "\n" + clean_title) if cur_names else clean_title)
+        dl_row = self.sidebar.row_for_page("download") if hasattr(self, "sidebar") else -1
+        if dl_row >= 0:
+            self.sidebar.setCurrentRow(dl_row)
+            self.handle_sidebar_click(self.sidebar.item(dl_row))
+        if hasattr(self, "_show_status"):
+            self._show_status(f"⬇ Đã chuyển sang Tải về: {clean_title}")
+
     def _hardware_play(self):
         """Idempotent Play-only handler for keyboard/headphone SMTC Play key."""
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.player.play()
+            return
+        self._pause_youtube_online_if_playing()
         if self._try_startup_resume():
             return
         if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(True):
@@ -397,6 +449,9 @@ class MainWindow(QMainWindow):
 
     def _hardware_pause(self):
         """Idempotent Pause-only handler for keyboard/headphone SMTC Pause key."""
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.pause_if_playing()
+            return
         if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(False):
             self.sync_mini_player_state()
             return
@@ -413,6 +468,9 @@ class MainWindow(QMainWindow):
         if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
             return
         self._hw_last_skip_mono = now
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.play_next()
+            return
         self.play_next()
 
     def _hardware_prev(self):
@@ -423,6 +481,9 @@ class MainWindow(QMainWindow):
         if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
             return
         self._hw_last_skip_mono = now
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.play_previous()
+            return
         self.play_previous()
 
     def _save_font_size(self, value):
@@ -441,6 +502,10 @@ class MainWindow(QMainWindow):
         self._save_setting("lock_position", value)
 
     def _escape_shortcut(self):
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and getattr(yt, "_is_fullscreen_stage", False):
+            yt.exit_fullscreen_stage()
+            return
         if self.isFullScreen():
             self.toggle_fullscreen()
                              
@@ -550,6 +615,8 @@ class MainWindow(QMainWindow):
                 self.audio_effects.shutdown()
             if hasattr(self, 'download_page'):
                 self.download_page.shutdown_workers()
+            if hasattr(self, 'youtube_online_page') and self.youtube_online_page is not None:
+                self.youtube_online_page.shutdown()
             if hasattr(self, 'update_controller') and self.update_controller is not None:
                 self.update_controller.shutdown()
             info_owner = getattr(QApplication.instance(), '_media_info_worker_owner', None)
@@ -748,6 +815,7 @@ class MainWindow(QMainWindow):
             "❤️ Bộ sưu tập",
             "🕒 Lịch sử",
             "💾 Download",
+            "🌐 YouTube",
             "⚙️ Tùy chỉnh",
         ])
 
@@ -778,13 +846,20 @@ class MainWindow(QMainWindow):
             media_library=self.media_library,
             notify_callback=self._show_status,
         )
-        self.content_stack.addWidget(self.home_page)        # Index 0
-        self.content_stack.addWidget(self.foryou_page)      # Index 1
-        self.content_stack.addWidget(self.library_page)     # Index 2
-        self.content_stack.addWidget(self.download_page)    # Index 3
-        self.content_stack.addWidget(self.settings_page)    # Index 4
-        self.content_stack.addWidget(self.collections_page) # Index 5
-        self.content_stack.addWidget(self.history_page)     # Index 6
+        self.youtube_online_page = YouTubeOnlinePage(
+            profile_provider=lambda: getattr(getattr(self, "audio_effects", None), "profile", None),
+        )
+        self.youtube_online_page.playback_starting.connect(self._pause_offline_for_youtube_online)
+        self.youtube_online_page.download_requested.connect(self._queue_download_from_youtube_online)
+        self.youtube_online_page.status_message.connect(self._show_status)
+        self.content_stack.addWidget(self.home_page)           # Index 0
+        self.content_stack.addWidget(self.foryou_page)         # Index 1
+        self.content_stack.addWidget(self.library_page)        # Index 2
+        self.content_stack.addWidget(self.download_page)       # Index 3
+        self.content_stack.addWidget(self.settings_page)       # Index 4
+        self.content_stack.addWidget(self.collections_page)    # Index 5
+        self.content_stack.addWidget(self.history_page)        # Index 6
+        self.content_stack.addWidget(self.youtube_online_page) # Index 7
 
         # 3. Tạo Vỏ bọc (Toolbar + Stack)
         self.content_ctrl = ContentController(self)
@@ -1022,6 +1097,7 @@ class MainWindow(QMainWindow):
             self.play_next()
 
     def toggle_play_pause(self):
+        self._pause_youtube_online_if_playing()
         if self._try_startup_resume():
             return
         if self.audio_effects.toggle_pending_start():
@@ -1561,6 +1637,7 @@ class MainWindow(QMainWindow):
         """Xử lý khi click vào một bài hát / video"""
         if media_item is None:
             return
+        self._pause_youtube_online_if_playing()
 
         video_path = str(getattr(media_item, "path", "") or "")
         file_exists = bool(video_path and os.path.isfile(video_path))
@@ -2870,6 +2947,7 @@ class MainWindow(QMainWindow):
         "settings": 4,
         "collections": 5,
         "history": 6,
+        "youtube_online": 7,
     }
 
     def handle_sidebar_click(self, item):
@@ -2942,6 +3020,7 @@ class MainWindow(QMainWindow):
             elif index == 4: self.content_ctrl.switch_to_settings()
             elif index == 5: self.content_ctrl.switch_to_collections()
             elif index == 6: self.content_ctrl.switch_to_history()
+            elif index == 7: self.content_ctrl.switch_to_youtube_online()
 
         # 4. Cập nhật vị trí video & sub
         if index == 1:
