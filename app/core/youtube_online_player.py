@@ -247,6 +247,7 @@ class YouTubeOnlinePlaybackController(QObject):
     audio_status_changed = Signal(str)
     buffering_changed = Signal(bool)
     error_occurred = Signal(str)
+    stream_recovery_needed = Signal(str)   # video_id when video URL fails with 403/ResourceError
 
     def __init__(
         self,
@@ -295,6 +296,8 @@ class YouTubeOnlinePlaybackController(QObject):
         self._sub_enabled = False
         self._sub_display_mode = "bilingual"
         self._sub_fullscreen = False
+        self._sub_primary_color = "#FFFFFF"
+        self._sub_phonetic_enabled = False
         self._cues: list[OnlineSubtitleCue] = []
         self._cue_starts: list[int] = []
         self._last_sub_text = ""
@@ -553,6 +556,11 @@ class YouTubeOnlinePlaybackController(QObject):
         self._sync_subtitle_for_pos(target)
         self.position_changed.emit(target, self.duration_ms())
 
+    def seek_relative(self, delta_ms: int) -> None:
+        if self._stream is None:
+            return
+        self.seek(self.position_ms() + int(delta_ms))
+
     def set_volume(self, volume: float) -> None:
         self._volume = max(0.0, min(1.0, float(volume)))
         if self._hifi_engine is not None:
@@ -687,30 +695,45 @@ class YouTubeOnlinePlaybackController(QObject):
         if self._sub_enabled:
             self._sync_subtitle_for_pos(self.position_ms())
 
+    def set_subtitle_appearance(self, *, primary_color: str = "#FFFFFF", phonetic_enabled: bool = False) -> None:
+        self._sub_primary_color = str(primary_color or "#FFFFFF")
+        self._sub_phonetic_enabled = bool(phonetic_enabled)
+        self._last_sub_text = ""
+        if self._sub_enabled:
+            self._sync_subtitle_for_pos(self.position_ms())
+
     def _format_cue_html(self, cue: OnlineSubtitleCue) -> str:
         import html as _html
         mode = getattr(self, "_sub_display_mode", "bilingual")
         is_fs = bool(getattr(self, "_sub_fullscreen", False))
+        p_color = getattr(self, "_sub_primary_color", "#FFFFFF") or "#FFFFFF"
+        show_phon = bool(getattr(self, "_sub_phonetic_enabled", False)) or (mode == "bilingual_phonetic")
         orig = (cue.orig or cue.text or "").strip()
         vi = (cue.vi or "").strip()
         en = (cue.en or "").strip()
         phon = (cue.phonetic or "").strip()
 
+        def _styled_single(raw_txt: str) -> str:
+            esc = _html.escape(raw_txt).replace("\n", "<br>")
+            if p_color.upper() != "#FFFFFF":
+                return f'<span style="color:{p_color};">{esc}</span>'
+            return esc
+
         # Plain single-language CC cue
         if not vi and not en:
-            return _html.escape(orig).replace("\n", "<br>")
+            return _styled_single(orig)
 
         if mode == "vi_only":
-            return _html.escape(vi or orig).replace("\n", "<br>")
+            return _styled_single(vi or orig)
         if mode == "en_only":
-            return _html.escape(en or orig).replace("\n", "<br>")
+            return _styled_single(en or orig)
         if mode == "orig_only":
-            return _html.escape(orig).replace("\n", "<br>")
-        # Default bilingual studio look: Original crisp white on top + Vietnamese soft mint below!
+            return _styled_single(orig)
+        # Default bilingual studio look: Original crisp top + optional phonetic + Vietnamese soft mint below!
         lines: list[str] = []
         if orig:
-            lines.append(f'<span style="color:#FFFFFF;">{_html.escape(orig)}</span>')
-        if phon and mode == "bilingual_phonetic":
+            lines.append(f'<span style="color:{p_color};">{_html.escape(orig)}</span>')
+        if phon and show_phon:
             phon_px = 17 if is_fs else 13
             lines.append(f'<span style="color:#A8C2DC;font-size:{phon_px}px;font-weight:500;">{_html.escape(phon)}</span>')
         sub_line = vi if (vi and vi.lower() != orig.lower()) else (en if (en and en.lower() != orig.lower()) else "")
@@ -814,9 +837,17 @@ class YouTubeOnlinePlaybackController(QObject):
                 self.state_changed.emit(False)
                 self.track_ended.emit()
 
-    def _on_qt_error(self, _error, error_string: str) -> None:
+    def _on_qt_error(self, error, error_string: str) -> None:
         if not self._using_hifi and error_string:
             self.error_occurred.emit(error_string)
+        elif (
+            self._using_hifi
+            and not self._audio_only
+            and self._stream is not None
+            and error == QMediaPlayer.Error.ResourceError
+        ):
+            logger.warning("Online video ResourceError (%s) -> requesting automatic stream refresh", error_string)
+            self.stream_recovery_needed.emit(self._stream.video_id)
 
     def stop(self, release_exclusive: bool = True) -> None:
         self._clock_timer.stop()

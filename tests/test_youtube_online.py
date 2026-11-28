@@ -19,6 +19,7 @@ from core.youtube_online_client import (
     YouTubeOnlineProfileStore,
     _extract_items_from_payload,
     has_cached_ai_subtitles,
+    is_bo_ai_subtitle_available,
     load_cached_ai_subtitles,
     parse_chapters_from_description,
     parse_duration_text,
@@ -191,6 +192,8 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
             item = OnlineVideoItem(video_id="dQw4w9WgXcQ", title="Song A", channel_name="Studio Artist", channel_id="UC1234567890")
             self.assertTrue(store.toggle_like(item))
             self.assertTrue(store.is_liked("dQw4w9WgXcQ"))
+            self.assertTrue(store.toggle_watch_later(item))
+            self.assertTrue(store.is_in_watch_later("dQw4w9WgXcQ"))
 
             pl = store.create_playlist("Chill Mix", items=[item])
             self.assertEqual(len(store.list_playlists()), 1)
@@ -214,6 +217,7 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
             reloaded = YouTubeOnlineProfileStore(prof_path)
             self.assertEqual(len(reloaded.list_subscriptions()), 2)
             self.assertTrue(reloaded.is_liked("dQw4w9WgXcQ"))
+            self.assertTrue(reloaded.is_in_watch_later("dQw4w9WgXcQ"))
             self.assertEqual(reloaded.list_watch_history()[0].video_id, "dQw4w9WgXcQ")
             self.assertEqual(reloaded.list_search_history(), ["hi-res acoustic"])
             self.assertEqual(reloaded.get_pref("subtitle_mode"), "youtube_cc")
@@ -330,8 +334,9 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         fake_http.json.return_value = fake_ios_resp
         fake_sess = MagicMock()
         fake_sess.post.return_value = fake_http
-        with patch.object(client, "_get_session", return_value=fake_sess):
-            resolved = client._resolve_stream_innertube_ios("dQw4w9WgXcQ")
+        with patch.object(client, "_get_session", return_value=fake_sess), \
+             patch.object(client, "_ensure_visitor_session", return_value="fake-visitor-id"):
+            resolved = client._resolve_stream_innertube_visionos("dQw4w9WgXcQ")
         self.assertIsNotNone(resolved)
         self.assertEqual(resolved.audio_url, "https://cdn/opus_251")
         self.assertEqual(resolved.video_streams["1080p"]["url"], "https://cdn/vid_1080")
@@ -493,7 +498,11 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 yt.playback_starting.emit()
                 mock_off_pause.assert_called_once()
 
-            # 6. True Edge-to-Edge Video Fullscreen reparents ONLY stage_frame + ctrl_box and hides mini_bar
+            # 6. True Edge-to-Edge Video Fullscreen overlays ctrl_box, blocks offline playback_bar & keeps clean cursor!
+            with patch.object(yt, "_load_home_feed"):
+                window.sidebar.setCurrentRow(yt_row)
+                window.handle_sidebar_click(window.sidebar.item(yt_row))
+                pump(40)
             yt._show_view(yt.VIEW_WATCH)
             yt._current_item = sample_item
             yt.player._stream = ResolvedStream(video_id=sample_item.video_id, title=sample_item.title)
@@ -502,10 +511,14 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 pump(30)
                 self.assertTrue(yt._is_fullscreen_stage)
                 self.assertEqual(yt.stack.currentIndex(), yt.VIEW_FULLSCREEN)
-                self.assertEqual(yt.fullscreen_lay.indexOf(yt.stage_frame), 0)
-                self.assertEqual(yt.fullscreen_lay.indexOf(yt.ctrl_box), 1)
+                self.assertEqual(yt.ctrl_box.objectName(), "ytWatchControlsFS")
                 self.assertEqual(yt.lbl_sub_overlay.objectName(), "ytSubOverlayFS")
                 self.assertTrue(yt.player._sub_fullscreen)
+                # Offline MainWindow show_controls/hide_controls must NEVER leak playback_bar or BlankCursor!
+                window.show_controls()
+                self.assertTrue(window.playback_bar.isHidden())
+                window.hide_controls()
+                self.assertNotEqual(window.cursor().shape(), window.cursor().shape().BlankCursor)
                 yt._update_mini_bar_visibility()
                 self.assertTrue(yt.mini_bar.isHidden())
 
@@ -513,10 +526,47 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 pump(30)
                 self.assertFalse(yt._is_fullscreen_stage)
                 self.assertEqual(yt.stack.currentIndex(), yt.VIEW_WATCH)
+                self.assertEqual(yt.ctrl_box.objectName(), "ytWatchControls")
                 self.assertEqual(yt._watch_left_lay.indexOf(yt.stage_frame), 0)
                 self.assertEqual(yt._watch_left_lay.indexOf(yt.ctrl_box), 1)
                 self.assertEqual(yt.lbl_sub_overlay.objectName(), "ytSubOverlay")
                 self.assertFalse(yt.player._sub_fullscreen)
+
+            # 6b. Isolated Floating PiP Mini-Player reparents & restores stage_frame cleanly
+            yt.toggle_mini_player()
+            pump(30)
+            self.assertTrue(yt._is_pip_mode)
+            self.assertIsNotNone(yt._pip_window)
+            self.assertEqual(yt._pip_window.stage_lay.indexOf(yt.stage_frame), 0)
+            yt.exit_mini_player()
+            pump(30)
+            self.assertFalse(yt._is_pip_mode)
+            self.assertEqual(yt._watch_left_lay.indexOf(yt.stage_frame), 0)
+
+            # 6c. AI-disabled gray-out & auto-run AI Sub on new uncached video when enabled
+            yt.profile.set_pref("allow_ai_sub", False)
+            yt.refresh_ai_availability()
+            self.assertFalse(yt.btn_ai_sub_gen.isEnabled())
+            self.assertFalse(yt.combo_sub_mode.model().item(2).isEnabled())
+            yt.profile.set_pref("allow_ai_sub", True)
+            with patch("core.youtube_online_client.is_bo_ai_subtitle_available", return_value=(True, "ready")), \
+                 patch("ui.pages.youtube_online_page.is_bo_ai_subtitle_available", return_value=(True, "ready")):
+                yt.refresh_ai_availability()
+                self.assertTrue(yt.btn_ai_sub_gen.isEnabled())
+                self.assertTrue(yt.combo_sub_mode.model().item(2).isEnabled())
+                idx_ai = yt.combo_sub_mode.findData("ai_bilingual")
+                yt.combo_sub_mode.blockSignals(True)
+                yt.combo_sub_mode.setCurrentIndex(idx_ai)
+                yt.combo_sub_mode.blockSignals(False)
+                with patch.object(yt.player, "load_and_play"), \
+                     patch("ui.pages.youtube_online_page.load_cached_ai_subtitles", return_value=[]), \
+                     patch.object(yt, "_start_ai_subtitle_generation") as mock_auto_ai:
+                    yt._on_stream_resolved(ResolvedStream(video_id=sample_item.video_id, title=sample_item.title))
+                    mock_auto_ai.assert_called_once_with(force_regen=False)
+
+            # 6d. Subtitle appearance style sync from BoTube config
+            yt.apply_subtitle_style({"font_size": 26, "font_color": "#FEF08A", "bg_color": "#000000", "bg_opacity": 0.6})
+            self.assertIn("#FEF08A", yt.lbl_sub_overlay.styleSheet())
 
             # 7. Audio Studio live sync wiring & panel opener
             with patch.object(yt, "on_audio_profile_changed") as mock_reapply:
