@@ -558,7 +558,12 @@ class MainWindow(QMainWindow):
         # Sync ALL BoTube Subtitle Studio settings (mode, font, color, bg, outline, shadow, fade, phonetic, VFX) live!
         sub_panel = getattr(self, "subsettings_panel", None)
         if sub_panel is not None:
-            notify_sub = lambda *_args: QTimer.singleShot(35, lambda: yt.apply_subtitle_style(dict(getattr(self, "config", {}) or {})))
+            notify_sub = lambda *_args: QTimer.singleShot(
+                35,
+                lambda: yt.apply_subtitle_style(dict(getattr(self, "config", {}) or {}))
+                if not getattr(yt, "_shutting_down", False)
+                else None,
+            )
             for sname in (
                 "subtitle_mode_changed",
                 "font_size_changed",

@@ -19,7 +19,7 @@ import subprocess
 import tempfile
 import threading
 import time
-from typing import Any, Callable, Iterator
+from typing import Any, Iterator
 import urllib.parse
 
 from control.worker_lifecycle import OwnedProcesses
@@ -1578,7 +1578,7 @@ def is_bo_ai_subtitle_available(profile: YouTubeOnlineProfileStore | None = None
 class YouTubeOnlineClient:
     """Resilient, paced, read-only YouTube client powered by InnerTube VISIONOS + bundled yt-dlp.exe."""
 
-    _MIN_PACE_SEC = 0.22
+    _MIN_PACE_SEC = 0.12
     _FEED_CACHE_TTL_SEC = 300.0
     _STREAM_CACHE_TTL_SEC = 2400.0
     _VISITOR_TTL_SEC = 1200.0
@@ -1601,7 +1601,11 @@ class YouTubeOnlineClient:
             with self._session_lock:
                 if self._session is None:
                     import requests
+                    from requests.adapters import HTTPAdapter
                     sess = requests.Session()
+                    adapter = HTTPAdapter(pool_connections=8, pool_maxsize=16)
+                    sess.mount("https://", adapter)
+                    sess.mount("http://", adapter)
                     sess.headers.update({
                         "User-Agent": _USER_AGENT,
                         "Origin": "https://www.youtube.com",
@@ -1610,6 +1614,24 @@ class YouTubeOnlineClient:
                     })
                     self._session = sess
         return self._session
+
+    def clear_home_cache(self) -> None:
+        with self._cache_lock:
+            for k in [k for k in self._feed_cache if k.startswith("home:")]:
+                self._feed_cache.pop(k, None)
+
+    def close(self) -> None:
+        with self._session_lock:
+            sess = self._session
+            self._session = None
+        if sess is not None:
+            try:
+                sess.close()
+            except Exception:
+                pass
+        with self._cache_lock:
+            self._feed_cache.clear()
+            self._stream_cache.clear()
 
     def _pace(self) -> None:
         with self._pace_lock:

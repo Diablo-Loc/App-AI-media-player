@@ -24,7 +24,7 @@ from typing import Any, Callable
 import weakref
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QPainter, QPainterPath, QPixmap
+from PySide6.QtGui import QDesktopServices, QGuiApplication, QPainter, QPainterPath, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QApplication,
@@ -712,14 +712,17 @@ class _TaskWorker(QThread):
 
 
 class _OnlineThumbnailLoader(QObject):
-    """RAM-bounded async HTTP thumbnail/avatar loader (max 240 pixmaps, rounded/circular masks)."""
+    """RAM-bounded async HTTP thumbnail/avatar loader (downscaled source + rounded pixmap LRU)."""
 
-    MAX_CACHE = 240
+    MAX_CACHE = 160
+    MAX_RENDERED = 160
+    MAX_DECODE_WIDTH = 480
 
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
         self._nam = QNetworkAccessManager(self)
         self._cache: OrderedDict[str, QPixmap] = OrderedDict()
+        self._rendered: OrderedDict[tuple[str, int, int, int], QPixmap] = OrderedDict()
         self._pending: dict[str, list[tuple[weakref.ref, QSize, int]]] = {}
         self._active_replies: set[QNetworkReply] = set()
 
@@ -727,10 +730,16 @@ class _OnlineThumbnailLoader(QObject):
         u = str(url or "").strip()
         if not u:
             return
+        rkey = (u, target_size.width(), target_size.height(), radius)
+        if rkey in self._rendered:
+            out = self._rendered[rkey]
+            self._rendered.move_to_end(rkey)
+            target_label.setPixmap(out)
+            return
         if u in self._cache:
             pix = self._cache[u]
             self._cache.move_to_end(u)
-            self._apply_pixmap(target_label, pix, target_size, radius)
+            self._apply_and_cache(u, target_label, pix, target_size, radius)
             return
         ref = weakref.ref(target_label)
         if u in self._pending:
@@ -751,6 +760,8 @@ class _OnlineThumbnailLoader(QObject):
                 raw = bytes(reply.readAll())
                 pix = QPixmap()
                 if pix.loadFromData(raw):
+                    if pix.width() > self.MAX_DECODE_WIDTH:
+                        pix = pix.scaledToWidth(self.MAX_DECODE_WIDTH, Qt.TransformationMode.SmoothTransformation)
                     self._cache[url] = pix
                     self._cache.move_to_end(url)
                     while len(self._cache) > self.MAX_CACHE:
@@ -759,16 +770,31 @@ class _OnlineThumbnailLoader(QObject):
                         lbl = ref()
                         if lbl is not None:
                             try:
-                                self._apply_pixmap(lbl, pix, sz, rad)
+                                self._apply_and_cache(url, lbl, pix, sz, rad)
                             except RuntimeError:
                                 pass
         finally:
             reply.deleteLater()
 
-    @staticmethod
-    def _apply_pixmap(label: QLabel, pix: QPixmap, target_size: QSize, radius: int) -> None:
-        if pix.isNull() or target_size.width() <= 0 or target_size.height() <= 0:
+    def _apply_and_cache(self, url: str, label: QLabel, pix: QPixmap, target_size: QSize, radius: int) -> None:
+        rkey = (url, target_size.width(), target_size.height(), radius)
+        cached = self._rendered.get(rkey)
+        if cached is not None:
+            self._rendered.move_to_end(rkey)
+            label.setPixmap(cached)
             return
+        out = self._render_rounded(pix, target_size, radius)
+        if out is not None:
+            self._rendered[rkey] = out
+            self._rendered.move_to_end(rkey)
+            while len(self._rendered) > self.MAX_RENDERED:
+                self._rendered.popitem(last=False)
+            label.setPixmap(out)
+
+    @staticmethod
+    def _render_rounded(pix: QPixmap, target_size: QSize, radius: int) -> QPixmap | None:
+        if pix.isNull() or target_size.width() <= 0 or target_size.height() <= 0:
+            return None
         scaled = pix.scaled(
             target_size,
             Qt.AspectRatioMode.KeepAspectRatioByExpanding,
@@ -789,7 +815,7 @@ class _OnlineThumbnailLoader(QObject):
         painter.setClipPath(path)
         painter.drawPixmap(0, 0, cropped)
         painter.end()
-        label.setPixmap(out)
+        return out
 
     def shutdown(self) -> None:
         for reply in list(self._active_replies):
@@ -798,6 +824,10 @@ class _OnlineThumbnailLoader(QObject):
                 reply.deleteLater()
             except Exception:
                 pass
+        self._active_replies.clear()
+        self._pending.clear()
+        self._rendered.clear()
+        self._cache.clear()
         self._active_replies.clear()
         self._pending.clear()
 
@@ -4409,6 +4439,9 @@ class YouTubeOnlinePage(QWidget):
 
     def apply_subtitle_style(self, config: dict[str, Any] | None = None) -> None:
         """Sync 100% of BoTube's Subtitle Appearance Studio settings live onto YouTube's SubtitleLayer."""
+        layer = getattr(self, "yt_sub_layer", None)
+        if self._shutting_down or layer is None:
+            return
         cfg = dict(config or {})
         self._sub_style_cfg = cfg
 
@@ -5430,10 +5463,8 @@ class YouTubeOnlinePage(QWidget):
         self._yt_cookie_cache.clear()
         self._yt_cookie_error.clear()
         self._yt_cookie_loading.clear()
-        if hasattr(self.client, "_cache") and hasattr(self.client, "_cache_lock"):
-            with self.client._cache_lock:
-                for k in [k for k in self.client._cache if k.startswith("home:")]:
-                    self.client._cache.pop(k, None)
+        if hasattr(self.client, "clear_home_cache"):
+            self.client.clear_home_cache()
 
     def _ensure_cookie_section_loaded(self, section: str, *, force: bool = False) -> None:
         spec = self._COOKIE_SECTION_TARGETS.get(section)
@@ -5927,3 +5958,5 @@ class YouTubeOnlinePage(QWidget):
         self._workers.clear()
         self._thumbs.shutdown()
         self.player.shutdown()
+        if hasattr(self.client, "close"):
+            self.client.close()

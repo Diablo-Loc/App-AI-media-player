@@ -15,9 +15,8 @@ import threading
 import time
 from typing import Callable
 
-from PySide6.QtCore import QEvent, QObject, QRectF, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QPainter, QPainterPath
-from PySide6.QtMultimedia import QAudioOutput, QMediaDevices, QMediaPlayer, QVideoFrame, QVideoSink
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Signal
+from PySide6.QtMultimedia import QAudioOutput, QMediaDevices, QMediaPlayer, QVideoSink
 from PySide6.QtMultimediaWidgets import QVideoWidget
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 

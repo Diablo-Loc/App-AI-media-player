@@ -24,7 +24,6 @@ from ui.i18n import (
     get_language,
     install_app_language_manager,
     normalize_language,
-    reload_language_from_settings,
     set_language,
     tr_pair,
     translate_widget_tree,
