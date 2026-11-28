@@ -276,6 +276,7 @@ class AudioEffectsController(QObject):
         self._pending = False
         self._generation = 0
         self._closed = False
+        self._starting_playback = False
         self._original = self.player.source()
         self._track = 0
         self._failed_request = None
@@ -603,9 +604,14 @@ class AudioEffectsController(QObject):
         self._original = source
         self._sync_qt_audio_routing()
         same_source = source == self.player.source()
-        self.player.setSource(source)
-        if same_source:
-            self._source_changed(source)
+        prev_starting = self._starting_playback
+        self._starting_playback = True
+        try:
+            self.player.setSource(source)
+            if same_source:
+                self._source_changed(source)
+        finally:
+            self._starting_playback = prev_starting
         self.player.play()
 
     def toggle_pending_start(self):
@@ -1106,7 +1112,9 @@ class AudioEffectsController(QObject):
             preferred = QMediaDevices.defaultAudioOutput().description()
         except Exception:
             pass
-        paused = self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState
+        paused = (not self._starting_playback) and (
+            self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState
+        )
         start_pos_ms = self._effective_start_position_ms()
         try:
             self.stream.set_user_volume(self.volume(), self.window.audio_output.isMuted())

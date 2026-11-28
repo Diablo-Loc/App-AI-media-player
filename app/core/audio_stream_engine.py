@@ -1,4 +1,5 @@
 """Zero-disk 64-bit FFmpeg -> RAM pre-buffer -> GIL-free C-blocking WASAPI Shared/Exclusive engine."""
+import ctypes
 import logging
 import os
 import subprocess
@@ -18,6 +19,37 @@ _TPDF_LEN = 262147
 _TPDF_R_STRIDE = 131071
 _TPDF_TABLE: np.ndarray | None = None
 _TPDF_LOCK = threading.Lock()
+_AVRT_MOD = None
+
+
+def _enter_mmcss_pro_audio():
+    """Register the current WASAPI pump thread with Windows MMCSS 'Pro Audio' scheduler."""
+    global _AVRT_MOD
+    if os.name != 'nt':
+        return None
+    try:
+        if _AVRT_MOD is None:
+            avrt = ctypes.WinDLL('avrt', use_last_error=True)
+            avrt.AvSetMmThreadCharacteristicsW.argtypes = [ctypes.c_wchar_p, ctypes.POINTER(ctypes.c_uint32)]
+            avrt.AvSetMmThreadCharacteristicsW.restype = ctypes.c_void_p
+            avrt.AvRevertMmThreadCharacteristics.argtypes = [ctypes.c_void_p]
+            avrt.AvRevertMmThreadCharacteristics.restype = ctypes.c_int
+            _AVRT_MOD = avrt
+        task_index = ctypes.c_uint32(0)
+        handle = _AVRT_MOD.AvSetMmThreadCharacteristicsW('Pro Audio', ctypes.byref(task_index))
+        return int(handle) if handle else None
+    except Exception:
+        return None
+
+
+def _leave_mmcss_pro_audio(handle) -> None:
+    """Release Windows MMCSS 'Pro Audio' registration cleanly on thread exit."""
+    if not handle or _AVRT_MOD is None:
+        return
+    try:
+        _AVRT_MOD.AvRevertMmThreadCharacteristics(ctypes.c_void_p(int(handle)))
+    except Exception:
+        pass
 
 
 def _get_tpdf_table() -> np.ndarray:
@@ -520,6 +552,7 @@ class AudioStreamEngine:
         with self._lock:
             current_gain_lin = self._target_gain_linear
         started = False
+        mmcss_handle = _enter_mmcss_pro_audio()
         try:
             stdout = proc.stdout
             if stdout is None:
@@ -554,14 +587,20 @@ class AudioStreamEngine:
                         target_amp = self._user_volume
                     target_gain = self._target_gain_linear
 
-                # Slew mastering gain smoothly in 64-bit float at <= 0.6 dB/sec so adjustments are inaudible.
+                # Slew mastering gain smoothly in logarithmic dB space (64-bit float):
+                # 6.0 dB/s when attenuating (settles loud uncached songs in ~1s to protect ears)
+                # and 3.5 dB/s when boosting (natural musical swell without zipper noise).
                 if abs(target_gain - current_gain_lin) > 1e-6:
-                    max_ratio = 10.0 ** (0.6 * (len(pcm) / float(max(8000, out_sr))) / 20.0)
+                    slew_db_per_sec = 6.0 if target_gain < current_gain_lin else 3.5
+                    max_ratio = 10.0 ** (slew_db_per_sec * (len(pcm) / float(max(8000, out_sr))) / 20.0)
                     if target_gain > current_gain_lin:
                         next_gain = min(target_gain, current_gain_lin * max_ratio)
                     else:
                         next_gain = max(target_gain, current_gain_lin / max_ratio)
-                    ramp = np.linspace(current_gain_lin, next_gain, len(pcm), dtype=np.float64)[:, None]
+                    if current_gain_lin > 1e-9 and next_gain > 1e-9:
+                        ramp = np.geomspace(current_gain_lin, next_gain, len(pcm), dtype=np.float64)[:, None]
+                    else:
+                        ramp = np.linspace(current_gain_lin, next_gain, len(pcm), dtype=np.float64)[:, None]
                     pcm_gained = pcm * ramp
                     current_gain_lin = next_gain
                 else:
@@ -638,6 +677,7 @@ class AudioStreamEngine:
                     proc.stdout.close()
             except Exception:
                 pass
+            _leave_mmcss_pro_audio(mmcss_handle)
 
     def _stop_active_worker(self, release_exclusive: bool = True):
         with self._lock:
