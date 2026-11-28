@@ -496,9 +496,12 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
         set_language("vi", persist=False)
 
     def test_isolated_tab_i18n_subtitles_download_handoff_and_mutual_exclusion(self):
-        with isolated_window() as (window, _root):
+        with tempfile.TemporaryDirectory(prefix="botube-yt-store-") as yt_store_td, \
+             patch("core.youtube_online_client.storage_dir", return_value=Path(yt_store_td)), \
+             isolated_window() as (window, _root):
             yt = window.youtube_online_page
             self.assertIsNotNone(yt)
+            self.assertEqual(yt.profile.path.parent.resolve(), Path(yt_store_td).resolve())
 
             # 1. Navigate to YouTube tab via sidebar without disturbing offline pages (0..6)
             yt_row = window.sidebar.row_for_page("youtube_online")
@@ -770,10 +773,13 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 self.assertEqual(yt.profile.get_pref("cookies_file"), COOKIE_VAULT_SENTINEL)
                 self.assertTrue(has_cookie_vault())
 
-                # Auto-recovery on cold restart: even if profile JSON had empty cookies_file, existing DPAPI vault is auto-loaded!
+                # Auto-recovery on cold restart: even if profile JSON had empty cookies_file AND stale cookies_browser,
+                # existing DPAPI vault is auto-loaded!
+                yt.profile.set_pref("cookies_browser", "firefox")
                 yt.profile.set_pref("cookies_file", "")
                 reloaded_prof = YouTubeOnlineProfileStore(yt.profile.path)
                 self.assertEqual(reloaded_prof.get_pref("cookies_file"), COOKIE_VAULT_SENTINEL)
+                yt.profile.set_pref("cookies_browser", "")
                 yt.profile.set_pref("cookies_file", COOKIE_VAULT_SENTINEL)
 
                 # Opening Liked / Watch Later / Playlists tabs auto-reads from saved DPAPI vault WITHOUT opening Account dialog!

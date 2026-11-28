@@ -1538,6 +1538,9 @@ class _YouTubeAccountDialog(QDialog):
         ok, msg = import_cookies_into_vault(source_path, wipe_source=wipe_src)
         if ok:
             self._apply_vault_ui_state(active=True)
+            if hasattr(self, "combo_browser"):
+                self.combo_browser.setCurrentIndex(0)
+            self.profile.set_pref("cookies_browser", "")
             self.profile.set_pref("cookie_auto_wipe_source", wipe_src)
             self.profile.set_pref("cookies_file", COOKIE_VAULT_SENTINEL)
             self.lbl_verify_status.setStyleSheet("color: #77E0BE; font-size: 12px; font-weight: 600;")

@@ -1300,9 +1300,10 @@ class YouTubeOnlineProfileStore:
                             state["preferences"] = merged
                 except Exception as err:
                     logger.warning("Failed to load YouTube online profile: %s", err)
-            # Auto-recover encrypted DPAPI vault on startup/reboot if vault exists on disk
+            # Auto-recover encrypted DPAPI vault on startup/reboot whenever the vault exists on disk
+            # (even if a stale cookies_browser preference remained from an earlier attempt).
             prefs = state["preferences"]
-            if not str(prefs.get("cookies_file") or "").strip() and not str(prefs.get("cookies_browser") or "").strip():
+            if not str(prefs.get("cookies_file") or "").strip():
                 if has_cookie_vault(self.path.parent / "youtube-cookies.vault"):
                     prefs["cookies_file"] = COOKIE_VAULT_SENTINEL
             self._data = state
