@@ -262,6 +262,15 @@ class MainWindow(QMainWindow):
         self._last_listen_pos_ms = 0
         self._session_listened_sec = 0.0
         self._session_play_counted = False
+        self._hw_last_skip_mono = 0.0
+        self._track_switch_guard_until = 0.0
+        self._in_track_switch = False
+        self._navigating_playlist_skip = False
+        self._pending_history_item = None
+        self._pending_history_timer = QTimer(self)
+        self._pending_history_timer.setSingleShot(True)
+        self._pending_history_timer.setInterval(2500)
+        self._pending_history_timer.timeout.connect(self._commit_pending_history)
         self._active_queue_playlist_id = None
         self.media_items = []      
         self.all_media_items = []
@@ -336,26 +345,11 @@ class MainWindow(QMainWindow):
         )
         if self.media_manager.enabled and not getattr(self, '_system_media_connected', False):
             self._system_media_connected = True
-
             self.media_manager.audio_received.connect(
-                self.process_realtime_audio
+                self.process_realtime_audio,
+                Qt.ConnectionType.QueuedConnection,
             )
-
-            self.media_manager.media_play.connect(
-                self._hardware_play
-            )
-
-            self.media_manager.media_pause.connect(
-                self._hardware_pause
-            )
-
-            self.media_manager.media_next.connect(
-                self.playback_bar.btn_next.click
-            )
-
-            self.media_manager.media_prev.connect(
-                self.playback_bar.btn_prev.click
-            )
+            self._connect_hardware_media_signals(reconnect=False)
         self.media_player.player.metaDataChanged.connect(
             self._on_video_metadata_ready
         )
@@ -363,19 +357,73 @@ class MainWindow(QMainWindow):
             self.video_display.videoSink().videoSizeChanged.connect(
                 self._on_video_metadata_ready
             )
-    def _hardware_play(self):
-        if self.audio_effects.set_pending_playback(True):
-            return
 
-        if hasattr(self, "playback_bar"):
-            self.playback_bar.btn_play.click()
+    def _connect_hardware_media_signals(self, reconnect: bool = False):
+        """Wire SMTC hardware media keys with explicit QueuedConnection and safe slots."""
+        manager = getattr(self, "media_manager", None)
+        if manager is None or not getattr(manager, "enabled", False):
+            return
+        pairs = (
+            ("media_play", self._hardware_play),
+            ("media_pause", self._hardware_pause),
+            ("media_next", self._hardware_next),
+            ("media_prev", self._hardware_prev),
+        )
+        if reconnect and getattr(self, "_hw_media_connected_mgr", None) is manager:
+            for sig_name, slot in pairs:
+                sig = getattr(manager, sig_name, None)
+                if sig is not None:
+                    try:
+                        sig.disconnect(slot)
+                    except (RuntimeError, TypeError):
+                        pass
+        for sig_name, slot in pairs:
+            sig = getattr(manager, sig_name, None)
+            if sig is not None:
+                sig.connect(slot, Qt.ConnectionType.QueuedConnection)
+        self._hw_media_connected_mgr = manager
+
+    def _hardware_play(self):
+        """Idempotent Play-only handler for keyboard/headphone SMTC Play key."""
+        if self._try_startup_resume():
+            return
+        if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(True):
+            self.sync_mini_player_state()
+            return
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        if player is not None and player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+            player.play()
+        self.sync_mini_player_state()
 
     def _hardware_pause(self):
-        if self.audio_effects.set_pending_playback(False):
+        """Idempotent Pause-only handler for keyboard/headphone SMTC Pause key."""
+        if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(False):
+            self.sync_mini_player_state()
             return
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            player.pause()
+        self.sync_mini_player_state()
 
-        if hasattr(self, "playback_bar"):
-            self.playback_bar.btn_play.click()
+    def _hardware_next(self):
+        """Debounced Next-track handler for keyboard/headphone SMTC Next key."""
+        if getattr(self, "_in_track_switch", False):
+            return
+        now = time.monotonic()
+        if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
+            return
+        self._hw_last_skip_mono = now
+        self.play_next()
+
+    def _hardware_prev(self):
+        """Debounced Previous-track handler for keyboard/headphone SMTC Previous key."""
+        if getattr(self, "_in_track_switch", False):
+            return
+        now = time.monotonic()
+        if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
+            return
+        self._hw_last_skip_mono = now
+        self.play_previous()
 
     def _save_font_size(self, value):
         self._save_setting("font_size", value)
@@ -453,6 +501,9 @@ class MainWindow(QMainWindow):
             # --- BƯỚC 1: DỪNG PLAYER & CHỐT VỊ TRÍ NGHE GẦN NHẤT ---
             if hasattr(self, "_resume_fallback_timer") and self._resume_fallback_timer.isActive():
                 self._resume_fallback_timer.stop()
+            if hasattr(self, "_pending_history_timer") and self._pending_history_timer.isActive():
+                self._pending_history_timer.stop()
+            self._pending_history_item = None
             if hasattr(self, "media_player") and self.media_player:
                 player = getattr(self.media_player, "player", self.media_player)
                 if (
@@ -961,6 +1012,13 @@ class MainWindow(QMainWindow):
         ):
             self._apply_pending_resume_seek()
         if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            if getattr(self, "_in_track_switch", False):
+                return
+            if time.monotonic() < float(getattr(self, "_track_switch_guard_until", 0.0) or 0.0):
+                return
+            player = getattr(getattr(self, "media_player", None), "player", None)
+            if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
+                return
             self.play_next()
 
     def toggle_play_pause(self):
@@ -987,7 +1045,18 @@ class MainWindow(QMainWindow):
         self.playback_bar.update_play_state(is_playing)
         # đồng bộ mini player mọi khi trạng thái phát thay đổi
         self.sync_mini_player_state()
-        if hasattr(self, 'media_manager') and getattr(self.media_manager, 'enabled', False):
+        if (
+            is_playing
+            and getattr(self, "_pending_history_item", None) is not None
+            and hasattr(self, "_pending_history_timer")
+            and not self._pending_history_timer.isActive()
+        ):
+            self._pending_history_timer.start(2500)
+        if (
+            not getattr(self, "_in_track_switch", False)
+            and hasattr(self, 'media_manager')
+            and getattr(self.media_manager, 'enabled', False)
+        ):
             self.media_manager.set_status(is_playing)
             
     def on_position_changed(self, position):
@@ -1336,20 +1405,30 @@ class MainWindow(QMainWindow):
             new_idx = current_idx + direction
             
             # Kiểm tra biên
-            if 0 <= new_idx < len(self.active_playlist):
-                next_item = self.active_playlist[new_idx]
-                self.on_media_clicked(next_item, update_playlist=False)
-            else:
-                # Nếu lùi quá bài đầu hoặc tiến quá bài cuối
-                if direction > 0: # Hết list thì quay lại bài đầu (Repeat All)
-                    self.on_media_clicked(self.active_playlist[0], update_playlist=False)
-                else: # Lùi quá bài đầu thì về bài cuối
-                    self.on_media_clicked(self.active_playlist[-1], update_playlist=False)
+            prev_skip = bool(getattr(self, "_navigating_playlist_skip", False))
+            self._navigating_playlist_skip = True
+            try:
+                if 0 <= new_idx < len(self.active_playlist):
+                    next_item = self.active_playlist[new_idx]
+                    self.on_media_clicked(next_item, update_playlist=False)
+                else:
+                    # Nếu lùi quá bài đầu hoặc tiến quá bài cuối
+                    if direction > 0: # Hết list thì quay lại bài đầu (Repeat All)
+                        self.on_media_clicked(self.active_playlist[0], update_playlist=False)
+                    else: # Lùi quá bài đầu thì về bài cuối
+                        self.on_media_clicked(self.active_playlist[-1], update_playlist=False)
+            finally:
+                self._navigating_playlist_skip = prev_skip
                     
         except (ValueError, AttributeError) as e:
             print(f"❌ Lỗi điều hướng: {e}")
             # Dự phòng: Phát bài đầu tiên nếu không tìm thấy vị trí hiện tại
-            self.on_media_clicked(self.active_playlist[0], update_playlist=False)
+            prev_skip = bool(getattr(self, "_navigating_playlist_skip", False))
+            self._navigating_playlist_skip = True
+            try:
+                self.on_media_clicked(self.active_playlist[0], update_playlist=False)
+            finally:
+                self._navigating_playlist_skip = prev_skip
 
     def switch_to_player_page(self):
         """Click vào video: Điều hướng thông minh dựa trên Tab hiện tại"""
@@ -1452,6 +1531,32 @@ class MainWindow(QMainWindow):
         # Quan trọng: Không return False tùy tiện, hãy để super() lo phần còn lại
         return super().eventFilter(watched, event)
 
+    def _commit_pending_history(self):
+        """Record a skipped-to track into Watch History only after actual playback dwell."""
+        item = getattr(self, "_pending_history_item", None)
+        if item is None or not hasattr(self, "user_collections"):
+            self._pending_history_item = None
+            return
+        cur = getattr(self, "current_media_item", None)
+        if cur is None or getattr(cur, "id", None) != getattr(item, "id", None):
+            self._pending_history_item = None
+            return
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        fx = getattr(self, "audio_effects", None)
+        stream_active = bool(fx is not None and hasattr(fx, "stream") and fx.stream.is_active())
+        is_playing = bool(
+            stream_active
+            or (
+                player is not None
+                and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState
+            )
+        )
+        if not is_playing:
+            # Keep pending until the user actually resumes playback on this track.
+            return
+        self._pending_history_item = None
+        self.user_collections.record_history(item)
+
     def on_media_clicked(self, media_item, force_gen=False, update_playlist=True, resume_position_ms=0):
         """Xử lý khi click vào một bài hát / video"""
         if media_item is None:
@@ -1530,6 +1635,13 @@ class MainWindow(QMainWindow):
 
         # Lưu bài đang phát để hàm play_next biết đường mà tìm
         self.current_media_item = media_item
+        self._track_switch_guard_until = time.monotonic() + 0.65
+        defer_history = bool(getattr(self, "_navigating_playlist_skip", False))
+
+        # Hủy timer lịch sử đang chờ của bài trước (nếu vừa bấm Next/Prev lướt qua)
+        if hasattr(self, "_pending_history_timer") and self._pending_history_timer.isActive():
+            self._pending_history_timer.stop()
+        self._pending_history_item = None
 
         # 0. HỦY JOB CŨ (AI, subtitle...)
         if getattr(self, "app_controller", None):
@@ -1551,7 +1663,14 @@ class MainWindow(QMainWindow):
         self._session_listened_sec = 0.0
         self._session_play_counted = False
         if hasattr(self, "user_collections"):
-            self.user_collections.record_history(media_item)
+            if defer_history:
+                # Lướt qua bằng Next / Previous / phím cứng: chỉ ghi vào lịch sử
+                # sau khi thực sự dừng lại nghe >= 2.5 giây để tránh rác lịch sử.
+                self._pending_history_item = media_item
+                if hasattr(self, "_pending_history_timer"):
+                    self._pending_history_timer.start(2500)
+            else:
+                self.user_collections.record_history(media_item)
             self.user_collections.record_last_played_track(
                 media_item,
                 position_ms=resume_target_ms if resume_target_ms > 1000 else 0,
@@ -1583,7 +1702,12 @@ class MainWindow(QMainWindow):
         # 3. RESET PLAYER (CHỈ PLAYER)
         # =============================
         player = self.media_player.player
-        self.audio_effects.play_source(QUrl.fromLocalFile(video_path))
+        prev_in_switch = bool(getattr(self, "_in_track_switch", False))
+        self._in_track_switch = True
+        try:
+            self.audio_effects.play_source(QUrl.fromLocalFile(video_path))
+        finally:
+            self._in_track_switch = prev_in_switch
 
         # Fix audio mute state
         if hasattr(self, "audio_output") and self.audio_output:
@@ -3268,42 +3392,7 @@ class MainWindow(QMainWindow):
             self.update_video_location(target_mode)
         
         if self.media_manager.enabled:
-
-            try:
-                self.media_manager.media_play.disconnect()
-            except:
-                pass
-
-            try:
-                self.media_manager.media_pause.disconnect()
-            except:
-                pass
-
-            try:
-                self.media_manager.media_next.disconnect()
-            except:
-                pass
-
-            try:
-                self.media_manager.media_prev.disconnect()
-            except:
-                pass
-
-            self.media_manager.media_play.connect(
-                self.playback_bar.btn_play.click
-            )
-
-            self.media_manager.media_pause.connect(
-                self.playback_bar.btn_play.click
-            )
-
-            self.media_manager.media_next.connect(
-                self.playback_bar.btn_next.click
-            )
-
-            self.media_manager.media_prev.connect(
-                self.playback_bar.btn_prev.click
-            )    
+            self._connect_hardware_media_signals(reconnect=True)
         # 5. HIỂN THỊ CHÍNH THỨC
         self.show()
         self.raise_()
@@ -3366,8 +3455,10 @@ class MainWindow(QMainWindow):
         if hasattr(self.media_player, "refresh_audio_output"):
             self.media_player.refresh_audio_output()
 
-        # restart WASAPI + SMTC
-        self.media_manager.restart()
+        # Chỉ khởi động lại WASAPI loopback nếu thực sự đang bật capture PCM
+        # (không gọi RestartEngine vì sẽ nhân bản delegate SMTC trên HWND).
+        if getattr(self.media_manager, "_capture_audio", False):
+            self.media_manager.restart()
     
 
 

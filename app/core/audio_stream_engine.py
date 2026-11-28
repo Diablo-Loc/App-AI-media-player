@@ -249,6 +249,8 @@ class AudioStreamEngine:
         self._cancel_event = threading.Event()
         self._active_proc: subprocess.Popen | None = None
         self._active_stream = None
+        self._active_stream_lock = None
+        self._active_stream_closed: list[bool] | None = None
 
         self._user_volume = 0.5
         self._muted = False
@@ -280,6 +282,7 @@ class AudioStreamEngine:
         self._gain_db = 0.0
         self._track = 0
         self._preferred_device = ''
+        self._last_exclusive_format: dict[tuple[str, str, int], tuple[int, str]] = {}
 
     def set_user_volume(self, volume: float, muted: bool = False):
         with self._lock:
@@ -333,6 +336,8 @@ class AudioStreamEngine:
     def refresh_devices(self) -> list[str]:
         """Re-enumerate PortAudio WASAPI endpoints safely after USB DAC or Bluetooth hotplug."""
         self._stop_active_worker(release_exclusive=True)
+        with self._lock:
+            self._last_exclusive_format.clear()
         try:
             import sounddevice as sd
             term = getattr(sd, '_terminate', None)
@@ -375,27 +380,40 @@ class AudioStreamEngine:
                     pass
 
             rates = preferred_exclusive_rates(source_sr, dev_sr, profile.upsample)
+            sr_family = 44100 if (source_sr > 0 and source_sr % 44100 == 0) else 48000
+            fmt_cache_key = (dev_name.lower(), str(profile.upsample), sr_family)
+            with self._lock:
+                cached_fmt = self._last_exclusive_format.get(fmt_cache_key)
+            attempts: list[tuple[int, str]] = []
+            if cached_fmt is not None and cached_fmt[0] in rates:
+                attempts.append(cached_fmt)
             for sr in rates:
                 for dtype in ('int32', 'int24', 'float32', 'int16'):
-                    stream = None
-                    try:
-                        # No Python callback: PortAudio runs WASAPI Exclusive pump in pure C!
-                        stream = sd.RawOutputStream(
-                            device=dev_idx,
-                            channels=2,
-                            dtype=dtype,
-                            samplerate=sr,
-                            blocksize=0,
-                            latency=0.10,
-                            extra_settings=sd.WasapiSettings(exclusive=True),
-                        )
-                        return stream, dev_name, sr, dtype, 'exclusive', pin_missing_note
-                    except Exception:
-                        if stream is not None:
-                            try:
-                                stream.close()
-                            except Exception:
-                                pass
+                    pair = (sr, dtype)
+                    if pair != cached_fmt:
+                        attempts.append(pair)
+            for sr, dtype in attempts:
+                stream = None
+                try:
+                    # No Python callback: PortAudio runs WASAPI Exclusive pump in pure C!
+                    stream = sd.RawOutputStream(
+                        device=dev_idx,
+                        channels=2,
+                        dtype=dtype,
+                        samplerate=sr,
+                        blocksize=0,
+                        latency=0.10,
+                        extra_settings=sd.WasapiSettings(exclusive=True),
+                    )
+                    with self._lock:
+                        self._last_exclusive_format[fmt_cache_key] = (sr, dtype)
+                    return stream, dev_name, sr, dtype, 'exclusive', pin_missing_note
+                except Exception:
+                    if stream is not None:
+                        try:
+                            stream.close()
+                        except Exception:
+                            pass
 
             with self._lock:
                 release_excl = self._exclusive_held
@@ -490,6 +508,8 @@ class AudioStreamEngine:
         out_sr: int,
         out_dtype: str,
         cancel_event: threading.Event,
+        stream_lock=None,
+        stream_closed: list[bool] | None = None,
     ):
         frame_bytes = 16  # Stereo 64-bit float (2 * 8 bytes)
         chunk_bytes = self._chunk_frames_for_rate(out_sr) * frame_bytes
@@ -588,14 +608,25 @@ class AudioStreamEngine:
                     stream.write(raw_tail)
                 except Exception:
                     pass
-            try:
-                stream.abort()
-            except Exception:
-                pass
-            try:
-                stream.close()
-            except Exception:
-                pass
+            def _close_stream_once():
+                if stream_closed is not None:
+                    if stream_closed[0]:
+                        return
+                    stream_closed[0] = True
+                try:
+                    stream.abort()
+                except Exception:
+                    pass
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
+            if stream_lock is not None:
+                with stream_lock:
+                    _close_stream_once()
+            else:
+                _close_stream_once()
             try:
                 if proc.poll() is None:
                     proc.kill()
@@ -613,12 +644,16 @@ class AudioStreamEngine:
             cancel_ev = self._cancel_event
             proc = self._active_proc
             stream = self._active_stream
+            stream_lock = self._active_stream_lock
+            stream_closed = self._active_stream_closed
             thread = self._writer_thread
             release_excl = bool(release_exclusive and self._exclusive_held)
             if release_excl:
                 self._exclusive_held = False
             self._active_proc = None
             self._active_stream = None
+            self._active_stream_lock = None
+            self._active_stream_closed = None
             self._writer_thread = None
 
         if cancel_ev is not None:
@@ -629,23 +664,46 @@ class AudioStreamEngine:
                     proc.kill()
             except Exception:
                 pass
+        # PortAudio WASAPI is not thread-safe for concurrent Pa_AbortStream + Pa_WriteStream.
+        # Killing FFmpeg + setting cancel_event lets _writer_loop finish its active ~42ms
+        # chunk and close the stream cleanly on its own thread; only abort externally if
+        # a stalled DAC/driver keeps the writer blocked past the grace window.
         if thread is not None and thread is not threading.current_thread():
-            thread.join(timeout=0.35)
+            thread.join(timeout=0.22)
             if thread.is_alive() and stream is not None:
+                if stream_lock is not None:
+                    with stream_lock:
+                        if stream_closed is None or not stream_closed[0]:
+                            try:
+                                stream.abort()
+                            except Exception:
+                                pass
+                else:
+                    try:
+                        stream.abort()
+                    except Exception:
+                        pass
+                thread.join(timeout=0.28)
+        elif stream is not None:
+            def _close_now():
+                if stream_closed is not None:
+                    if stream_closed[0]:
+                        return
+                    stream_closed[0] = True
                 try:
                     stream.abort()
                 except Exception:
                     pass
-                thread.join(timeout=0.65)
-        elif stream is not None:
-            try:
-                stream.abort()
-            except Exception:
-                pass
-            try:
-                stream.close()
-            except Exception:
-                pass
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
+            if stream_lock is not None:
+                with stream_lock:
+                    _close_now()
+            else:
+                _close_now()
 
         if release_excl and self._on_after_exclusive is not None:
             try:
@@ -711,9 +769,11 @@ class AudioStreamEngine:
         )
         proc = self._spawn_ffmpeg(str(source_path), max(0, int(start_ms)), int(track), filter_graph, out_sr=out_sr)
         cancel_event = threading.Event()
+        stream_lock = threading.Lock()
+        stream_closed = [False]
         thread = threading.Thread(
             target=self._writer_loop,
-            args=(op_id, stream, proc, out_sr, out_dtype, cancel_event),
+            args=(op_id, stream, proc, out_sr, out_dtype, cancel_event, stream_lock, stream_closed),
             name='BoTube-HiFi-WASAPI-Pump',
             daemon=True,
         )
@@ -725,6 +785,8 @@ class AudioStreamEngine:
                 superseded = False
                 self._cancel_event = cancel_event
                 self._active_stream = stream
+                self._active_stream_lock = stream_lock
+                self._active_stream_closed = stream_closed
                 self._active_proc = proc
                 self._writer_thread = thread
                 self._current_amp = 0.0
@@ -807,13 +869,13 @@ class AudioStreamEngine:
             )
         self.start_or_reconfigure(*args, paused=False)
 
-    def stop(self):
+    def stop(self, release_exclusive: bool = True):
         with self._lock:
             self._op_id += 1
             self._playing = False
             self._paused = False
             self._last_write_mono = 0.0
-        self._stop_active_worker(release_exclusive=True)
+        self._stop_active_worker(release_exclusive=release_exclusive)
 
     def shutdown(self):
         self.stop()

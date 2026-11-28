@@ -1,5 +1,5 @@
 ; =====================================================================
-; BoTube Official Commercial Windows Installer (Inno Setup 6)
+; BoTube Official Windows Installer (Inno Setup 6)
 ; - Preserves exact legacy AppId for seamless 5.0.0 -> 6.0.0+ upgrades
 ; - Supports silent in-place auto-updates (/SILENT /CLOSEAPPLICATIONS)
 ; - Automatically relaunches BoTube as original non-elevated user
@@ -10,7 +10,7 @@
   #define AppName "BoTube"
 #endif
 #ifndef AppVersion
-  #define AppVersion "6.0.1"
+  #define AppVersion "6.0.2"
 #endif
 #ifndef AppPublisher
   #define AppPublisher "BoTube Studio"

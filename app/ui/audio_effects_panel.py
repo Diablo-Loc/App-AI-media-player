@@ -427,6 +427,9 @@ class AudioEffectsPanel(QWidget):
         key = self.preset_combo.currentData()
         if key == 'custom' or not key:
             return
+        if key == 'master_hifi':
+            self.recommended_requested.emit()
+            return
         prof, lufs = preset_profile(key)
         eq_state = dict(self._eq_state)
         if key == 'bypass':
@@ -442,12 +445,12 @@ class AudioEffectsPanel(QWidget):
             eq_state=eq_state,
             dac_phase=prof.dac_phase,
         )
+        # Emit settings FIRST so AudioEffectsController updates profile fields
+        # before dac_phase_changed/level_changed sync panel widgets back.
+        self._emit_settings()
         self.dac_phase_changed.emit(prof.dac_phase)
         if isinstance(lufs, int) and key != 'youtube':
             self.level_changed.emit(int(lufs))
-        self._emit_settings()
-        if key == 'master_hifi':
-            self.recommended_requested.emit()
 
     def _on_level_changed(self, *_):
         val = self.level.currentData()
@@ -475,19 +478,17 @@ class AudioEffectsPanel(QWidget):
         self.settings_changed.emit(norm, tone_val, rest_val, out_val, up_val, yt_loud)
 
     def _apply_recommended(self):
-        self.set_profile(True, 'master_hifi', 'auto', 'shared', 'off', False, target_lufs=-14, dac_phase='linear')
-        self.dac_phase_changed.emit('linear')
-        self.level_changed.emit(-14)
-        self._emit_settings()
         self.recommended_requested.emit()
 
     def _reset(self):
         eq_state = dict(self._eq_state)
         eq_state['eq_enabled'] = False
         self.set_profile(False, 'off', 'off', 'shared', 'off', False, eq_state=eq_state, output_device='', dac_phase='linear')
-        self.dac_phase_changed.emit('linear')
-        self.output_device_changed.emit('')
+        # Emit settings FIRST so dac_phase_changed/output_device_changed do not
+        # revert widgets to the old profile before _emit_settings reads them.
         self._emit_settings()
+        self.output_device_changed.emit('')
+        self.dac_phase_changed.emit('linear')
 
     def set_profile(
         self,

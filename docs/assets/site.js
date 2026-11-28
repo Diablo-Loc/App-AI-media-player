@@ -1,7 +1,7 @@
 'use strict';
 
 const REPO_API = 'https://api.github.com/repos/Diablo-Loc/App-AI-media-player/releases/latest';
-const DEFAULT_VERSION = '6.0.0';
+const DEFAULT_VERSION = '6.0.2';
 
 const I18N = {
   vi: {
@@ -11,7 +11,7 @@ const I18N = {
     nav_whats_new: 'Điểm mới 6.0',
     nav_install: 'Cài đặt',
     nav_download: 'Tải Windows',
-    hero_badge: 'Phiên bản lớn 6.0.0 · Dành cho Windows 10/11 64-bit',
+    hero_badge: 'Phiên bản 6.0.2 · Dành cho Windows 10/11 64-bit',
     hero_title: 'Trình phát Media AI & Phòng thu Âm thanh Hi-Fi 64-bit',
     hero_lead:
       'Kết hợp phát nhạc Bit-Pure WASAPI Exclusive, nhận diện lời Whisper AI, dịch đa mô hình LLM, Karaoke khớp từng chữ, phiên âm tức thì và xuất video tăng tốc GPU NVIDIA NVENC — tất cả trong một ứng dụng desktop siêu mượt.',
@@ -108,7 +108,7 @@ const I18N = {
     nav_whats_new: "What's New 6.0",
     nav_install: 'Install',
     nav_download: 'Download Windows',
-    hero_badge: 'Major Release 6.0.0 · Built for Windows 10/11 64-bit',
+    hero_badge: 'Release 6.0.2 · Built for Windows 10/11 64-bit',
     hero_title: 'AI Media Player & 64-bit Hi-Fi Audio Studio',
     hero_lead:
       'Bit-Pure WASAPI Exclusive audio playback, Faster-Whisper CUDA transcription, Multi-LLM lyric translation, syllable-accurate Karaoke, instant offline phonetics, and NVIDIA NVENC video export — unified in one ultra-responsive desktop studio.',

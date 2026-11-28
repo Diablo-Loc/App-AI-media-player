@@ -121,27 +121,36 @@ class MiniPlayer(QWidget):
         # Bật focus để có thể bắt phím
         self.setFocus()
         self.setFocusPolicy(Qt.StrongFocus)
+        self._last_cover_path = object()
+        self._last_play_state = None
 
     def update_info(self, title, artist, is_playing, cover_path=None):
         display_title = (title[:20] + '..') if len(title) > 20 else title
-        self.lbl_title.setText(display_title)
-        self.lbl_artist.setText(artist)
-        button_icon(self.btn_play, "pause" if is_playing else "play", size=16, color=ACCENT)
-        
-        # Sử dụng hàm bo tròn để cập nhật thumbnail
-        if cover_path:
-            # Gọi hàm xử lý bo tròn thay vì setPixmap trực tiếp
-            self.set_rounded_pixmap(self.lbl_icon, cover_path)
-        else:
-            self.lbl_icon.clear() # Xóa ảnh cũ
-            label_icon(self.lbl_icon, "disc-3", size=24)
-            self.lbl_icon.setAlignment(Qt.AlignCenter) # Căn giữa icon đĩa nhạc
-            self.lbl_icon.setStyleSheet("""
-                border-radius: 20px; 
-                background-color: #222222; 
-                border: 1px solid #333333;
-                font-size: 20px;
-            """)
+        if self.lbl_title.text() != display_title:
+            self.lbl_title.setText(display_title)
+        if self.lbl_artist.text() != artist:
+            self.lbl_artist.setText(artist)
+        playing_bool = bool(is_playing)
+        if self._last_play_state is not playing_bool:
+            self._last_play_state = playing_bool
+            button_icon(self.btn_play, "pause" if playing_bool else "play", size=16, color=ACCENT)
+
+        # Chỉ tải và bo tròn lại ảnh bìa khi đổi bài để tránh đọc đĩa lặp trên mỗi Play/Pause
+        norm_cover = cover_path or None
+        if norm_cover != self._last_cover_path:
+            self._last_cover_path = norm_cover
+            if norm_cover:
+                self.set_rounded_pixmap(self.lbl_icon, norm_cover)
+            else:
+                self.lbl_icon.clear() # Xóa ảnh cũ
+                label_icon(self.lbl_icon, "disc-3", size=24)
+                self.lbl_icon.setAlignment(Qt.AlignCenter) # Căn giữa icon đĩa nhạc
+                self.lbl_icon.setStyleSheet("""
+                    border-radius: 20px; 
+                    background-color: #222222; 
+                    border: 1px solid #333333;
+                    font-size: 20px;
+                """)
     
     def set_rounded_pixmap(self, label, image_path):
         pixmap = QPixmap(image_path)

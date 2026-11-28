@@ -21,6 +21,8 @@ HIDDEN_IMPORTS = (
     'timeit', 'filecmp', 'pipes', 'trace', 'unittest', 'unittest.mock', 'doctest', 'pdb',
     'wave', 'py_compile', 'compileall', 'zipimport', 'sqlite3', 'shelve', 'tarfile',
     'http.cookiejar', 'urllib.robotparser', 'webbrowser', 'code', 'codeop',
+    'csv', 'configparser', 'decimal', 'faulthandler', 'mmap', 'runpy', 'shlex', 'site',
+    'xml.etree.ElementTree',
     'sounddevice', '_sounddevice_data', 'cffi', 'numpy',
     'pykakasi', 'jaconv', 'deprecated', 'pypinyin',
 )

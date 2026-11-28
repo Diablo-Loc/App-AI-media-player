@@ -422,7 +422,11 @@ class AudioEffectsController(QObject):
         if self._closed:
             return
         manager = getattr(self.window, 'media_manager', None)
-        if manager is not None and getattr(manager, 'enabled', False):
+        if (
+            manager is not None
+            and getattr(manager, 'enabled', False)
+            and getattr(manager, '_capture_audio', False)
+        ):
             manager.restart()
 
     def _load_profile(self):
@@ -1001,7 +1005,13 @@ class AudioEffectsController(QObject):
             return
         self._seek_timer.stop()
         self._sync_timer.stop()
-        self.stream.stop()
+        keep_exclusive = (
+            self._use_stream_engine()
+            and self.profile.output_mode == 'exclusive'
+            and isinstance(source, QUrl)
+            and source.isLocalFile()
+        )
+        self.stream.stop(release_exclusive=not keep_exclusive)
         self._original = source
         self._failed_request = None
         self._track = 0

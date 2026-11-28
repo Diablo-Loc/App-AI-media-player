@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 APP_NAME = 'BoTube'
-APP_VERSION = '6.0.1'
+APP_VERSION = '6.0.2'
 APP_PUBLISHER = 'BoTube Studio'
 APP_ID = '{B070B3-E119-4A92-B76F-B937DAE9E312}'
 

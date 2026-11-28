@@ -1061,9 +1061,14 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 self.assertEqual(res['verdict']['badge'], 'ĐẠT CHUẨN BIT-PURE')
                 self.assertGreater(abs(res['lab_phase_deg'][-8]), 5.0)
 
-            # UI Panel -> Controller persistence for dac_phase
+            # UI Panel -> Controller persistence for dac_phase (works regardless of whether a USB DAC starts on minimum)
+            idx_lin = panel.dac_phase.findData('linear')
             idx_min = panel.dac_phase.findData('minimum')
+            self.assertGreaterEqual(idx_lin, 0)
             self.assertGreaterEqual(idx_min, 0)
+            if panel.dac_phase.currentIndex() == idx_min:
+                panel.dac_phase.setCurrentIndex(idx_lin)
+                pump(30)
             panel.dac_phase.setCurrentIndex(idx_min)
             pump(40)
             self.assertEqual(ctrl.profile.dac_phase, 'minimum')
