@@ -935,12 +935,17 @@ def _build_comparison_and_verdict(
     tp_tone = 'warn' if (proc_tp_db > -0.05 or proc_clips > 0) else 'good'
 
     # Standardized 8-row Pre vs Post table (identical units on both columns)
+    lu_delta = (
+        round(float(proc_lufs) - float(orig_lufs), 2)
+        if isinstance(orig_lufs, (int, float)) and isinstance(proc_lufs, (int, float))
+        else float(gain_db)
+    )
     rows = [
         {
             'metric': 'Độ lớn tích hợp (BS.1770-4)',
             'orig': orig_lufs_s,
             'proc': proc_lufs_s,
-            'status': 'Không đổi' if (not profile.enabled or abs(gain_db) < 0.05) else f'{gain_db:+.1f} LU',
+            'status': 'Không đổi' if (not profile.enabled or abs(lu_delta) < 0.05) else f'{lu_delta:+.1f} LU',
             'tone': 'good' if profile.enabled else 'neutral',
         },
         {
@@ -1258,7 +1263,18 @@ def run_audio_benchmark(
 
     orig_lufs = meas.get('lufs')
     orig_lufs_r = round(float(orig_lufs), 2) if isinstance(orig_lufs, (int, float)) else None
-    proc_lufs_r = round(float(orig_lufs) + applied_gain, 2) if isinstance(orig_lufs, (int, float)) else None
+    if isinstance(orig_lufs, (int, float)):
+        if profile.enabled and profile.custom_eq_active and orig_f64.size > 0 and proc_f64.size > 0:
+            k_orig_ex = compute_k_weighted_db(orig_f64, in_sr)
+            k_proc_ex = compute_k_weighted_db(proc_f64, out_sr)
+            if k_orig_ex > -68.0 and k_proc_ex > -68.0:
+                proc_lufs_r = round(float(orig_lufs) + (k_proc_ex - k_orig_ex), 2)
+            else:
+                proc_lufs_r = round(float(orig_lufs) + applied_gain, 2)
+        else:
+            proc_lufs_r = round(float(orig_lufs) + applied_gain, 2)
+    else:
+        proc_lufs_r = None
 
     stereo_orig = _stereo_correlation(orig_f64)
     stereo_proc = _stereo_correlation(proc_f64)

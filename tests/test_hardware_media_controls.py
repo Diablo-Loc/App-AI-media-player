@@ -363,6 +363,69 @@ class HardwareMediaControlsTests(unittest.TestCase):
                 if old_mgr is not None:
                     w.media_manager = old_mgr
 
+    def test_benchmark_lab_determinism_custom_eq_lufs_default_source_and_exclusive_release(self):
+        import subprocess
+        from core.audio_effects import find_tool
+        from core.audio_benchmark import run_audio_benchmark
+        from core.audio_profile import adaptive_master_profile
+
+        ffmpeg = find_tool("ffmpeg")
+        with isolated_window() as (w, root):
+            wav = root / "lab_ref.wav"
+            subprocess.run(
+                [
+                    ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-f", "lavfi",
+                    "-i", "aevalsrc=0.15*sin(2*PI*100*t)+0.15*sin(2*PI*1000*t)+0.10*sin(2*PI*6000*t):s=48000:c=stereo:d=3.0",
+                    "-c:a", "pcm_s24le", str(wav),
+                ],
+                check=True,
+            )
+
+            # 1. Default source resolution picks MediaMetadata.path from library before any click.
+            w.all_media_items = [
+                MediaMetadata(id="lib_1", path=str(wav), title="Lab Ref", artist="Studio", duration=3.0)
+            ]
+            bpage = w.audio_effects.benchmark_page
+            bpage._source_path = ""
+            self.assertTrue(bpage.sync_default_source())
+            self.assertEqual(bpage._source_path, str(wav))
+
+            # 2. 100% deterministic repeatability across back-to-back runs on USB DAC Master Hi-Fi.
+            dac_prof, dac_lufs = adaptive_master_profile("Headphones (DAWN PRO2)")
+            r1 = run_audio_benchmark(str(wav), dac_prof, dac_lufs)
+            r2 = run_audio_benchmark(str(wav), dac_prof, dac_lufs)
+            for key in (
+                "orig_lufs", "proc_lufs", "orig_tp_db", "proc_tp_db",
+                "thdn_db", "imd_db", "snr_db", "lab_transfer_db", "lab_phase_deg",
+            ):
+                self.assertEqual(r1[key], r2[key], f"Non-deterministic metric: {key}")
+
+            # 3. Uncompensated manual EQ boost (+6 dB at 1 kHz, eq_auto_preamp=False) is reflected in proc_lufs & LU delta.
+            boost_prof = AudioProfile(
+                normalize=False,
+                eq_enabled=True,
+                eq_auto_preamp=False,
+                eq_bands=(0.0, 0.0, 0.0, 0.0, 0.0, 6.0, 0.0, 0.0, 0.0, 0.0),
+            )
+            rb = run_audio_benchmark(str(wav), boost_prof, -16)
+            self.assertGreater(rb["proc_lufs"] - rb["orig_lufs"], 1.5)
+            self.assertNotEqual(rb["comparison_rows"][0]["status"], "Không đổi")
+
+            # 4. toggle_audition() explicitly pauses AudioStreamEngine to release WASAPI Exclusive lock.
+            bpage._last_result = r1
+            bpage._last_profile = dac_prof
+            with patch.object(w.audio_effects.stream, "pause") as mock_stream_pause, \
+                 patch.object(bpage, "_begin_audition_playback"):
+                bpage._audition_pair = {"orig_f32": [1] * 32, "proc_f32": [1] * 32, "sample_rate": 48000}
+                bpage._audition_cache_key = (
+                    r1.get("source_path"),
+                    dac_prof,
+                    float(r1.get("exact_gain_db", r1.get("gain_db", 0.0))),
+                    float(r1.get("window_start_sec", 0.0)),
+                )
+                bpage.toggle_audition()
+                mock_stream_pause.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

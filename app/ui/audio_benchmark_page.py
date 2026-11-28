@@ -29,7 +29,11 @@ from control.worker_lifecycle import OwnedProcesses
 from core.audio_benchmark import render_audition_pair, run_audio_benchmark
 from core.audio_effects import source_signature
 from core.audio_profile import AudioProfile, adaptive_master_profile, preset_profile
-from core.audio_stream_engine import select_wasapi_device
+from core.audio_stream_engine import (
+    _enter_mmcss_pro_audio,
+    _leave_mmcss_pro_audio,
+    select_wasapi_device,
+)
 from ui.design_system import FORM_STYLE
 from ui.i18n import tr_pair, translate_text, translate_widget_tree
 from ui.icons import INK, MUTED, TEXT, button_icon
@@ -146,6 +150,8 @@ class BenchmarkAuditionEngine:
         self._cancel_event = threading.Event()
         self._thread: threading.Thread | None = None
         self._stream = None
+        self._stream_lock = None
+        self._stream_closed = None
         self._playing = False
         self._branch = 'proc'
         self._gain_matched = True
@@ -194,6 +200,8 @@ class BenchmarkAuditionEngine:
             extra_settings=sd.WasapiSettings(exclusive=False),
         )
         cancel_ev = threading.Event()
+        stream_lock = threading.Lock()
+        stream_closed = [False]
         with self._lock:
             self._pair = pair
             self._branch = 'orig' if branch == 'orig' else 'proc'
@@ -203,11 +211,13 @@ class BenchmarkAuditionEngine:
             self._xfade_len = max(64, int(round(0.012 * sr)))
             self._cancel_event = cancel_ev
             self._stream = stream
+            self._stream_lock = stream_lock
+            self._stream_closed = stream_closed
             self._playing = True
 
         t = threading.Thread(
             target=self._run_loop,
-            args=(stream, pair, sr, cancel_ev),
+            args=(stream, pair, sr, cancel_ev, stream_lock, stream_closed),
             name='BoTube-AB-Audition',
             daemon=True,
         )
@@ -215,7 +225,7 @@ class BenchmarkAuditionEngine:
             self._thread = t
         t.start()
 
-    def _run_loop(self, stream, pair: dict, sr: int, cancel_ev: threading.Event):
+    def _run_loop(self, stream, pair: dict, sr: int, cancel_ev: threading.Event, stream_lock=None, stream_closed=None):
         orig = pair['orig_f32']
         proc = pair['proc_f32']
         n_frames = min(len(orig), len(proc))
@@ -238,6 +248,7 @@ class BenchmarkAuditionEngine:
             scale = match_proc if matched else 1.0
             return seg_p.astype(np.float64) * scale
 
+        mmcss_handle = _enter_mmcss_pro_audio()
         try:
             stream.start()
             while not cancel_ev.is_set():
@@ -268,14 +279,26 @@ class BenchmarkAuditionEngine:
         except Exception:
             pass
         finally:
-            try:
-                stream.abort()
-            except Exception:
-                pass
-            try:
-                stream.close()
-            except Exception:
-                pass
+            def _close_once():
+                if stream_closed is not None:
+                    if stream_closed[0]:
+                        return
+                    stream_closed[0] = True
+                try:
+                    stream.abort()
+                except Exception:
+                    pass
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
+            if stream_lock is not None:
+                with stream_lock:
+                    _close_once()
+            else:
+                _close_once()
+            _leave_mmcss_pro_audio(mmcss_handle)
             with self._lock:
                 if self._stream is stream:
                     self._stream = None
@@ -285,28 +308,51 @@ class BenchmarkAuditionEngine:
         with self._lock:
             ev = self._cancel_event
             stream = self._stream
+            stream_lock = self._stream_lock
+            stream_closed = self._stream_closed
             thread = self._thread
             self._playing = False
             self._stream = None
+            self._stream_lock = None
+            self._stream_closed = None
             self._thread = None
         ev.set()
         if thread is not None and thread is not threading.current_thread():
-            thread.join(timeout=0.4)
+            thread.join(timeout=0.25)
             if thread.is_alive() and stream is not None:
+                if stream_lock is not None:
+                    with stream_lock:
+                        if stream_closed is None or not stream_closed[0]:
+                            try:
+                                stream.abort()
+                            except Exception:
+                                pass
+                else:
+                    try:
+                        stream.abort()
+                    except Exception:
+                        pass
+                thread.join(timeout=0.35)
+        elif stream is not None:
+            def _close_now():
+                if stream_closed is not None:
+                    if stream_closed[0]:
+                        return
+                    stream_closed[0] = True
                 try:
                     stream.abort()
                 except Exception:
                     pass
-                thread.join(timeout=0.6)
-        elif stream is not None:
-            try:
-                stream.abort()
-            except Exception:
-                pass
-            try:
-                stream.close()
-            except Exception:
-                pass
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+
+            if stream_lock is not None:
+                with stream_lock:
+                    _close_now()
+            else:
+                _close_now()
 
 
 class BenchmarkChartCanvas(QWidget):
@@ -530,14 +576,17 @@ class BenchmarkChartCanvas(QWidget):
         max_m = max((abs(float(v)) for v in mag), default=0.0)
         y_lim = 6.0 if max_m <= 5.0 else 15.0
         ticks = (6, 3, 0, -3, -6) if y_lim == 6.0 else (15, 7, 0, -7, -15)
+        max_ph = max((abs(float(v)) for v in phase), default=0.0)
+        ph_lim = 90.0 if max_ph <= 88.0 else 180.0
+        ph_ticks = (90, 0, -90) if ph_lim == 90.0 else (180, 0, -180)
 
         def _y_mag(db: float) -> float:
             c = max(-y_lim, min(y_lim, float(db)))
             return pad_t + (1.0 - (c + y_lim) / (2.0 * y_lim)) * top_h
 
         def _y_ph(deg: float) -> float:
-            c = max(-90.0, min(90.0, float(deg)))
-            return bot_top + (1.0 - (c + 90.0) / 180.0) * bot_h
+            c = max(-ph_lim, min(ph_lim, float(deg)))
+            return bot_top + (1.0 - (c + ph_lim) / (2.0 * ph_lim)) * bot_h
 
         for db in ticks:
             yy = _y_mag(float(db))
@@ -547,7 +596,7 @@ class BenchmarkChartCanvas(QWidget):
             p.setPen(QColor('#64778B'))
             p.drawText(int(pad_l - fm.horizontalAdvance(lbl) - 6), int(yy + fm.ascent() / 2 - 1), lbl)
 
-        for deg in (90, 0, -90):
+        for deg in ph_ticks:
             yy = _y_ph(float(deg))
             p.setPen(QPen(QColor('#2B3C50' if deg == 0 else '#16202C'), 1.0))
             p.drawLine(QPointF(pad_l, yy), QPointF(w - pad_r, yy))
@@ -1214,15 +1263,31 @@ class AudioBenchmarkPage(QWidget):
             self.run_benchmark()
 
     def _resolve_default_source(self) -> str:
+        win = getattr(self.controller, 'window', None)
+        cur_item = getattr(win, 'current_media_item', None) if win is not None else None
+        if cur_item is not None:
+            cur_p = str(getattr(cur_item, 'path', '') or getattr(cur_item, 'file_path', '') or '').strip()
+            if cur_p and Path(cur_p).is_file():
+                return cur_p
         orig = getattr(self.controller, '_original', None)
         if orig is not None and hasattr(orig, 'isLocalFile') and orig.isLocalFile():
             local = orig.toLocalFile()
             if local and Path(local).is_file():
                 return local
-        win = getattr(self.controller, 'window', None)
+        if win is not None and hasattr(win, 'user_collections') and hasattr(win, 'media_library'):
+            try:
+                lp = win.user_collections.get_last_played(win.media_library)
+                if lp and getattr(lp[0], 'path', '') and Path(lp[0].path).is_file():
+                    return str(lp[0].path)
+            except Exception:
+                pass
         for attr in ('all_media_items', 'media_items'):
             for item in (getattr(win, attr, None) or ()):
-                fp = getattr(item, 'file_path', None) or (item.get('file_path') if isinstance(item, dict) else '')
+                fp = (
+                    getattr(item, 'path', None)
+                    or getattr(item, 'file_path', None)
+                    or (item.get('path') or item.get('file_path') if isinstance(item, dict) else '')
+                )
                 if fp and Path(fp).is_file():
                     return str(fp)
         return ''
@@ -1281,13 +1346,20 @@ class AudioBenchmarkPage(QWidget):
             cb.setText(self._last_result.get('report_text', ''))
         info = self._last_result.get('source_info') or {}
         codec = str(info.get('codec_name') or '?').upper()
-        self.lbl_source.setText(f'Đã chép báo cáo đo kiểm ({Path(self._source_path).name} · {codec})')
+        self.lbl_source.setText(
+            tr_pair(
+                f'Đã chép báo cáo đo kiểm ({Path(self._source_path).name} · {codec})',
+                f'Copied benchmark report ({Path(self._source_path).name} · {codec})',
+            )
+        )
         return True
 
     def run_benchmark(self):
         if not self._source_path or not Path(self._source_path).is_file():
             if not self.sync_default_source():
-                self.lbl_verdict_headline.setText('Chưa có file hợp lệ. Bấm Chọn file… để kiểm tra.')
+                self.lbl_verdict_headline.setText(
+                    translate_text('Chưa có file hợp lệ. Bấm Chọn file… để kiểm tra.')
+                )
                 return
 
         self.stop_audition()
@@ -1528,6 +1600,9 @@ class AudioBenchmarkPage(QWidget):
         player = getattr(self.controller, 'player', None)
         if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
             player.pause()
+        stream_eng = getattr(self.controller, 'stream', None)
+        if stream_eng is not None and hasattr(stream_eng, 'pause'):
+            stream_eng.pause()
 
         prof = self._last_profile if self._last_profile is not None else self._selected_profile()[0]
         res = self._last_result
@@ -1543,9 +1618,14 @@ class AudioBenchmarkPage(QWidget):
 
         self._audition_gen += 1
         gen = self._audition_gen
-        self.btn_audition_toggle.setText('Đang chuẩn bị…')
+        self.btn_audition_toggle.setText(tr_pair('Đang chuẩn bị…', 'Preparing…'))
         self.btn_audition_toggle.setEnabled(False)
-        self.lbl_audition_hint.setText('Đang dựng luồng nghe thử A/B trong RAM (0 MB ổ cứng)…')
+        self.lbl_audition_hint.setText(
+            tr_pair(
+                'Đang dựng luồng nghe thử A/B trong RAM (0 MB ổ cứng)…',
+                'Building live A/B audition buffers in RAM (0 MB disk)…',
+            )
+        )
         worker = AuditionPrepWorker(
             gen,
             str(res['source_path']),
@@ -1584,9 +1664,9 @@ class AudioBenchmarkPage(QWidget):
             return
         self._audition_worker = None
         self.btn_audition_toggle.setEnabled(bool(self._last_result))
-        self.btn_audition_toggle.setText('Nghe thử A/B')
-        button_icon(self.btn_audition_toggle, 'play', 'Nghe đối chiếu A/B', color=INK, size=13, icon_only=False)
-        self.lbl_audition_hint.setText(f'Không phát thử được: {msg}')
+        self.btn_audition_toggle.setText(translate_text('Nghe thử A/B'))
+        button_icon(self.btn_audition_toggle, 'play', translate_text('Nghe đối chiếu A/B'), color=INK, size=13, icon_only=False)
+        self.lbl_audition_hint.setText(tr_pair(f'Không phát thử được: {msg}', f'Audition failed: {msg}'))
 
     def _begin_audition_playback(self, pair: dict):
         branch = 'orig' if self.btn_ab_orig.isChecked() else 'proc'
@@ -1594,13 +1674,13 @@ class AudioBenchmarkPage(QWidget):
         pref = str(getattr(self._last_profile, 'output_device', '') or '')
         try:
             self._audition.start(pair, branch=branch, gain_matched=matched, preferred_device=pref)
-            self.btn_audition_toggle.setText('Dừng nghe')
-            button_icon(self.btn_audition_toggle, 'square', 'Dừng nghe thử A/B', color=INK, size=12, icon_only=False)
+            self.btn_audition_toggle.setText(tr_pair('Dừng nghe', 'Stop'))
+            button_icon(self.btn_audition_toggle, 'square', tr_pair('Dừng nghe thử A/B', 'Stop A/B audition'), color=INK, size=12, icon_only=False)
             self._refresh_audition_hint()
         except Exception as err:
-            self.btn_audition_toggle.setText('Nghe thử A/B')
-            button_icon(self.btn_audition_toggle, 'play', 'Nghe đối chiếu A/B', color=INK, size=13, icon_only=False)
-            self.lbl_audition_hint.setText(f'Thiết bị âm thanh đang bận: {err}')
+            self.btn_audition_toggle.setText(translate_text('Nghe thử A/B'))
+            button_icon(self.btn_audition_toggle, 'play', translate_text('Nghe đối chiếu A/B'), color=INK, size=13, icon_only=False)
+            self.lbl_audition_hint.setText(tr_pair(f'Thiết bị âm thanh đang bận: {err}', f'Audio device busy: {err}'))
 
     def stop_audition(self):
         self._audition_gen += 1
