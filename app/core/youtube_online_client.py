@@ -2090,8 +2090,9 @@ class YouTubeOnlineClient:
                 if cached is not None and (time.monotonic() - cached.resolved_at_mono) < self._STREAM_CACHE_TTL_SEC:
                     return cached
 
-        # Fast-path (~0.14s): InnerTube VISIONOS 1.02 returns zero-403 direct 4K/1080p/Opus URLs!
-        if not prefer_ytdlp and not cookies_browser and not cookies_file:
+        # Fast-path (~0.14s): ALWAYS try InnerTube VISIONOS 1.02 first (even when cookies are saved for Liked/Private playlists!
+        # Public videos inside Liked/Watch Later resolve in ~0.14s without hitting yt-dlp's cookie format/PO-token restriction.)
+        if not prefer_ytdlp:
             fast = self._resolve_stream_innertube_visionos(vid)
             if fast is not None:
                 with self._cache_lock:
@@ -2107,43 +2108,62 @@ class YouTubeOnlineClient:
             raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
 
         url = f"https://www.youtube.com/watch?v={vid}"
-        cmd = [
-            str(ytdlp),
-            "--no-playlist",
-            "--no-warnings",
-            "--skip-download",
-            "-J",
-            *self._cookie_args(cookies_browser, cookies_file),
-            "--",
-            url,
-        ]
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            creationflags=_NO_WINDOW,
-        )
-        if processes is not None:
-            processes.track(proc)
-        try:
-            stdout, stderr = proc.communicate(timeout=30)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            raise TimeoutError("Hết thời gian kết nối luồng YouTube.")
-        finally:
-            if processes is not None:
-                processes.release(proc)
+        cookie_args = self._cookie_args(cookies_browser, cookies_file)
 
-        if proc.returncode != 0 or not stdout.strip():
+        def _run_ytdlp_stream(use_cookies: list[str]) -> tuple[int, str, str]:
+            cmd = [
+                str(ytdlp),
+                "--no-playlist",
+                "--no-warnings",
+                "--skip-download",
+                "--ignore-no-formats-error",
+                "-J",
+                *use_cookies,
+                "--",
+                url,
+            ]
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                creationflags=_NO_WINDOW,
+            )
+            if processes is not None:
+                processes.track(proc)
+            try:
+                out, err = proc.communicate(timeout=30)
+                return proc.returncode, out, err
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                raise TimeoutError("Hết thời gian kết nối luồng YouTube.")
+            finally:
+                if processes is not None:
+                    processes.release(proc)
+
+        rc, stdout, stderr = _run_ytdlp_stream(cookie_args)
+        # If cookie-authenticated yt-dlp hit YouTube's PO-token / format restriction, retry anonymously!
+        if (rc != 0 or not stdout.strip()) and cookie_args:
+            rc2, stdout2, stderr2 = _run_ytdlp_stream([])
+            if rc2 == 0 and stdout2.strip():
+                rc, stdout, stderr = rc2, stdout2, stderr2
+
+        if rc != 0 or not stdout.strip():
             msg = (stderr or "").strip().splitlines()
-            tail = msg[-1] if msg else f"yt-dlp exit {proc.returncode}"
+            tail = msg[-1] if msg else f"yt-dlp exit {rc}"
             raise RuntimeError(tail)
 
         info = json.loads(stdout)
         resolved = self._build_resolved_stream(vid, info)
+        if not resolved.audio_url and not resolved.progressive_url and cookie_args:
+            # Cookie response returned empty playable formats -> retry anonymous yt-dlp!
+            rc2, stdout2, _stderr2 = _run_ytdlp_stream([])
+            if rc2 == 0 and stdout2.strip():
+                resolved2 = self._build_resolved_stream(vid, json.loads(stdout2))
+                if resolved2.audio_url or resolved2.progressive_url:
+                    resolved = resolved2
         with self._cache_lock:
             if len(self._stream_cache) > 40:
                 oldest = sorted(self._stream_cache.items(), key=lambda kv: kv[1].resolved_at_mono)[:10]

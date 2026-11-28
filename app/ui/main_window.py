@@ -585,22 +585,86 @@ class MainWindow(QMainWindow):
         yt.apply_subtitle_style(dict(getattr(self, "config", {}) or {}))
         QTimer.singleShot(0, lambda: self.apply_workspace_mode(navigate=True))
 
+    @staticmethod
+    def _workspace_mode_file():
+        from pathlib import Path as _Path
+        return _Path(storage_dir()) / "workspace-mode.json"
+
+    @classmethod
+    def load_saved_workspace_mode(cls) -> str:
+        """Load portable workspace mode ('both' | 'offline' | 'online') without polluting sandbox tests."""
+        from pathlib import Path as _Path
+        p = cls._workspace_mode_file()
+        if p.is_file():
+            try:
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                val = str((raw.get("mode") if isinstance(raw, dict) else raw) or "both").strip().lower()
+                if val in ("both", "offline", "online"):
+                    return val
+            except Exception:
+                pass
+        # Preserve a user's existing QSettings choice on real app storage (never leak into temp test sandboxes)
+        try:
+            import tempfile as _tf
+            if not str(p.resolve()).lower().startswith(str(_Path(_tf.gettempdir()).resolve()).lower()):
+                from PySide6.QtCore import QSettings as _QS
+                val = str(_QS("MyStudio", "AI_Music_Player").value("app_workspace_mode", "both") or "both").strip().lower()
+                if val in ("both", "offline", "online"):
+                    return val
+        except Exception:
+            pass
+        return "both"
+
+    @classmethod
+    def save_workspace_mode(cls, mode: str) -> str:
+        m = str(mode or "both").strip().lower()
+        if m not in ("both", "offline", "online"):
+            m = "both"
+        p = cls._workspace_mode_file()
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            tmp = p.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps({"mode": m}, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(tmp, p)
+        except Exception:
+            pass
+        return m
+
     def apply_workspace_mode(self, mode: str | None = None, *, navigate: bool = False) -> str:
         """Apply BoTube workspace mode: 'both' (default), 'offline' (classic BoTube), or 'online' (YouTube + Download + Settings)."""
         if mode is None:
-            try:
-                from PySide6.QtCore import QSettings as _QS
-                mode = str(_QS("MyStudio", "AI_Music_Player").value("app_workspace_mode", "both") or "both")
-            except Exception:
-                mode = "both"
+            mode = self.load_saved_workspace_mode()
         m = str(mode or "both").strip().lower()
         if m not in ("both", "offline", "online"):
             m = "both"
         self._workspace_mode = m
 
-        offline_keys = {"home", "for_you", "library", "collections", "history"}
         online_allowed = {"youtube_online", "download", "settings"}
         if hasattr(self, "sidebar"):
+            # Reorder YouTube to top (before Download & Settings) in pure Online mode; restore canonical order otherwise!
+            yt_row_cur = self.sidebar.row_for_page("youtube_online") if hasattr(self.sidebar, "row_for_page") else -1
+            if yt_row_cur >= 0:
+                cur_key = self.sidebar.page_key_at(self.sidebar.currentRow())
+                self.sidebar.blockSignals(True)
+                try:
+                    if m == "online" and yt_row_cur != 0:
+                        yt_item = self.sidebar.takeItem(yt_row_cur)
+                        self.sidebar.insertItem(0, yt_item)
+                    elif m != "online":
+                        set_row = self.sidebar.row_for_page("settings")
+                        target_idx = max(0, set_row - 1) if set_row >= 0 else (self.sidebar.count() - 1)
+                        if yt_row_cur != target_idx:
+                            yt_item = self.sidebar.takeItem(yt_row_cur)
+                            set_row2 = self.sidebar.row_for_page("settings")
+                            ins_idx = set_row2 if set_row2 >= 0 else self.sidebar.count()
+                            self.sidebar.insertItem(ins_idx, yt_item)
+                    if cur_key:
+                        new_cur = self.sidebar.row_for_page(cur_key)
+                        if new_cur >= 0:
+                            self.sidebar.setCurrentRow(new_cur)
+                finally:
+                    self.sidebar.blockSignals(False)
+
             for r in range(self.sidebar.count()):
                 pkey = self.sidebar.page_key_at(r) if hasattr(self.sidebar, "page_key_at") else ""
                 if m == "offline":

@@ -354,7 +354,7 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         fake_sess.post.return_value = fake_http
         with patch.object(client, "_get_session", return_value=fake_sess), \
              patch.object(client, "_ensure_visitor_session", return_value="fake-visitor-id"):
-            resolved = client._resolve_stream_innertube_visionos("dQw4w9WgXcQ")
+            resolved = client.resolve_stream("dQw4w9WgXcQ", cookies_file="C:/fake/cookies.txt", force_refresh=True)
         self.assertIsNotNone(resolved)
         self.assertEqual(resolved.audio_url, "https://cdn/opus_251")
         self.assertEqual(resolved.video_streams["1080p"]["url"], "https://cdn/vid_1080")
@@ -631,24 +631,35 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             self.assertFalse(window.sidebar_container.isHidden())
             self.assertFalse(window.playback_bar.isHidden())
 
-            # 6e2. Workspace Mode selector (Offline / Online / Both) hides irrelevant sidebar tabs cleanly
+            # 6e2. Workspace Mode selector (Offline / Online / Both) hides irrelevant sidebar tabs & places YouTube FIRST in Online mode!
             window.apply_workspace_mode("offline", navigate=False)
             self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
             self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
             window.apply_workspace_mode("online", navigate=False)
-            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
-            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("download")))
-            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("settings")))
+            r_yt_on = window.sidebar.row_for_page("youtube_online")
+            r_dl_on = window.sidebar.row_for_page("download")
+            r_st_on = window.sidebar.row_for_page("settings")
+            self.assertEqual(r_yt_on, 0)
+            self.assertLess(r_yt_on, r_dl_on)
+            self.assertLess(r_dl_on, r_st_on)
+            self.assertFalse(window.sidebar.isRowHidden(r_yt_on))
+            self.assertFalse(window.sidebar.isRowHidden(r_dl_on))
+            self.assertFalse(window.sidebar.isRowHidden(r_st_on))
             self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
             self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("library")))
             window.apply_workspace_mode("both", navigate=False)
+            self.assertEqual(window.sidebar.row_for_page("home"), 0)
+            self.assertEqual(window.sidebar.row_for_page("youtube_online"), window.sidebar.row_for_page("settings") - 1)
             self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
             self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
 
-            # 6e3. Account Dialog has scrollable layout, Cookie guide, and AI Whisper + Translate toggles
+            # 6e3. Account Dialog has scrollable layout, Cookie guide with Copy/Store buttons, and AI Whisper + Translate toggles
             acc_dlg = _YouTubeAccountDialog(yt.profile, client=yt.client, parent=yt)
             self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_sub"))
             self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_translate"))
+            self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_name"))
+            self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_link"))
+            self.assertTrue(hasattr(acc_dlg, "btn_open_ext_store"))
             acc_dlg.deleteLater()
 
             # 6e4. Liked library section shows Play All / Shuffle / Sync YouTube Liked buttons

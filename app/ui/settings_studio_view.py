@@ -474,7 +474,12 @@ class SettingsStudioView(QObject):
         )
 
         self.workspace_mode_combo = self._make_proxy_combo(_WORKSPACE_MODE_ITEMS)
-        saved_ws = str(self.page.settings.value('app_workspace_mode', 'both') or 'both').strip().lower()
+        win = getattr(self.controller, 'window', None)
+        saved_ws = (
+            win.load_saved_workspace_mode()
+            if (win is not None and hasattr(win, 'load_saved_workspace_mode'))
+            else 'both'
+        )
         if saved_ws not in ('both', 'offline', 'online'):
             saved_ws = 'both'
         idx_ws = self.workspace_mode_combo.findData(saved_ws)
@@ -511,11 +516,13 @@ class SettingsStudioView(QObject):
         mode = str(self.workspace_mode_combo.currentData() or 'both').strip().lower()
         if mode not in ('both', 'offline', 'online'):
             mode = 'both'
-        self.page.settings.setValue('app_workspace_mode', mode)
         self._update_workspace_badge(mode)
         win = getattr(self.controller, 'window', None)
-        if win is not None and hasattr(win, 'apply_workspace_mode'):
-            win.apply_workspace_mode(mode, navigate=False)
+        if win is not None:
+            if hasattr(win, 'save_workspace_mode'):
+                win.save_workspace_mode(mode)
+            if hasattr(win, 'apply_workspace_mode'):
+                win.apply_workspace_mode(mode, navigate=False)
         self._show_save_pill('✓ Đã đổi chế độ ứng dụng', '✓ Workspace mode updated')
 
     def _build_audio_card(self):

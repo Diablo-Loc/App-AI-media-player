@@ -22,7 +22,7 @@ from typing import Any, Callable
 import weakref
 
 from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPainterPath, QPixmap
+from PySide6.QtGui import QColor, QDesktopServices, QGuiApplication, QPainter, QPainterPath, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
     QApplication,
@@ -1160,25 +1160,56 @@ class _YouTubeAccountDialog(QDialog):
             )
         )
         lbl_g_title.setStyleSheet("font-size: 13px; font-weight: 700; color: #8DE7CA;")
+        ext_name = "Get cookies.txt LOCALLY"
+        ext_url = "https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc"
         lbl_g_body = QLabel(
             tr_pair(
                 "• <b>Cách 1 (Nhanh nhất):</b> Đăng nhập YouTube trên <b>Firefox</b> → chọn <i>Firefox</i> ở mục 1 bên dưới → bấm <b>Kiểm tra &amp; Kết nối</b>.<br>"
                 "• <b>Cách 2 (Dùng Chrome / Edge / Cốc Cốc — không bị lỗi khóa):</b><br>"
-                "&nbsp;&nbsp;1. Cài tiện ích miễn phí <b>“Get cookies.txt LOCALLY”</b> trên Chrome Web Store.<br>"
+                f"&nbsp;&nbsp;1. Cài đúng tiện ích mã nguồn mở <b>“{ext_name}”</b> tại "
+                f'<a href="{ext_url}" style="color:#77E0BE;text-decoration:underline;">Chrome Web Store</a>.<br>'
                 "&nbsp;&nbsp;2. Mở <b>youtube.com</b> (đã đăng nhập) → bấm biểu tượng tiện ích → bấm <b>Export</b> tải tệp <code>cookies.txt</code>.<br>"
-                "&nbsp;&nbsp;3. Bấm <b>Chọn file</b> ở mục 1 bên dưới để nạp tệp <code>.txt</code> → bấm <b>Kiểm tra &amp; Kết nối</b> → <b>Lưu cấu hình</b>.",
+                "&nbsp;&nbsp;3. Bấm <b>Chọn file</b> ở mục 1 bên dưới để nạp tệp <code>.txt</code> → bấm <b>Kiểm tra &amp; Kết nối</b> → <b>Lưu cấu hình</b>.<br>"
+                "<span style='color:#92B7AD;'>🔒 Bảo mật: Tệp cookie chỉ lưu trên máy bạn (chỉ đọc playlist, không gửi ra ngoài) — tuyệt đối không chia sẻ tệp này cho người khác.</span>",
                 "• <b>Method 1 (Fastest):</b> Sign in to YouTube in <b>Firefox</b> → pick <i>Firefox</i> below → click <b>Test &amp; Connect</b>.<br>"
                 "• <b>Method 2 (Chrome / Edge / Brave — never locked):</b><br>"
-                "&nbsp;&nbsp;1. Install the free Chrome extension <b>“Get cookies.txt LOCALLY”</b>.<br>"
+                f"&nbsp;&nbsp;1. Install the open-source extension <b>“{ext_name}”</b> from "
+                f'<a href="{ext_url}" style="color:#77E0BE;text-decoration:underline;">Chrome Web Store</a>.<br>'
                 "&nbsp;&nbsp;2. Open signed-in <b>youtube.com</b> → click the extension → <b>Export</b> to save <code>cookies.txt</code>.<br>"
-                "&nbsp;&nbsp;3. Click <b>Browse</b> below to select that file → <b>Test &amp; Connect</b> → <b>Save Settings</b>.",
+                "&nbsp;&nbsp;3. Click <b>Browse</b> below to select that file → <b>Test &amp; Connect</b> → <b>Save Settings</b>.<br>"
+                "<span style='color:#92B7AD;'>🔒 Security: Cookies stay strictly local on your PC (read-only) — never share your cookies.txt file with anyone.</span>",
             )
         )
         lbl_g_body.setTextFormat(Qt.TextFormat.RichText)
         lbl_g_body.setWordWrap(True)
+        lbl_g_body.setOpenExternalLinks(True)
+        lbl_g_body.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         lbl_g_body.setStyleSheet("color: #C7D7E7; font-size: 12px; line-height: 1.45;")
         gl.addWidget(lbl_g_title)
         gl.addWidget(lbl_g_body)
+
+        g_btns = QHBoxLayout()
+        g_btns.setSpacing(8)
+        self.btn_copy_ext_name = QPushButton(tr_pair("📋 Copy tên tiện ích", "📋 Copy Extension Name"))
+        self.btn_copy_ext_name.setFixedHeight(32)
+        self.btn_copy_ext_name.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_copy_ext_name.clicked.connect(lambda: self._copy_guide_text(ext_name, self.btn_copy_ext_name, tr_pair("📋 Copy tên tiện ích", "📋 Copy Extension Name")))
+
+        self.btn_copy_ext_link = QPushButton(tr_pair("🔗 Copy link cài", "🔗 Copy Store Link"))
+        self.btn_copy_ext_link.setFixedHeight(32)
+        self.btn_copy_ext_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_copy_ext_link.clicked.connect(lambda: self._copy_guide_text(ext_url, self.btn_copy_ext_link, tr_pair("🔗 Copy link cài", "🔗 Copy Store Link")))
+
+        self.btn_open_ext_store = QPushButton(tr_pair("🌐 Mở Chrome Web Store", "🌐 Open Chrome Web Store"))
+        self.btn_open_ext_store.setFixedHeight(32)
+        self.btn_open_ext_store.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_open_ext_store.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(ext_url)))
+
+        g_btns.addWidget(self.btn_copy_ext_name)
+        g_btns.addWidget(self.btn_copy_ext_link)
+        g_btns.addWidget(self.btn_open_ext_store)
+        g_btns.addStretch(1)
+        gl.addLayout(g_btns)
         root.addWidget(guide_card)
 
         # CARD 1: 1-Click Browser / Cookie Account Connect + Instant Liked / Watch Later
@@ -1375,6 +1406,13 @@ class _YouTubeAccountDialog(QDialog):
         foot.addWidget(btn_close)
         foot.addWidget(btn_save)
         outer_root.addLayout(foot)
+
+    def _copy_guide_text(self, value: str, btn: QPushButton, orig_label: str) -> None:
+        cb = QGuiApplication.clipboard()
+        if cb is not None:
+            cb.setText(str(value))
+        btn.setText(tr_pair("✓ Đã copy!", "✓ Copied!"))
+        QTimer.singleShot(1600, lambda b=btn, lbl=orig_label: b.setText(lbl))
 
     def _save_cookie_prefs(self) -> tuple[str, str]:
         br = str(self.combo_browser.currentData() or "")
@@ -1853,6 +1891,7 @@ class YouTubeOnlinePage(QWidget):
         self._workspace_mode = "both"
         self._sub_style_initialized = False
         self._window_filter_host: QObject | None = None
+        self._shutting_down = False
 
         # Worker tracking with generation counters
         self._workers: dict[str, _TaskWorker] = {}
@@ -3638,6 +3677,8 @@ class YouTubeOnlinePage(QWidget):
         if stream.subtitles:
             self.combo_sub_lang.setCurrentIndex(picked_sub_idx)
         self.combo_sub_lang.blockSignals(False)
+        if self._normalize_sub_mode(str(self.combo_sub_mode.currentData() or "off")) == "youtube_cc":
+            self.combo_sub_lang.setVisible(self.combo_sub_lang.count() > 0)
 
         if stream.chapters:
             self._render_chapters(stream.chapters)
@@ -4164,29 +4205,43 @@ class YouTubeOnlinePage(QWidget):
         self.lbl_sub_overlay.raise_()
 
     def sync_floating_overlays(self, *_args) -> None:
-        mode = self._normalize_sub_mode(str(self.combo_sub_mode.currentData() or "off"))
-        if not self._can_show_floating_subtitle() or mode == "off":
-            self.hide_floating_overlays()
+        if getattr(self, "_shutting_down", False) or getattr(self, "yt_sub_layer", None) is None:
             return
-        if mode == "ai_botube":
-            self.lbl_sub_overlay.hide()
-            if self._ai_cues:
-                self._sync_yt_sub_layer_anchor()
-                self.yt_sub_layer.enable_render = True
-                self.yt_sub_layer.update_position(self.player.position_ms())
-        elif mode == "youtube_cc":
-            self.yt_sub_layer.enable_render = False
-            self.yt_sub_layer.hide()
-            if self.lbl_sub_overlay.text().strip():
-                self.lbl_sub_overlay.show()
-                self._position_cc_overlay()
+        try:
+            mode = self._normalize_sub_mode(str(self.combo_sub_mode.currentData() or "off"))
+            if not self._can_show_floating_subtitle() or mode == "off":
+                self.hide_floating_overlays()
+                return
+            if mode == "ai_botube":
+                if self.lbl_sub_overlay is not None:
+                    self.lbl_sub_overlay.hide()
+                if self._ai_cues:
+                    self._sync_yt_sub_layer_anchor()
+                    self.yt_sub_layer.enable_render = True
+                    self.yt_sub_layer.update_position(self.player.position_ms())
+            elif mode == "youtube_cc":
+                self.yt_sub_layer.enable_render = False
+                self.yt_sub_layer.hide()
+                if self.lbl_sub_overlay is not None and self.lbl_sub_overlay.text().strip():
+                    self.lbl_sub_overlay.show()
+                    self._position_cc_overlay()
+        except RuntimeError:
+            pass
 
     def hide_floating_overlays(self) -> None:
-        if hasattr(self, "yt_sub_layer"):
-            self.yt_sub_layer.enable_render = False
-            self.yt_sub_layer.hide()
-        if hasattr(self, "lbl_sub_overlay"):
-            self.lbl_sub_overlay.hide()
+        layer = getattr(self, "yt_sub_layer", None)
+        if layer is not None:
+            try:
+                layer.enable_render = False
+                layer.hide()
+            except RuntimeError:
+                pass
+        lbl = getattr(self, "lbl_sub_overlay", None)
+        if lbl is not None:
+            try:
+                lbl.hide()
+            except RuntimeError:
+                pass
 
     def apply_subtitle_style(self, config: dict[str, Any] | None = None) -> None:
         """Sync 100% of BoTube's Subtitle Appearance Studio settings live onto YouTube's SubtitleLayer."""
@@ -4383,7 +4438,7 @@ class YouTubeOnlinePage(QWidget):
         elif mode == "youtube_cc":
             self.yt_sub_layer.enable_render = False
             self.yt_sub_layer.hide()
-            self.combo_sub_lang.show()
+            self.combo_sub_lang.setVisible(self.combo_sub_lang.count() > 0)
             self._load_selected_youtube_cc()
         elif mode == "ai_botube":
             self.combo_sub_lang.hide()
@@ -4628,6 +4683,8 @@ class YouTubeOnlinePage(QWidget):
         )
 
     def _on_subtitle_text_changed(self, text: str) -> None:
+        if getattr(self, "_shutting_down", False) or getattr(self, "lbl_sub_overlay", None) is None:
+            return
         clean = str(text or "").strip()
         mode = self._normalize_sub_mode(str(self.combo_sub_mode.currentData() or "off"))
         if clean and mode == "youtube_cc":
@@ -5460,6 +5517,7 @@ class YouTubeOnlinePage(QWidget):
                 w.deleteLater()
 
     def shutdown(self) -> None:
+        self._shutting_down = True
         unregister_language_listener(self.retranslate)
         self._suggest_timer.stop()
         self._grid_resize_timer.stop()
@@ -5474,12 +5532,20 @@ class YouTubeOnlinePage(QWidget):
             except Exception:
                 pass
             self._window_filter_host = None
-        if hasattr(self, "yt_sub_layer") and self.yt_sub_layer is not None:
-            self.yt_sub_layer.hide()
-            self.yt_sub_layer.deleteLater()
-        if hasattr(self, "lbl_sub_overlay") and self.lbl_sub_overlay is not None:
-            self.lbl_sub_overlay.hide()
-            self.lbl_sub_overlay.deleteLater()
+        if getattr(self, "yt_sub_layer", None) is not None:
+            try:
+                self.yt_sub_layer.hide()
+                self.yt_sub_layer.deleteLater()
+            except RuntimeError:
+                pass
+            self.yt_sub_layer = None
+        if getattr(self, "lbl_sub_overlay", None) is not None:
+            try:
+                self.lbl_sub_overlay.hide()
+                self.lbl_sub_overlay.deleteLater()
+            except RuntimeError:
+                pass
+            self.lbl_sub_overlay = None
         self.exit_pill_mode()
         if self._pill_window is not None:
             self._pill_window.deleteLater()
