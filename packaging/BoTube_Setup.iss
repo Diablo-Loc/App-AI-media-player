@@ -10,7 +10,7 @@
   #define AppName "BoTube"
 #endif
 #ifndef AppVersion
-  #define AppVersion "6.0.2"
+  #define AppVersion "6.1.0"
 #endif
 #ifndef AppPublisher
   #define AppPublisher "BoTube Studio"

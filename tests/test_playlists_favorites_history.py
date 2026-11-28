@@ -352,9 +352,10 @@ class CollectionsAndHistoryUiTests(unittest.TestCase):
             ("Bộ sưu tập", "collections", 5),
             ("Lịch sử", "history", 6),
             ("Download", "download", 3),
+            ("YouTube", "youtube_online", 7),
             ("Tùy chỉnh", "settings", 4),
         ]
-        self.assertEqual(sidebar.count(), 7)
+        self.assertEqual(sidebar.count(), 8)
         for row, (label, key, stack_idx) in enumerate(expected):
             self.assertEqual(sidebar.item(row).text(), label)
             self.assertEqual(sidebar.page_key_at(row), key)
@@ -372,9 +373,9 @@ class CollectionsAndHistoryUiTests(unittest.TestCase):
 
         # Mini / full mode roundtrip
         sidebar.set_mini_mode()
-        self.assertTrue(all(sidebar.item(i).text() == "" for i in range(7)))
+        self.assertTrue(all(sidebar.item(i).text() == "" for i in range(8)))
         sidebar.set_full_mode()
-        self.assertEqual([sidebar.item(i).text() for i in range(7)], [e[0] for e in expected])
+        self.assertEqual([sidebar.item(i).text() for i in range(8)], [e[0] for e in expected])
 
         # Return to Home
         sidebar.setCurrentRow(0)
