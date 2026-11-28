@@ -1191,6 +1191,97 @@ class ZeroDiskIntegrationTests(unittest.TestCase):
                 page.reset_to_defaults()
             self.assertEqual(page.volume_percent.value(), 50)
 
+    def test_mid_playback_wasapi_drop_recovers_and_never_crashes_sync_or_seek(self):
+        """Mid-song WASAPI write loss or device open failure must auto-recover or fall back to Qt without crashing."""
+        import io
+        import sys
+        import threading
+        import types
+        from unittest.mock import MagicMock
+        from PySide6.QtMultimedia import QMediaPlayer
+
+        # 1. _writer_loop exception marks stream_error & clears is_active immediately (no silent frozen clock!)
+        eng = AudioStreamEngine()
+        class _DroppingStream:
+            def __init__(self):
+                self.closed = False
+                self.writes = 0
+            def start(self):
+                pass
+            def write(self, _raw):
+                self.writes += 1
+                raise RuntimeError('PortAudioError: AUDCLNT_E_DEVICE_INVALIDATED')
+            def abort(self):
+                pass
+            def close(self):
+                self.closed = True
+
+        fake_pcm = np.zeros((eng._CHUNK_FRAMES * 4, 2), dtype='<f8').tobytes()
+        fake_proc = MagicMock()
+        fake_proc.stdout = io.BytesIO(fake_pcm)
+        fake_proc.poll.return_value = 0
+        fake_stream = _DroppingStream()
+        cancel_ev = threading.Event()
+        eng._op_id = 1
+        eng._playing = True
+        eng._paused = False
+        eng._active_stream = fake_stream
+        eng._writer_loop(1, fake_stream, fake_proc, 48000, 'float32', cancel_ev)
+        self.assertTrue(fake_stream.closed)
+        self.assertFalse(eng.is_active())
+        self.assertTrue(eng.has_stream_error())
+        self.assertIn('AUDCLNT_E_DEVICE_INVALIDATED', eng.consume_stream_error())
+        self.assertFalse(eng.has_stream_error())
+
+        # 2. _open_wasapi_stream falls back across tiers (pinned device broken -> default WASAPI endpoint!)
+        opened_devs: list = []
+        fake_sd = types.SimpleNamespace(
+            query_hostapis=lambda: [{'name': 'Windows WASAPI', 'devices': [1, 2], 'default_output_device': 2}],
+            query_devices=lambda idx: {
+                1: {'name': 'SPACE TRAVEL 2 ULTRA', 'max_output_channels': 2, 'default_samplerate': 48000.0},
+                2: {'name': 'Speakers (Realtek Audio)', 'max_output_channels': 2, 'default_samplerate': 48000.0},
+            }[idx],
+            WasapiSettings=lambda exclusive=False: ('wasapi', exclusive),
+            default=types.SimpleNamespace(device=(0, 2)),
+        )
+        def _fake_raw_stream(**kwargs):
+            opened_devs.append(kwargs.get('device'))
+            if kwargs.get('device') == 1:
+                raise RuntimeError('Bluetooth endpoint disconnected')
+            return MagicMock(latency=0.16)
+        fake_sd.RawOutputStream = _fake_raw_stream
+        with patch.dict(sys.modules, {'sounddevice': fake_sd}):
+            prof = AudioProfile(normalize=True, output_mode='shared', output_device='SPACE TRAVEL 2 ULTRA')
+            stream, dev_name, sr, dtype, mode, fb_note = eng._open_wasapi_stream(prof, None, '')
+            self.assertIsNotNone(stream)
+            self.assertEqual(dev_name, 'Speakers (Realtek Audio)')
+            self.assertEqual(mode, 'shared_fallback')
+            self.assertIn('Speakers', fb_note)
+
+        # 3. AudioEffectsController _sync_tick & _commit_seek NEVER propagate RuntimeError('Không mở được thiết bị đầu ra WASAPI.')!
+        with isolated_window() as (window, _root):
+            ctrl = window.audio_effects
+            ctrl._source_info = {'sample_rate': 48000, 'codec_name': 'flac', 'bit_rate': 0, 'track': 0}
+            with patch.object(ctrl, '_use_stream_engine', return_value=True), \
+                 patch.object(ctrl.player, 'playbackState', return_value=QMediaPlayer.PlaybackState.PlayingState), \
+                 patch.object(ctrl.player, 'position', return_value=92000), \
+                 patch.object(ctrl.stream, 'is_active', return_value=True), \
+                 patch.object(ctrl.stream, 'position_ms', return_value=80000), \
+                 patch.object(ctrl.stream, 'seek', side_effect=RuntimeError('Không mở được thiết bị đầu ra WASAPI.')):
+                ctrl._last_sync_at = 0.0
+                # Must NOT raise — must gracefully fall back to Qt native output!
+                ctrl._sync_tick()
+                self.assertIs(ctrl.player.audioOutput(), window.audio_output)
+
+            # Mid-song stream_error triggers automatic _start_or_reconfigure_stream recovery in <= 500ms!
+            with patch.object(ctrl, '_use_stream_engine', return_value=True), \
+                 patch.object(ctrl.player, 'playbackState', return_value=QMediaPlayer.PlaybackState.PlayingState), \
+                 patch.object(ctrl.stream, 'consume_stream_error', return_value='AUDCLNT_E_DEVICE_INVALIDATED'), \
+                 patch.object(ctrl, '_start_or_reconfigure_stream') as mock_recover:
+                ctrl._last_wasapi_recovery_mono = 0.0
+                ctrl._sync_tick()
+                mock_recover.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

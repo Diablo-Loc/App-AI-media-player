@@ -313,6 +313,7 @@ class YouTubeOnlinePlaybackController(QObject):
         self._seek_settle_until = 0.0
         self._last_hifi_status: dict = {}
         self._hifi_profile_dirty = False
+        self._last_hifi_recovery_mono = 0.0
 
         # Subtitle cue cache (fast O(log N) binary lookup, zero GUI allocations)
         self._sub_enabled = False
@@ -934,6 +935,17 @@ class YouTubeOnlinePlaybackController(QObject):
         self._sync_subtitle_for_pos(pos_ms)
 
         if self._using_hifi and self._hifi_engine is not None:
+            # Auto-recover mid-song WASAPI drop on YouTube Online too (Bluetooth / USB DAC reset)
+            stream_err = self._hifi_engine.consume_stream_error() if hasattr(self._hifi_engine, "consume_stream_error") else ""
+            if stream_err:
+                now_m = time.monotonic()
+                if (now_m - self._last_hifi_recovery_mono) >= 2.0:
+                    self._last_hifi_recovery_mono = now_m
+                    logger.warning("Online Hi-Fi WASAPI drop detected (%s) — auto-recovering", stream_err)
+                    self._seek_settle_until = now_m + 1.8
+                    self._reconfigure_hifi_only(pos_ms)
+                return
+
             buf = self._hifi_engine.is_buffering()
             if buf != self._last_buffering:
                 self._last_buffering = buf
