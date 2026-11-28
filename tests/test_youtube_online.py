@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 from tools.ui_preview import isolated_window, pump  # Must precede MainWindow for clean Shiboken isolation
 
 from core.youtube_online_client import (
+    COOKIE_VAULT_SENTINEL,
     OnlineSubtitleCue,
     OnlineSubtitleTrack,
     OnlineVideoItem,
@@ -18,7 +19,11 @@ from core.youtube_online_client import (
     YouTubeOnlineClient,
     YouTubeOnlineProfileStore,
     _extract_items_from_payload,
+    delete_cookie_vault,
+    has_active_cookie_source,
     has_cached_ai_subtitles,
+    has_cookie_vault,
+    import_cookies_into_vault,
     is_bo_ai_subtitle_available,
     load_cached_ai_subtitles,
     parse_chapters_from_description,
@@ -26,8 +31,10 @@ from core.youtube_online_client import (
     parse_json3_subtitles,
     parse_vtt_subtitles,
     parse_youtube_input,
+    read_cookie_vault_bytes,
     save_cached_ai_subtitles,
     serialize_ai_segments_to_cues,
+    validate_netscape_cookie_text,
 )
 from core.youtube_online_player import (
     OnlineAudioStreamEngine,
@@ -307,6 +314,64 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         finally:
             ctrl.shutdown()
             surface.deleteLater()
+
+    def test_encrypted_cookie_vault_dpapi_roundtrip_and_ephemeral_wipe(self):
+        sample_cookie = (
+            "# Netscape HTTP Cookie File\n"
+            ".youtube.com\tTRUE\t/\tTRUE\t1893456000\tSAPISID\tSECRET_TOKEN_XYZ_999\n"
+            "#HttpOnly_.youtube.com\tTRUE\t/\tTRUE\t1893456000\t__Secure-3PSID\tSUPER_SECRET_PSID_777\n"
+        )
+        ok_v, _msg_v, has_auth = validate_netscape_cookie_text(sample_cookie)
+        self.assertTrue(ok_v)
+        self.assertTrue(has_auth)
+        ok_bad, _msg_bad, _ = validate_netscape_cookie_text("just random plain notes\nnot cookies")
+        self.assertFalse(ok_bad)
+
+        with tempfile.TemporaryDirectory() as td:
+            dl_dir = Path(td) / "Downloads"
+            dl_dir.mkdir()
+            src_ck = dl_dir / "www.youtube.com_cookies.txt"
+            src_ck.write_bytes(sample_cookie.encode("utf-8"))
+            vault_file = Path(td) / "storage" / "youtube-cookies.vault"
+
+            # Reject bad files without touching vault
+            bad_file = dl_dir / "bad.txt"
+            bad_file.write_text("hello world", encoding="utf-8")
+            ok_imp_bad, _ = import_cookies_into_vault(bad_file, wipe_source=True, vault_path=vault_file)
+            self.assertFalse(ok_imp_bad)
+            self.assertTrue(bad_file.is_file())
+            self.assertFalse(has_cookie_vault(vault_file))
+
+            # Encrypt into DPAPI vault and auto-shred original Downloads file
+            ok_imp, msg_imp = import_cookies_into_vault(src_ck, wipe_source=True, vault_path=vault_file)
+            self.assertTrue(ok_imp, msg_imp)
+            self.assertFalse(src_ck.exists())
+            self.assertTrue(has_cookie_vault(vault_file))
+            self.assertTrue(has_active_cookie_source("", COOKIE_VAULT_SENTINEL, vault_path=vault_file))
+
+            # Ciphertext on disk must NOT leak plaintext tokens!
+            cipher_bytes = vault_file.read_bytes()
+            self.assertNotIn(b"SECRET_TOKEN_XYZ_999", cipher_bytes)
+            self.assertNotIn(b"SUPER_SECRET_PSID_777", cipher_bytes)
+            self.assertEqual(read_cookie_vault_bytes(vault_file).decode("utf-8"), sample_cookie)
+
+            # Ephemeral context manager yields decrypted temp file ONLY inside with-block and shreds immediately on exit
+            client = YouTubeOnlineClient()
+            ephemeral_path: Path | None = None
+            with patch("core.youtube_online_client.cookie_vault_path", return_value=vault_file):
+                with client._ephemeral_cookie_args(cookies_file=COOKIE_VAULT_SENTINEL) as args:
+                    self.assertEqual(len(args), 2)
+                    self.assertEqual(args[0], "--cookies")
+                    ephemeral_path = Path(args[1])
+                    self.assertTrue(ephemeral_path.is_file())
+                    self.assertEqual(ephemeral_path.read_text(encoding="utf-8"), sample_cookie)
+                self.assertIsNotNone(ephemeral_path)
+                self.assertFalse(ephemeral_path.exists())
+
+            # Delete vault securely
+            self.assertTrue(delete_cookie_vault(vault_file))
+            self.assertFalse(has_cookie_vault(vault_file))
+            self.assertFalse(has_active_cookie_source("", COOKIE_VAULT_SENTINEL, vault_path=vault_file))
 
     def test_innertube_ios_fast_path_and_rdem_mix_playlist(self):
         client = YouTubeOnlineClient()
@@ -660,14 +725,40 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
             self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
 
-            # 6e3. Account Dialog has scrollable layout, Cookie guide with Copy/Store buttons, and AI Whisper + Translate toggles
-            acc_dlg = _YouTubeAccountDialog(yt.profile, client=yt.client, parent=yt)
-            self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_sub"))
-            self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_translate"))
-            self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_name"))
-            self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_link"))
-            self.assertTrue(hasattr(acc_dlg, "btn_open_ext_store"))
-            acc_dlg.deleteLater()
+            # 6e3. Account Dialog has scrollable layout, Cookie guide, DPAPI Vault migration/auto-wipe & AI Whisper toggles
+            with tempfile.TemporaryDirectory() as ck_td:
+                legacy_ck = Path(ck_td) / "www.youtube.com_cookies.txt"
+                legacy_ck.write_text(
+                    "# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tTRUE\t1893456000\tSAPISID\tUI_TEST_TOKEN\n",
+                    encoding="utf-8",
+                )
+                yt.profile.set_pref("cookies_file", str(legacy_ck))
+                acc_dlg = _YouTubeAccountDialog(yt.profile, client=yt.client, parent=yt)
+                self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_sub"))
+                self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_translate"))
+                self.assertTrue(hasattr(acc_dlg, "chk_auto_wipe_source"))
+                self.assertTrue(acc_dlg.chk_auto_wipe_source.isChecked())
+                self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_name"))
+                self.assertTrue(hasattr(acc_dlg, "btn_copy_ext_link"))
+                self.assertTrue(hasattr(acc_dlg, "btn_open_ext_store"))
+                self.assertFalse(acc_dlg.btn_migrate_vault.isHidden())
+
+                # 1-Click migrate existing plain Downloads cookie -> DPAPI Vault + auto-shred original!
+                acc_dlg._on_migrate_existing_cookie_file()
+                self.assertFalse(legacy_ck.exists())
+                self.assertTrue(acc_dlg._vault_active)
+                self.assertTrue(acc_dlg.txt_cookie_file.isReadOnly())
+                self.assertTrue(acc_dlg.btn_migrate_vault.isHidden())
+                self.assertEqual(yt.profile.get_pref("cookies_file"), COOKIE_VAULT_SENTINEL)
+                self.assertTrue(has_cookie_vault())
+
+                # Clear wipes encrypted vault cleanly
+                acc_dlg._clear_cookie_file()
+                self.assertFalse(acc_dlg._vault_active)
+                self.assertFalse(has_cookie_vault())
+                self.assertEqual(acc_dlg.txt_cookie_file.text(), "")
+                self.assertEqual(yt.profile.get_pref("cookies_file"), "")
+                acc_dlg.deleteLater()
 
             # 6e4. Liked library section shows Play All / Shuffle / Sync YouTube Liked buttons
             yt._render_library_section("liked")

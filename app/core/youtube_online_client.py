@@ -7,6 +7,7 @@ local JSON file (`storage/youtube-online-profile.json`).
 """
 from __future__ import annotations
 
+import contextlib
 from dataclasses import asdict, dataclass, field
 import html
 import json
@@ -15,9 +16,10 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import tempfile
 import threading
 import time
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 import urllib.parse
 
 from control.worker_lifecycle import OwnedProcesses
@@ -899,6 +901,350 @@ def _extract_items_from_payload(payload: dict[str, Any], *, limit: int = 36, inc
 
 
 # =====================================================================
+# ENCRYPTED YOUTUBE COOKIE VAULT (WINDOWS DPAPI — USER-BOUND, ZERO PLAINTEXT)
+# =====================================================================
+
+COOKIE_VAULT_SENTINEL = "__BOTUBE_COOKIE_VAULT__"
+_COOKIE_VAULT_MAGIC_DPAPI = b"BTCV1\x00"
+_COOKIE_VAULT_MAGIC_PORTABLE = b"BTCV0\x00"
+_COOKIE_VAULT_ENTROPY = b"BoTube.YouTubeCookieVault.v1"
+_COOKIE_MAX_BYTES = 4 * 1024 * 1024  # 4 MB safety cap
+_YT_AUTH_COOKIE_NAMES = frozenset({
+    "SID",
+    "HSID",
+    "SSID",
+    "APISID",
+    "SAPISID",
+    "__Secure-1PSID",
+    "__Secure-3PSID",
+    "__Secure-1PAPISID",
+    "__Secure-3PAPISID",
+    "LOGIN_INFO",
+})
+
+
+def cookie_vault_path() -> Path:
+    """Return private path for the encrypted YouTube cookie vault inside BoTube storage."""
+    return Path(storage_dir()) / "youtube-cookies.vault"
+
+
+def secure_wipe_file(path: Path | str) -> bool:
+    """Overwrite a sensitive file with zero bytes, fsync, and unlink it safely."""
+    p = Path(path)
+    if not p.exists():
+        return True
+    try:
+        try:
+            os.chmod(p, 0o666)
+        except OSError:
+            pass
+        size = p.stat().st_size
+        if size > 0:
+            chunk = b"\x00" * min(size, 65536)
+            with open(p, "r+b") as fh:
+                remaining = size
+                while remaining > 0:
+                    n = min(remaining, len(chunk))
+                    fh.write(chunk if n == len(chunk) else (b"\x00" * n))
+                    remaining -= n
+                fh.flush()
+                try:
+                    os.fsync(fh.fileno())
+                except OSError:
+                    pass
+    except OSError as err:
+        logger.debug("Zero-overwrite before delete skipped for %s: %s", p, err)
+    try:
+        p.unlink(missing_ok=True)
+    except OSError as err:
+        logger.warning("Failed to delete sensitive file %s: %s", p, err)
+        return False
+    return not p.exists()
+
+
+def validate_netscape_cookie_text(text: str) -> tuple[bool, str, bool]:
+    """Validate Netscape cookies.txt text. Returns (ok, message, has_auth_cookie)."""
+    if not text or not text.strip():
+        return (False, "Tệp cookies.txt đang trống.", False)
+    cleaned = text.lstrip("\ufeff")
+    total_rows = 0
+    yt_rows = 0
+    has_auth = False
+    for raw_line in cleaned.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("#HttpOnly_"):
+            line = line[len("#HttpOnly_"):]
+        elif line.startswith("#"):
+            continue
+        parts = line.split("\t")
+        if len(parts) < 7:
+            continue
+        domain = parts[0].strip().lower()
+        name = parts[5].strip()
+        if not domain or not name:
+            continue
+        total_rows += 1
+        if domain.endswith("youtube.com") or domain.endswith("google.com") or domain.endswith("youtu.be"):
+            yt_rows += 1
+            if name in _YT_AUTH_COOKIE_NAMES:
+                has_auth = True
+    if total_rows == 0:
+        return (
+            False,
+            "Tệp không đúng chuẩn Netscape cookies.txt (hãy xuất bằng tiện ích Get cookies.txt LOCALLY).",
+            False,
+        )
+    if yt_rows == 0:
+        return (
+            False,
+            "Không tìm thấy cookie của YouTube/Google trong tệp này. Hãy mở youtube.com rồi xuất lại.",
+            False,
+        )
+    return (True, f"{yt_rows} cookie YouTube/Google hợp lệ", has_auth)
+
+
+def _dpapi_protect(raw: bytes) -> bytes:
+    """Encrypt bytes using Windows DPAPI bound to the current Windows user account."""
+    if not raw:
+        raise ValueError("Empty cookie payload")
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+
+        class _DATA_BLOB(ctypes.Structure):
+            _fields_ = [
+                ("cbData", wintypes.DWORD),
+                ("pbData", ctypes.POINTER(ctypes.c_char)),
+            ]
+
+        crypt32 = ctypes.windll.crypt32
+        kernel32 = ctypes.windll.kernel32
+        crypt32.CryptProtectData.argtypes = [
+            ctypes.POINTER(_DATA_BLOB),
+            wintypes.LPCWSTR,
+            ctypes.POINTER(_DATA_BLOB),
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+            ctypes.POINTER(_DATA_BLOB),
+        ]
+        crypt32.CryptProtectData.restype = wintypes.BOOL
+        kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+        kernel32.LocalFree.restype = ctypes.c_void_p
+
+        in_buf = ctypes.create_string_buffer(raw, len(raw))
+        ent_buf = ctypes.create_string_buffer(_COOKIE_VAULT_ENTROPY, len(_COOKIE_VAULT_ENTROPY))
+        in_blob = _DATA_BLOB(len(raw), ctypes.cast(in_buf, ctypes.POINTER(ctypes.c_char)))
+        ent_blob = _DATA_BLOB(len(_COOKIE_VAULT_ENTROPY), ctypes.cast(ent_buf, ctypes.POINTER(ctypes.c_char)))
+        out_blob = _DATA_BLOB()
+        try:
+            ok = crypt32.CryptProtectData(
+                ctypes.byref(in_blob),
+                "BoTube YouTube Cookie Vault",
+                ctypes.byref(ent_blob),
+                None,
+                None,
+                0x01,  # CRYPTPROTECT_UI_FORBIDDEN
+                ctypes.byref(out_blob),
+            )
+            if not ok:
+                raise OSError(f"Windows DPAPI CryptProtectData failed (err={ctypes.GetLastError()})")
+            try:
+                cipher = ctypes.string_at(out_blob.pbData, out_blob.cbData)
+            finally:
+                if out_blob.pbData:
+                    kernel32.LocalFree(ctypes.cast(out_blob.pbData, ctypes.c_void_p))
+            return _COOKIE_VAULT_MAGIC_DPAPI + cipher
+        finally:
+            ctypes.memset(in_buf, 0, len(raw))
+
+    # Non-Windows fallback (private 0600 obfuscated blob)
+    import hashlib
+    import zlib
+
+    comp = zlib.compress(raw, 6)
+    seed = hashlib.sha256(_COOKIE_VAULT_ENTROPY + os.path.expanduser("~").encode("utf-8", "ignore")).digest()
+    out = bytearray(len(comp))
+    for i, b in enumerate(comp):
+        out[i] = b ^ seed[i % len(seed)]
+    return _COOKIE_VAULT_MAGIC_PORTABLE + bytes(out)
+
+
+def _dpapi_unprotect(blob: bytes) -> bytes:
+    """Decrypt bytes stored by _dpapi_protect."""
+    if not blob:
+        raise ValueError("Empty cookie vault")
+    if blob.startswith(_COOKIE_VAULT_MAGIC_DPAPI):
+        if os.name != "nt":
+            raise OSError("Windows DPAPI cookie vault can only be decrypted on Windows.")
+        import ctypes
+        from ctypes import wintypes
+
+        class _DATA_BLOB(ctypes.Structure):
+            _fields_ = [
+                ("cbData", wintypes.DWORD),
+                ("pbData", ctypes.POINTER(ctypes.c_char)),
+            ]
+
+        crypt32 = ctypes.windll.crypt32
+        kernel32 = ctypes.windll.kernel32
+        crypt32.CryptUnprotectData.argtypes = [
+            ctypes.POINTER(_DATA_BLOB),
+            ctypes.c_void_p,
+            ctypes.POINTER(_DATA_BLOB),
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+            ctypes.POINTER(_DATA_BLOB),
+        ]
+        crypt32.CryptUnprotectData.restype = wintypes.BOOL
+        kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+        kernel32.LocalFree.restype = ctypes.c_void_p
+
+        cipher = blob[len(_COOKIE_VAULT_MAGIC_DPAPI):]
+        in_buf = ctypes.create_string_buffer(cipher, len(cipher))
+        ent_buf = ctypes.create_string_buffer(_COOKIE_VAULT_ENTROPY, len(_COOKIE_VAULT_ENTROPY))
+        in_blob = _DATA_BLOB(len(cipher), ctypes.cast(in_buf, ctypes.POINTER(ctypes.c_char)))
+        ent_blob = _DATA_BLOB(len(_COOKIE_VAULT_ENTROPY), ctypes.cast(ent_buf, ctypes.POINTER(ctypes.c_char)))
+        out_blob = _DATA_BLOB()
+        ok = crypt32.CryptUnprotectData(
+            ctypes.byref(in_blob),
+            None,
+            ctypes.byref(ent_blob),
+            None,
+            None,
+            0x01,  # CRYPTPROTECT_UI_FORBIDDEN
+            ctypes.byref(out_blob),
+        )
+        if not ok:
+            raise OSError(f"Windows DPAPI CryptUnprotectData failed (err={ctypes.GetLastError()})")
+        try:
+            raw = ctypes.string_at(out_blob.pbData, out_blob.cbData)
+            if out_blob.pbData and out_blob.cbData:
+                ctypes.memset(ctypes.cast(out_blob.pbData, ctypes.c_void_p), 0, out_blob.cbData)
+            return raw
+        finally:
+            if out_blob.pbData:
+                kernel32.LocalFree(ctypes.cast(out_blob.pbData, ctypes.c_void_p))
+
+    if blob.startswith(_COOKIE_VAULT_MAGIC_PORTABLE):
+        import hashlib
+        import zlib
+
+        enc = blob[len(_COOKIE_VAULT_MAGIC_PORTABLE):]
+        seed = hashlib.sha256(_COOKIE_VAULT_ENTROPY + os.path.expanduser("~").encode("utf-8", "ignore")).digest()
+        comp = bytes(b ^ seed[i % len(seed)] for i, b in enumerate(enc))
+        return zlib.decompress(comp)
+
+    raise ValueError("Invalid BoTube cookie vault format")
+
+
+def has_cookie_vault(vault_path: Path | str | None = None) -> bool:
+    """Return True if a non-empty encrypted BoTube cookie vault exists on disk."""
+    vp = Path(vault_path) if vault_path is not None else cookie_vault_path()
+    try:
+        return vp.is_file() and vp.stat().st_size > len(_COOKIE_VAULT_MAGIC_DPAPI)
+    except OSError:
+        return False
+
+
+def read_cookie_vault_bytes(vault_path: Path | str | None = None) -> bytes:
+    """Decrypt and return the Netscape cookie bytes from BoTube's private DPAPI vault."""
+    vp = Path(vault_path) if vault_path is not None else cookie_vault_path()
+    if not vp.is_file():
+        raise FileNotFoundError("Không tìm thấy Két Cookie mã hóa của BoTube.")
+    return _dpapi_unprotect(vp.read_bytes())
+
+
+def import_cookies_into_vault(
+    source_path: Path | str,
+    *,
+    wipe_source: bool = False,
+    vault_path: Path | str | None = None,
+) -> tuple[bool, str]:
+    """Validate a Netscape cookies.txt file, encrypt it into BoTube's DPAPI vault, and optionally shred the source file."""
+    src = Path(source_path)
+    if not src.is_file():
+        return (False, "Không tìm thấy tệp cookies.txt đã chọn.")
+    try:
+        size = src.stat().st_size
+    except OSError as err:
+        return (False, f"Không đọc được tệp cookie: {err}")
+    if size <= 0 or size > _COOKIE_MAX_BYTES:
+        return (False, "Tệp cookies.txt trống hoặc vượt quá giới hạn 4 MB.")
+
+    try:
+        raw_bytes = src.read_bytes()
+    except OSError as err:
+        return (False, f"Không đọc được nội dung tệp cookie: {err}")
+
+    text = raw_bytes.decode("utf-8", errors="replace")
+    ok_fmt, fmt_msg, has_auth = validate_netscape_cookie_text(text)
+    if not ok_fmt:
+        return (False, fmt_msg)
+
+    vp = Path(vault_path) if vault_path is not None else cookie_vault_path()
+    try:
+        encrypted = _dpapi_protect(raw_bytes)
+        vp.parent.mkdir(parents=True, exist_ok=True)
+        tmp = vp.with_suffix(".vault.tmp")
+        tmp.write_bytes(encrypted)
+        try:
+            os.chmod(tmp, 0o600)
+        except OSError:
+            pass
+        os.replace(tmp, vp)
+        # Verify encrypted vault can be cleanly decrypted BEFORE ever wiping the original file!
+        if read_cookie_vault_bytes(vp) != raw_bytes:
+            raise OSError("Kiểm tra toàn vẹn Két Cookie mã hóa thất bại.")
+    except Exception as err:
+        return (False, f"Lỗi mã hóa Két Cookie (DPAPI): {err}")
+
+    wiped = False
+    if wipe_source:
+        try:
+            same_file = src.resolve() == vp.resolve()
+        except OSError:
+            same_file = False
+        if not same_file:
+            wiped = secure_wipe_file(src)
+
+    auth_note = "" if has_auth else " (Lưu ý: tệp có thể được xuất khi chưa đăng nhập YouTube)"
+    if wiped:
+        return (
+            True,
+            f"🔒 Đã mã hóa an toàn vào Két BoTube (Windows DPAPI · {fmt_msg}) và đã xóa sạch tệp gốc trong máy!{auth_note}",
+        )
+    return (
+        True,
+        f"🔒 Đã mã hóa an toàn vào Két BoTube (Windows DPAPI · {fmt_msg}). Bạn có thể xóa tệp cookies.txt trong Downloads ngay bây giờ!{auth_note}",
+    )
+
+
+def delete_cookie_vault(vault_path: Path | str | None = None) -> bool:
+    """Securely zero-overwrite and delete BoTube's encrypted cookie vault."""
+    vp = Path(vault_path) if vault_path is not None else cookie_vault_path()
+    return secure_wipe_file(vp)
+
+
+def has_active_cookie_source(
+    cookies_browser: str = "",
+    cookies_file: str = "",
+    *,
+    vault_path: Path | str | None = None,
+) -> bool:
+    """Return True if a valid encrypted vault, existing cookies.txt, or browser profile is configured."""
+    c_file = str(cookies_file or "").strip()
+    if c_file == COOKIE_VAULT_SENTINEL:
+        return has_cookie_vault(vault_path)
+    if c_file and Path(c_file).is_file():
+        return True
+    return bool(normalize_cookies_browser(cookies_browser))
+
+
+# =====================================================================
 # ISOLATED LOCAL PROFILE STORE (ZERO GOOGLE WRITE RISK)
 # =====================================================================
 
@@ -917,6 +1263,7 @@ class YouTubeOnlineProfileStore:
         "volume": 0.7,
         "cookies_browser": "",
         "cookies_file": "",
+        "cookie_auto_wipe_source": True,
     }
 
     def __init__(self, path: Path | str | None = None):
@@ -1671,12 +2018,37 @@ class YouTubeOnlineClient:
     # --- 7. Playlist Fetch via Portable yt-dlp.exe (--flat-playlist, 1 request!) ---
     def _cookie_args(self, cookies_browser: str = "", cookies_file: str = "") -> list[str]:
         c_file = str(cookies_file or "").strip()
-        if c_file and Path(c_file).is_file():
+        if c_file and c_file != COOKIE_VAULT_SENTINEL and Path(c_file).is_file():
             return ["--cookies", c_file]
         browser = normalize_cookies_browser(cookies_browser)
         if browser:
             return ["--cookies-from-browser", browser]
         return []
+
+    @contextlib.contextmanager
+    def _ephemeral_cookie_args(
+        self,
+        cookies_browser: str = "",
+        cookies_file: str = "",
+    ) -> Iterator[list[str]]:
+        """Yield yt-dlp cookie CLI args; decrypts DPAPI vault to a short-lived temp file shredded on exit."""
+        c_file = str(cookies_file or "").strip()
+        if c_file == COOKIE_VAULT_SENTINEL:
+            if not has_cookie_vault():
+                yield []
+                return
+            raw = read_cookie_vault_bytes()
+            fd, tmp_path = tempfile.mkstemp(prefix="botube-ck-", suffix=".txt")
+            try:
+                try:
+                    os.write(fd, raw)
+                finally:
+                    os.close(fd)
+                yield ["--cookies", tmp_path]
+            finally:
+                secure_wipe_file(tmp_path)
+            return
+        yield self._cookie_args(cookies_browser, cookies_file)
 
     def _fetch_playlist_via_innertube(
         self,
@@ -1770,8 +2142,7 @@ class YouTubeOnlineClient:
         if not ytdlp.is_file():
             raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
 
-        cookie_args = self._cookie_args(cookies_browser, cookies_file)
-        if is_personal and not cookie_args:
+        if is_personal and not has_active_cookie_source(cookies_browser, cookies_file):
             raise RuntimeError(
                 "Cần kết nối Cookie tài khoản YouTube để đọc Danh sách đã thích / Xem sau / Playlist riêng tư. "
                 "Hãy bấm “Tài khoản” ở góc trên và xem hướng dẫn lấy cookies.txt (30 giây) hoặc chọn Firefox."
@@ -1811,12 +2182,13 @@ class YouTubeOnlineClient:
                 if processes is not None:
                     processes.release(proc)
 
-        rc, stdout, stderr = _run_ytdlp_pl(cookie_args)
-        # If a public playlist failed solely because saved Chrome/Edge cookies were locked or expired (401), retry anonymously!
-        if (rc != 0 or not stdout.strip()) and cookie_args and not is_personal:
-            rc2, stdout2, stderr2 = _run_ytdlp_pl([])
-            if rc2 == 0 and stdout2.strip():
-                rc, stdout, stderr = rc2, stdout2, stderr2
+        with self._ephemeral_cookie_args(cookies_browser, cookies_file) as cookie_args:
+            rc, stdout, stderr = _run_ytdlp_pl(cookie_args)
+            # If a public playlist failed solely because saved Chrome/Edge cookies were locked or expired (401), retry anonymously!
+            if (rc != 0 or not stdout.strip()) and cookie_args and not is_personal:
+                rc2, stdout2, stderr2 = _run_ytdlp_pl([])
+                if rc2 == 0 and stdout2.strip():
+                    rc, stdout, stderr = rc2, stdout2, stderr2
 
         if rc != 0 or not stdout.strip():
             # Fallback to InnerTube Mix/Browse when YouTube rejects playlist tab scraping
@@ -2108,7 +2480,6 @@ class YouTubeOnlineClient:
             raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
 
         url = f"https://www.youtube.com/watch?v={vid}"
-        cookie_args = self._cookie_args(cookies_browser, cookies_file)
 
         def _run_ytdlp_stream(use_cookies: list[str]) -> tuple[int, str, str]:
             cmd = [
@@ -2143,12 +2514,14 @@ class YouTubeOnlineClient:
                 if processes is not None:
                     processes.release(proc)
 
-        rc, stdout, stderr = _run_ytdlp_stream(cookie_args)
-        # If cookie-authenticated yt-dlp hit YouTube's PO-token / format restriction, retry anonymously!
-        if (rc != 0 or not stdout.strip()) and cookie_args:
-            rc2, stdout2, stderr2 = _run_ytdlp_stream([])
-            if rc2 == 0 and stdout2.strip():
-                rc, stdout, stderr = rc2, stdout2, stderr2
+        with self._ephemeral_cookie_args(cookies_browser, cookies_file) as cookie_args:
+            used_cookies = bool(cookie_args)
+            rc, stdout, stderr = _run_ytdlp_stream(cookie_args)
+            # If cookie-authenticated yt-dlp hit YouTube's PO-token / format restriction, retry anonymously!
+            if (rc != 0 or not stdout.strip()) and used_cookies:
+                rc2, stdout2, stderr2 = _run_ytdlp_stream([])
+                if rc2 == 0 and stdout2.strip():
+                    rc, stdout, stderr = rc2, stdout2, stderr2
 
         if rc != 0 or not stdout.strip():
             msg = (stderr or "").strip().splitlines()
@@ -2157,7 +2530,7 @@ class YouTubeOnlineClient:
 
         info = json.loads(stdout)
         resolved = self._build_resolved_stream(vid, info)
-        if not resolved.audio_url and not resolved.progressive_url and cookie_args:
+        if not resolved.audio_url and not resolved.progressive_url and used_cookies:
             # Cookie response returned empty playable formats -> retry anonymous yt-dlp!
             rc2, stdout2, _stderr2 = _run_ytdlp_stream([])
             if rc2 == 0 and stdout2.strip():
@@ -2376,8 +2749,8 @@ class YouTubeOnlineClient:
         processes: OwnedProcesses | None = None,
     ) -> tuple[bool, str, int]:
         """Test read-only cookie access to Liked Videos (:ytfav) and return (ok, message, count)."""
-        if not cookies_browser and not (cookies_file and Path(cookies_file).is_file()):
-            return (False, "Chưa chọn trình duyệt hoặc tệp cookies.txt.", 0)
+        if not has_active_cookie_source(cookies_browser, cookies_file):
+            return (False, "Chưa chọn trình duyệt hoặc chưa nạp cookies.txt vào Két mã hóa.", 0)
         try:
             title, items = self.fetch_playlist(
                 ":ytfav",
@@ -2457,35 +2830,36 @@ class YouTubeOnlineClient:
         if not ytdlp.is_file():
             raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
         out_tmpl = str(dest_dir / f"{safe_title}.%(ext)s")
-        cmd = [
-            str(ytdlp),
-            "--no-playlist",
-            "--no-warnings",
-            "-f", "ba/b",
-            *self._cookie_args(cookies_browser, cookies_file),
-            "-o", out_tmpl,
-            "--",
-            f"https://www.youtube.com/watch?v={video_id}",
-        ]
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            creationflags=_NO_WINDOW,
-        )
-        if processes is not None:
-            processes.track(proc)
-        try:
-            _out, stderr = proc.communicate(timeout=150)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            raise TimeoutError("Hết thời gian tải audio nền cho AI Sub.")
-        finally:
+        with self._ephemeral_cookie_args(cookies_browser, cookies_file) as cookie_args:
+            cmd = [
+                str(ytdlp),
+                "--no-playlist",
+                "--no-warnings",
+                "-f", "ba/b",
+                *cookie_args,
+                "-o", out_tmpl,
+                "--",
+                f"https://www.youtube.com/watch?v={video_id}",
+            ]
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                creationflags=_NO_WINDOW,
+            )
             if processes is not None:
-                processes.release(proc)
+                processes.track(proc)
+            try:
+                _out, stderr = proc.communicate(timeout=150)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                raise TimeoutError("Hết thời gian tải audio nền cho AI Sub.")
+            finally:
+                if processes is not None:
+                    processes.release(proc)
 
         candidates = [p for p in dest_dir.iterdir() if p.is_file() and p.stat().st_size > 4096]
         if candidates:

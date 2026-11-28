@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections import OrderedDict
 import html
 import logging
+from pathlib import Path
 import random
 import re
 import shutil
@@ -55,6 +56,7 @@ from PySide6.QtWidgets import (
 from control.worker_lifecycle import OwnedProcesses
 from core.audio_profile import AudioProfile
 from core.youtube_online_client import (
+    COOKIE_VAULT_SENTINEL,
     OnlineChannelInfo,
     OnlineChapter,
     OnlineComment,
@@ -67,8 +69,12 @@ from core.youtube_online_client import (
     YouTubeOnlineClient,
     YouTubeOnlineProfileStore,
     create_youtube_ai_worker,
+    delete_cookie_vault,
     format_seconds_mmss,
+    has_active_cookie_source,
     has_cached_ai_subtitles,
+    has_cookie_vault,
+    import_cookies_into_vault,
     is_bo_ai_subtitle_available,
     load_cached_ai_subtitles,
     online_ai_sub_cache_dir,
@@ -603,6 +609,25 @@ QDialog#ytAccountDialog QLineEdit {
 QDialog#ytAccountDialog QLineEdit:focus {
     border-color: #77E0BE;
 }
+QDialog#ytAccountDialog QLineEdit[vaultActive="true"] {
+    background: #0F231E;
+    color: #96F0D2;
+    border: 1px solid #3C8F75;
+    font-weight: 600;
+}
+QDialog#ytAccountDialog QPushButton#ytVaultMigrateBtn {
+    background: #1B342D;
+    color: #9AF3D6;
+    border: 1px solid #3F957A;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+}
+QDialog#ytAccountDialog QPushButton#ytVaultMigrateBtn:hover {
+    background: #24473D;
+    border-color: #77E0BE;
+}
 QDialog#ytAccountDialog QComboBox {
     background: #0F1620;
     color: #EDF3FA;
@@ -1120,6 +1145,7 @@ class _YouTubeAccountDialog(QDialog):
         self.profile = profile
         self.client = client or YouTubeOnlineClient(profile_store=profile)
         self._verify_worker: _TaskWorker | None = None
+        self._vault_active: bool = False
 
         self.setWindowTitle(tr_pair("Tài khoản YouTube & Đồng bộ", "YouTube Account & Sync"))
         self.setStyleSheet(ACCOUNT_DIALOG_STYLE)
@@ -1169,15 +1195,15 @@ class _YouTubeAccountDialog(QDialog):
                 f"&nbsp;&nbsp;1. Cài đúng tiện ích mã nguồn mở <b>“{ext_name}”</b> tại "
                 f'<a href="{ext_url}" style="color:#77E0BE;text-decoration:underline;">Chrome Web Store</a>.<br>'
                 "&nbsp;&nbsp;2. Mở <b>youtube.com</b> (đã đăng nhập) → bấm biểu tượng tiện ích → bấm <b>Export</b> tải tệp <code>cookies.txt</code>.<br>"
-                "&nbsp;&nbsp;3. Bấm <b>Chọn file</b> ở mục 1 bên dưới để nạp tệp <code>.txt</code> → bấm <b>Kiểm tra &amp; Kết nối</b> → <b>Lưu cấu hình</b>.<br>"
-                "<span style='color:#92B7AD;'>🔒 Bảo mật: Tệp cookie chỉ lưu trên máy bạn (chỉ đọc playlist, không gửi ra ngoài) — tuyệt đối không chia sẻ tệp này cho người khác.</span>",
+                "&nbsp;&nbsp;3. Bấm <b>Chọn file</b> ở mục 1 bên dưới → BoTube tự <b>mã hóa kín (Windows DPAPI)</b> vào Két riêng &amp; <b>tự xóa tệp gốc trong Downloads</b> → bấm <b>Kiểm tra &amp; Kết nối</b>.<br>"
+                "<span style='color:#92B7AD;'>💡 Mẹo giữ phiên 6+ tháng: đăng nhập YouTube ở <b>Cửa sổ Ẩn danh</b> → Export → đóng cửa sổ Ẩn danh (không bấm Đăng xuất). Cookie chỉ mã hóa cục bộ theo tài khoản Windows của bạn.</span>",
                 "• <b>Method 1 (Fastest):</b> Sign in to YouTube in <b>Firefox</b> → pick <i>Firefox</i> below → click <b>Test &amp; Connect</b>.<br>"
                 "• <b>Method 2 (Chrome / Edge / Brave — never locked):</b><br>"
                 f"&nbsp;&nbsp;1. Install the open-source extension <b>“{ext_name}”</b> from "
                 f'<a href="{ext_url}" style="color:#77E0BE;text-decoration:underline;">Chrome Web Store</a>.<br>'
                 "&nbsp;&nbsp;2. Open signed-in <b>youtube.com</b> → click the extension → <b>Export</b> to save <code>cookies.txt</code>.<br>"
-                "&nbsp;&nbsp;3. Click <b>Browse</b> below to select that file → <b>Test &amp; Connect</b> → <b>Save Settings</b>.<br>"
-                "<span style='color:#92B7AD;'>🔒 Security: Cookies stay strictly local on your PC (read-only) — never share your cookies.txt file with anyone.</span>",
+                "&nbsp;&nbsp;3. Click <b>Browse</b> below → BoTube automatically <b>encrypts it with Windows DPAPI</b> into its private Vault &amp; <b>shreds the Downloads copy</b> → click <b>Test &amp; Connect</b>.<br>"
+                "<span style='color:#92B7AD;'>💡 6+ Month Tip: sign in to YouTube inside an <b>Incognito window</b> → Export → close window (without clicking Sign out). Vault is encrypted locally for your Windows user only.</span>",
             )
         )
         lbl_g_body.setTextFormat(Qt.TextFormat.RichText)
@@ -1254,10 +1280,11 @@ class _YouTubeAccountDialog(QDialog):
 
         cf_row = QHBoxLayout()
         cf_row.setSpacing(8)
-        self.txt_cookie_file = QLineEdit(str(profile.get_pref("cookies_file", "") or ""))
+        raw_cf = str(profile.get_pref("cookies_file", "") or "").strip()
+        self.txt_cookie_file = QLineEdit()
         self.txt_cookie_file.setFixedHeight(36)
         self.txt_cookie_file.setPlaceholderText(
-            tr_pair("Chọn tệp cookies.txt (khuyên dùng cho Chrome/Edge)...", "Select cookies.txt (recommended for Chrome/Edge)...")
+            tr_pair("Chọn tệp cookies.txt để mã hóa vào Két BoTube (DPAPI)...", "Select cookies.txt to encrypt into BoTube Vault (DPAPI)...")
         )
         btn_cf = QPushButton(tr_pair("Chọn file", "Browse"))
         btn_cf.setFixedHeight(36)
@@ -1266,11 +1293,42 @@ class _YouTubeAccountDialog(QDialog):
         btn_cf_clr = QPushButton(tr_pair("Xóa", "Clear"))
         btn_cf_clr.setFixedHeight(36)
         btn_cf_clr.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_cf_clr.clicked.connect(lambda: self.txt_cookie_file.setText(""))
+        btn_cf_clr.clicked.connect(self._clear_cookie_file)
         cf_row.addWidget(self.txt_cookie_file, 1)
         cf_row.addWidget(btn_cf)
         cf_row.addWidget(btn_cf_clr)
         al.addLayout(cf_row)
+
+        self.chk_auto_wipe_source = QCheckBox(
+            tr_pair(
+                "Tự động xóa an toàn tệp cookies.txt gốc (Downloads) ngay sau khi mã hóa vào Két BoTube",
+                "Automatically shred original cookies.txt (Downloads) right after encrypting into Vault",
+            )
+        )
+        self.chk_auto_wipe_source.setStyleSheet(
+            "QCheckBox { color: #B8D7CE; font-size: 12px; spacing: 8px; padding: 1px 0; }"
+        )
+        self.chk_auto_wipe_source.setChecked(bool(profile.get_pref("cookie_auto_wipe_source", True)))
+        al.addWidget(self.chk_auto_wipe_source)
+
+        self.btn_migrate_vault = QPushButton(
+            tr_pair(
+                "🔒 Mã hóa tệp cookies.txt này vào Két kín (Windows DPAPI) && xóa bản gốc",
+                "🔒 Encrypt This cookies.txt into Private Vault (Windows DPAPI) && Wipe Original",
+            )
+        )
+        self.btn_migrate_vault.setObjectName("ytVaultMigrateBtn")
+        self.btn_migrate_vault.setFixedHeight(34)
+        self.btn_migrate_vault.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_migrate_vault.clicked.connect(self._on_migrate_existing_cookie_file)
+        al.addWidget(self.btn_migrate_vault)
+
+        if raw_cf == COOKIE_VAULT_SENTINEL and has_cookie_vault():
+            self._apply_vault_ui_state(active=True)
+        else:
+            initial_txt = "" if raw_cf == COOKIE_VAULT_SENTINEL else raw_cf
+            self._apply_vault_ui_state(active=False, plain_path=initial_txt)
+        self.txt_cookie_file.textChanged.connect(self._refresh_migrate_button_visibility)
 
         self.lbl_verify_status = QLabel("")
         self.lbl_verify_status.setWordWrap(True)
@@ -1414,11 +1472,83 @@ class _YouTubeAccountDialog(QDialog):
         btn.setText(tr_pair("✓ Đã copy!", "✓ Copied!"))
         QTimer.singleShot(1600, lambda b=btn, lbl=orig_label: b.setText(lbl))
 
+    def _apply_vault_ui_state(self, *, active: bool, plain_path: str = "") -> None:
+        self._vault_active = bool(active)
+        self.txt_cookie_file.blockSignals(True)
+        if self._vault_active:
+            self.txt_cookie_file.setReadOnly(True)
+            self.txt_cookie_file.setProperty("vaultActive", "true")
+            self.txt_cookie_file.setText(
+                tr_pair(
+                    "🔒 Két mã hóa BoTube (Windows DPAPI · An toàn)",
+                    "🔒 BoTube Encrypted Vault (Windows DPAPI · Safe)",
+                )
+            )
+            self.txt_cookie_file.setCursorPosition(0)
+        else:
+            self.txt_cookie_file.setReadOnly(False)
+            self.txt_cookie_file.setProperty("vaultActive", "false")
+            self.txt_cookie_file.setText(plain_path)
+        self.txt_cookie_file.blockSignals(False)
+        self.txt_cookie_file.style().unpolish(self.txt_cookie_file)
+        self.txt_cookie_file.style().polish(self.txt_cookie_file)
+        self._refresh_migrate_button_visibility()
+
+    def _refresh_migrate_button_visibility(self) -> None:
+        if self._vault_active:
+            self.btn_migrate_vault.hide()
+            return
+        cur = self.txt_cookie_file.text().strip()
+        show = bool(cur and cur != COOKIE_VAULT_SENTINEL and Path(cur).is_file())
+        self.btn_migrate_vault.setVisible(show)
+
+    def _import_cookie_file_into_vault(self, source_path: str | Path) -> bool:
+        wipe_src = bool(self.chk_auto_wipe_source.isChecked())
+        ok, msg = import_cookies_into_vault(source_path, wipe_source=wipe_src)
+        if ok:
+            self._apply_vault_ui_state(active=True)
+            self.profile.set_pref("cookie_auto_wipe_source", wipe_src)
+            self.profile.set_pref("cookies_file", COOKIE_VAULT_SENTINEL)
+            self.lbl_verify_status.setStyleSheet("color: #77E0BE; font-size: 12px; font-weight: 600;")
+            self.lbl_verify_status.setText(msg)
+            self.lbl_verify_status.show()
+            return True
+        self.lbl_verify_status.setStyleSheet("color: #F29C9C; font-size: 12px;")
+        self.lbl_verify_status.setText(f"⚠️ {msg}")
+        self.lbl_verify_status.show()
+        return False
+
+    def _on_migrate_existing_cookie_file(self) -> None:
+        cur = self.txt_cookie_file.text().strip()
+        if cur and not self._vault_active:
+            self._import_cookie_file_into_vault(cur)
+
+    def _clear_cookie_file(self) -> None:
+        had_vault = self._vault_active or has_cookie_vault()
+        delete_cookie_vault()
+        self._apply_vault_ui_state(active=False, plain_path="")
+        self.profile.set_pref("cookies_file", "")
+        if had_vault:
+            self.lbl_verify_status.setStyleSheet("color: #9AAABC; font-size: 12px;")
+            self.lbl_verify_status.setText(
+                tr_pair(
+                    "🗑️ Đã ghi đè xóa sạch Két Cookie mã hóa của BoTube.",
+                    "🗑️ Securely wiped and deleted BoTube's encrypted Cookie Vault.",
+                )
+            )
+            self.lbl_verify_status.show()
+
     def _save_cookie_prefs(self) -> tuple[str, str]:
         br = str(self.combo_browser.currentData() or "")
-        cf = self.txt_cookie_file.text().strip()
+        if self._vault_active and has_cookie_vault():
+            cf = COOKIE_VAULT_SENTINEL
+        else:
+            raw_txt = self.txt_cookie_file.text().strip()
+            cf = "" if self._vault_active else raw_txt
         self.profile.set_pref("cookies_browser", br)
         self.profile.set_pref("cookies_file", cf)
+        if hasattr(self, "chk_auto_wipe_source"):
+            self.profile.set_pref("cookie_auto_wipe_source", bool(self.chk_auto_wipe_source.isChecked()))
         if hasattr(self, "chk_allow_ai_sub") and self.chk_allow_ai_sub.isEnabled():
             self.profile.set_pref("allow_ai_sub", bool(self.chk_allow_ai_sub.isChecked()))
             self.profile.set_pref("allow_ai_translate", bool(self.chk_allow_ai_translate.isChecked()))
@@ -1496,12 +1626,12 @@ class _YouTubeAccountDialog(QDialog):
     def _browse_cookie_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
             self,
-            tr_pair("Chọn tệp cookies.txt", "Select cookies.txt"),
+            tr_pair("Chọn tệp cookies.txt để mã hóa vào Két BoTube", "Select cookies.txt to encrypt into BoTube Vault"),
             "",
             "Text Files (*.txt);;All Files (*)",
         )
         if path:
-            self.txt_cookie_file.setText(path)
+            self._import_cookie_file_into_vault(path)
 
     def _on_save(self) -> None:
         self._save_cookie_prefs()
@@ -1831,6 +1961,7 @@ class YouTubeOnlinePage(QWidget):
         super().__init__(parent)
         self.setObjectName("youtubeOnlineRoot")
         self.setStyleSheet(YOUTUBE_PAGE_STYLE)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
 
         self._audio_panel_opener = audio_panel_opener
         self._sub_settings_opener = sub_settings_opener
@@ -3036,6 +3167,10 @@ class YouTubeOnlinePage(QWidget):
     # BILINGUAL I18N (100% VI/EN COVERAGE)
     # =================================================================
 
+    def minimumSizeHint(self) -> QSize:
+        # Keep MainWindow free to shrink to its original 1100x750 / compact 760px widths!
+        return QSize(320, 240)
+
     def set_workspace_mode(self, mode: str) -> None:
         self._workspace_mode = str(mode or "both").strip().lower()
         self.retranslate(get_language())
@@ -3060,7 +3195,10 @@ class YouTubeOnlinePage(QWidget):
             if self.btn_audio_mode.isChecked()
             else tr_pair("🎬 Video + Hi-Fi", "🎬 Video + Hi-Fi", lg)
         )
-        has_ck = bool(self.profile.get_pref("cookies_browser", "") or self.profile.get_pref("cookies_file", ""))
+        has_ck = has_active_cookie_source(
+            str(self.profile.get_pref("cookies_browser", "") or ""),
+            str(self.profile.get_pref("cookies_file", "") or ""),
+        )
         self.btn_account.setText(
             tr_pair("● Tài khoản YouTube", "● YouTube Connected", lg)
             if has_ck
@@ -5419,7 +5557,7 @@ class YouTubeOnlinePage(QWidget):
         """Import/sync YouTube Liked Videos (:ytfav) directly into BoTube's isolated 'Đã thích' list."""
         cookies_br = str(self.profile.get_pref("cookies_browser", "") or "")
         cookies_file = str(self.profile.get_pref("cookies_file", "") or "")
-        if not cookies_br and not cookies_file:
+        if not has_active_cookie_source(cookies_br, cookies_file):
             self.status_message.emit(
                 tr_pair(
                     "Hãy chọn Firefox hoặc nạp cookies.txt trong Tài khoản để đồng bộ Video đã thích trên YouTube!",
