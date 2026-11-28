@@ -710,6 +710,15 @@ class MainWindow(QMainWindow):
             # 'both': restore playback bar if currently on a non-YouTube tab
             if cur_idx != 7 and hasattr(self, "playback_bar"):
                 self.playback_bar.show()
+
+        # If user started in Online-only mode (deferred offline scan) and now switches to Both/Offline, load their folders!
+        if m != "online" and getattr(self, "_deferred_offline_folders", None):
+            pending = list(self._deferred_offline_folders)
+            self._deferred_offline_folders = []
+            if len(pending) > 1:
+                QTimer.singleShot(80, lambda f=pending: self.load_folders_content(f))
+            elif len(pending) == 1:
+                QTimer.singleShot(80, lambda f=pending[0]: self.load_folder_content(f))
         return m
 
     def _return_from_youtube_online(self):
@@ -2448,6 +2457,11 @@ class MainWindow(QMainWindow):
         )
         self._restore_passive_last_played_ui()
 
+        if self.load_saved_workspace_mode() == "online":
+            # In pure Online mode, skip heavy offline disk/thumbnail scanning on startup and stay on YouTube Online!
+            self._deferred_offline_folders = list(folders)
+            return
+
         if len(folders) > 1:
             print(f"🔄 Khôi phục đa thư mục ({len(folders)} nguồn): {folders}")
             QTimer.singleShot(100, lambda f=list(folders): self.load_folders_content(f))
@@ -2960,7 +2974,11 @@ class MainWindow(QMainWindow):
             # Nếu người dùng đang mở Bộ sưu tập (5) hoặc Lịch sử (6) (VD: vừa thêm/quét lại thư mục),
             # giữ nguyên tab hiện tại để không giật màn hình về Trang chủ.
             cur_stack_idx = self.content_stack.currentIndex() if hasattr(self, 'content_stack') else 0
-            if cur_stack_idx in (5, 6):
+            if cur_stack_idx == 7 or getattr(self, "_workspace_mode", "both") == "online":
+                # Never hijack the screen away from YouTube Online or hide the user's navigation!
+                if hasattr(self, 'content_ctrl'):
+                    self.content_ctrl.all_items = self.all_media_items
+            elif cur_stack_idx in (5, 6):
                 if cur_stack_idx == 5 and hasattr(self, 'collections_page'):
                     self.collections_page.refresh_all()
                     self.collections_page.refresh_folders_ui()

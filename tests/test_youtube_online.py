@@ -647,6 +647,13 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             self.assertFalse(window.sidebar.isRowHidden(r_st_on))
             self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
             self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("library")))
+            # Offline folder scan completing while in Online / YouTube tab must NEVER hijack back to Home (index 0)!
+            window.sidebar.setCurrentRow(r_yt_on)
+            window.handle_sidebar_click(window.sidebar.item(r_yt_on))
+            pump(25)
+            from types import SimpleNamespace
+            window._folder_scan_completed([SimpleNamespace(mtime=1, id="m1", title="Local", artist="Artist", path="x.mp3", duration=10, thumbnail=None)])
+            self.assertEqual(window.content_stack.currentIndex(), 7)
             window.apply_workspace_mode("both", navigate=False)
             self.assertEqual(window.sidebar.row_for_page("home"), 0)
             self.assertEqual(window.sidebar.row_for_page("youtube_online"), window.sidebar.row_for_page("settings") - 1)
