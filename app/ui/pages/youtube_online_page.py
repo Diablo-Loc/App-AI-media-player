@@ -1,12 +1,13 @@
 """Commercial-grade isolated YouTube Online Studio page for BoTube.
 
 Self-contained tab (zero mutations to offline Library, For You, SubtitleManager, or AudioStreamEngine):
-- Full YouTube Desktop workflow: Home & Topic Chips, Live Search + Autocomplete, URL paste
-  (Video/Playlist/Channel), 2-Column Watch Page (4K/1080p Video or Audio-Only Hi-Fi 64-bit DAC),
-  Chapters, Clickable Timestamps, Top Comments, Auto-Mix Radio Queue, Channel View, Playlist View,
-  Local Profile (Subscriptions / Liked / Online Playlists / Watch History) + Read-Only Cookie Sync.
-- 3-Mode Subtitle Control: Off (0% overhead) | YouTube CC (instant native captions) | AI Sub Handoff.
-- 100% Bilingual VI/EN with zero leftover strings and clean worker/process lifecycle ownership.
+- 2-ID scoped QSS (`#youtubeOnlineRoot ...`) so global `SHELL_STYLE` never overrides buttons, chips, or badges.
+- Fluid responsive 16:9 Home Grid with channel avatars & zero ragged right gap.
+- Authentic 2-column YouTube Watch Page: 4K/2K/1080p CinemaScope & 16:9 video + 64-bit Hi-Fi WASAPI audio,
+  Audio-Only Hi-Fi cover stage, 3-mode Subtitle control (Off / YouTube CC / AI Sub Handoff),
+  Chapters, Clickable Timestamps, clean Top Comments, Radio Mix Queue, and unclipped Up Next cards.
+- Streamlined Account & Playlist Sync dialog with live 1-click browser/cookie verification.
+- 100% Bilingual VI/EN with clean worker/process lifecycle ownership.
 """
 from __future__ import annotations
 
@@ -18,12 +19,10 @@ import re
 from typing import Any, Callable
 import weakref
 
-from PySide6.QtCore import QEvent, QObject, QPoint, QSize, Qt, QThread, QTimer, QUrl, Signal
-from PySide6.QtGui import QAction, QDesktopServices, QGuiApplication, QPixmap
-from PySide6.QtMultimediaWidgets import QVideoWidget
+from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QThread, QTimer, QUrl, Signal
+from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPainterPath, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
-    QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -41,7 +40,6 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QSlider,
-    QSplitter,
     QStackedWidget,
     QTextBrowser,
     QVBoxLayout,
@@ -65,117 +63,502 @@ from core.youtube_online_client import (
     parse_duration_text,
     parse_youtube_input,
 )
-from core.youtube_online_player import YouTubeOnlinePlaybackController
-from ui.design_system import DIALOG_STYLE, FORM_STYLE, ICON_BUTTON_STYLE
+from core.youtube_online_player import OnlineVideoSurface, YouTubeOnlinePlaybackController
 from ui.i18n import get_language, register_language_listener, tr_pair, unregister_language_listener
-from ui.icons import ACCENT, HEART_COLOR, INK, MUTED, TEXT, button_icon, icon
+from ui.icons import ACCENT, INK, MUTED, TEXT, button_icon, icon
 
 logger = logging.getLogger(__name__)
 
 _RE_DESC_TS = re.compile(r"\b(\d{1,2}:\d{2}(?::\d{2})?)\b")
 
+# Strictly 2-ID scoped selectors (`#youtubeOnlineRoot #...`) beat `QWidget#applicationShell QPushButton/QLabel`
+# (specificity 202 vs 102) without ever modifying global design_system.py!
 YOUTUBE_PAGE_STYLE = """
-QWidget#youtubeOnlineRoot { background: #0D1118; color: #EDF3FA; }
-QFrame#ytTopBar {
-    background: #101722; border-bottom: 1px solid #222F40;
+QWidget#youtubeOnlineRoot {
+    background: #0D1118;
+    color: #EDF3FA;
+    font-family: 'Segoe UI';
 }
-QFrame#ytSubNav {
-    background: #0F1520; border-bottom: 1px solid #1E2A3A;
+QWidget#youtubeOnlineRoot QScrollArea {
+    background: transparent;
+    border: none;
 }
-QLineEdit#ytSearchInput {
-    background: #151C26; color: #EDF3FA; border: 1px solid #2A384B;
-    border-radius: 19px; padding: 0 16px; font-size: 13px;
+QWidget#youtubeOnlineRoot QWidget#ytScrollHost {
+    background: transparent;
 }
-QLineEdit#ytSearchInput:focus { border-color: #77E0BE; background: #18212E; }
-QPushButton[ytChip="true"] {
-    background: #161F2C; color: #C2D0E0; border: 1px solid #263447;
-    border-radius: 15px; padding: 5px 14px; font-size: 12px; font-weight: 600;
+
+/* ---- Topbar & Sub-nav ---- */
+QWidget#youtubeOnlineRoot QFrame#ytTopBar {
+    background: #101722;
+    border-bottom: 1px solid #1E2A3B;
 }
-QPushButton[ytChip="true"]:hover { background: #212E40; color: #EDF3FA; border-color: #3D5068; }
-QPushButton[ytChip="true"]:checked {
-    background: #77E0BE; color: #0D1118; border-color: #77E0BE;
+QWidget#youtubeOnlineRoot QFrame#ytSubNav {
+    background: #0E141E;
+    border-bottom: 1px solid #1A2535;
 }
-QPushButton[ytNavTab="true"] {
-    background: transparent; color: #9AAABC; border: none;
-    border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+QWidget#youtubeOnlineRoot QLabel#ytBrandText {
+    color: #F4F8FD;
+    font-size: 16px;
+    font-weight: 800;
+    background: transparent;
+    border: none;
 }
-QPushButton[ytNavTab="true"]:hover { background: #1A2332; color: #EDF3FA; }
-QPushButton[ytNavTab="true"]:checked {
-    background: #19372F; color: #A9F1D9;
+QWidget#youtubeOnlineRoot QLabel#ytHifiPill {
+    background: #FF4E45;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 0 6px;
 }
-QPushButton#ytSubscribeBtn {
-    background: #FF4E45; color: #FFFFFF; border: none;
-    border-radius: 17px; padding: 7px 18px; font-weight: 700; font-size: 12px;
+QWidget#youtubeOnlineRoot QLineEdit#ytSearchInput {
+    background: #151D29;
+    color: #EDF3FA;
+    border: 1px solid #2A384D;
+    border-radius: 19px;
+    padding: 0 16px;
+    font-size: 13px;
+    selection-background-color: #2E5A4F;
 }
-QPushButton#ytSubscribeBtn:hover { background: #FF6B63; }
-QPushButton#ytSubscribeBtn:checked {
-    background: #233041; color: #D4E0EE; border: 1px solid #394C64;
+QWidget#youtubeOnlineRoot QLineEdit#ytSearchInput:focus {
+    border: 1px solid #77E0BE;
+    background: #182230;
 }
-QPushButton#ytPlayCircle {
-    background: #77E0BE; color: #0D1118; border: none; border-radius: 19px;
+QWidget#youtubeOnlineRoot QPushButton#ytIconBtn {
+    background: transparent;
+    border: none;
+    border-radius: 9px;
+    padding: 4px;
+    color: #EDF3FA;
 }
-QPushButton#ytPlayCircle:hover { background: #9AEDD3; }
-QPushButton#ytAudioToggle {
-    background: #192433; color: #DCE6F2; border: 1px solid #2C3D54;
-    border-radius: 16px; padding: 5px 13px; font-size: 12px; font-weight: 600;
+QWidget#youtubeOnlineRoot QPushButton#ytIconBtn:hover {
+    background: #202C3D;
 }
-QPushButton#ytAudioToggle:checked {
-    background: #19372F; color: #77E0BE; border-color: #77E0BE;
+QWidget#youtubeOnlineRoot QPushButton#ytIconBtn:disabled {
+    color: #4A596B;
 }
-QFrame#ytCard {
-    background: #131A24; border: 1px solid #1E2938; border-radius: 12px;
+QWidget#youtubeOnlineRoot QPushButton#ytSearchBtn {
+    background: #1B2636;
+    border: 1px solid #2E3F55;
+    border-radius: 19px;
+    padding: 0;
 }
-QFrame#ytCard:hover {
-    background: #192230; border-color: #364961;
+QWidget#youtubeOnlineRoot QPushButton#ytSearchBtn:hover {
+    background: #25344A;
+    border-color: #77E0BE;
 }
-QFrame#ytWatchControls {
-    background: #121924; border: 1px solid #222F40; border-radius: 10px;
+QWidget#youtubeOnlineRoot QPushButton#ytAudioToggle {
+    background: #182332;
+    color: #DCE6F2;
+    border: 1px solid #2C3E55;
+    border-radius: 17px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
 }
-QFrame#ytPanel {
-    background: #131B26; border: 1px solid #223042; border-radius: 12px;
+QWidget#youtubeOnlineRoot QPushButton#ytAudioToggle:hover {
+    background: #223044;
+    border-color: #46607E;
 }
-QFrame#ytMiniBar {
-    background: #111824; border-top: 1px solid #28364A;
+QWidget#youtubeOnlineRoot QPushButton#ytAudioToggle:checked {
+    background: #17382F;
+    color: #77E0BE;
+    border: 1px solid #3A8C75;
 }
-QLabel#ytAudioBadge {
-    background: #16322B; color: #8AE8CA; border: 1px solid #2B5E51;
-    border-radius: 11px; padding: 3px 10px; font-size: 11px; font-weight: 600;
+QWidget#youtubeOnlineRoot QPushButton#ytAccountBtn {
+    background: #182332;
+    color: #EDF3FA;
+    border: 1px solid #2C3E55;
+    border-radius: 17px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
 }
-QLabel#ytLiveBadge {
-    background: #D93832; color: #FFFFFF; border-radius: 4px;
-    padding: 2px 6px; font-size: 10px; font-weight: 700;
+QWidget#youtubeOnlineRoot QPushButton#ytAccountBtn:hover {
+    background: #233349;
+    border-color: #77E0BE;
 }
-QComboBox[ytCompact="true"] {
-    background: #17202D; color: #EDF3FA; border: 1px solid #2B394D;
-    border-radius: 7px; padding: 4px 8px; font-size: 12px; min-height: 26px;
+
+/* ---- Sub-nav tabs & Topic chips ---- */
+QWidget#youtubeOnlineRoot QPushButton#ytNavTab {
+    background: transparent;
+    color: #96A7BC;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
 }
-QComboBox[ytCompact="true"]:hover { border-color: #465B76; }
-QComboBox[ytCompact="true"] QAbstractItemView {
-    background: #18212E; color: #EDF3FA; selection-background-color: #284E44;
-    border: 1px solid #35475E;
+QWidget#youtubeOnlineRoot QPushButton#ytNavTab:hover {
+    background: #192332;
+    color: #EDF3FA;
 }
-QSlider#ytSeekSlider::groove:horizontal {
-    height: 5px; background: #2D3B4F; border-radius: 2px;
+QWidget#youtubeOnlineRoot QPushButton#ytNavTab:checked {
+    background: #19372F;
+    color: #9FF1D7;
 }
-QSlider#ytSeekSlider::sub-page:horizontal {
-    background: #FF4E45; border-radius: 2px;
+QWidget#youtubeOnlineRoot QPushButton#ytChipBtn {
+    background: #161F2D;
+    color: #C8D5E4;
+    border: 1px solid #263549;
+    border-radius: 15px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 600;
 }
-QSlider#ytSeekSlider::handle:horizontal {
-    background: #EDF3FA; width: 13px; height: 13px; margin: -4px 0; border-radius: 6px;
+QWidget#youtubeOnlineRoot QPushButton#ytChipBtn:hover {
+    background: #222F42;
+    color: #FFFFFF;
+    border-color: #3E536E;
 }
-QSlider#ytSeekSlider::handle:horizontal:hover { background: #77E0BE; }
-QListWidget#ytSuggestPopup {
-    background: #161F2B; color: #EDF3FA; border: 1px solid #34465C;
-    border-radius: 10px; padding: 4px; outline: none; font-size: 13px;
+QWidget#youtubeOnlineRoot QPushButton#ytChipBtn:checked {
+    background: #77E0BE;
+    color: #0B1117;
+    border: 1px solid #77E0BE;
 }
-QListWidget#ytSuggestPopup::item { padding: 7px 12px; border-radius: 6px; }
-QListWidget#ytSuggestPopup::item:hover,
-QListWidget#ytSuggestPopup::item:selected { background: #223044; color: #A9F1D9; }
+
+/* ---- Home Video Cards ---- */
+QWidget#youtubeOnlineRoot QFrame#ytCard {
+    background: #121924;
+    border: 1px solid #1C2736;
+    border-radius: 12px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytCard:hover {
+    background: #182231;
+    border: 1px solid #33465E;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytCardChannel {
+    background: transparent;
+    border: none;
+    color: #9AAABC;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    padding: 0;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytCardChannel:hover {
+    color: #77E0BE;
+}
+
+/* ---- Watch Stage, Transport & Action Pills ---- */
+QWidget#youtubeOnlineRoot QFrame#ytStageFrame {
+    background: #05080D;
+    border: 1px solid #1E2A3B;
+    border-radius: 12px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytWatchControls {
+    background: #111824;
+    border: 1px solid #202E40;
+    border-radius: 10px;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytPlayCircle {
+    background: #77E0BE;
+    color: #0D1118;
+    border: none;
+    border-radius: 19px;
+    padding: 0;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytPlayCircle:hover {
+    background: #9BF0D5;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytPlayCircle:pressed {
+    background: #5EC9A7;
+}
+QWidget#youtubeOnlineRoot QLabel#ytAudioBadge {
+    background: #14322B;
+    color: #88E8C9;
+    border: 1px solid #2A5F52;
+    border-radius: 11px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+QWidget#youtubeOnlineRoot QLabel#ytErrorBadge {
+    background: #36181C;
+    color: #FF8E8E;
+    border: 1px solid #6E2F36;
+    border-radius: 11px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytSubscribeBtn {
+    background: #FF4E45;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 17px;
+    padding: 7px 18px;
+    font-size: 12px;
+    font-weight: 700;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytSubscribeBtn:hover {
+    background: #FF6961;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytSubscribeBtn:checked {
+    background: #212E40;
+    color: #D7E2EF;
+    border: 1px solid #394D66;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytActionPill {
+    background: #182231;
+    color: #E3ECF7;
+    border: 1px solid #29384C;
+    border-radius: 17px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytActionPill:hover {
+    background: #233146;
+    border-color: #415875;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytActionPill:checked {
+    background: #361C27;
+    color: #FF8FA8;
+    border: 1px solid #75374D;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytPrimaryPill {
+    background: #77E0BE;
+    color: #0B1117;
+    border: none;
+    border-radius: 17px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 700;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytPrimaryPill:hover {
+    background: #98EED3;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytWatchChanBtn {
+    background: transparent;
+    border: none;
+    color: #F2F6FC;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    padding: 0;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytWatchChanBtn:hover {
+    color: #77E0BE;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytDescToggle {
+    background: transparent;
+    border: none;
+    color: #77E0BE;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: left;
+    padding: 2px 0;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytDescToggle:hover {
+    color: #A6F3DA;
+}
+
+/* ---- Panels, Description, Comments, Related Rows ---- */
+QWidget#youtubeOnlineRoot QFrame#ytPanel {
+    background: #121A25;
+    border: 1px solid #1F2D3E;
+    border-radius: 12px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytCommentCard {
+    background: #0F1620;
+    border: 1px solid #1D293A;
+    border-radius: 10px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytRelRow {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytRelRow:hover {
+    background: #1A2434;
+    border: 1px solid #2A3A50;
+}
+QWidget#youtubeOnlineRoot QFrame#ytRelRowActive {
+    background: #17312A;
+    border: 1px solid #2E6456;
+    border-radius: 10px;
+}
+QWidget#youtubeOnlineRoot QFrame#ytMiniBar {
+    background: #101723;
+    border-top: 1px solid #243347;
+}
+QWidget#youtubeOnlineRoot QLabel#ytBufferingPill {
+    background: rgba(13, 17, 24, 225);
+    color: #77E0BE;
+    border: 1px solid #2E6456;
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+QWidget#youtubeOnlineRoot QLabel#ytSubOverlay {
+    background: rgba(8, 11, 17, 220);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+/* ---- Compact Combos & Sliders ---- */
+QWidget#youtubeOnlineRoot QComboBox#ytCombo {
+    background: #172130;
+    color: #EDF3FA;
+    border: 1px solid #2A3A4F;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 26px;
+}
+QWidget#youtubeOnlineRoot QComboBox#ytCombo:hover {
+    border-color: #46607E;
+    background: #1D293B;
+}
+QWidget#youtubeOnlineRoot QComboBox#ytCombo::drop-down {
+    border: none;
+    width: 20px;
+}
+QWidget#youtubeOnlineRoot QComboBox#ytCombo QAbstractItemView {
+    background: #161F2D;
+    color: #EDF3FA;
+    border: 1px solid #344760;
+    selection-background-color: #244D42;
+    outline: none;
+}
+QWidget#youtubeOnlineRoot QSlider#ytSeekSlider::groove:horizontal {
+    height: 5px;
+    background: #2A384C;
+    border-radius: 2px;
+}
+QWidget#youtubeOnlineRoot QSlider#ytSeekSlider::sub-page:horizontal {
+    background: #FF4E45;
+    border-radius: 2px;
+}
+QWidget#youtubeOnlineRoot QSlider#ytSeekSlider::handle:horizontal {
+    background: #FFFFFF;
+    width: 13px;
+    height: 13px;
+    margin: -4px 0;
+    border-radius: 6px;
+}
+QWidget#youtubeOnlineRoot QSlider#ytSeekSlider::handle:horizontal:hover {
+    background: #77E0BE;
+}
+QWidget#youtubeOnlineRoot QSlider#ytVolSlider::groove:horizontal {
+    height: 4px;
+    background: #2A384C;
+    border-radius: 2px;
+}
+QWidget#youtubeOnlineRoot QSlider#ytVolSlider::sub-page:horizontal {
+    background: #77E0BE;
+    border-radius: 2px;
+}
+QWidget#youtubeOnlineRoot QSlider#ytVolSlider::handle:horizontal {
+    background: #EDF3FA;
+    width: 11px;
+    height: 11px;
+    margin: -4px 0;
+    border-radius: 5px;
+}
+QWidget#youtubeOnlineRoot QListWidget#ytSuggestPopup {
+    background: #151E2B;
+    color: #EDF3FA;
+    border: 1px solid #354962;
+    border-radius: 10px;
+    padding: 5px;
+    outline: none;
+    font-size: 13px;
+}
+QWidget#youtubeOnlineRoot QListWidget#ytSuggestPopup::item {
+    padding: 7px 12px;
+    border-radius: 6px;
+}
+QWidget#youtubeOnlineRoot QListWidget#ytSuggestPopup::item:hover,
+QWidget#youtubeOnlineRoot QListWidget#ytSuggestPopup::item:selected {
+    background: #213044;
+    color: #A9F1D9;
+}
+"""
+
+ACCOUNT_DIALOG_STYLE = """
+QDialog#ytAccountDialog {
+    background: #0D1118;
+    color: #EDF3FA;
+    font-family: 'Segoe UI';
+}
+QDialog#ytAccountDialog QLabel {
+    background: transparent;
+    border: none;
+    color: #EDF3FA;
+}
+QDialog#ytAccountDialog QFrame#ytAccCard {
+    background: #141C27;
+    border: 1px solid #243347;
+    border-radius: 12px;
+}
+QDialog#ytAccountDialog QLineEdit {
+    background: #0F1620;
+    color: #EDF3FA;
+    border: 1px solid #2B3B50;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+}
+QDialog#ytAccountDialog QLineEdit:focus {
+    border-color: #77E0BE;
+}
+QDialog#ytAccountDialog QComboBox {
+    background: #0F1620;
+    color: #EDF3FA;
+    border: 1px solid #2B3B50;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+}
+QDialog#ytAccountDialog QComboBox QAbstractItemView {
+    background: #161F2D;
+    color: #EDF3FA;
+    border: 1px solid #354962;
+    selection-background-color: #244D42;
+}
+QDialog#ytAccountDialog QPushButton {
+    background: #1C2736;
+    color: #EDF3FA;
+    border: 1px solid #2E3F55;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    font-weight: 600;
+}
+QDialog#ytAccountDialog QPushButton:hover {
+    background: #263549;
+    border-color: #46607E;
+}
+QDialog#ytAccountDialog QPushButton#ytDlgPrimary {
+    background: #77E0BE;
+    color: #0B1117;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 12px;
+    font-weight: 700;
+}
+QDialog#ytAccountDialog QPushButton#ytDlgPrimary:hover {
+    background: #98EED3;
+}
+QDialog#ytAccountDialog QPushButton#ytDlgPrimary:disabled {
+    background: #243445;
+    color: #6B7D92;
+}
 """
 
 
 # =====================================================================
-# ASYNC WORKERS & BOUNDED THUMBNAIL CACHE
+# ASYNC WORKERS & BOUNDED THUMBNAIL CACHE (WITH CIRCULAR AVATARS)
 # =====================================================================
 
 class _TaskWorker(QThread):
@@ -209,31 +592,31 @@ class _TaskWorker(QThread):
 
 
 class _OnlineThumbnailLoader(QObject):
-    """RAM-bounded async HTTP thumbnail loader (max 220 pixmaps, weakref label targets)."""
+    """RAM-bounded async HTTP thumbnail/avatar loader (max 240 pixmaps, rounded/circular masks)."""
 
-    MAX_CACHE = 220
+    MAX_CACHE = 240
 
     def __init__(self, parent: QObject | None = None):
         super().__init__(parent)
         self._nam = QNetworkAccessManager(self)
         self._cache: OrderedDict[str, QPixmap] = OrderedDict()
-        self._pending: dict[str, list[tuple[weakref.ref, QSize]]] = {}
+        self._pending: dict[str, list[tuple[weakref.ref, QSize, int]]] = {}
         self._active_replies: set[QNetworkReply] = set()
 
-    def load(self, url: str, target_label: QLabel, target_size: QSize) -> None:
+    def load(self, url: str, target_label: QLabel, target_size: QSize, *, radius: int = 8) -> None:
         u = str(url or "").strip()
         if not u:
             return
         if u in self._cache:
             pix = self._cache[u]
             self._cache.move_to_end(u)
-            self._apply_pixmap(target_label, pix, target_size)
+            self._apply_pixmap(target_label, pix, target_size, radius)
             return
         ref = weakref.ref(target_label)
         if u in self._pending:
-            self._pending[u].append((ref, target_size))
+            self._pending[u].append((ref, target_size, radius))
             return
-        self._pending[u] = [(ref, target_size)]
+        self._pending[u] = [(ref, target_size, radius)]
         req = QNetworkRequest(QUrl(u))
         req.setRawHeader(b"User-Agent", b"Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
         reply = self._nam.get(req)
@@ -252,30 +635,41 @@ class _OnlineThumbnailLoader(QObject):
                     self._cache.move_to_end(url)
                     while len(self._cache) > self.MAX_CACHE:
                         self._cache.popitem(last=False)
-                    for ref, sz in targets:
+                    for ref, sz, rad in targets:
                         lbl = ref()
                         if lbl is not None:
                             try:
-                                self._apply_pixmap(lbl, pix, sz)
+                                self._apply_pixmap(lbl, pix, sz, rad)
                             except RuntimeError:
                                 pass
         finally:
             reply.deleteLater()
 
     @staticmethod
-    def _apply_pixmap(label: QLabel, pix: QPixmap, target_size: QSize) -> None:
-        if pix.isNull():
+    def _apply_pixmap(label: QLabel, pix: QPixmap, target_size: QSize, radius: int) -> None:
+        if pix.isNull() or target_size.width() <= 0 or target_size.height() <= 0:
             return
         scaled = pix.scaled(
             target_size,
             Qt.AspectRatioMode.KeepAspectRatioByExpanding,
             Qt.TransformationMode.SmoothTransformation,
         )
-        # Center crop cleanly to exact aspect ratio
         x = max(0, (scaled.width() - target_size.width()) // 2)
         y = max(0, (scaled.height() - target_size.height()) // 2)
         cropped = scaled.copy(x, y, min(target_size.width(), scaled.width()), min(target_size.height(), scaled.height()))
-        label.setPixmap(cropped)
+
+        out = QPixmap(target_size)
+        out.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(out)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        path = QPainterPath()
+        r = min(radius, target_size.width() // 2, target_size.height() // 2)
+        path.addRoundedRect(0, 0, target_size.width(), target_size.height(), r, r)
+        painter.setClipPath(path)
+        painter.drawPixmap(0, 0, cropped)
+        painter.end()
+        label.setPixmap(out)
 
     def shutdown(self) -> None:
         for reply in list(self._active_replies):
@@ -289,7 +683,7 @@ class _OnlineThumbnailLoader(QObject):
 
 
 # =====================================================================
-# CUSTOM INTERACTIVE WIDGETS (SEEK SLIDER, VIDEO CARD, STAGE)
+# CUSTOM INTERACTIVE WIDGETS (SEEK SLIDER, FLUID CARD, RELATED ROW)
 # =====================================================================
 
 class _ClickSeekSlider(QSlider):
@@ -334,44 +728,61 @@ class _ClickSeekSlider(QSlider):
         super().mouseMoveEvent(event)
 
 
+def _elide_two_lines(text: str, max_chars_per_line: int = 38) -> str:
+    clean = " ".join(str(text or "").split())
+    limit = max(24, max_chars_per_line * 2)
+    if len(clean) <= limit:
+        return clean
+    return clean[: limit - 1].rstrip() + "…"
+
+
 class _OnlineVideoCard(QFrame):
-    """Crisp 16:9 YouTube Desktop video/playlist/channel card."""
+    """Fluid 16:9 YouTube Desktop video/playlist/channel card with circular channel avatar."""
 
     clicked = Signal(object)
     channel_clicked = Signal(str, str)
     queue_clicked = Signal(object)
     download_clicked = Signal(object)
 
-    THUMB_SIZE = QSize(272, 153)
-
-    def __init__(self, item: OnlineVideoItem, thumb_loader: _OnlineThumbnailLoader, parent: QWidget | None = None):
+    def __init__(
+        self,
+        item: OnlineVideoItem,
+        thumb_loader: _OnlineThumbnailLoader,
+        *,
+        card_width: int = 296,
+        parent: QWidget | None = None,
+    ):
         super().__init__(parent)
         self.item = item
         self.setObjectName("ytCard")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setFixedWidth(288)
+
+        cw = max(248, int(card_width))
+        tw = cw - 16
+        th = max(130, int(round(tw * 9.0 / 16.0)))
+        self.setFixedWidth(cw)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 10)
-        root.setSpacing(7)
+        root.setSpacing(8)
 
-        # Thumbnail container with overlaid duration/LIVE badge
-        thumb_wrap = QFrame()
-        thumb_wrap.setFixedSize(self.THUMB_SIZE)
-        thumb_wrap.setStyleSheet("background: #0A0E14; border-radius: 9px; border: none;")
-        thumb_grid = QGridLayout(thumb_wrap)
-        thumb_grid.setContentsMargins(0, 0, 0, 0)
+        # 16:9 Thumbnail container with crisp overlaid duration/LIVE badge
+        thumb_wrap = QWidget()
+        thumb_wrap.setFixedSize(tw, th)
+        thumb_wrap.setStyleSheet("background: #0A0E15; border-radius: 9px;")
+        t_grid = QGridLayout(thumb_wrap)
+        t_grid.setContentsMargins(0, 0, 0, 0)
 
         self.lbl_thumb = QLabel()
-        self.lbl_thumb.setFixedSize(self.THUMB_SIZE)
+        self.lbl_thumb.setFixedSize(tw, th)
         self.lbl_thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lbl_thumb.setStyleSheet("background: #101620; border-radius: 9px; color: #536479;")
+        self.lbl_thumb.setStyleSheet("background: #0E1520; border-radius: 9px; color: #53657A; font-weight: 700;")
         if item.item_type == "channel":
             self.lbl_thumb.setText("CHANNEL")
         elif item.item_type == "playlist":
             self.lbl_thumb.setText("PLAYLIST")
-        thumb_grid.addWidget(self.lbl_thumb, 0, 0)
+        t_grid.addWidget(self.lbl_thumb, 0, 0)
 
         badge_text = ""
         if item.is_live:
@@ -386,76 +797,98 @@ class _OnlineVideoCard(QFrame):
         if badge_text:
             badge = QLabel(badge_text)
             if item.is_live:
-                badge.setObjectName("ytLiveBadge")
+                badge.setStyleSheet(
+                    "background: #DC362E; color: #FFFFFF; border-radius: 5px; "
+                    "padding: 2px 7px; font-size: 10px; font-weight: 800; margin: 6px;"
+                )
             elif item.item_type == "playlist":
                 badge.setStyleSheet(
-                    "background: rgba(13, 17, 24, 225); color: #77E0BE; border: 1px solid #2B5E51; "
-                    "border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 700;"
+                    "background: rgba(11, 16, 23, 225); color: #77E0BE; border: 1px solid #2A5F52; "
+                    "border-radius: 5px; padding: 2px 7px; font-size: 11px; font-weight: 700; margin: 6px;"
                 )
             else:
                 badge.setStyleSheet(
-                    "background: rgba(10, 14, 20, 220); color: #F2F6FB; "
-                    "border-radius: 5px; padding: 2px 6px; font-size: 11px; font-weight: 600;"
+                    "background: rgba(9, 13, 19, 225); color: #F2F6FB; "
+                    "border-radius: 5px; padding: 2px 6px; font-size: 11px; font-weight: 600; margin: 6px;"
                 )
-            thumb_grid.addWidget(badge, 0, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
-            thumb_grid.setContentsMargins(0, 0, 6, 6)
+            t_grid.addWidget(badge, 0, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
 
         root.addWidget(thumb_wrap)
 
-        # Title (2 lines crisp)
-        self.lbl_title = QLabel(item.title)
-        self.lbl_title.setWordWrap(True)
-        self.lbl_title.setFixedHeight(38)
-        self.lbl_title.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        self.lbl_title.setStyleSheet("color: #EDF3FA; font-size: 13px; font-weight: 600;")
-        self.lbl_title.setToolTip(item.title)
-        root.addWidget(self.lbl_title)
+        # Info Row: Circular Channel Avatar + Title & Channel/Stats + Quick Actions
+        info_row = QHBoxLayout()
+        info_row.setContentsMargins(2, 0, 2, 0)
+        info_row.setSpacing(9)
 
-        # Channel & metadata row + compact quick actions
-        meta_row = QHBoxLayout()
-        meta_row.setContentsMargins(0, 0, 0, 0)
-        meta_row.setSpacing(4)
-
-        meta_col = QVBoxLayout()
-        meta_col.setContentsMargins(0, 0, 0, 0)
-        meta_col.setSpacing(2)
-
-        ch_btn = QPushButton(item.channel_name or ("YouTube" if item.item_type != "channel" else item.title))
-        ch_btn.setFlat(True)
-        ch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        ch_btn.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #9AAABC; "
-            "font-size: 12px; text-align: left; padding: 0; font-weight: 500; }"
-            "QPushButton:hover { color: #77E0BE; }"
+        avatar_lbl = QLabel()
+        avatar_lbl.setFixedSize(32, 32)
+        avatar_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        initials = (item.channel_name or item.title or "Y").strip()[:1].upper()
+        avatar_lbl.setText(initials)
+        avatar_lbl.setStyleSheet(
+            "background: #1D293A; color: #8DE7CA; border-radius: 16px; font-size: 12px; font-weight: 700;"
         )
-        ch_btn.clicked.connect(lambda: self.channel_clicked.emit(item.channel_id, item.channel_name or item.title))
-        meta_col.addWidget(ch_btn)
+        if item.channel_avatar:
+            thumb_loader.load(item.channel_avatar, avatar_lbl, QSize(32, 32), radius=16)
+        info_row.addWidget(avatar_lbl, 0, Qt.AlignmentFlag.AlignTop)
+
+        text_col = QVBoxLayout()
+        text_col.setContentsMargins(0, 0, 0, 0)
+        text_col.setSpacing(3)
+
+        chars_per_line = max(24, (tw - 60) // 7)
+        lbl_title = QLabel(_elide_two_lines(item.title, chars_per_line))
+        lbl_title.setWordWrap(True)
+        lbl_title.setFixedHeight(40)
+        lbl_title.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        lbl_title.setStyleSheet("color: #EDF3FA; font-size: 13px; font-weight: 600;")
+        lbl_title.setToolTip(item.title)
+        text_col.addWidget(lbl_title)
+
+        meta_bottom = QHBoxLayout()
+        meta_bottom.setContentsMargins(0, 0, 0, 0)
+        meta_bottom.setSpacing(4)
+
+        sub_col = QVBoxLayout()
+        sub_col.setContentsMargins(0, 0, 0, 0)
+        sub_col.setSpacing(1)
+
+        ch_name = item.channel_name or ("YouTube" if item.item_type != "channel" else item.title)
+        ch_btn = QPushButton(ch_name[:28] + ("…" if len(ch_name) > 28 else ""))
+        ch_btn.setObjectName("ytCardChannel")
+        ch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        ch_btn.setToolTip(ch_name)
+        ch_btn.clicked.connect(lambda: self.channel_clicked.emit(item.channel_id, ch_name))
+        sub_col.addWidget(ch_btn)
 
         stats_parts = [p for p in (item.views_text, item.published_text) if p]
-        lbl_stats = QLabel(" • ".join(stats_parts) if stats_parts else ("Playlist" if item.item_type == "playlist" else ""))
-        lbl_stats.setStyleSheet("color: #7D8FA3; font-size: 11px;")
-        meta_col.addWidget(lbl_stats)
-        meta_row.addLayout(meta_col, 1)
+        stats_str = " • ".join(stats_parts) if stats_parts else ("Playlist" if item.item_type == "playlist" else "")
+        lbl_stats = QLabel(stats_str)
+        lbl_stats.setStyleSheet("color: #7D90A6; font-size: 11px;")
+        sub_col.addWidget(lbl_stats)
+        meta_bottom.addLayout(sub_col, 1)
 
         if item.item_type == "video":
             btn_q = QPushButton()
+            btn_q.setObjectName("ytIconBtn")
             btn_q.setFixedSize(26, 26)
-            btn_q.setStyleSheet(ICON_BUTTON_STYLE)
             button_icon(btn_q, "plus", tr_pair("Thêm vào hàng đợi", "Add to queue"), color=MUTED, size=14)
             btn_q.clicked.connect(lambda: self.queue_clicked.emit(self.item))
-            meta_row.addWidget(btn_q)
+            meta_bottom.addWidget(btn_q)
 
             btn_dl = QPushButton()
+            btn_dl.setObjectName("ytIconBtn")
             btn_dl.setFixedSize(26, 26)
-            btn_dl.setStyleSheet(ICON_BUTTON_STYLE)
-            button_icon(btn_dl, "download", tr_pair("Tải về thư viện BoTube", "Download to BoTube library"), color=MUTED, size=14)
+            button_icon(btn_dl, "download", tr_pair("Tải về BoTube", "Download to BoTube"), color=MUTED, size=14)
             btn_dl.clicked.connect(lambda: self.download_clicked.emit(self.item))
-            meta_row.addWidget(btn_dl)
+            meta_bottom.addWidget(btn_dl)
 
-        root.addLayout(meta_row)
+        text_col.addLayout(meta_bottom)
+        info_row.addLayout(text_col, 1)
+        root.addLayout(info_row)
 
         if item.thumbnail_url:
-            thumb_loader.load(item.thumbnail_url, self.lbl_thumb, self.THUMB_SIZE)
+            thumb_loader.load(item.thumbnail_url, self.lbl_thumb, QSize(tw, th), radius=9)
 
     def mouseReleaseEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -466,11 +899,11 @@ class _OnlineVideoCard(QFrame):
 
 
 class _CompactRelatedRow(QFrame):
-    """YouTube Watch right-column Up Next / Queue compact horizontal card."""
+    """Unclipped YouTube Watch right-column Up Next / Queue compact card."""
 
     clicked = Signal(object)
 
-    THUMB_SIZE = QSize(136, 76)
+    THUMB_SIZE = QSize(132, 74)
 
     def __init__(
         self,
@@ -483,47 +916,51 @@ class _CompactRelatedRow(QFrame):
     ):
         super().__init__(parent)
         self.item = item
+        self.setObjectName("ytRelRowActive" if is_active else "ytRelRow")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._set_highlight(is_active)
+        self.setFixedHeight(90)
+        self.setMinimumWidth(0)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
 
         row = QHBoxLayout(self)
-        row.setContentsMargins(6, 6, 6, 6)
-        row.setSpacing(8)
+        row.setContentsMargins(7, 7, 8, 7)
+        row.setSpacing(10)
 
         if index_num is not None:
             lbl_idx = QLabel("▶" if is_active else str(index_num))
             lbl_idx.setFixedWidth(18)
             lbl_idx.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl_idx.setStyleSheet(f"color: {'#77E0BE' if is_active else '#7D8FA3'}; font-size: 11px; font-weight: 700;")
+            lbl_idx.setStyleSheet(f"color: {'#77E0BE' if is_active else '#7D90A6'}; font-size: 11px; font-weight: 700;")
             row.addWidget(lbl_idx)
 
-        thumb_wrap = QFrame()
+        thumb_wrap = QWidget()
         thumb_wrap.setFixedSize(self.THUMB_SIZE)
-        thumb_wrap.setStyleSheet("background: #0A0E14; border-radius: 7px; border: none;")
+        thumb_wrap.setStyleSheet("background: #0A0E14; border-radius: 7px;")
         t_grid = QGridLayout(thumb_wrap)
-        t_grid.setContentsMargins(0, 0, 4, 4)
+        t_grid.setContentsMargins(0, 0, 0, 0)
 
         lbl_thumb = QLabel()
         lbl_thumb.setFixedSize(self.THUMB_SIZE)
-        lbl_thumb.setStyleSheet("background: #101620; border-radius: 7px;")
+        lbl_thumb.setStyleSheet("background: #101722; border-radius: 7px;")
         t_grid.addWidget(lbl_thumb, 0, 0)
 
         if item.duration_text:
             dur = QLabel(item.duration_text)
             dur.setStyleSheet(
-                "background: rgba(10, 14, 20, 220); color: #EDF3FA; border-radius: 4px; "
-                "padding: 1px 5px; font-size: 10px; font-weight: 600;"
+                "background: rgba(9, 13, 19, 225); color: #EDF3FA; border-radius: 4px; "
+                "padding: 1px 5px; font-size: 10px; font-weight: 600; margin: 4px;"
             )
             t_grid.addWidget(dur, 0, 0, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
 
         row.addWidget(thumb_wrap)
 
         col = QVBoxLayout()
-        col.setContentsMargins(0, 0, 0, 0)
+        col.setContentsMargins(0, 1, 0, 1)
         col.setSpacing(3)
-        lbl_t = QLabel(item.title)
+
+        lbl_t = QLabel(_elide_two_lines(item.title, 26))
         lbl_t.setWordWrap(True)
-        lbl_t.setMaximumHeight(36)
+        lbl_t.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         lbl_t.setStyleSheet(f"color: {'#A9F1D9' if is_active else '#EDF3FA'}; font-size: 12px; font-weight: 600;")
         lbl_t.setToolTip(item.title)
         col.addWidget(lbl_t)
@@ -532,26 +969,16 @@ class _CompactRelatedRow(QFrame):
         lbl_ch.setStyleSheet("color: #9AAABC; font-size: 11px;")
         col.addWidget(lbl_ch)
 
-        if item.views_text:
-            lbl_v = QLabel(item.views_text)
-            lbl_v.setStyleSheet("color: #728499; font-size: 11px;")
+        stats = " • ".join(p for p in (item.views_text, item.published_text) if p)
+        if stats:
+            lbl_v = QLabel(stats[:34] + ("…" if len(stats) > 34 else ""))
+            lbl_v.setStyleSheet("color: #74879C; font-size: 11px;")
             col.addWidget(lbl_v)
         col.addStretch(1)
         row.addLayout(col, 1)
 
         if item.thumbnail_url:
-            thumb_loader.load(item.thumbnail_url, lbl_thumb, self.THUMB_SIZE)
-
-    def _set_highlight(self, active: bool) -> None:
-        if active:
-            self.setStyleSheet(
-                "QFrame { background: #19312B; border: 1px solid #2E6456; border-radius: 9px; }"
-            )
-        else:
-            self.setStyleSheet(
-                "QFrame { background: transparent; border: 1px solid transparent; border-radius: 9px; }"
-                "QFrame:hover { background: #1A2433; border-color: #2A394D; }"
-            )
+            thumb_loader.load(item.thumbnail_url, lbl_thumb, self.THUMB_SIZE, radius=7)
 
     def mouseReleaseEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
@@ -562,106 +989,68 @@ class _CompactRelatedRow(QFrame):
 
 
 # =====================================================================
-# ACCOUNT & PLAYLIST SYNC DIALOG (SAFE LOCAL PROFILE + OPTIONAL COOKIE)
+# STREAMLINED ACCOUNT & PLAYLIST SYNC DIALOG (1-CLICK VERIFICATION)
 # =====================================================================
 
 class _YouTubeAccountDialog(QDialog):
-    """Manage Local YouTube Profile, Playlist URL Import, Takeout CSV & Read-Only Cookie Sync."""
+    """Clean, commercial YouTube Account Connection & Playlist Import dialog."""
 
-    playlist_import_requested = Signal(str)
+    playlist_import_requested = Signal(str, str)  # (url_or_special, title_hint)
 
-    def __init__(self, profile: YouTubeOnlineProfileStore, parent: QWidget | None = None):
+    def __init__(
+        self,
+        profile: YouTubeOnlineProfileStore,
+        client: YouTubeOnlineClient | None = None,
+        parent: QWidget | None = None,
+    ):
         super().__init__(parent)
+        self.setObjectName("ytAccountDialog")
         self.profile = profile
-        self.setWindowTitle(tr_pair("Tài khoản YouTube & Đồng bộ Playlist", "YouTube Profile & Playlist Sync"))
-        self.setStyleSheet(DIALOG_STYLE)
-        self.setMinimumWidth(520)
+        self.client = client or YouTubeOnlineClient(profile_store=profile)
+        self._verify_worker: _TaskWorker | None = None
+
+        self.setWindowTitle(tr_pair("Tài khoản YouTube & Đồng bộ", "YouTube Account & Sync"))
+        self.setStyleSheet(ACCOUNT_DIALOG_STYLE)
+        self.setMinimumWidth(540)
 
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 18, 20, 18)
         root.setSpacing(14)
 
-        title = QLabel(tr_pair("Hồ sơ YouTube Online cục bộ (An toàn 100%)", "Local YouTube Online Profile (100% Account-Safe)"))
-        title.setStyleSheet("font-size: 16px; font-weight: 700; color: #EDF3FA;")
-        root.addWidget(title)
+        hdr = QLabel(tr_pair("Kết nối Tài khoản YouTube & Playlist", "Connect YouTube Account & Playlists"))
+        hdr.setStyleSheet("font-size: 17px; font-weight: 700; color: #F4F8FD;")
+        root.addWidget(hdr)
 
-        subs_n = len(profile.list_subscriptions())
-        likes_n = len(profile.list_liked())
-        pls_n = len(profile.list_playlists())
-        hist_n = len(profile.list_watch_history())
-        lbl_stats = QLabel(
+        sub_hdr = QLabel(
             tr_pair(
-                f"Đã lưu cục bộ trên máy: {subs_n} kênh đăng ký · {pls_n} playlist · {likes_n} đã thích · {hist_n} lịch sử.\n"
-                "Mọi thao tác Đăng ký / Thích / Lưu Playlist hoạt động ngay tại BoTube, không gửi ghi tự động lên Google nên không lo khóa tài khoản.",
-                f"Stored safely on your PC: {subs_n} subscriptions · {pls_n} playlists · {likes_n} liked · {hist_n} history.\n"
-                "Subscriptions, likes, and playlists stay 100% local with zero automated Google write requests.",
+                "Google chặn nhập mật khẩu Google trực tiếp trên app bên thứ 3 để bảo vệ tài khoản. "
+                "Bạn chỉ cần chọn trình duyệt đang đăng nhập YouTube để BoTube đọc sẵn Video đã thích, Xem sau & Playlist Riêng tư (chỉ đọc — an toàn 100%).",
+                "Google blocks raw password login inside third-party desktop apps for account security. "
+                "Select a browser already signed in to YouTube so BoTube can read your Liked Videos, Watch Later & Private Playlists safely (read-only).",
             )
         )
-        lbl_stats.setWordWrap(True)
-        lbl_stats.setStyleSheet("color: #9AAABC; font-size: 12px;")
-        root.addWidget(lbl_stats)
+        sub_hdr.setWordWrap(True)
+        sub_hdr.setStyleSheet("color: #9AAABC; font-size: 12px;")
+        root.addWidget(sub_hdr)
 
-        # 1. Import any YouTube Playlist URL
-        box_pl = QFrame()
-        box_pl.setStyleSheet("background: #151C26; border: 1px solid #273445; border-radius: 10px;")
-        pl_lay = QVBoxLayout(box_pl)
-        pl_lay.setContentsMargins(14, 12, 14, 12)
-        pl_lay.setSpacing(8)
-        lbl_pl = QLabel(tr_pair("Nhập trực tiếp Playlist từ YouTube / YouTube Music", "Import Playlist from YouTube / YouTube Music"))
-        lbl_pl.setStyleSheet("font-weight: 600; color: #A9F1D9; font-size: 13px;")
-        pl_lay.addWidget(lbl_pl)
+        # CARD 1: 1-Click Browser / Cookie Account Connect + Instant Liked / Watch Later
+        card_acc = QFrame()
+        card_acc.setObjectName("ytAccCard")
+        al = QVBoxLayout(card_acc)
+        al.setContentsMargins(16, 14, 16, 14)
+        al.setSpacing(10)
 
-        pl_row = QHBoxLayout()
-        self.txt_pl_url = QLineEdit()
-        self.txt_pl_url.setPlaceholderText("https://www.youtube.com/playlist?list=... / :ytfav")
-        btn_imp_pl = QPushButton(tr_pair("Nhập Playlist", "Import Playlist"))
-        btn_imp_pl.setProperty("role", "primary")
-        btn_imp_pl.clicked.connect(self._on_import_playlist)
-        pl_row.addWidget(self.txt_pl_url, 1)
-        pl_row.addWidget(btn_imp_pl)
-        pl_lay.addLayout(pl_row)
-        root.addWidget(box_pl)
+        lbl_acc = QLabel(tr_pair("1. Kết nối phiên YouTube sẵn có (1-Click)", "1. Connect Existing YouTube Session (1-Click)"))
+        lbl_acc.setStyleSheet("font-size: 13px; font-weight: 700; color: #8DE7CA;")
+        al.addWidget(lbl_acc)
 
-        # 2. Import Google Takeout subscriptions.csv
-        box_csv = QFrame()
-        box_csv.setStyleSheet("background: #151C26; border: 1px solid #273445; border-radius: 10px;")
-        csv_lay = QHBoxLayout(box_csv)
-        csv_lay.setContentsMargins(14, 12, 14, 12)
-        lbl_csv = QLabel(tr_pair("Nhập danh sách Kênh đăng ký (Google Takeout CSV)", "Import Subscribed Channels (Google Takeout CSV)"))
-        lbl_csv.setStyleSheet("color: #DCE6F2; font-size: 12px; font-weight: 600;")
-        btn_csv = QPushButton(tr_pair("Chọn tệp .csv", "Choose .csv file"))
-        btn_csv.clicked.connect(self._on_import_csv)
-        csv_lay.addWidget(lbl_csv, 1)
-        csv_lay.addWidget(btn_csv)
-        root.addWidget(box_csv)
-
-        # 3. Optional Read-Only Cookie Sync for Private / Liked Playlists
-        box_ck = QFrame()
-        box_ck.setStyleSheet("background: #151C26; border: 1px solid #273445; border-radius: 10px;")
-        ck_lay = QVBoxLayout(box_ck)
-        ck_lay.setContentsMargins(14, 12, 14, 12)
-        ck_lay.setSpacing(8)
-        lbl_ck = QLabel(tr_pair("Đồng bộ chỉ-đọc Playlist Riêng tư (Tùy chọn Cookie)", "Read-Only Private Playlist Sync (Optional Cookies)"))
-        lbl_ck.setStyleSheet("font-weight: 600; color: #EDF3FA; font-size: 13px;")
-        ck_lay.addWidget(lbl_ck)
-
-        lbl_ck_note = QLabel(
-            tr_pair(
-                "Chỉ cần thiết nếu bạn muốn phát Playlist Riêng tư hoặc danh sách Đã thích từ tài khoản YouTube thật. Khuyên dùng Firefox hoặc tệp cookies.txt.",
-                "Only needed if you want to play Private playlists or Liked Videos from your YouTube account. Firefox or cookies.txt recommended.",
-            )
-        )
-        lbl_ck_note.setWordWrap(True)
-        lbl_ck_note.setStyleSheet("color: #8EA0B5; font-size: 11px;")
-        ck_lay.addWidget(lbl_ck_note)
-
-        row_br = QHBoxLayout()
-        row_br.addWidget(QLabel(tr_pair("Trình duyệt:", "Browser:")))
+        br_row = QHBoxLayout()
+        br_row.setSpacing(8)
         self.combo_browser = QComboBox()
         self.combo_browser.setProperty("_i18n_safe_combo", True)
         for val, vi_l, en_l in (
-            ("", "Không dùng (Mặc định an toàn)", "None (Default Safe)"),
-            ("firefox", "Firefox", "Firefox"),
+            ("", "Không dùng (Chỉ dùng Hồ sơ cục bộ BoTube)", "None (Local BoTube Profile only)"),
+            ("firefox", "Firefox (Khuyên dùng — không bị khóa)", "Firefox (Recommended — never locked)"),
             ("edge", "Microsoft Edge", "Microsoft Edge"),
             ("chrome", "Google Chrome", "Google Chrome"),
             ("brave", "Brave", "Brave"),
@@ -671,39 +1060,169 @@ class _YouTubeAccountDialog(QDialog):
         idx_br = self.combo_browser.findData(cur_br)
         if idx_br >= 0:
             self.combo_browser.setCurrentIndex(idx_br)
-        row_br.addWidget(self.combo_browser, 1)
-        ck_lay.addLayout(row_br)
 
-        row_cf = QHBoxLayout()
+        self.btn_verify = QPushButton(tr_pair("Kiểm tra && Kết nối", "Test && Connect"))
+        self.btn_verify.setObjectName("ytDlgPrimary")
+        self.btn_verify.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_verify.clicked.connect(self._on_verify_connection)
+        br_row.addWidget(self.combo_browser, 1)
+        br_row.addWidget(self.btn_verify)
+        al.addLayout(br_row)
+
+        cf_row = QHBoxLayout()
+        cf_row.setSpacing(8)
         self.txt_cookie_file = QLineEdit(str(profile.get_pref("cookies_file", "") or ""))
-        self.txt_cookie_file.setPlaceholderText(tr_pair("Hoặc chọn đường dẫn cookies.txt (ưu tiên cao hơn)...", "Or choose cookies.txt file (takes priority)..."))
+        self.txt_cookie_file.setPlaceholderText(
+            tr_pair("Hoặc chọn file cookies.txt (nếu Chrome/Edge đang mở bị khóa cookie)...", "Or choose cookies.txt (if Chrome/Edge locks cookies while open)...")
+        )
         btn_cf = QPushButton(tr_pair("Chọn file", "Browse"))
+        btn_cf.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_cf.clicked.connect(self._browse_cookie_file)
-        btn_cf_clear = QPushButton(tr_pair("Xóa", "Clear"))
-        btn_cf_clear.clicked.connect(lambda: self.txt_cookie_file.setText(""))
-        row_cf.addWidget(self.txt_cookie_file, 1)
-        row_cf.addWidget(btn_cf)
-        row_cf.addWidget(btn_cf_clear)
-        ck_lay.addLayout(row_cf)
-        root.addWidget(box_ck)
+        btn_cf_clr = QPushButton(tr_pair("Xóa", "Clear"))
+        btn_cf_clr.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_cf_clr.clicked.connect(lambda: self.txt_cookie_file.setText(""))
+        cf_row.addWidget(self.txt_cookie_file, 1)
+        cf_row.addWidget(btn_cf)
+        cf_row.addWidget(btn_cf_clr)
+        al.addLayout(cf_row)
+
+        self.lbl_verify_status = QLabel("")
+        self.lbl_verify_status.setWordWrap(True)
+        self.lbl_verify_status.setStyleSheet("color: #9AAABC; font-size: 12px;")
+        self.lbl_verify_status.hide()
+        al.addWidget(self.lbl_verify_status)
+
+        quick_row = QHBoxLayout()
+        quick_row.setSpacing(8)
+        btn_liked = QPushButton(tr_pair("❤️ Mở Video đã thích trên YouTube", "❤️ Open YouTube Liked Videos"))
+        btn_liked.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_liked.clicked.connect(lambda: self._open_special_playlist(":ytfav", tr_pair("Video đã thích (YouTube)", "Liked Videos (YouTube)")))
+        btn_wl = QPushButton(tr_pair("🕒 Mở Xem sau (Watch Later)", "🕒 Open Watch Later"))
+        btn_wl.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_wl.clicked.connect(lambda: self._open_special_playlist(":ytwatchlater", tr_pair("Xem sau (YouTube)", "Watch Later (YouTube)")))
+        quick_row.addWidget(btn_liked, 1)
+        quick_row.addWidget(btn_wl, 1)
+        al.addLayout(quick_row)
+        root.addWidget(card_acc)
+
+        # CARD 2: Instant Playlist URL Import (Works even WITHOUT cookies for Public/Unlisted!)
+        card_pl = QFrame()
+        card_pl.setObjectName("ytAccCard")
+        pl_lay = QVBoxLayout(card_pl)
+        pl_lay.setContentsMargins(16, 14, 16, 14)
+        pl_lay.setSpacing(8)
+        lbl_pl = QLabel(tr_pair("2. Nghe ngay bất kỳ Playlist YouTube / YouTube Music nào", "2. Play Any YouTube / YouTube Music Playlist"))
+        lbl_pl.setStyleSheet("font-size: 13px; font-weight: 700; color: #EDF3FA;")
+        pl_lay.addWidget(lbl_pl)
+
+        pl_row = QHBoxLayout()
+        pl_row.setSpacing(8)
+        self.txt_pl_url = QLineEdit()
+        self.txt_pl_url.setPlaceholderText("https://www.youtube.com/playlist?list=...")
+        btn_imp_pl = QPushButton(tr_pair("Mở Playlist", "Open Playlist"))
+        btn_imp_pl.setObjectName("ytDlgPrimary")
+        btn_imp_pl.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_imp_pl.clicked.connect(self._on_import_playlist)
+        pl_row.addWidget(self.txt_pl_url, 1)
+        pl_row.addWidget(btn_imp_pl)
+        pl_lay.addLayout(pl_row)
+        root.addWidget(card_pl)
+
+        # CARD 3: Local BoTube Profile & Takeout Subscriptions CSV
+        card_loc = QFrame()
+        card_loc.setObjectName("ytAccCard")
+        ll = QHBoxLayout(card_loc)
+        ll.setContentsMargins(16, 12, 16, 12)
+        ll.setSpacing(10)
+        subs_n = len(profile.list_subscriptions())
+        likes_n = len(profile.list_liked())
+        pls_n = len(profile.list_playlists())
+        lbl_loc = QLabel(
+            tr_pair(
+                f"Hồ sơ cục bộ BoTube: {subs_n} kênh · {pls_n} playlist · {likes_n} đã thích",
+                f"BoTube Local Profile: {subs_n} channels · {pls_n} playlists · {likes_n} liked",
+            )
+        )
+        lbl_loc.setStyleSheet("color: #BAC8D8; font-size: 12px; font-weight: 600;")
+        btn_csv = QPushButton(tr_pair("Nhập kênh từ .CSV", "Import Channels .CSV"))
+        btn_csv.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_csv.clicked.connect(self._on_import_csv)
+        ll.addWidget(lbl_loc, 1)
+        ll.addWidget(btn_csv)
+        root.addWidget(card_loc)
 
         # Footer Save / Close
         foot = QHBoxLayout()
         foot.addStretch(1)
         btn_close = QPushButton(tr_pair("Đóng", "Close"))
+        btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_close.clicked.connect(self.reject)
         btn_save = QPushButton(tr_pair("Lưu cấu hình", "Save Settings"))
-        btn_save.setProperty("role", "primary")
+        btn_save.setObjectName("ytDlgPrimary")
+        btn_save.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_save.clicked.connect(self._on_save)
         foot.addWidget(btn_close)
         foot.addWidget(btn_save)
         root.addLayout(foot)
 
+    def _save_cookie_prefs(self) -> tuple[str, str]:
+        br = str(self.combo_browser.currentData() or "")
+        cf = self.txt_cookie_file.text().strip()
+        self.profile.set_pref("cookies_browser", br)
+        self.profile.set_pref("cookies_file", cf)
+        return br, cf
+
+    def _on_verify_connection(self) -> None:
+        br, cf = self._save_cookie_prefs()
+        self.btn_verify.setEnabled(False)
+        self.lbl_verify_status.setStyleSheet("color: #8DE7CA; font-size: 12px;")
+        self.lbl_verify_status.setText(tr_pair("Đang kiểm tra kết nối phiên YouTube…", "Checking YouTube session…"))
+        self.lbl_verify_status.show()
+
+        if self._verify_worker is not None:
+            self._verify_worker.cancel()
+        w = _TaskWorker(
+            1,
+            lambda procs: self.client.verify_cookie_connection(
+                cookies_browser=br, cookies_file=cf, processes=procs
+            ),
+            pass_processes=True,
+            parent=self,
+        )
+        w.finished_ok.connect(self._on_verify_done)
+        w.failed.connect(lambda _g, m: self._on_verify_done(1, (False, m, 0)))
+        w.finished.connect(w.deleteLater)
+        self._verify_worker = w
+        w.start()
+
+    def _on_verify_done(self, _gen: int, payload: tuple[bool, str, int]) -> None:
+        self._verify_worker = None
+        self.btn_verify.setEnabled(True)
+        ok, msg, count = payload
+        if ok:
+            self.lbl_verify_status.setStyleSheet("color: #77E0BE; font-size: 12px; font-weight: 600;")
+            self.lbl_verify_status.setText(
+                tr_pair(
+                    f"✅ Đã kết nối tài khoản YouTube thành công ({msg})! Bấm nút bên dưới để mở Video đã thích hoặc dán link Playlist Riêng tư.",
+                    f"✅ Connected to YouTube account ({msg})! Open Liked Videos below or paste any private playlist URL.",
+                )
+            )
+        else:
+            self.lbl_verify_status.setStyleSheet("color: #F29C9C; font-size: 12px;")
+            self.lbl_verify_status.setText(f"⚠️ {msg}")
+        self.lbl_verify_status.show()
+
+    def _open_special_playlist(self, target: str, title_hint: str) -> None:
+        self._save_cookie_prefs()
+        self.playlist_import_requested.emit(target, title_hint)
+        self.accept()
+
     def _on_import_playlist(self) -> None:
         url = self.txt_pl_url.text().strip()
         if not url:
             return
-        self.playlist_import_requested.emit(url)
+        self._save_cookie_prefs()
+        self.playlist_import_requested.emit(url, "")
         self.accept()
 
     def _on_import_csv(self) -> None:
@@ -733,9 +1252,14 @@ class _YouTubeAccountDialog(QDialog):
             self.txt_cookie_file.setText(path)
 
     def _on_save(self) -> None:
-        self.profile.set_pref("cookies_browser", str(self.combo_browser.currentData() or ""))
-        self.profile.set_pref("cookies_file", self.txt_cookie_file.text().strip())
+        self._save_cookie_prefs()
         self.accept()
+
+    def closeEvent(self, event) -> None:
+        if self._verify_worker is not None:
+            self._verify_worker.cancel()
+            self._verify_worker.wait(500)
+        super().closeEvent(event)
 
 
 # =====================================================================
@@ -852,7 +1376,7 @@ class YouTubeOnlinePage(QWidget):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # 1. TOP YOUTUBE BAR
+        # 1. TOP YOUTUBE BAR (Clean centered search + fixed-size brand/HI-FI pill)
         self.top_bar = QFrame()
         self.top_bar.setObjectName("ytTopBar")
         self.top_bar.setFixedHeight(58)
@@ -861,56 +1385,53 @@ class YouTubeOnlinePage(QWidget):
         top_lay.setSpacing(8)
 
         self.btn_back = QPushButton()
+        self.btn_back.setObjectName("ytIconBtn")
         self.btn_back.setFixedSize(34, 34)
-        self.btn_back.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_back, "arrow-left", "Back", color=TEXT, size=18)
         self.btn_back.setEnabled(False)
         self.btn_back.clicked.connect(self._go_back)
 
         self.btn_forward = QPushButton()
+        self.btn_forward.setObjectName("ytIconBtn")
         self.btn_forward.setFixedSize(34, 34)
-        self.btn_forward.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_forward.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_forward, "arrow-right", "Forward", color=TEXT, size=18)
         self.btn_forward.setEnabled(False)
         self.btn_forward.clicked.connect(self._go_forward)
 
         self.btn_refresh = QPushButton()
+        self.btn_refresh.setObjectName("ytIconBtn")
         self.btn_refresh.setFixedSize(34, 34)
-        self.btn_refresh.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_refresh.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_refresh, "refresh-cw", "Refresh", color=TEXT, size=16)
         self.btn_refresh.clicked.connect(self._refresh_current_view)
 
         brand = QLabel("YouTube")
-        brand.setStyleSheet(
-            "color: #EDF3FA; font-size: 16px; font-weight: 800; padding: 0 4px;"
-        )
-        badge_pro = QLabel("HI-FI")
-        badge_pro.setStyleSheet(
-            "background: #FF4E45; color: #FFFFFF; border-radius: 5px; "
-            "padding: 2px 6px; font-size: 10px; font-weight: 800;"
-        )
+        brand.setObjectName("ytBrandText")
+        brand.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
-        # Search pill
+        badge_pro = QLabel("HI-FI")
+        badge_pro.setObjectName("ytHifiPill")
+        badge_pro.setFixedSize(44, 20)
+        badge_pro.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Centered search bar
         self.search_input = QLineEdit()
         self.search_input.setObjectName("ytSearchInput")
         self.search_input.setFixedHeight(38)
-        self.search_input.setMinimumWidth(240)
+        self.search_input.setMinimumWidth(260)
         self.search_input.setMaximumWidth(560)
+        self.search_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_input.setClearButtonEnabled(True)
         self.search_input.returnPressed.connect(self._on_search_submitted)
         self.search_input.textEdited.connect(self._on_search_text_edited)
         self.search_input.installEventFilter(self)
 
         self.btn_search = QPushButton()
+        self.btn_search.setObjectName("ytSearchBtn")
         self.btn_search.setFixedSize(38, 38)
         self.btn_search.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_search.setStyleSheet(
-            "QPushButton { background: #1C2636; border: 1px solid #2E3E54; border-radius: 19px; }"
-            "QPushButton:hover { background: #263449; border-color: #77E0BE; }"
-        )
         button_icon(self.btn_search, "search", "Search", color=TEXT, size=16)
         self.btn_search.clicked.connect(self._on_search_submitted)
 
@@ -918,28 +1439,29 @@ class YouTubeOnlinePage(QWidget):
         self.btn_audio_mode = QPushButton()
         self.btn_audio_mode.setObjectName("ytAudioToggle")
         self.btn_audio_mode.setCheckable(True)
+        self.btn_audio_mode.setFixedHeight(34)
+        self.btn_audio_mode.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_audio_mode.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_audio_mode.toggled.connect(self._on_audio_only_toggled)
 
         # Account & Sync button
         self.btn_account = QPushButton()
+        self.btn_account.setObjectName("ytAccountBtn")
+        self.btn_account.setFixedHeight(34)
+        self.btn_account.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_account.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_account.setStyleSheet(
-            "QPushButton { background: #192433; color: #EDF3FA; border: 1px solid #2C3D54; "
-            "border-radius: 16px; padding: 5px 12px; font-size: 12px; font-weight: 600; }"
-            "QPushButton:hover { background: #233247; border-color: #77E0BE; }"
-        )
         self.btn_account.clicked.connect(self._open_account_dialog)
 
         top_lay.addWidget(self.btn_back)
         top_lay.addWidget(self.btn_forward)
         top_lay.addWidget(self.btn_refresh)
+        top_lay.addSpacing(4)
         top_lay.addWidget(brand)
         top_lay.addWidget(badge_pro)
-        top_lay.addSpacing(8)
-        top_lay.addWidget(self.search_input, 1)
+        top_lay.addStretch(1)
+        top_lay.addWidget(self.search_input, 4)
         top_lay.addWidget(self.btn_search)
-        top_lay.addSpacing(8)
+        top_lay.addStretch(1)
         top_lay.addWidget(self.btn_audio_mode)
         top_lay.addWidget(self.btn_account)
         root.addWidget(self.top_bar)
@@ -955,8 +1477,9 @@ class YouTubeOnlinePage(QWidget):
         self.nav_buttons: dict[str, QPushButton] = {}
         for key in ("home", "music", "subscriptions", "library", "watch"):
             btn = QPushButton()
-            btn.setProperty("ytNavTab", True)
+            btn.setObjectName("ytNavTab")
             btn.setCheckable(True)
+            btn.setFixedHeight(32)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.clicked.connect(lambda _checked=False, k=key: self._on_subnav_clicked(k))
             self.nav_buttons[key] = btn
@@ -992,27 +1515,29 @@ class YouTubeOnlinePage(QWidget):
     def _build_home_view(self) -> None:
         page = QWidget()
         lay = QVBoxLayout(page)
-        lay.setContentsMargins(16, 10, 16, 10)
+        lay.setContentsMargins(16, 10, 16, 6)
         lay.setSpacing(10)
 
-        # Topic Chips / Search Filter Row
+        # Topic Chips Row (Crisp pills, zero clipped items)
         self.chips_scroll = QScrollArea()
-        self.chips_scroll.setFixedHeight(42)
+        self.chips_scroll.setFixedHeight(40)
         self.chips_scroll.setWidgetResizable(True)
         self.chips_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.chips_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.chips_scroll.setStyleSheet("background: transparent; border: none;")
 
         chips_host = QWidget()
+        chips_host.setObjectName("ytScrollHost")
         self.chips_layout = QHBoxLayout(chips_host)
         self.chips_layout.setContentsMargins(0, 2, 0, 2)
         self.chips_layout.setSpacing(8)
         self.topic_buttons: dict[str, QPushButton] = {}
         for key, vi_lbl, _en_lbl, _q in TOPIC_CHIPS:
-            btn = QPushButton(vi_lbl)
-            btn.setProperty("ytChip", True)
+            btn = QPushButton(vi_lbl.replace("&", "&&"))
+            btn.setObjectName("ytChipBtn")
             btn.setCheckable(True)
             btn.setChecked(key == "all")
+            btn.setFixedHeight(30)
+            btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.clicked.connect(lambda _c=False, k=key: self._select_topic(k))
             self.topic_buttons[key] = btn
@@ -1024,7 +1549,7 @@ class YouTubeOnlinePage(QWidget):
         # Search filter bar (shown only during active search)
         self.search_filter_bar = QWidget()
         sf_lay = QHBoxLayout(self.search_filter_bar)
-        sf_lay.setContentsMargins(0, 0, 0, 0)
+        sf_lay.setContentsMargins(0, 2, 0, 2)
         sf_lay.setSpacing(8)
         self.lbl_search_heading = QLabel("")
         self.lbl_search_heading.setStyleSheet("font-size: 14px; font-weight: 700; color: #EDF3FA;")
@@ -1033,9 +1558,11 @@ class YouTubeOnlinePage(QWidget):
         self.filter_buttons: dict[str, QPushButton] = {}
         for fkey in ("all", "videos", "playlists", "channels", "live"):
             fb = QPushButton()
-            fb.setProperty("ytChip", True)
+            fb.setObjectName("ytChipBtn")
             fb.setCheckable(True)
             fb.setChecked(fkey == "all")
+            fb.setFixedHeight(30)
+            fb.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
             fb.setCursor(Qt.CursorShape.PointingHandCursor)
             fb.clicked.connect(lambda _c=False, k=fkey: self._select_search_filter(k))
             self.filter_buttons[fkey] = fb
@@ -1044,13 +1571,14 @@ class YouTubeOnlinePage(QWidget):
         self.search_filter_bar.hide()
         lay.addWidget(self.search_filter_bar)
 
-        # Responsive 16:9 Grid Scroll Area
+        # Responsive Fluid 16:9 Grid Scroll Area
         self.home_scroll = QScrollArea()
         self.home_scroll.setWidgetResizable(True)
-        self.home_scroll.setStyleSheet("background: transparent; border: none;")
+        self.home_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.home_grid_host = QWidget()
+        self.home_grid_host.setObjectName("ytScrollHost")
         self.home_grid = QGridLayout(self.home_grid_host)
-        self.home_grid.setContentsMargins(2, 4, 2, 16)
+        self.home_grid.setContentsMargins(0, 4, 4, 16)
         self.home_grid.setHorizontalSpacing(14)
         self.home_grid.setVerticalSpacing(16)
         self.home_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -1062,46 +1590,50 @@ class YouTubeOnlinePage(QWidget):
     def _build_watch_view(self) -> None:
         page = QWidget()
         outer = QHBoxLayout(page)
-        outer.setContentsMargins(14, 10, 14, 10)
-        outer.setSpacing(14)
+        outer.setContentsMargins(16, 12, 16, 10)
+        outer.setSpacing(16)
 
         # LEFT COLUMN (Scrollable Watch Stage + Controls + Metadata + Description + Comments)
         self.watch_left_scroll = QScrollArea()
         self.watch_left_scroll.setWidgetResizable(True)
-        self.watch_left_scroll.setStyleSheet("background: transparent; border: none;")
+        self.watch_left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         left_host = QWidget()
+        left_host.setObjectName("ytScrollHost")
         left_lay = QVBoxLayout(left_host)
-        left_lay.setContentsMargins(0, 0, 4, 24)
-        left_lay.setSpacing(10)
+        left_lay.setContentsMargins(0, 0, 6, 24)
+        left_lay.setSpacing(12)
 
         # 16:9 Stage (Video + Audio-Only Art + Floating Subtitle Overlay + Buffering Pill)
         self.stage_frame = QFrame()
-        self.stage_frame.setMinimumHeight(340)
-        self.stage_frame.setMaximumHeight(540)
+        self.stage_frame.setObjectName("ytStageFrame")
+        self.stage_frame.setMinimumHeight(400)
+        self.stage_frame.setMaximumHeight(580)
         self.stage_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.stage_frame.setStyleSheet("background: #070A0F; border-radius: 12px; border: 1px solid #1E2938;")
         stage_grid = QGridLayout(self.stage_frame)
         stage_grid.setContentsMargins(0, 0, 0, 0)
 
         self.stage_stack = QStackedWidget()
-        self.video_widget = QVideoWidget()
-        self.video_widget.setStyleSheet("background: #000000;")
+        self.video_widget = OnlineVideoSurface()
+        self.video_widget.clicked.connect(self.toggle_play_pause)
+        self.video_widget.double_clicked.connect(self._toggle_fullscreen_stage)
         self.stage_stack.addWidget(self.video_widget)
 
         # Audio-Only Hi-Fi Cover Art Stage
         audio_stage = QWidget()
-        audio_stage.setStyleSheet("background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0E1826, stop:1 #102422); border-radius: 12px;")
+        audio_stage.setStyleSheet(
+            "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0E1826, stop:1 #102624); border-radius: 11px;"
+        )
         as_lay = QVBoxLayout(audio_stage)
         as_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        as_lay.setSpacing(10)
+        as_lay.setSpacing(12)
         self.lbl_audio_art = QLabel()
-        self.lbl_audio_art.setFixedSize(260, 146)
+        self.lbl_audio_art.setFixedSize(300, 169)
         self.lbl_audio_art.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lbl_audio_art.setStyleSheet("background: #131D2B; border: 1px solid #2A3F54; border-radius: 12px;")
+        self.lbl_audio_art.setStyleSheet("background: #131D2B; border-radius: 12px;")
         self.lbl_audio_title = QLabel("")
         self.lbl_audio_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_audio_title.setWordWrap(True)
-        self.lbl_audio_title.setStyleSheet("color: #EDF3FA; font-size: 16px; font-weight: 700; padding: 0 24px;")
+        self.lbl_audio_title.setStyleSheet("color: #F2F6FC; font-size: 16px; font-weight: 700; padding: 0 28px;")
         self.lbl_audio_artist = QLabel("")
         self.lbl_audio_artist.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_audio_artist.setStyleSheet("color: #8DE7CA; font-size: 13px; font-weight: 600;")
@@ -1114,22 +1646,16 @@ class YouTubeOnlinePage(QWidget):
 
         # Buffering indicator pill (top-left)
         self.lbl_buffering = QLabel("")
-        self.lbl_buffering.setStyleSheet(
-            "background: rgba(13, 17, 24, 220); color: #77E0BE; border: 1px solid #2E6456; "
-            "border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 600; margin: 12px;"
-        )
+        self.lbl_buffering.setObjectName("ytBufferingPill")
         self.lbl_buffering.hide()
         stage_grid.addWidget(self.lbl_buffering, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         # Floating Subtitle / CC Overlay (bottom-center — hidden whenever Sub is Off or empty!)
         self.lbl_sub_overlay = QLabel("")
+        self.lbl_sub_overlay.setObjectName("ytSubOverlay")
         self.lbl_sub_overlay.setWordWrap(True)
         self.lbl_sub_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_sub_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
-        self.lbl_sub_overlay.setStyleSheet(
-            "background: rgba(8, 12, 18, 215); color: #FFFFFF; border-radius: 8px; "
-            "padding: 7px 16px; font-size: 17px; font-weight: 700; margin-bottom: 16px;"
-        )
         self.lbl_sub_overlay.hide()
         stage_grid.addWidget(self.lbl_sub_overlay, 0, 0, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
         left_lay.addWidget(self.stage_frame)
@@ -1138,12 +1664,13 @@ class YouTubeOnlinePage(QWidget):
         ctrl_box = QFrame()
         ctrl_box.setObjectName("ytWatchControls")
         ctrl_lay = QVBoxLayout(ctrl_box)
-        ctrl_lay.setContentsMargins(12, 8, 12, 10)
-        ctrl_lay.setSpacing(6)
+        ctrl_lay.setContentsMargins(14, 8, 14, 10)
+        ctrl_lay.setSpacing(8)
 
         seek_row = QHBoxLayout()
         seek_row.setSpacing(10)
         self.lbl_pos_time = QLabel("0:00")
+        self.lbl_pos_time.setFixedWidth(44)
         self.lbl_pos_time.setStyleSheet("color: #DCE6F2; font-size: 12px; font-family: Consolas;")
         self.seek_slider = _ClickSeekSlider()
         self.seek_slider.setRange(0, 0)
@@ -1151,6 +1678,8 @@ class YouTubeOnlinePage(QWidget):
         self.seek_slider.sliderPressed.connect(lambda: setattr(self, "_user_dragging_seek", True))
         self.seek_slider.sliderReleased.connect(self._on_seek_slider_released)
         self.lbl_dur_time = QLabel("0:00")
+        self.lbl_dur_time.setFixedWidth(44)
+        self.lbl_dur_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.lbl_dur_time.setStyleSheet("color: #9AAABC; font-size: 12px; font-family: Consolas;")
         seek_row.addWidget(self.lbl_pos_time)
         seek_row.addWidget(self.seek_slider, 1)
@@ -1161,8 +1690,8 @@ class YouTubeOnlinePage(QWidget):
         btn_row.setSpacing(6)
 
         self.btn_prev = QPushButton()
+        self.btn_prev.setObjectName("ytIconBtn")
         self.btn_prev.setFixedSize(34, 34)
-        self.btn_prev.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_prev.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_prev, "skip-back", "Previous", color=TEXT, size=17)
         self.btn_prev.clicked.connect(self.play_previous)
@@ -1175,45 +1704,48 @@ class YouTubeOnlinePage(QWidget):
         self.btn_play.clicked.connect(self.toggle_play_pause)
 
         self.btn_next = QPushButton()
+        self.btn_next.setObjectName("ytIconBtn")
         self.btn_next.setFixedSize(34, 34)
-        self.btn_next.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_next, "skip-forward", "Next", color=TEXT, size=17)
         self.btn_next.clicked.connect(self.play_next)
 
         self.btn_mute = QPushButton()
+        self.btn_mute.setObjectName("ytIconBtn")
         self.btn_mute.setFixedSize(32, 32)
-        self.btn_mute.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_mute.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_mute, "volume-2", "Mute", color=TEXT, size=16)
         self.btn_mute.clicked.connect(self._toggle_mute)
 
         self.vol_slider = QSlider(Qt.Orientation.Horizontal)
+        self.vol_slider.setObjectName("ytVolSlider")
         self.vol_slider.setRange(0, 100)
         self.vol_slider.setValue(int(round(float(self.profile.get_pref("volume", 0.7) or 0.7) * 100)))
-        self.vol_slider.setFixedWidth(82)
+        self.vol_slider.setFixedWidth(84)
         self.vol_slider.valueChanged.connect(self._on_volume_changed)
 
         # 3-Mode Subtitle Selector + CC Language Picker
         self.combo_sub_mode = QComboBox()
-        self.combo_sub_mode.setProperty("ytCompact", True)
+        self.combo_sub_mode.setObjectName("ytCombo")
         self.combo_sub_mode.setProperty("_i18n_safe_combo", True)
+        self.combo_sub_mode.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo_sub_mode.addItem("Sub: Tắt", "off")
         self.combo_sub_mode.addItem("Sub: YouTube CC", "youtube_cc")
         self.combo_sub_mode.addItem("AI Sub (Tải về)", "ai_handoff")
         self.combo_sub_mode.currentIndexChanged.connect(self._on_sub_mode_changed)
 
         self.combo_sub_lang = QComboBox()
-        self.combo_sub_lang.setProperty("ytCompact", True)
+        self.combo_sub_lang.setObjectName("ytCombo")
         self.combo_sub_lang.setProperty("_i18n_skip_combo", True)
-        self.combo_sub_lang.setMaximumWidth(140)
+        self.combo_sub_lang.setMaximumWidth(135)
         self.combo_sub_lang.hide()
         self.combo_sub_lang.currentIndexChanged.connect(self._on_sub_lang_changed)
 
         # Quality Selector (Audio Hi-Fi + 4K/2K/1080p/720p/480p/360p)
         self.combo_quality = QComboBox()
-        self.combo_quality.setProperty("ytCompact", True)
+        self.combo_quality.setObjectName("ytCombo")
         self.combo_quality.setProperty("_i18n_safe_combo", True)
+        self.combo_quality.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo_quality.addItem("Audio Hi-Fi", "audio_only")
         self.combo_quality.addItem("1080p HD", "1080p")
         self.combo_quality.addItem("720p HD", "720p")
@@ -1221,24 +1753,25 @@ class YouTubeOnlinePage(QWidget):
 
         # Speed Selector
         self.combo_speed = QComboBox()
-        self.combo_speed.setProperty("ytCompact", True)
+        self.combo_speed.setObjectName("ytCombo")
         self.combo_speed.setProperty("_i18n_skip_combo", True)
+        self.combo_speed.setFixedWidth(64)
         for sp in (0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0):
             self.combo_speed.addItem(f"{sp:g}x", sp)
         self.combo_speed.setCurrentIndex(2)
         self.combo_speed.currentIndexChanged.connect(self._on_speed_changed)
 
         self.btn_cinema = QPushButton()
+        self.btn_cinema.setObjectName("ytIconBtn")
         self.btn_cinema.setFixedSize(32, 32)
         self.btn_cinema.setCheckable(True)
-        self.btn_cinema.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_cinema.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_cinema, "tv", "Cinema Mode", color=TEXT, size=16)
         self.btn_cinema.toggled.connect(self._toggle_cinema_mode)
 
         self.btn_fs = QPushButton()
+        self.btn_fs.setObjectName("ytIconBtn")
         self.btn_fs.setFixedSize(32, 32)
-        self.btn_fs.setStyleSheet(ICON_BUTTON_STYLE)
         self.btn_fs.setCursor(Qt.CursorShape.PointingHandCursor)
         button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=16)
         self.btn_fs.clicked.connect(self._toggle_fullscreen_stage)
@@ -1261,36 +1794,33 @@ class YouTubeOnlinePage(QWidget):
 
         # Title + Active Hi-Fi Audio Status Badge
         title_row = QHBoxLayout()
-        title_row.setSpacing(10)
+        title_row.setSpacing(12)
         self.lbl_watch_title = QLabel("")
         self.lbl_watch_title.setWordWrap(True)
-        self.lbl_watch_title.setStyleSheet("color: #EDF3FA; font-size: 18px; font-weight: 700;")
+        self.lbl_watch_title.setStyleSheet("color: #F4F8FD; font-size: 18px; font-weight: 700;")
         self.lbl_audio_badge = QLabel("Hi-Fi 64-bit · Ready")
         self.lbl_audio_badge.setObjectName("ytAudioBadge")
+        self.lbl_audio_badge.setFixedHeight(26)
         self.lbl_audio_badge.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         title_row.addWidget(self.lbl_watch_title, 1)
         title_row.addWidget(self.lbl_audio_badge, 0, Qt.AlignmentFlag.AlignTop)
         left_lay.addLayout(title_row)
 
-        # Channel Row + Action Pills (Subscribe, Like, Save Playlist, 1-Click Download, Copy Link)
+        # Channel Row + Action Pills (Subscribe, Like, Save, Download, Copy Link — zero squishing!)
         action_row = QHBoxLayout()
         action_row.setSpacing(8)
 
         self.lbl_ch_avatar = QLabel()
         self.lbl_ch_avatar.setFixedSize(40, 40)
-        self.lbl_ch_avatar.setStyleSheet("background: #1B2534; border-radius: 20px; border: 1px solid #2E3F55;")
+        self.lbl_ch_avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_ch_avatar.setStyleSheet("background: #1C2736; border-radius: 20px; color: #8DE7CA; font-weight: 700;")
         action_row.addWidget(self.lbl_ch_avatar)
 
         ch_col = QVBoxLayout()
         ch_col.setSpacing(1)
         self.btn_watch_channel = QPushButton("")
-        self.btn_watch_channel.setFlat(True)
+        self.btn_watch_channel.setObjectName("ytWatchChanBtn")
         self.btn_watch_channel.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_watch_channel.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #EDF3FA; "
-            "font-size: 14px; font-weight: 700; text-align: left; padding: 0; }"
-            "QPushButton:hover { color: #77E0BE; }"
-        )
         self.btn_watch_channel.clicked.connect(self._open_current_channel)
         self.lbl_watch_subs = QLabel("")
         self.lbl_watch_subs.setStyleSheet("color: #8EA0B5; font-size: 11px;")
@@ -1301,26 +1831,40 @@ class YouTubeOnlinePage(QWidget):
         self.btn_subscribe = QPushButton()
         self.btn_subscribe.setObjectName("ytSubscribeBtn")
         self.btn_subscribe.setCheckable(True)
+        self.btn_subscribe.setFixedHeight(34)
+        self.btn_subscribe.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_subscribe.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_subscribe.clicked.connect(self._toggle_subscribe_current)
+        action_row.addSpacing(4)
         action_row.addWidget(self.btn_subscribe)
         action_row.addStretch(1)
 
         self.btn_like = QPushButton()
+        self.btn_like.setObjectName("ytActionPill")
         self.btn_like.setCheckable(True)
+        self.btn_like.setFixedHeight(34)
+        self.btn_like.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_like.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_like.clicked.connect(self._toggle_like_current)
 
         self.btn_save_pl = QPushButton()
+        self.btn_save_pl.setObjectName("ytActionPill")
+        self.btn_save_pl.setFixedHeight(34)
+        self.btn_save_pl.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_save_pl.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_save_pl.clicked.connect(self._open_save_playlist_menu)
 
         self.btn_dl_video = QPushButton()
-        self.btn_dl_video.setProperty("role", "primary")
+        self.btn_dl_video.setObjectName("ytPrimaryPill")
+        self.btn_dl_video.setFixedHeight(34)
+        self.btn_dl_video.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_dl_video.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dl_video.clicked.connect(self._download_current_video)
 
         self.btn_copy_link = QPushButton()
+        self.btn_copy_link.setObjectName("ytActionPill")
+        self.btn_copy_link.setFixedHeight(34)
+        self.btn_copy_link.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_copy_link.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_copy_link.clicked.connect(self._copy_current_link)
 
@@ -1332,17 +1876,17 @@ class YouTubeOnlinePage(QWidget):
         self.chapters_wrap = QFrame()
         self.chapters_wrap.setObjectName("ytPanel")
         ch_lay = QVBoxLayout(self.chapters_wrap)
-        ch_lay.setContentsMargins(12, 8, 12, 8)
+        ch_lay.setContentsMargins(14, 10, 14, 10)
         ch_lay.setSpacing(6)
         self.lbl_chapters_hdr = QLabel()
-        self.lbl_chapters_hdr.setStyleSheet("color: #A9F1D9; font-size: 12px; font-weight: 700;")
+        self.lbl_chapters_hdr.setStyleSheet("color: #98EED3; font-size: 12px; font-weight: 700;")
         ch_lay.addWidget(self.lbl_chapters_hdr)
         self.chapters_scroll = QScrollArea()
         self.chapters_scroll.setFixedHeight(36)
         self.chapters_scroll.setWidgetResizable(True)
         self.chapters_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.chapters_scroll.setStyleSheet("background: transparent; border: none;")
         self.chapters_row_host = QWidget()
+        self.chapters_row_host.setObjectName("ytScrollHost")
         self.chapters_row = QHBoxLayout(self.chapters_row_host)
         self.chapters_row.setContentsMargins(0, 0, 0, 0)
         self.chapters_row.setSpacing(6)
@@ -1355,39 +1899,38 @@ class YouTubeOnlinePage(QWidget):
         self.desc_box = QFrame()
         self.desc_box.setObjectName("ytPanel")
         desc_lay = QVBoxLayout(self.desc_box)
-        desc_lay.setContentsMargins(14, 10, 14, 10)
+        desc_lay.setContentsMargins(14, 12, 14, 10)
         desc_lay.setSpacing(6)
         self.lbl_watch_stats = QLabel("")
-        self.lbl_watch_stats.setStyleSheet("color: #DCE6F2; font-size: 12px; font-weight: 700;")
+        self.lbl_watch_stats.setStyleSheet("color: #E3ECF7; font-size: 13px; font-weight: 700;")
         self.desc_browser = QTextBrowser()
         self.desc_browser.setOpenLinks(False)
         self.desc_browser.anchorClicked.connect(self._on_desc_link_clicked)
-        self.desc_browser.setMaximumHeight(84)
+        self.desc_browser.setMaximumHeight(82)
         self.desc_browser.setStyleSheet(
-            "QTextBrowser { background: transparent; border: none; color: #BAC8D8; font-size: 12px; }"
+            "QTextBrowser { background: transparent; border: none; color: #C2D0E0; font-size: 12px; }"
         )
         self.btn_toggle_desc = QPushButton()
-        self.btn_toggle_desc.setFlat(True)
+        self.btn_toggle_desc.setObjectName("ytDescToggle")
         self.btn_toggle_desc.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_toggle_desc.setStyleSheet(
-            "QPushButton { background: transparent; border: none; color: #77E0BE; font-size: 12px; font-weight: 600; text-align: left; padding: 0; }"
-        )
         self.btn_toggle_desc.clicked.connect(self._toggle_description)
         desc_lay.addWidget(self.lbl_watch_stats)
         desc_lay.addWidget(self.desc_browser)
         desc_lay.addWidget(self.btn_toggle_desc)
         left_lay.addWidget(self.desc_box)
 
-        # Comments Section (Lazy-loaded Top Comments)
+        # Comments Section (Clean cards, zero nested label borders!)
         self.comments_box = QFrame()
         self.comments_box.setObjectName("ytPanel")
         c_lay = QVBoxLayout(self.comments_box)
-        c_lay.setContentsMargins(14, 12, 14, 12)
+        c_lay.setContentsMargins(14, 12, 14, 14)
         c_lay.setSpacing(10)
         c_hdr = QHBoxLayout()
         self.lbl_comments_hdr = QLabel()
         self.lbl_comments_hdr.setStyleSheet("color: #EDF3FA; font-size: 14px; font-weight: 700;")
         self.btn_load_comments = QPushButton()
+        self.btn_load_comments.setObjectName("ytActionPill")
+        self.btn_load_comments.setFixedHeight(30)
         self.btn_load_comments.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_load_comments.clicked.connect(self._load_comments_async)
         c_hdr.addWidget(self.lbl_comments_hdr)
@@ -1395,7 +1938,7 @@ class YouTubeOnlinePage(QWidget):
         c_hdr.addWidget(self.btn_load_comments)
         c_lay.addLayout(c_hdr)
         self.comments_list_lay = QVBoxLayout()
-        self.comments_list_lay.setSpacing(10)
+        self.comments_list_lay.setSpacing(8)
         c_lay.addLayout(self.comments_list_lay)
         left_lay.addWidget(self.comments_box)
         left_lay.addStretch(1)
@@ -1403,28 +1946,29 @@ class YouTubeOnlinePage(QWidget):
         self.watch_left_scroll.setWidget(left_host)
         outer.addWidget(self.watch_left_scroll, 7)
 
-        # RIGHT COLUMN (Active Playlist / Mix Queue + Related Up Next Videos)
+        # RIGHT COLUMN (Active Queue / Radio Mix + Unclipped Related Up Next)
         self.watch_right_panel = QWidget()
-        self.watch_right_panel.setMinimumWidth(320)
-        self.watch_right_panel.setMaximumWidth(420)
+        self.watch_right_panel.setMinimumWidth(360)
+        self.watch_right_panel.setMaximumWidth(430)
         right_lay = QVBoxLayout(self.watch_right_panel)
         right_lay.setContentsMargins(0, 0, 0, 0)
-        right_lay.setSpacing(10)
+        right_lay.setSpacing(12)
 
         # Queue / Auto-Mix Panel
         self.queue_frame = QFrame()
         self.queue_frame.setObjectName("ytPanel")
         qf_lay = QVBoxLayout(self.queue_frame)
-        qf_lay.setContentsMargins(10, 10, 10, 10)
+        qf_lay.setContentsMargins(12, 10, 12, 10)
         qf_lay.setSpacing(8)
 
         qh = QHBoxLayout()
         self.lbl_queue_title = QLabel()
         self.lbl_queue_title.setStyleSheet("color: #EDF3FA; font-size: 13px; font-weight: 700;")
         self.btn_autoplay = QPushButton()
-        self.btn_autoplay.setProperty("ytChip", True)
+        self.btn_autoplay.setObjectName("ytChipBtn")
         self.btn_autoplay.setCheckable(True)
         self.btn_autoplay.setChecked(self._autoplay)
+        self.btn_autoplay.setFixedHeight(28)
         self.btn_autoplay.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_autoplay.toggled.connect(self._on_autoplay_toggled)
         qh.addWidget(self.lbl_queue_title, 1)
@@ -1434,21 +1978,22 @@ class YouTubeOnlinePage(QWidget):
         q_ctrl = QHBoxLayout()
         q_ctrl.setSpacing(6)
         self.btn_q_shuffle = QPushButton()
+        self.btn_q_shuffle.setObjectName("ytIconBtn")
         self.btn_q_shuffle.setCheckable(True)
         self.btn_q_shuffle.setFixedSize(30, 30)
-        self.btn_q_shuffle.setStyleSheet(ICON_BUTTON_STYLE)
         button_icon(self.btn_q_shuffle, "shuffle", "Shuffle", color=MUTED, size=15)
         self.btn_q_shuffle.toggled.connect(self._on_shuffle_toggled)
 
         self.btn_q_repeat = QPushButton()
+        self.btn_q_repeat.setObjectName("ytIconBtn")
         self.btn_q_repeat.setCheckable(True)
         self.btn_q_repeat.setFixedSize(30, 30)
-        self.btn_q_repeat.setStyleSheet(ICON_BUTTON_STYLE)
         button_icon(self.btn_q_repeat, "repeat", "Repeat", color=MUTED, size=15)
         self.btn_q_repeat.toggled.connect(self._on_repeat_toggled)
 
         self.btn_start_mix = QPushButton()
-        self.btn_start_mix.setProperty("ytChip", True)
+        self.btn_start_mix.setObjectName("ytChipBtn")
+        self.btn_start_mix.setFixedHeight(28)
         self.btn_start_mix.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_start_mix.clicked.connect(self._start_radio_mix)
 
@@ -1460,11 +2005,13 @@ class YouTubeOnlinePage(QWidget):
 
         self.queue_scroll = QScrollArea()
         self.queue_scroll.setWidgetResizable(True)
-        self.queue_scroll.setMaximumHeight(260)
-        self.queue_scroll.setStyleSheet("background: transparent; border: none;")
+        self.queue_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.queue_scroll.setMinimumHeight(98)
+        self.queue_scroll.setMaximumHeight(220)
         self.queue_host = QWidget()
+        self.queue_host.setObjectName("ytScrollHost")
         self.queue_lay = QVBoxLayout(self.queue_host)
-        self.queue_lay.setContentsMargins(0, 0, 0, 0)
+        self.queue_lay.setContentsMargins(0, 0, 2, 0)
         self.queue_lay.setSpacing(4)
         self.queue_lay.addStretch(1)
         self.queue_scroll.setWidget(self.queue_host)
@@ -1475,17 +2022,18 @@ class YouTubeOnlinePage(QWidget):
         rel_frame = QFrame()
         rel_frame.setObjectName("ytPanel")
         rf_lay = QVBoxLayout(rel_frame)
-        rf_lay.setContentsMargins(10, 10, 10, 10)
+        rf_lay.setContentsMargins(12, 10, 12, 10)
         rf_lay.setSpacing(8)
         self.lbl_related_hdr = QLabel()
         self.lbl_related_hdr.setStyleSheet("color: #EDF3FA; font-size: 13px; font-weight: 700;")
         rf_lay.addWidget(self.lbl_related_hdr)
         self.related_scroll = QScrollArea()
         self.related_scroll.setWidgetResizable(True)
-        self.related_scroll.setStyleSheet("background: transparent; border: none;")
+        self.related_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.related_host = QWidget()
+        self.related_host.setObjectName("ytScrollHost")
         self.related_lay = QVBoxLayout(self.related_host)
-        self.related_lay.setContentsMargins(0, 0, 0, 0)
+        self.related_lay.setContentsMargins(0, 0, 2, 0)
         self.related_lay.setSpacing(6)
         self.related_lay.addStretch(1)
         self.related_scroll.setWidget(self.related_host)
@@ -1508,7 +2056,7 @@ class YouTubeOnlinePage(QWidget):
         hl.setSpacing(14)
         self.lbl_chan_page_avatar = QLabel()
         self.lbl_chan_page_avatar.setFixedSize(68, 68)
-        self.lbl_chan_page_avatar.setStyleSheet("background: #1C2636; border-radius: 34px; border: 2px solid #354760;")
+        self.lbl_chan_page_avatar.setStyleSheet("background: #1C2636; border-radius: 34px;")
         hl.addWidget(self.lbl_chan_page_avatar)
 
         ch_info = QVBoxLayout()
@@ -1524,6 +2072,7 @@ class YouTubeOnlinePage(QWidget):
         self.btn_chan_page_sub = QPushButton()
         self.btn_chan_page_sub.setObjectName("ytSubscribeBtn")
         self.btn_chan_page_sub.setCheckable(True)
+        self.btn_chan_page_sub.setFixedHeight(36)
         self.btn_chan_page_sub.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_chan_page_sub.clicked.connect(self._toggle_subscribe_channel_page)
         hl.addWidget(self.btn_chan_page_sub)
@@ -1532,13 +2081,15 @@ class YouTubeOnlinePage(QWidget):
         tab_row = QHBoxLayout()
         tab_row.setSpacing(8)
         self.btn_chan_videos = QPushButton()
-        self.btn_chan_videos.setProperty("ytChip", True)
+        self.btn_chan_videos.setObjectName("ytChipBtn")
         self.btn_chan_videos.setCheckable(True)
         self.btn_chan_videos.setChecked(True)
+        self.btn_chan_videos.setFixedHeight(30)
         self.btn_chan_videos.clicked.connect(lambda: self._switch_channel_tab("videos"))
         self.btn_chan_playlists = QPushButton()
-        self.btn_chan_playlists.setProperty("ytChip", True)
+        self.btn_chan_playlists.setObjectName("ytChipBtn")
         self.btn_chan_playlists.setCheckable(True)
+        self.btn_chan_playlists.setFixedHeight(30)
         self.btn_chan_playlists.clicked.connect(lambda: self._switch_channel_tab("playlists"))
         tab_row.addWidget(self.btn_chan_videos)
         tab_row.addWidget(self.btn_chan_playlists)
@@ -1547,8 +2098,9 @@ class YouTubeOnlinePage(QWidget):
 
         self.channel_scroll = QScrollArea()
         self.channel_scroll.setWidgetResizable(True)
-        self.channel_scroll.setStyleSheet("background: transparent; border: none;")
+        self.channel_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.channel_grid_host = QWidget()
+        self.channel_grid_host.setObjectName("ytScrollHost")
         self.channel_grid = QGridLayout(self.channel_grid_host)
         self.channel_grid.setSpacing(14)
         self.channel_grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
@@ -1567,7 +2119,7 @@ class YouTubeOnlinePage(QWidget):
         hdr.setObjectName("ytPanel")
         hl = QHBoxLayout(hdr)
         hl.setContentsMargins(16, 14, 16, 14)
-        hl.setSpacing(12)
+        hl.setSpacing(10)
         col = QVBoxLayout()
         self.lbl_pl_page_title = QLabel("")
         self.lbl_pl_page_title.setStyleSheet("color: #EDF3FA; font-size: 19px; font-weight: 700;")
@@ -1578,11 +2130,16 @@ class YouTubeOnlinePage(QWidget):
         hl.addLayout(col, 1)
 
         self.btn_pl_play_all = QPushButton()
-        self.btn_pl_play_all.setProperty("role", "primary")
+        self.btn_pl_play_all.setObjectName("ytPrimaryPill")
+        self.btn_pl_play_all.setFixedHeight(34)
         self.btn_pl_play_all.clicked.connect(lambda: self._play_active_playlist(shuffle=False))
         self.btn_pl_shuffle = QPushButton()
+        self.btn_pl_shuffle.setObjectName("ytActionPill")
+        self.btn_pl_shuffle.setFixedHeight(34)
         self.btn_pl_shuffle.clicked.connect(lambda: self._play_active_playlist(shuffle=True))
         self.btn_pl_pin = QPushButton()
+        self.btn_pl_pin.setObjectName("ytActionPill")
+        self.btn_pl_pin.setFixedHeight(34)
         self.btn_pl_pin.clicked.connect(self._pin_active_playlist)
         for b in (self.btn_pl_play_all, self.btn_pl_shuffle, self.btn_pl_pin):
             b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -1591,8 +2148,9 @@ class YouTubeOnlinePage(QWidget):
 
         self.pl_scroll = QScrollArea()
         self.pl_scroll.setWidgetResizable(True)
-        self.pl_scroll.setStyleSheet("background: transparent; border: none;")
+        self.pl_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.pl_list_host = QWidget()
+        self.pl_list_host.setObjectName("ytScrollHost")
         self.pl_list_lay = QVBoxLayout(self.pl_list_host)
         self.pl_list_lay.setSpacing(6)
         self.pl_list_lay.addStretch(1)
@@ -1612,9 +2170,10 @@ class YouTubeOnlinePage(QWidget):
         self.lib_tab_btns: dict[str, QPushButton] = {}
         for k in ("playlists", "liked", "history", "subscriptions"):
             b = QPushButton()
-            b.setProperty("ytChip", True)
+            b.setObjectName("ytChipBtn")
             b.setCheckable(True)
             b.setChecked(k == "playlists")
+            b.setFixedHeight(30)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.clicked.connect(lambda _c=False, key=k: self._render_library_section(key))
             self.lib_tab_btns[k] = b
@@ -1622,13 +2181,18 @@ class YouTubeOnlinePage(QWidget):
         top.addStretch(1)
 
         self.btn_lib_import_pl = QPushButton()
-        self.btn_lib_import_pl.setProperty("role", "primary")
+        self.btn_lib_import_pl.setObjectName("ytPrimaryPill")
+        self.btn_lib_import_pl.setFixedHeight(32)
         self.btn_lib_import_pl.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_lib_import_pl.clicked.connect(self._prompt_import_playlist_url)
         self.btn_lib_new_pl = QPushButton()
+        self.btn_lib_new_pl.setObjectName("ytActionPill")
+        self.btn_lib_new_pl.setFixedHeight(32)
         self.btn_lib_new_pl.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_lib_new_pl.clicked.connect(self._prompt_new_playlist)
         self.btn_lib_clear_hist = QPushButton()
+        self.btn_lib_clear_hist.setObjectName("ytActionPill")
+        self.btn_lib_clear_hist.setFixedHeight(32)
         self.btn_lib_clear_hist.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_lib_clear_hist.clicked.connect(self._clear_online_history)
         self.btn_lib_clear_hist.hide()
@@ -1640,10 +2204,11 @@ class YouTubeOnlinePage(QWidget):
 
         self.lib_scroll = QScrollArea()
         self.lib_scroll.setWidgetResizable(True)
-        self.lib_scroll.setStyleSheet("background: transparent; border: none;")
+        self.lib_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.lib_host = QWidget()
+        self.lib_host.setObjectName("ytScrollHost")
         self.lib_lay = QVBoxLayout(self.lib_host)
-        self.lib_lay.setSpacing(10)
+        self.lib_lay.setSpacing(8)
         self.lib_lay.addStretch(1)
         self.lib_scroll.setWidget(self.lib_host)
         lay.addWidget(self.lib_scroll, 1)
@@ -1653,20 +2218,20 @@ class YouTubeOnlinePage(QWidget):
     def _build_mini_bar(self) -> None:
         self.mini_bar = QFrame()
         self.mini_bar.setObjectName("ytMiniBar")
-        self.mini_bar.setFixedHeight(62)
+        self.mini_bar.setFixedHeight(64)
         lay = QHBoxLayout(self.mini_bar)
-        lay.setContentsMargins(14, 6, 14, 6)
-        lay.setSpacing(10)
+        lay.setContentsMargins(16, 8, 16, 8)
+        lay.setSpacing(12)
 
         self.lbl_mini_thumb = QLabel()
-        self.lbl_mini_thumb.setFixedSize(76, 44)
+        self.lbl_mini_thumb.setFixedSize(80, 45)
         self.lbl_mini_thumb.setStyleSheet("background: #141C27; border-radius: 6px;")
         lay.addWidget(self.lbl_mini_thumb)
 
         info = QVBoxLayout()
-        info.setSpacing(1)
+        info.setSpacing(2)
         self.lbl_mini_title = QLabel("")
-        self.lbl_mini_title.setStyleSheet("color: #EDF3FA; font-size: 13px; font-weight: 700;")
+        self.lbl_mini_title.setStyleSheet("color: #F2F6FC; font-size: 13px; font-weight: 700;")
         self.lbl_mini_sub = QLabel("")
         self.lbl_mini_sub.setStyleSheet("color: #8DE7CA; font-size: 11px;")
         info.addWidget(self.lbl_mini_title)
@@ -1674,31 +2239,33 @@ class YouTubeOnlinePage(QWidget):
         lay.addLayout(info, 1)
 
         self.btn_mini_prev = QPushButton()
-        self.btn_mini_prev.setFixedSize(32, 32)
-        self.btn_mini_prev.setStyleSheet(ICON_BUTTON_STYLE)
+        self.btn_mini_prev.setObjectName("ytIconBtn")
+        self.btn_mini_prev.setFixedSize(34, 34)
         button_icon(self.btn_mini_prev, "skip-back", "Previous", color=TEXT, size=16)
         self.btn_mini_prev.clicked.connect(self.play_previous)
 
         self.btn_mini_play = QPushButton()
         self.btn_mini_play.setObjectName("ytPlayCircle")
-        self.btn_mini_play.setFixedSize(36, 36)
+        self.btn_mini_play.setFixedSize(38, 38)
         button_icon(self.btn_mini_play, "play", "Play/Pause", color=INK, size=17)
         self.btn_mini_play.clicked.connect(self.toggle_play_pause)
 
         self.btn_mini_next = QPushButton()
-        self.btn_mini_next.setFixedSize(32, 32)
-        self.btn_mini_next.setStyleSheet(ICON_BUTTON_STYLE)
+        self.btn_mini_next.setObjectName("ytIconBtn")
+        self.btn_mini_next.setFixedSize(34, 34)
         button_icon(self.btn_mini_next, "skip-forward", "Next", color=TEXT, size=16)
         self.btn_mini_next.clicked.connect(self.play_next)
 
         self.btn_mini_open = QPushButton()
-        self.btn_mini_open.setProperty("role", "primary")
+        self.btn_mini_open.setObjectName("ytPrimaryPill")
+        self.btn_mini_open.setFixedHeight(34)
         self.btn_mini_open.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_mini_open.clicked.connect(lambda: self._show_view(self.VIEW_WATCH))
 
         lay.addWidget(self.btn_mini_prev)
         lay.addWidget(self.btn_mini_play)
         lay.addWidget(self.btn_mini_next)
+        lay.addSpacing(4)
         lay.addWidget(self.btn_mini_open)
         self.mini_bar.hide()
 
@@ -1709,14 +2276,19 @@ class YouTubeOnlinePage(QWidget):
     def retranslate(self, lang: str | None = None) -> None:
         lg = lang or get_language()
         self.search_input.setPlaceholderText(
-            tr_pair("Tìm kiếm YouTube, bài hát, nghệ sĩ hoặc dán link video / playlist...", "Search YouTube, songs, artists, or paste video / playlist URL...", lg)
+            tr_pair("Tìm kiếm YouTube, bài hát, nghệ sĩ hoặc dán link...", "Search YouTube, songs, artists, or paste URL...", lg)
         )
         self.btn_audio_mode.setText(
             tr_pair("🎵 Chỉ nghe Nhạc", "🎵 Audio Only", lg)
             if self.btn_audio_mode.isChecked()
             else tr_pair("🎬 Video + Hi-Fi", "🎬 Video + Hi-Fi", lg)
         )
-        self.btn_account.setText(tr_pair("👤 Tài khoản & Đồng bộ", "👤 Profile & Sync", lg))
+        has_ck = bool(self.profile.get_pref("cookies_browser", "") or self.profile.get_pref("cookies_file", ""))
+        self.btn_account.setText(
+            tr_pair("● Tài khoản YouTube", "● YouTube Connected", lg)
+            if has_ck
+            else tr_pair("👤 Tài khoản", "👤 Account", lg)
+        )
 
         nav_labels = {
             "home": tr_pair("Trang chủ", "Home", lg),
@@ -1730,7 +2302,7 @@ class YouTubeOnlinePage(QWidget):
 
         for key, vi_l, en_l, _q in TOPIC_CHIPS:
             if key in self.topic_buttons:
-                self.topic_buttons[key].setText(tr_pair(vi_l, en_l, lg))
+                self.topic_buttons[key].setText(tr_pair(vi_l, en_l, lg).replace("&", "&&"))
 
         flt_labels = {
             "all": tr_pair("Tất cả", "All", lg),
@@ -1749,17 +2321,17 @@ class YouTubeOnlinePage(QWidget):
         self.btn_like.setText(
             tr_pair("❤️ Đã thích", "❤️ Liked", lg) if self.btn_like.isChecked() else tr_pair("🤍 Thích", "🤍 Like", lg)
         )
-        self.btn_save_pl.setText(tr_pair("＋ Lưu Playlist", "＋ Save Playlist", lg))
-        self.btn_dl_video.setText(tr_pair("⬇ Tải về BoTube", "⬇ Save to BoTube", lg))
-        self.btn_copy_link.setText(tr_pair("📋 Sao chép link", "📋 Copy URL", lg))
+        self.btn_save_pl.setText(tr_pair("+ Lưu", "+ Save", lg))
+        self.btn_dl_video.setText(tr_pair("⬇ Tải về", "⬇ Download", lg))
+        self.btn_copy_link.setText(tr_pair("📋 Link", "📋 Copy", lg))
         self._refresh_subscribe_button_text(lg)
 
         self.lbl_chapters_hdr.setText(tr_pair("Phân đoạn (Chapters)", "Chapters", lg))
         self.btn_toggle_desc.setText(
-            tr_pair("Thu gọn mô tả", "Show less", lg) if self._desc_expanded else tr_pair("Xem thêm mô tả", "Show more", lg)
+            tr_pair("Thu gọn mô tả ▲", "Show less ▲", lg) if self._desc_expanded else tr_pair("Xem thêm mô tả ▼", "Show more ▼", lg)
         )
         self.lbl_comments_hdr.setText(tr_pair("Bình luận nổi bật", "Top Comments", lg))
-        self.btn_load_comments.setText(tr_pair("Tải bình luận", "Load Comments", lg))
+        self.btn_load_comments.setText(tr_pair("Làm mới", "Refresh", lg))
         self.btn_autoplay.setText(tr_pair("Tự động phát", "Auto-Play", lg))
         self.btn_start_mix.setText(tr_pair("📻 Mix Radio", "📻 Radio Mix", lg))
         self.lbl_related_hdr.setText(tr_pair("Đề xuất tiếp theo", "Up Next", lg))
@@ -1770,7 +2342,7 @@ class YouTubeOnlinePage(QWidget):
         self.btn_chan_playlists.setText(tr_pair("Danh sách phát", "Playlists", lg))
         self.btn_pl_play_all.setText(tr_pair("▶ Phát tất cả", "▶ Play All", lg))
         self.btn_pl_shuffle.setText(tr_pair("🔀 Trộn bài", "🔀 Shuffle", lg))
-        self.btn_pl_pin.setText(tr_pair("📌 Lưu vào Thư viện Online", "📌 Pin to Online Library", lg))
+        self.btn_pl_pin.setText(tr_pair("📌 Lưu Thư viện", "📌 Pin Playlist", lg))
 
         lib_labels = {
             "playlists": tr_pair("Danh sách phát", "Playlists", lg),
@@ -1780,8 +2352,8 @@ class YouTubeOnlinePage(QWidget):
         }
         for k, txt in lib_labels.items():
             self.lib_tab_btns[k].setText(txt)
-        self.btn_lib_import_pl.setText(tr_pair("＋ Nhập URL Playlist", "＋ Import Playlist URL", lg))
-        self.btn_lib_new_pl.setText(tr_pair("＋ Tạo Playlist mới", "＋ New Playlist", lg))
+        self.btn_lib_import_pl.setText(tr_pair("+ Nhập URL Playlist", "+ Import Playlist URL", lg))
+        self.btn_lib_new_pl.setText(tr_pair("+ Tạo Playlist", "+ New Playlist", lg))
         self.btn_lib_clear_hist.setText(tr_pair("🗑 Xóa lịch sử", "🗑 Clear History", lg))
         self.btn_mini_open.setText(tr_pair("Mở trình phát", "Open Player", lg))
 
@@ -1943,10 +2515,7 @@ class YouTubeOnlinePage(QWidget):
 
     def _on_search_text_edited(self, text: str) -> None:
         q = text.strip()
-        if not q:
-            self.suggest_popup.hide()
-            return
-        if parse_youtube_input(q) is not None:
+        if not q or parse_youtube_input(q) is not None:
             self.suggest_popup.hide()
             return
         self._suggest_timer.start()
@@ -2052,7 +2621,7 @@ class YouTubeOnlinePage(QWidget):
         )
 
     # =================================================================
-    # HOME / TOPIC DISCOVERY FEED
+    # HOME / TOPIC DISCOVERY FEED (FLUID GRID)
     # =================================================================
 
     def _select_topic(self, topic_key: str) -> None:
@@ -2086,6 +2655,13 @@ class YouTubeOnlinePage(QWidget):
         self._grid_items = list(items or [])
         self._relayout_home_grid()
 
+    def _compute_fluid_grid_metrics(self, scroll_area: QScrollArea) -> tuple[int, int]:
+        avail = max(320, scroll_area.viewport().width() - 18)
+        cols = max(1, min(5, avail // 285))
+        spacing = 14
+        card_w = max(248, (avail - (cols - 1) * spacing) // cols)
+        return cols, card_w
+
     def _relayout_home_grid(self) -> None:
         self._clear_layout(self.home_grid)
         if not self._grid_items:
@@ -2093,10 +2669,9 @@ class YouTubeOnlinePage(QWidget):
             lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 24px;")
             self.home_grid.addWidget(lbl, 0, 0)
             return
-        avail = max(320, self.home_scroll.viewport().width() - 16)
-        cols = max(1, min(5, avail // 302))
+        cols, card_w = self._compute_fluid_grid_metrics(self.home_scroll)
         for idx, item in enumerate(self._grid_items):
-            card = _OnlineVideoCard(item, self._thumbs)
+            card = _OnlineVideoCard(item, self._thumbs, card_width=card_w)
             card.clicked.connect(self._on_card_clicked)
             card.channel_clicked.connect(self.open_channel)
             card.queue_clicked.connect(self._append_to_queue)
@@ -2149,18 +2724,22 @@ class YouTubeOnlinePage(QWidget):
         self._current_stream = None
         self._preresolved_vid = ""
         self._desc_expanded = False
-        self.desc_browser.setMaximumHeight(84)
+        self.desc_browser.setMaximumHeight(82)
 
         self.lbl_watch_title.setText(item.title or item.video_id)
         self.lbl_audio_title.setText(item.title or item.video_id)
         self.lbl_audio_artist.setText(item.channel_name or "YouTube Hi-Fi")
         self.btn_watch_channel.setText(item.channel_name or "YouTube")
+        self.lbl_ch_avatar.setText((item.channel_name or "Y")[:1].upper())
         self.lbl_watch_subs.setText("")
         self.lbl_watch_stats.setText(" • ".join(p for p in (item.views_text, item.published_text) if p))
         self.desc_browser.setHtml("")
         self.chapters_wrap.hide()
         self._clear_layout(self.comments_list_lay)
         self.lbl_sub_overlay.hide()
+        self.lbl_audio_badge.setObjectName("ytAudioBadge")
+        self.lbl_audio_badge.setText(tr_pair("Đang kết nối…", "Connecting…"))
+        self.lbl_audio_badge.style().polish(self.lbl_audio_badge)
         self.lbl_buffering.setText(tr_pair("Đang kết nối luồng Hi-Fi…", "Resolving Hi-Fi stream…"))
         self.lbl_buffering.show()
         self.btn_like.setChecked(self.profile.is_liked(item.video_id))
@@ -2168,8 +2747,10 @@ class YouTubeOnlinePage(QWidget):
         self.retranslate(get_language())
 
         if item.thumbnail_url:
-            self._thumbs.load(item.thumbnail_url, self.lbl_audio_art, QSize(260, 146))
-            self._thumbs.load(item.thumbnail_url, self.lbl_mini_thumb, QSize(76, 44))
+            self._thumbs.load(item.thumbnail_url, self.lbl_audio_art, QSize(300, 169), radius=10)
+            self._thumbs.load(item.thumbnail_url, self.lbl_mini_thumb, QSize(80, 45), radius=6)
+        if item.channel_avatar:
+            self._thumbs.load(item.channel_avatar, self.lbl_ch_avatar, QSize(40, 40), radius=20)
         self.lbl_mini_title.setText(item.title)
         self.lbl_mini_sub.setText(item.channel_name or "YouTube")
 
@@ -2196,7 +2777,7 @@ class YouTubeOnlinePage(QWidget):
             busy_text=tr_pair("Đang kết nối luồng YouTube…", "Connecting to YouTube stream…"),
         )
 
-        # 2. Fetch full YouTube Watch details (description, channel, related videos, comments token) in parallel!
+        # 2. Fetch full YouTube Watch details (description, channel, related videos, comments token)
         self._run_async(
             "watch_meta",
             lambda: self.client.fetch_watch_info(item.video_id, playlist_id=item.playlist_id, lang=lang),
@@ -2223,7 +2804,7 @@ class YouTubeOnlinePage(QWidget):
             self.lbl_mini_sub.setText(stream.channel_name)
             self.profile.record_watch(self._current_item)
 
-        # Populate available Quality choices cleanly
+        # Populate available Quality choices cleanly (including CinemaScope 4K/2K/1080p!)
         self.combo_quality.blockSignals(True)
         self.combo_quality.clear()
         self.combo_quality.addItem("Audio Hi-Fi", "audio_only")
@@ -2274,7 +2855,9 @@ class YouTubeOnlinePage(QWidget):
 
     def _on_stream_error(self, msg: str) -> None:
         self.lbl_buffering.hide()
+        self.lbl_audio_badge.setObjectName("ytErrorBadge")
         self.lbl_audio_badge.setText(tr_pair("Lỗi kết nối luồng", "Stream Error"))
+        self.lbl_audio_badge.style().polish(self.lbl_audio_badge)
         self.status_message.emit(tr_pair(f"Không phát được video: {msg}", f"Playback failed: {msg}"))
 
     def _on_watch_info_ready(self, info: OnlineWatchInfo) -> None:
@@ -2296,7 +2879,7 @@ class YouTubeOnlinePage(QWidget):
             self.btn_subscribe.setChecked(self.profile.is_subscribed(info.channel_id))
             self._refresh_subscribe_button_text()
         if info.channel_avatar:
-            self._thumbs.load(info.channel_avatar, self.lbl_ch_avatar, QSize(40, 40))
+            self._thumbs.load(info.channel_avatar, self.lbl_ch_avatar, QSize(40, 40), radius=20)
         if info.subscriber_text:
             self.lbl_watch_subs.setText(info.subscriber_text)
         stats = " • ".join(p for p in (info.views_text, info.published_text) if p)
@@ -2307,10 +2890,7 @@ class YouTubeOnlinePage(QWidget):
         if info.chapters and (self._current_stream is None or not self._current_stream.chapters):
             self._render_chapters(info.chapters)
 
-        # Render Up Next / Related list
         self._render_related_list(info.related)
-
-        # Auto-load top comments gently
         if info.comment_token:
             self._load_comments_async()
 
@@ -2330,7 +2910,7 @@ class YouTubeOnlinePage(QWidget):
 
     def _toggle_description(self) -> None:
         self._desc_expanded = not self._desc_expanded
-        self.desc_browser.setMaximumHeight(420 if self._desc_expanded else 84)
+        self.desc_browser.setMaximumHeight(420 if self._desc_expanded else 82)
         self.retranslate(get_language())
 
     def _render_chapters(self, chapters: list[OnlineChapter]) -> None:
@@ -2341,7 +2921,8 @@ class YouTubeOnlinePage(QWidget):
             return
         for ch in chapters[:24]:
             btn = QPushButton(f"{format_seconds_mmss(ch.start_sec)}  {ch.title[:28]}")
-            btn.setProperty("ytChip", True)
+            btn.setObjectName("ytChipBtn")
+            btn.setFixedHeight(28)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setToolTip(f"{format_seconds_mmss(ch.start_sec)} — {ch.title}")
             btn.clicked.connect(lambda _c=False, s=ch.start_sec: self.player.seek(int(s * 1000)))
@@ -2370,6 +2951,8 @@ class YouTubeOnlinePage(QWidget):
             row.clicked.connect(lambda item_obj, i=idx: self._jump_queue_index(i))
             self.queue_lay.addWidget(row)
         self.queue_lay.addStretch(1)
+        # Keep queue compact when only 1 track is loaded, spacious when playlist/mix is active
+        self.queue_scroll.setFixedHeight(106 if len(self._queue) <= 1 else min(220, len(self._queue) * 102 + 8))
 
     def _update_queue_header_text(self, lang: str | None = None) -> None:
         base = self._queue_title or tr_pair("Hàng đợi phát", "Up Next Queue", lang)
@@ -2416,7 +2999,7 @@ class YouTubeOnlinePage(QWidget):
         self.status_message.emit(tr_pair(f"Đã tạo Mix Radio ({len(merged)} bài).", f"Radio Mix ready ({len(merged)} tracks)."))
 
     # =================================================================
-    # COMMENTS
+    # COMMENTS (CLEAN BORDERLESS INNER TYPOGRAPHY + CIRCULAR AVATARS)
     # =================================================================
 
     def _load_comments_async(self) -> None:
@@ -2440,27 +3023,42 @@ class YouTubeOnlinePage(QWidget):
             return
         for c in comments:
             card = QFrame()
-            card.setStyleSheet("background: #101722; border: 1px solid #1E2B3C; border-radius: 9px;")
-            cl = QVBoxLayout(card)
-            cl.setContentsMargins(12, 8, 12, 8)
+            card.setObjectName("ytCommentCard")
+            outer = QHBoxLayout(card)
+            outer.setContentsMargins(12, 10, 12, 10)
+            outer.setSpacing(10)
+
+            av = QLabel((c.author.lstrip("@") or "U")[:1].upper())
+            av.setFixedSize(32, 32)
+            av.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            av.setStyleSheet("background: #1B2738; color: #8DE7CA; border-radius: 16px; font-size: 12px; font-weight: 700;")
+            if c.avatar_url:
+                self._thumbs.load(c.avatar_url, av, QSize(32, 32), radius=16)
+            outer.addWidget(av, 0, Qt.AlignmentFlag.AlignTop)
+
+            cl = QVBoxLayout()
+            cl.setContentsMargins(0, 0, 0, 0)
             cl.setSpacing(4)
             hdr = QHBoxLayout()
+            hdr.setSpacing(8)
             author_lbl = QLabel(c.author + (" ★" if c.is_creator else ""))
-            author_lbl.setStyleSheet(f"color: {'#77E0BE' if c.is_creator else '#DCE6F2'}; font-size: 12px; font-weight: 700;")
+            author_lbl.setStyleSheet(f"color: {'#77E0BE' if c.is_creator else '#E4EDF8'}; font-size: 12px; font-weight: 700;")
             time_lbl = QLabel(c.published_text)
-            time_lbl.setStyleSheet("color: #728499; font-size: 11px;")
+            time_lbl.setStyleSheet("color: #788B9F; font-size: 11px;")
             hdr.addWidget(author_lbl)
             hdr.addWidget(time_lbl)
             hdr.addStretch(1)
             if c.likes_text:
                 lk = QLabel(f"👍 {c.likes_text}")
-                lk.setStyleSheet("color: #8EA0B5; font-size: 11px;")
+                lk.setStyleSheet("color: #8FA3B8; font-size: 11px; font-weight: 600;")
                 hdr.addWidget(lk)
             cl.addLayout(hdr)
+
             txt = QLabel(c.text)
             txt.setWordWrap(True)
-            txt.setStyleSheet("color: #C7D4E3; font-size: 12px;")
+            txt.setStyleSheet("color: #CFDCEB; font-size: 12px;")
             cl.addWidget(txt)
+            outer.addLayout(cl, 1)
             self.comments_list_lay.addWidget(card)
 
     # =================================================================
@@ -2491,7 +3089,6 @@ class YouTubeOnlinePage(QWidget):
                 self._queue_index = nxt
                 self._start_watching_item(self._queue[nxt])
                 return
-        # Seamless YouTube Auto-Play from Related list!
         if self._autoplay and self._current_watch and self._current_watch.related:
             nxt_item = next(
                 (r for r in self._current_watch.related if r.item_type == "video" and r.video_id),
@@ -2608,7 +3205,6 @@ class YouTubeOnlinePage(QWidget):
     def _on_sub_mode_changed(self) -> None:
         mode = str(self.combo_sub_mode.currentData() or "off")
         if mode == "ai_handoff":
-            # Keep YouTube streaming clean & hand off to BoTube's Studio Download + AI Sub pipeline!
             self.combo_sub_mode.blockSignals(True)
             self.combo_sub_mode.setCurrentIndex(0)
             self.combo_sub_mode.blockSignals(False)
@@ -2666,7 +3262,9 @@ class YouTubeOnlinePage(QWidget):
             self.lbl_sub_overlay.hide()
 
     def _on_audio_status_changed(self, label: str) -> None:
+        self.lbl_audio_badge.setObjectName("ytAudioBadge")
         self.lbl_audio_badge.setText(label)
+        self.lbl_audio_badge.style().polish(self.lbl_audio_badge)
         if self._current_item is not None:
             self.lbl_mini_sub.setText(f"{self._current_item.channel_name or 'YouTube'} · {label}")
 
@@ -2695,7 +3293,7 @@ class YouTubeOnlinePage(QWidget):
     def _toggle_cinema_mode(self, checked: bool) -> None:
         self._cinema_mode = bool(checked)
         self.watch_right_panel.setVisible(not checked)
-        self.stage_frame.setMaximumHeight(680 if checked else 540)
+        self.stage_frame.setMaximumHeight(700 if checked else 580)
 
     def _toggle_fullscreen_stage(self) -> None:
         win = self.window()
@@ -2709,7 +3307,7 @@ class YouTubeOnlinePage(QWidget):
             self.sub_nav.hide()
             self.watch_right_panel.hide()
             self.stage_frame.setMaximumHeight(16777215)
-            self.stage_frame.setMinimumHeight(520)
+            self.stage_frame.setMinimumHeight(560)
             if hasattr(win, "sidebar_container"):
                 win.sidebar_container.hide()
             if hasattr(win, "playback_bar"):
@@ -2725,13 +3323,11 @@ class YouTubeOnlinePage(QWidget):
         self.top_bar.show()
         self.sub_nav.show()
         self.watch_right_panel.setVisible(not self._cinema_mode)
-        self.stage_frame.setMaximumHeight(680 if self._cinema_mode else 540)
-        self.stage_frame.setMinimumHeight(340)
+        self.stage_frame.setMaximumHeight(700 if self._cinema_mode else 580)
+        self.stage_frame.setMinimumHeight(400)
         if win is not None:
             if hasattr(win, "sidebar_container"):
                 win.sidebar_container.show()
-            if hasattr(win, "playback_bar"):
-                win.playback_bar.show()
             if win.isFullScreen():
                 win.showNormal()
         button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=16)
@@ -2782,12 +3378,16 @@ class YouTubeOnlinePage(QWidget):
         if self._current_item is None:
             return
         menu = QMenu(self)
-        menu.setStyleSheet("QMenu { background: #18212E; color: #EDF3FA; border: 1px solid #35475E; } QMenu::item:selected { background: #264B41; }")
+        menu.setStyleSheet(
+            "QMenu { background: #161F2D; color: #EDF3FA; border: 1px solid #354962; padding: 4px; }"
+            "QMenu::item { padding: 6px 14px; border-radius: 5px; }"
+            "QMenu::item:selected { background: #234C41; color: #A9F1D9; }"
+        )
         for pl in self.profile.list_playlists():
             act = menu.addAction(f"🎵  {pl.get('name', 'Playlist')}")
             act.triggered.connect(lambda _c=False, pid=pl["id"]: self._save_current_to_playlist(pid))
         menu.addSeparator()
-        act_new = menu.addAction(tr_pair("＋ Tạo Playlist Online mới…", "＋ Create New Online Playlist…"))
+        act_new = menu.addAction(tr_pair("+ Tạo Playlist Online mới…", "+ Create New Online Playlist…"))
         act_new.triggered.connect(self._create_playlist_with_current)
         menu.exec(self.btn_save_pl.mapToGlobal(QPoint(0, self.btn_save_pl.height())))
 
@@ -2832,9 +3432,10 @@ class YouTubeOnlinePage(QWidget):
             self.status_message.emit(tr_pair("Đã sao chép đường dẫn YouTube!", "Copied YouTube URL!"))
 
     def _open_account_dialog(self) -> None:
-        dlg = _YouTubeAccountDialog(self.profile, parent=self)
-        dlg.playlist_import_requested.connect(self.open_playlist)
+        dlg = _YouTubeAccountDialog(self.profile, client=self.client, parent=self)
+        dlg.playlist_import_requested.connect(lambda u, t: self.open_playlist(u, title_hint=t))
         dlg.exec()
+        self.retranslate(get_language())
 
     # =================================================================
     # CHANNEL, PLAYLIST & ONLINE LIBRARY VIEWS
@@ -2875,12 +3476,11 @@ class YouTubeOnlinePage(QWidget):
         self.btn_chan_page_sub.setChecked(self.profile.is_subscribed(info.channel_id))
         self._refresh_subscribe_button_text()
         if info.avatar_url:
-            self._thumbs.load(info.avatar_url, self.lbl_chan_page_avatar, QSize(68, 68))
+            self._thumbs.load(info.avatar_url, self.lbl_chan_page_avatar, QSize(68, 68), radius=34)
         self._clear_layout(self.channel_grid)
-        avail = max(320, self.channel_scroll.viewport().width() - 16)
-        cols = max(1, min(5, avail // 302))
+        cols, card_w = self._compute_fluid_grid_metrics(self.channel_scroll)
         for idx, it in enumerate(info.items):
-            card = _OnlineVideoCard(it, self._thumbs)
+            card = _OnlineVideoCard(it, self._thumbs, card_width=card_w)
             card.clicked.connect(self._on_card_clicked)
             card.channel_clicked.connect(self.open_channel)
             card.queue_clicked.connect(self._append_to_queue)
@@ -2973,7 +3573,12 @@ class YouTubeOnlinePage(QWidget):
         if section == "playlists":
             playlists = self.profile.list_playlists()
             if not playlists:
-                lbl = QLabel(tr_pair("Chưa có Playlist Online nào. Bấm “+ Nhập URL Playlist” để dán link YouTube nghe ngay!", "No Online Playlists yet. Click “+ Import Playlist URL” to play any YouTube playlist!"))
+                lbl = QLabel(
+                    tr_pair(
+                        "Chưa có Playlist Online nào. Bấm “+ Nhập URL Playlist” để dán link YouTube nghe ngay, hoặc vào “Tài khoản” để mở Video đã thích!",
+                        "No Online Playlists yet. Click “+ Import Playlist URL” to play any YouTube playlist, or open “Account” for Liked Videos!",
+                    )
+                )
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 20px;")
                 self.lib_lay.addWidget(lbl)
@@ -2993,7 +3598,8 @@ class YouTubeOnlinePage(QWidget):
                 row.addLayout(col, 1)
 
                 btn_play = QPushButton(tr_pair("▶ Phát", "▶ Play"))
-                btn_play.setProperty("role", "primary")
+                btn_play.setObjectName("ytPrimaryPill")
+                btn_play.setFixedHeight(32)
                 btn_play.clicked.connect(
                     lambda _c=False, its=items_raw, nm=pl.get("name", ""), url=pl.get("source_url", ""): (
                         self.play_video_item(its[0], queue=its, queue_index=0, queue_title=nm)
@@ -3004,9 +3610,13 @@ class YouTubeOnlinePage(QWidget):
                 row.addWidget(btn_play)
                 if pl.get("source_url"):
                     btn_sync = QPushButton(tr_pair("↻ Mở / Đồng bộ", "↻ Open / Sync"))
+                    btn_sync.setObjectName("ytActionPill")
+                    btn_sync.setFixedHeight(32)
                     btn_sync.clicked.connect(lambda _c=False, u=pl["source_url"], nm=pl.get("name", ""): self.open_playlist(u, title_hint=nm))
                     row.addWidget(btn_sync)
                 btn_del = QPushButton(tr_pair("Xóa", "Delete"))
+                btn_del.setObjectName("ytActionPill")
+                btn_del.setFixedHeight(32)
                 btn_del.clicked.connect(lambda _c=False, pid=pl["id"]: self._delete_saved_playlist(pid))
                 row.addWidget(btn_del)
                 self.lib_lay.addWidget(card)
@@ -3025,7 +3635,7 @@ class YouTubeOnlinePage(QWidget):
         elif section == "subscriptions":
             subs = self.profile.list_subscriptions()
             if not subs:
-                lbl = QLabel(tr_pair("Bạn chưa đăng ký kênh nào trong BoTube. Bấm “Đăng ký” ở bất kỳ kênh nào hoặc nhập subscriptions.csv trong Tài khoản & Đồng bộ.", "No subscriptions yet. Click “Subscribe” on any channel or import subscriptions.csv via Profile & Sync."))
+                lbl = QLabel(tr_pair("Bạn chưa đăng ký kênh nào trong BoTube. Bấm “Đăng ký” ở bất kỳ kênh nào hoặc nhập subscriptions.csv trong Tài khoản.", "No subscriptions yet. Click “Subscribe” on any channel or import subscriptions.csv via Account."))
                 lbl.setWordWrap(True)
                 lbl.setStyleSheet("color: #8EA0B5; font-size: 13px; padding: 20px;")
                 self.lib_lay.addWidget(lbl)
@@ -3038,9 +3648,12 @@ class YouTubeOnlinePage(QWidget):
                 lbl.setStyleSheet("color: #EDF3FA; font-size: 14px; font-weight: 700;")
                 row.addWidget(lbl, 1)
                 btn_open = QPushButton(tr_pair("Xem Kênh", "Open Channel"))
-                btn_open.setProperty("role", "primary")
+                btn_open.setObjectName("ytPrimaryPill")
+                btn_open.setFixedHeight(32)
                 btn_open.clicked.connect(lambda _c=False, cid=s["channel_id"], nm=s.get("name", ""): self.open_channel(cid, nm))
                 btn_unsub = QPushButton(tr_pair("Hủy đăng ký", "Unsubscribe"))
+                btn_unsub.setObjectName("ytActionPill")
+                btn_unsub.setFixedHeight(32)
                 btn_unsub.clicked.connect(lambda _c=False, cid=s["channel_id"], nm=s.get("name", ""): self._unsub_from_list(cid, nm))
                 row.addWidget(btn_open)
                 row.addWidget(btn_unsub)

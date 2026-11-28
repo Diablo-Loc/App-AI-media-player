@@ -1520,7 +1520,7 @@ class YouTubeOnlineClient:
             creationflags=_NO_WINDOW,
         )
         if processes is not None:
-            processes.add(proc)
+            processes.track(proc)
         try:
             stdout, stderr = proc.communicate(timeout=35)
         except subprocess.TimeoutExpired:
@@ -1528,7 +1528,7 @@ class YouTubeOnlineClient:
             raise TimeoutError("Hết thời gian tải danh sách phát YouTube.")
         finally:
             if processes is not None:
-                processes.discard(proc)
+                processes.release(proc)
 
         if proc.returncode != 0 or not stdout.strip():
             msg = (stderr or "").strip().splitlines()
@@ -1605,7 +1605,7 @@ class YouTubeOnlineClient:
             creationflags=_NO_WINDOW,
         )
         if processes is not None:
-            processes.add(proc)
+            processes.track(proc)
         try:
             stdout, stderr = proc.communicate(timeout=30)
         except subprocess.TimeoutExpired:
@@ -1613,7 +1613,7 @@ class YouTubeOnlineClient:
             raise TimeoutError("Hết thời gian kết nối luồng YouTube.")
         finally:
             if processes is not None:
-                processes.discard(proc)
+                processes.release(proc)
 
         if proc.returncode != 0 or not stdout.strip():
             msg = (stderr or "").strip().splitlines()
@@ -1680,10 +1680,20 @@ class YouTubeOnlineClient:
                 ),
             )
 
-        # Bucket video streams by standard YouTube resolutions (prefer H.264/MP4 for buttery Qt DXVA decode!)
+        # Bucket video streams by standard YouTube resolutions, supporting both 16:9 AND
+        # CinemaScope 21:9 MVs (e.g., 1920x776 -> 1080p, 3840x1550 -> 2160p) and vertical Shorts.
         buckets: dict[str, dict[str, Any]] = {}
         target_heights = (2160, 1440, 1080, 720, 480, 360)
         all_video = video_only + progressive
+
+        def _effective_resolution(f: dict[str, Any]) -> int:
+            w = int(f.get("width") or 0)
+            h = int(f.get("height") or 0)
+            if w <= 0 and h <= 0:
+                return 0
+            if w >= h:
+                return max(h, int(round(w * 9.0 / 16.0)))
+            return min(w, h) if w > 0 else h
 
         def _video_rank(f: dict[str, Any]) -> tuple[int, int, float, float]:
             vc = str(f.get("vcodec") or "").lower()
@@ -1699,7 +1709,12 @@ class YouTubeOnlineClient:
             return (is_https, codec_score, fps, tbr)
 
         for target_h in target_heights:
-            cands = [f for f in all_video if abs(int(f.get("height") or 0) - target_h) <= 40]
+            tol = max(50, int(target_h * 0.12))
+            cands = [
+                f for f in all_video
+                if abs(_effective_resolution(f) - target_h) <= tol
+                and str(f.get("protocol") or "").lower() in ("https", "http", "m3u8_native", "m3u8")
+            ]
             if not cands:
                 continue
             pick = max(cands, key=_video_rank)
@@ -1707,6 +1722,7 @@ class YouTubeOnlineClient:
             buckets[label] = {
                 "url": str(pick.get("url") or ""),
                 "height": int(pick.get("height") or target_h),
+                "width": int(pick.get("width") or 0),
                 "fps": int(round(float(pick.get("fps") or 30))),
                 "vcodec": str(pick.get("vcodec") or ""),
                 "ext": str(pick.get("ext") or ""),
@@ -1808,3 +1824,34 @@ class YouTubeOnlineClient:
             cues = parse_vtt_subtitles(text)
         self._cache_set(cache_key, cues)
         return cues
+
+    # --- 10. Verify Read-Only Browser / Cookie Account Connection ---
+    def verify_cookie_connection(
+        self,
+        *,
+        cookies_browser: str = "",
+        cookies_file: str = "",
+        processes: OwnedProcesses | None = None,
+    ) -> tuple[bool, str, int]:
+        """Test read-only cookie access to Liked Videos (:ytfav) and return (ok, message, count)."""
+        if not cookies_browser and not (cookies_file and Path(cookies_file).is_file()):
+            return (False, "Chưa chọn trình duyệt hoặc tệp cookies.txt.", 0)
+        try:
+            title, items = self.fetch_playlist(
+                ":ytfav",
+                cookies_browser=cookies_browser,
+                cookies_file=cookies_file,
+                processes=processes,
+                max_items=5,
+            )
+            return (True, title or "Liked Videos", len(items))
+        except Exception as err:
+            raw = str(err)
+            low = raw.lower()
+            if "could not copy chrome cookie database" in low or "dpapi" in low or "permission" in low:
+                return (
+                    False,
+                    "Trình duyệt Chrome/Edge đang khóa Cookie khi mở. Hãy chọn Firefox, tạm đóng trình duyệt 3 giây, hoặc dùng tệp cookies.txt.",
+                    0,
+                )
+            return (False, raw[:220], 0)

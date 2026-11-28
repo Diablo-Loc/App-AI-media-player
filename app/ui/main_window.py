@@ -2992,7 +2992,10 @@ class MainWindow(QMainWindow):
             self.top_toolbar_container.hide()
             self.showMaximized()
             if hasattr(self, 'playback_bar'):
-                self.playback_bar.show()
+                if index == 7:
+                    self.playback_bar.hide()
+                else:
+                    self.playback_bar.show()
             if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
                 self.ai_progress_bar.show()
         else:
@@ -3005,7 +3008,10 @@ class MainWindow(QMainWindow):
             else:
                 self.top_toolbar_container.hide()
             if hasattr(self, 'playback_bar'):
-                self.playback_bar.show()
+                if index == 7:
+                    self.playback_bar.hide()
+                else:
+                    self.playback_bar.show()
             if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
                 self.ai_progress_bar.show()
 

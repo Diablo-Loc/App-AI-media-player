@@ -15,9 +15,10 @@ import threading
 import time
 from typing import Callable
 
-from PySide6.QtCore import QObject, QTimer, QUrl, Signal
-from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-from PySide6.QtMultimediaWidgets import QVideoWidget
+from PySide6.QtCore import QObject, QRectF, Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QColor, QPainter, QPainterPath
+from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QVideoFrame, QVideoSink
+from PySide6.QtWidgets import QWidget
 
 from core.audio_effects import find_tool
 from core.audio_profile import AudioProfile
@@ -25,6 +26,74 @@ from core.audio_stream_engine import AudioStreamEngine, is_stream_engine_availab
 from core.youtube_online_client import OnlineSubtitleCue, ResolvedStream
 
 logger = logging.getLogger(__name__)
+
+
+class OnlineVideoSurface(QWidget):
+    """Hardware-friendly QVideoSink surface that scrolls smoothly, clips cleanly & composites CC overlays."""
+
+    clicked = Signal()
+    double_clicked = Signal()
+
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._sink = QVideoSink(self)
+        self._frame: QVideoFrame | None = None
+        self._sink.videoFrameChanged.connect(self._on_frame_changed)
+        self._click_timer = QTimer(self)
+        self._click_timer.setSingleShot(True)
+        self._click_timer.setInterval(210)
+        self._click_timer.timeout.connect(self.clicked.emit)
+
+    def videoSink(self) -> QVideoSink:
+        return self._sink
+
+    def clear_frame(self) -> None:
+        self._frame = None
+        self.update()
+
+    def _on_frame_changed(self, frame: QVideoFrame) -> None:
+        if frame.isValid():
+            self._frame = QVideoFrame(frame)
+            self.update()
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+        painter.fillRect(self.rect(), QColor("#05080D"))
+        frame = self._frame
+        if frame is not None and frame.isValid():
+            fw = max(1, frame.width())
+            fh = max(1, frame.height())
+            ww = max(1, self.width())
+            wh = max(1, self.height())
+            scale = min(ww / float(fw), wh / float(fh))
+            dw = fw * scale
+            dh = fh * scale
+            target = QRectF((ww - dw) * 0.5, (wh - dh) * 0.5, dw, dh)
+            try:
+                frame.paint(painter, target, QVideoFrame.PaintOptions())
+            except Exception:
+                img = frame.toImage()
+                if not img.isNull():
+                    painter.drawImage(target, img)
+        painter.end()
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._click_timer.start()
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._click_timer.stop()
+            self.double_clicked.emit()
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
 
 class OnlineAudioStreamEngine(AudioStreamEngine):
@@ -175,7 +244,7 @@ class YouTubeOnlinePlaybackController(QObject):
 
     def __init__(
         self,
-        video_widget: QVideoWidget,
+        video_widget: QWidget,
         *,
         profile_provider: Callable[[], AudioProfile] | None = None,
         parent: QObject | None = None,
@@ -188,7 +257,10 @@ class YouTubeOnlinePlaybackController(QObject):
         self._qt_audio.setVolume(0.7)
         self._qt_player = QMediaPlayer(self)
         self._qt_player.setAudioOutput(self._qt_audio)
-        self._qt_player.setVideoOutput(self.video_widget)
+        if hasattr(self.video_widget, "videoSink") and isinstance(self.video_widget, OnlineVideoSurface):
+            self._qt_player.setVideoSink(self.video_widget.videoSink())
+        else:
+            self._qt_player.setVideoOutput(self.video_widget)
         self._qt_player.mediaStatusChanged.connect(self._on_qt_media_status)
         self._qt_player.errorOccurred.connect(self._on_qt_error)
 
@@ -211,6 +283,7 @@ class YouTubeOnlinePlaybackController(QObject):
         self._last_buffering = False
         self._eof_emitted = False
         self._video_start_pending_ms: int | None = None
+        self._last_video_seek_mono = 0.0
 
         # Subtitle cue cache (fast O(log N) binary lookup, zero GUI allocations)
         self._sub_enabled = False
@@ -461,9 +534,11 @@ class YouTubeOnlinePlaybackController(QObject):
             target = min(self._duration_ms, target)
         self._last_pos_ms = target
         self._eof_emitted = False
+        self._last_video_seek_mono = time.monotonic()
         if self._using_hifi and self._hifi_engine is not None:
             self._hifi_engine.seek(target)
         if not self._audio_only and self._qt_player.source().isValid():
+            self._qt_player.setPlaybackRate(self._playback_rate)
             self._qt_player.setPosition(target)
         elif not self._using_hifi and self._qt_player.source().isValid():
             self._qt_player.setPosition(target)
@@ -586,23 +661,39 @@ class YouTubeOnlinePlaybackController(QObject):
                 self._last_buffering = buf
                 self.buffering_changed.emit(buf)
 
-            # Sync muted QMediaPlayer video closely to authoritative Hi-Fi audio clock
+            # Smooth, non-thrashing A/V sync: never abort HTTP buffering with rapid seeks!
             if not self._audio_only and self._qt_player.source().isValid():
+                status = self._qt_player.mediaStatus()
+                in_flight = status in (
+                    QMediaPlayer.MediaStatus.LoadingMedia,
+                    QMediaPlayer.MediaStatus.BufferingMedia,
+                )
                 if buf:
                     if self._qt_player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
                         self._qt_player.pause()
-                else:
+                elif not in_flight:
                     if self._qt_player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
-                        if self._qt_player.mediaStatus() not in (
+                        if status not in (
                             QMediaPlayer.MediaStatus.EndOfMedia,
                             QMediaPlayer.MediaStatus.InvalidMedia,
                         ):
-                            self._qt_player.setPosition(pos_ms)
+                            self._qt_player.setPlaybackRate(self._playback_rate)
                             self._qt_player.play()
-                    else:
+                    elif status == QMediaPlayer.MediaStatus.BufferedMedia:
+                        now_m = time.monotonic()
                         v_pos = int(self._qt_player.position())
-                        if abs(v_pos - pos_ms) > 320:
+                        drift = pos_ms - v_pos  # positive = video lagging behind Hi-Fi audio
+                        if abs(drift) > 750 and (now_m - self._last_video_seek_mono) >= 2.5:
+                            self._last_video_seek_mono = now_m
+                            self._qt_player.setPlaybackRate(self._playback_rate)
                             self._qt_player.setPosition(pos_ms)
+                        elif 180 < drift <= 750:
+                            self._qt_player.setPlaybackRate(min(2.2, self._playback_rate * 1.05))
+                        elif -750 <= drift < -180:
+                            self._qt_player.setPlaybackRate(max(0.45, self._playback_rate * 0.95))
+                        elif abs(drift) <= 120:
+                            if abs(float(self._qt_player.playbackRate()) - self._playback_rate) > 0.005:
+                                self._qt_player.setPlaybackRate(self._playback_rate)
 
             # Reliable EOF detection for Hi-Fi audio stream
             if not self._eof_emitted and self._hifi_engine.has_reached_eof():
@@ -646,6 +737,8 @@ class YouTubeOnlinePlaybackController(QObject):
             self._hifi_engine.stop(release_exclusive=release_exclusive)
         self._qt_player.stop()
         self._qt_player.setSource(QUrl())
+        if hasattr(self.video_widget, "clear_frame"):
+            self.video_widget.clear_frame()
         self._last_buffering = False
         self.buffering_changed.emit(False)
         self.state_changed.emit(False)
