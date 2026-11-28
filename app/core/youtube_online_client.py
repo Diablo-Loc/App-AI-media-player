@@ -430,6 +430,8 @@ def parse_youtube_input(raw: str) -> dict[str, str] | None:
             return {"kind": "video", "video_id": parts[1], "playlist_id": list_id}
     if path == "playlist" and list_id:
         return {"kind": "playlist", "playlist_id": list_id, "url": text}
+    if path in ("feed/playlists", "feed/library"):
+        return {"kind": "playlist", "playlist_id": "", "url": text}
     if list_id and not path:
         return {"kind": "playlist", "playlist_id": list_id, "url": text}
     if path.startswith("channel/"):
@@ -906,9 +908,10 @@ class YouTubeOnlineProfileStore:
     DEFAULT_PREFS: dict[str, Any] = {
         "quality": "1080p",
         "audio_only": False,
-        "subtitle_mode": "off",  # 'off' | 'youtube_cc' | 'ai_bilingual' | 'ai_vi' | 'ai_en'
+        "subtitle_mode": "off",  # 'off' | 'youtube_cc' | 'ai_botube'
         "subtitle_lang": "vi",
         "allow_ai_sub": True,
+        "allow_ai_translate": True,
         "autoplay": True,
         "speed": 1.0,
         "volume": 0.7,
@@ -1675,6 +1678,41 @@ class YouTubeOnlineClient:
             return ["--cookies-from-browser", browser]
         return []
 
+    def _fetch_playlist_via_innertube(
+        self,
+        playlist_id: str,
+        *,
+        lang: str = "vi",
+        max_items: int = 150,
+    ) -> tuple[str, list[OnlineVideoItem]]:
+        """Fast (~1s) public/unlisted YouTube playlist fetch via InnerTube /browse (zero cookies, zero 401!)."""
+        pid = str(playlist_id or "").strip()
+        if not pid or pid.upper() in ("LL", "WL"):
+            return ("", [])
+        browse_id = pid if pid.startswith("VL") else f"VL{pid}"
+        try:
+            data = self._innertube_post("browse", {**self._context(lang), "browseId": browse_id}, timeout=12.0)
+            items = _extract_items_from_payload(
+                data,
+                limit=max(1, int(max_items)),
+                include_playlists=False,
+                include_channels=False,
+            )
+            if not items:
+                return ("", [])
+            for it in items:
+                it.playlist_id = pid
+            hdr = (
+                (data.get("header") or {}).get("playlistHeaderRenderer")
+                or (data.get("metadata") or {}).get("playlistMetadataRenderer")
+                or {}
+            )
+            title = _extract_text(hdr.get("title")) or str(hdr.get("title") or "").strip() or "YouTube Playlist"
+            return (title, items)
+        except Exception as err:
+            logger.debug("InnerTube playlist browse failed for %s: %s", pid, err)
+            return ("", [])
+
     def fetch_playlist(
         self,
         playlist_url_or_id: str,
@@ -1699,11 +1737,29 @@ class YouTubeOnlineClient:
                 if not vid_hint:
                     vid_hint = parsed.get("video_id", "")
 
+        # Normalize personal YouTube special playlists (LL = Liked Videos, WL = Watch Later)
+        is_personal = (
+            raw.startswith(":")
+            or pl_id.upper() in ("LL", "WL")
+            or "/feed/playlists" in raw.lower()
+            or "/feed/library" in raw.lower()
+        )
+        if pl_id.upper() == "LL":
+            raw = ":ytfav"
+        elif pl_id.upper() == "WL":
+            raw = ":ytwatchlater"
+
         # Dynamic YouTube Mixes (RD..., RDEM..., RDCLAK..., UL...) are served via InnerTube /next!
-        if pl_id.startswith(("RD", "UL")) and not raw.startswith(":"):
+        if pl_id.startswith(("RD", "UL")) and not is_personal:
             mix_title, mix_items = self._fetch_mix_via_innertube(pl_id, seed_video_id=vid_hint)
             if mix_items:
                 return mix_title, mix_items
+
+        # Fast-path (~1s): public/unlisted YouTube playlists via InnerTube /browse (immune to Chrome cookie 401/DPAPI!)
+        if not is_personal and re.match(r"^[A-Za-z0-9_-]{10,64}$", pl_id):
+            it_title, it_items = self._fetch_playlist_via_innertube(pl_id, max_items=max_items)
+            if it_items:
+                return it_title, it_items
 
         if raw.startswith(("http://", "https://", ":")):
             target = raw
@@ -1714,46 +1770,72 @@ class YouTubeOnlineClient:
         if not ytdlp.is_file():
             raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
 
-        cmd = [
-            str(ytdlp),
-            "--flat-playlist",
-            "--no-warnings",
-            "--skip-download",
-            "--playlist-end",
-            str(max(1, int(max_items))),
-            "-J",
-            *self._cookie_args(cookies_browser, cookies_file),
-            "--",
-            target,
-        ]
-        proc = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            creationflags=_NO_WINDOW,
-        )
-        if processes is not None:
-            processes.track(proc)
-        try:
-            stdout, stderr = proc.communicate(timeout=35)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            raise TimeoutError("Hết thời gian tải danh sách phát YouTube.")
-        finally:
-            if processes is not None:
-                processes.release(proc)
+        cookie_args = self._cookie_args(cookies_browser, cookies_file)
+        if is_personal and not cookie_args:
+            raise RuntimeError(
+                "Cần kết nối Cookie tài khoản YouTube để đọc Danh sách đã thích / Xem sau / Playlist riêng tư. "
+                "Hãy bấm “Tài khoản” ở góc trên và xem hướng dẫn lấy cookies.txt (30 giây) hoặc chọn Firefox."
+            )
 
-        if proc.returncode != 0 or not stdout.strip():
+        def _run_ytdlp_pl(use_cookies: list[str]) -> tuple[int, str, str]:
+            cmd = [
+                str(ytdlp),
+                "--flat-playlist",
+                "--no-warnings",
+                "--skip-download",
+                "--playlist-end",
+                str(max(1, int(max_items))),
+                "-J",
+                *use_cookies,
+                "--",
+                target,
+            ]
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                creationflags=_NO_WINDOW,
+            )
+            if processes is not None:
+                processes.track(proc)
+            try:
+                out, err = proc.communicate(timeout=35)
+                return proc.returncode, out, err
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                raise TimeoutError("Hết thời gian tải danh sách phát YouTube.")
+            finally:
+                if processes is not None:
+                    processes.release(proc)
+
+        rc, stdout, stderr = _run_ytdlp_pl(cookie_args)
+        # If a public playlist failed solely because saved Chrome/Edge cookies were locked or expired (401), retry anonymously!
+        if (rc != 0 or not stdout.strip()) and cookie_args and not is_personal:
+            rc2, stdout2, stderr2 = _run_ytdlp_pl([])
+            if rc2 == 0 and stdout2.strip():
+                rc, stdout, stderr = rc2, stdout2, stderr2
+
+        if rc != 0 or not stdout.strip():
             # Fallback to InnerTube Mix/Browse when YouTube rejects playlist tab scraping
-            if not raw.startswith(":"):
+            if not is_personal:
                 mix_title, mix_items = self._fetch_mix_via_innertube(pl_id, seed_video_id=vid_hint)
                 if mix_items:
                     return mix_title, mix_items
+            low = (stderr or "").lower()
+            if "401" in low or "unauthorized" in low or "login" in low or "private" in low:
+                raise RuntimeError(
+                    "Phiên Cookie YouTube chưa hợp lệ hoặc đã hết hạn (HTTP 401). "
+                    "Hãy mở mục “Tài khoản” để xuất tệp cookies.txt mới (Chrome/Edge) hoặc dùng Firefox!"
+                )
+            if "could not copy chrome cookie database" in low or "dpapi" in low:
+                raise RuntimeError(
+                    "Chrome/Edge đang khóa tệp Cookie khi mở. Hãy mở “Tài khoản” và dùng tệp cookies.txt hoặc chọn Firefox."
+                )
             msg = (stderr or "").strip().splitlines()
-            tail = msg[-1] if msg else f"yt-dlp exit {proc.returncode}"
+            tail = msg[-1] if msg else f"yt-dlp exit {rc}"
             raise RuntimeError(tail)
 
         data = json.loads(stdout)
@@ -1765,20 +1847,33 @@ class YouTubeOnlineClient:
             if not isinstance(e, dict):
                 continue
             vid = str(e.get("id") or "").strip()
-            if not _RE_VIDEO_ID.match(vid):
-                continue
-            dur_s = int(e.get("duration") or 0)
-            items.append(OnlineVideoItem(
-                video_id=vid,
-                title=str(e.get("title") or vid).strip(),
-                channel_name=str(e.get("channel") or e.get("uploader") or "").strip(),
-                channel_id=str(e.get("channel_id") or "").strip(),
-                thumbnail_url=_best_thumb_url(e.get("thumbnails"), vid),
-                duration_text=format_seconds_mmss(dur_s) if dur_s > 0 else "",
-                duration_sec=dur_s,
-                playlist_id=pl_id_out,
-                item_type="video",
-            ))
+            e_url = str(e.get("url") or e.get("webpage_url") or "").strip()
+            if _RE_VIDEO_ID.match(vid):
+                dur_s = int(e.get("duration") or 0)
+                items.append(OnlineVideoItem(
+                    video_id=vid,
+                    title=str(e.get("title") or vid).strip(),
+                    channel_name=str(e.get("channel") or e.get("uploader") or "").strip(),
+                    channel_id=str(e.get("channel_id") or "").strip(),
+                    thumbnail_url=_best_thumb_url(e.get("thumbnails"), vid),
+                    duration_text=format_seconds_mmss(dur_s) if dur_s > 0 else "",
+                    duration_sec=dur_s,
+                    playlist_id=pl_id_out,
+                    item_type="video",
+                ))
+            elif "list=" in e_url or vid.startswith(("PL", "OLAK", "RD", "UU", "LL", "WL")):
+                # Support /feed/playlists entries so clicking opens the playlist!
+                parsed_e = parse_youtube_input(e_url) if e_url else None
+                sub_pid = (parsed_e or {}).get("playlist_id") or vid
+                if sub_pid:
+                    items.append(OnlineVideoItem(
+                        video_id="",
+                        title=str(e.get("title") or sub_pid).strip(),
+                        channel_name=str(e.get("channel") or e.get("uploader") or "Playlist").strip(),
+                        thumbnail_url=_best_thumb_url(e.get("thumbnails")),
+                        playlist_id=sub_pid,
+                        item_type="playlist",
+                    ))
         return title, items
 
     def _fetch_mix_via_innertube(self, playlist_id: str, *, seed_video_id: str = "", lang: str = "vi") -> tuple[str, list[OnlineVideoItem]]:
@@ -2283,7 +2378,7 @@ class YouTubeOnlineClient:
                 )
             return (False, raw[:220], 0)
 
-    # --- 11. Download Compact Temp Audio Only for In-Tab AI Subtitles ---
+    # --- 11. Download Compact Temp Audio Only for In-Tab AI Subtitles / Benchmark Lab ---
     def download_temp_audio_for_ai(
         self,
         video_id: str,
@@ -2294,8 +2389,10 @@ class YouTubeOnlineClient:
         cookies_browser: str = "",
         cookies_file: str = "",
         processes: OwnedProcesses | None = None,
+        max_duration_sec: float = 0.0,
+        start_sec: float = 0.0,
     ) -> Path:
-        """Download ONLY the lightweight audio track to an owned temp dir (deleted immediately after AI finishes)."""
+        """Download ONLY the lightweight audio track to an owned temp dir (deleted immediately after job finishes)."""
         from core.audio_effects import find_tool
         from download_core.utils import sanitize_folder_name
 
@@ -2316,7 +2413,12 @@ class YouTubeOnlineClient:
             ua = (stream.http_headers or {}).get("User-Agent")
             if ua:
                 cmd.extend(["-user_agent", str(ua)])
-            cmd.extend(["-i", stream.audio_url, "-vn", "-c:a", "copy", str(out_path)])
+            if start_sec > 1.0:
+                cmd.extend(["-ss", f"{float(start_sec):.2f}"])
+            cmd.extend(["-i", stream.audio_url])
+            if max_duration_sec > 1.0:
+                cmd.extend(["-t", f"{float(max_duration_sec):.2f}"])
+            cmd.extend(["-vn", "-c:a", "copy", str(out_path)])
             proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, creationflags=_NO_WINDOW)
             if processes is not None:
                 processes.track(proc)
@@ -2370,3 +2472,161 @@ class YouTubeOnlineClient:
             return candidates[0]
         tail = (stderr or "").strip().splitlines()
         raise RuntimeError(tail[-1] if tail else "Không tải được audio nền cho AI Sub.")
+
+
+# =====================================================================
+# ISOLATED YOUTUBE AI WORKER (SUPPORTS WHISPER-ONLY / NO-TRANSLATE MODE)
+# =====================================================================
+
+def _yt_ai_process_wrapper(
+    input_path: str,
+    output_dir: str,
+    media_id: str,
+    queue,
+    cancel_event=None,
+    skip_translate: bool = False,
+) -> None:
+    """Child process running BoTube's AI pipeline for YouTube (optionally skipping AI translation)."""
+    import traceback as _tb
+
+    try:
+        os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+        os.environ.setdefault("OMP_NUM_THREADS", "1")
+        os.environ.setdefault("MKL_NUM_THREADS", "1")
+        os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
+
+        def proxy_progress_cb(percent, message):
+            queue.put(("progress", percent, message))
+
+        def proxy_cancel_cb():
+            return bool(cancel_event is not None and cancel_event.is_set())
+
+        if skip_translate:
+            import translate.pipeline as _tp
+            import translate.online_logic as _tol
+
+            _tp.translate_pipeline = lambda subs, *a, **kw: subs
+            _tol.translate_online_pipeline = lambda subs, *a, **kw: subs
+
+        from ai.pipeline import run_ai_pipeline
+
+        result = run_ai_pipeline(
+            input_path=input_path,
+            output_dir=output_dir,
+            media_id=media_id,
+            progress_cb=proxy_progress_cb,
+            cancel_cb=proxy_cancel_cb,
+            device_policy="auto",
+        )
+        queue.put(("finished", result))
+        try:
+            queue.close()
+            queue.join_thread()
+        except Exception:
+            time.sleep(0.15)
+    except Exception:
+        if cancel_event is not None and cancel_event.is_set():
+            return
+        queue.put(("failed", _tb.format_exc()))
+        try:
+            queue.close()
+            queue.join_thread()
+        except Exception:
+            pass
+
+
+def create_youtube_ai_worker(
+    media_id: str,
+    input_path: str,
+    output_dir: str,
+    *,
+    skip_translate: bool = False,
+    parent=None,
+):
+    """Create BoTube AIWorker (full translate) or isolated Whisper-only worker (skip_translate=True)."""
+    if not skip_translate:
+        from worker import AIWorker
+        return AIWorker(media_id=media_id, input_path=input_path, output_dir=output_dir, parent=parent)
+
+    import multiprocessing
+    from PySide6.QtCore import QThread, Signal
+
+    class _YouTubeWhisperOnlyWorker(QThread):
+        started = Signal(str)
+        progress = Signal(int, str)
+        data_ready = Signal(str, list)
+        failed = Signal(str, str)
+
+        def __init__(self, mid: str, in_p: str, out_d: str, p=None):
+            super().__init__(p)
+            self.media_id = mid
+            self.input_path = in_p
+            self.output_dir = out_d
+            self._cancelled = False
+            self._process = None
+            self._queue = None
+            self._cancel_event = None
+
+        def run(self):
+            self.started.emit(self.media_id)
+            ctx = multiprocessing.get_context("spawn")
+            q = multiprocessing.Queue()
+            self._queue = q
+            ev = ctx.Event() if hasattr(ctx, "Event") else None
+            self._cancel_event = ev
+            self._process = ctx.Process(
+                target=_yt_ai_process_wrapper,
+                kwargs={
+                    "input_path": self.input_path,
+                    "output_dir": self.output_dir,
+                    "media_id": self.media_id,
+                    "queue": q,
+                    "cancel_event": ev,
+                    "skip_translate": True,
+                },
+            )
+            self._process.start()
+            while not self.isInterruptionRequested():
+                if self._cancelled:
+                    break
+                if not self._process.is_alive() and q.empty():
+                    self.failed.emit(self.media_id, "AI Process stopped unexpectedly.")
+                    break
+                try:
+                    msg = q.get(timeout=0.1)
+                    if msg[0] == "progress":
+                        self.progress.emit(msg[1], msg[2])
+                    elif msg[0] == "finished":
+                        res = msg[1]
+                        self.data_ready.emit(self.media_id, res.get("segments", []) if res else [])
+                        break
+                    elif msg[0] == "failed":
+                        self.failed.emit(self.media_id, msg[1])
+                        break
+                except Exception:
+                    pass
+            try:
+                if ev is not None and self._cancelled:
+                    ev.set()
+                if self._process is not None and self._process.is_alive():
+                    self._process.join(timeout=1.0)
+                    if self._process.is_alive():
+                        self._process.terminate()
+            except Exception:
+                pass
+
+        def cancel(self):
+            self._cancelled = True
+            if self._cancel_event is not None:
+                try:
+                    self._cancel_event.set()
+                except Exception:
+                    pass
+
+        def stop(self):
+            if self.isRunning():
+                self.cancel()
+                self.requestInterruption()
+                self.wait(1500)
+
+    return _YouTubeWhisperOnlyWorker(media_id, input_path, output_dir, parent)

@@ -241,7 +241,8 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         self.assertIn("-user_agent", cmd)
         self.assertIn("-ss", cmd)
         self.assertLess(cmd.index("-ss"), cmd.index("-i"))
-        self.assertIn("+nobuffer", cmd)
+        self.assertIn("-probesize", cmd)
+        self.assertNotIn("+nobuffer", cmd)
 
     def test_ai_subtitle_disk_cache_roundtrip_and_bilingual_formatting(self):
         from subtitle.model import Subtitle, SubtitleLine
@@ -568,7 +569,11 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             pump(30)
             self.assertFalse(yt._is_pill_mode)
 
-            # 6c. Conditional BoTube Subtitle Style button (hidden on Off/CC, visible ONLY on AI modes)
+            # 6c. 3-mode Subtitle dropdown (Off / YouTube CC / ✨ AI BoTube) + conditional BoTube Subtitle Style button
+            self.assertEqual(yt.combo_sub_mode.count(), 3)
+            self.assertEqual(yt.combo_sub_mode.itemData(0), "off")
+            self.assertEqual(yt.combo_sub_mode.itemData(1), "youtube_cc")
+            self.assertEqual(yt.combo_sub_mode.itemData(2), "ai_botube")
             yt.combo_sub_mode.setCurrentIndex(yt.combo_sub_mode.findData("off"))
             pump(15)
             self.assertTrue(yt.btn_sub_style.isHidden())
@@ -576,7 +581,7 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             pump(15)
             self.assertTrue(yt.btn_sub_style.isHidden())
 
-            # 6d. AI-disabled gray-out & auto-run AI Sub on new uncached video when enabled
+            # 6d. AI-disabled gray-out & auto-run ✨ AI BoTube on new uncached video when enabled
             yt.profile.set_pref("allow_ai_sub", False)
             yt.refresh_ai_availability()
             self.assertFalse(yt.btn_ai_sub_gen.isEnabled())
@@ -588,7 +593,7 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 yt.refresh_ai_availability()
                 self.assertTrue(yt.btn_ai_sub_gen.isEnabled())
                 self.assertTrue(yt.combo_sub_mode.model().item(2).isEnabled())
-                idx_ai = yt.combo_sub_mode.findData("ai_bilingual")
+                idx_ai = yt.combo_sub_mode.findData("ai_botube")
                 yt.combo_sub_mode.blockSignals(True)
                 yt.combo_sub_mode.setCurrentIndex(idx_ai)
                 yt.combo_sub_mode.blockSignals(False)
@@ -599,14 +604,58 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                     mock_auto_ai.assert_called_once_with(force_regen=False)
                 self.assertFalse(yt.btn_sub_style.isHidden())
 
-            # 6e. Subtitle appearance style sync + Audio Panel live status + Benchmark handoff (never traps!)
-            yt.apply_subtitle_style({"font_size": 26, "font_color": "#FEF08A", "bg_color": "#000000", "bg_opacity": 0.6})
-            self.assertIn("#FEF08A", yt.lbl_sub_overlay.styleSheet())
+            # 6e. Real BoTube SubtitleLayer sync + Audio Panel live status + Benchmark handoff AFTER stack switch!
+            from subtitle.mode import SubtitleMode
+            yt.apply_subtitle_style({
+                "mode": "jp_vi",
+                "font_size": 28,
+                "font_color": "#FEF08A",
+                "bg_color": "#000000",
+                "bg_opacity": 0.6,
+                "phonetic_enabled": True,
+                "outline_enabled": True,
+                "outline_width": 3,
+            })
+            self.assertEqual(yt.yt_sub_layer.mode, SubtitleMode.JP_VI)
+            self.assertEqual(yt.yt_sub_layer.current_color, "#FEF08A")
+            self.assertTrue(yt.yt_sub_layer.phonetic_enabled)
             yt.sync_to_audio_panel(window.audio_effects.panel)
             self.assertIn("YouTube", window.audio_effects.panel.signal_path.text())
-            window._on_open_benchmark_from_youtube()
+            # Simulate real click order: panel opens on YouTube -> open_benchmark_tab switches stack FIRST -> _on_open_benchmark_from_youtube fires SECOND!
+            yt._current_stream = ResolvedStream(video_id=sample_item.video_id, title=sample_item.title, audio_url="https://example.invalid/a.opus")
+            window._yt_benchmark_armed = True
+            window.content_stack.setCurrentWidget(window.audio_effects.benchmark_page)
+            with patch.object(yt, "prepare_benchmark_audio_for") as mock_prep_bench:
+                window._on_open_benchmark_from_youtube()
+                mock_prep_bench.assert_called_once_with(window.audio_effects.benchmark_page)
             self.assertFalse(window.sidebar_container.isHidden())
             self.assertFalse(window.playback_bar.isHidden())
+
+            # 6e2. Workspace Mode selector (Offline / Online / Both) hides irrelevant sidebar tabs cleanly
+            window.apply_workspace_mode("offline", navigate=False)
+            self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
+            window.apply_workspace_mode("online", navigate=False)
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("download")))
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("settings")))
+            self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
+            self.assertTrue(window.sidebar.isRowHidden(window.sidebar.row_for_page("library")))
+            window.apply_workspace_mode("both", navigate=False)
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("home")))
+            self.assertFalse(window.sidebar.isRowHidden(window.sidebar.row_for_page("youtube_online")))
+
+            # 6e3. Account Dialog has scrollable layout, Cookie guide, and AI Whisper + Translate toggles
+            acc_dlg = _YouTubeAccountDialog(yt.profile, client=yt.client, parent=yt)
+            self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_sub"))
+            self.assertTrue(hasattr(acc_dlg, "chk_allow_ai_translate"))
+            acc_dlg.deleteLater()
+
+            # 6e4. Liked library section shows Play All / Shuffle / Sync YouTube Liked buttons
+            yt._render_library_section("liked")
+            self.assertFalse(yt.btn_lib_sync_yt_liked.isHidden())
+            self.assertFalse(yt.btn_lib_play_all.isHidden())
+            self.assertFalse(yt.btn_lib_shuffle.isHidden())
 
             # 6f. Smooth Seek Slider drag preview -> commit ONCE on release
             from PySide6.QtCore import QPointF, Qt as _Qt
