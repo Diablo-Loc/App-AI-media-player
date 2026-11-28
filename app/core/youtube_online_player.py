@@ -154,6 +154,12 @@ class OnlineAudioStreamEngine(AudioStreamEngine):
             "error",
             "-threads",
             "2",
+            "-fflags",
+            "+nobuffer",
+            "-probesize",
+            "65536",
+            "-analyzeduration",
+            "500000",
             "-reconnect",
             "1",
             "-reconnect_streamed",
@@ -287,6 +293,8 @@ class YouTubeOnlinePlaybackController(QObject):
 
         # Subtitle cue cache (fast O(log N) binary lookup, zero GUI allocations)
         self._sub_enabled = False
+        self._sub_display_mode = "bilingual"
+        self._sub_fullscreen = False
         self._cues: list[OnlineSubtitleCue] = []
         self._cue_starts: list[int] = []
         self._last_sub_text = ""
@@ -567,9 +575,48 @@ class YouTubeOnlinePlaybackController(QObject):
             return
         pos = self.position_ms()
         was_playing = self.is_playing
+        self._last_video_seek_mono = time.monotonic()
+        # Keep video smoothly playing without re-fetching HTTP video stream!
         self._qt_player.setPlaybackRate(new_rate)
-        if self._using_hifi and was_playing:
-            self._start_playback_at(pos)
+        if self._using_hifi and self._hifi_engine is not None and was_playing:
+            self._reconfigure_hifi_only(pos)
+
+    def _reconfigure_hifi_only(self, pos_ms: int) -> None:
+        """Seamlessly reconfigure ONLY the Hi-Fi audio pipe (for instant speed/EQ changes without reloading video)."""
+        stream = self._stream
+        if stream is None or self._hifi_engine is None or not stream.audio_url:
+            return
+        try:
+            prof = self._current_audio_profile()
+            self._hifi_engine.set_http_headers(stream.http_headers)
+            self._hifi_engine.set_user_volume(self._volume, self._muted)
+            src_info = {
+                "codec_name": stream.audio_codec or "opus",
+                "sample_rate": int(stream.audio_sr or 48000),
+                "channels": 2,
+                "bit_rate": int(round(float(stream.audio_abr or 128.0) * 1000)),
+                "duration": float(stream.duration_sec or 0.0),
+                "track": 0,
+            }
+            status = self._hifi_engine.start_or_reconfigure(
+                stream.audio_url,
+                max(0, int(pos_ms)),
+                prof,
+                src_info,
+                0.0,
+                playback_rate=self._playback_rate,
+                track=0,
+                preferred_device_name=str(getattr(prof, "output_device", "") or ""),
+                paused=False,
+            )
+            self._emit_audio_badge(status, stream)
+        except Exception as err:
+            logger.warning("Online Hi-Fi live reconfigure failed: %s", err)
+
+    def reapply_audio_profile(self) -> None:
+        """Re-apply BoTube's live AudioProfile (EQ/DAC/Exclusive) seamlessly without reloading video!"""
+        if self._stream is not None and self._using_hifi and self.is_playing:
+            self._reconfigure_hifi_only(self.position_ms())
 
     def set_audio_only(self, audio_only: bool) -> None:
         flag = bool(audio_only)
@@ -605,20 +652,22 @@ class YouTubeOnlinePlaybackController(QObject):
             if self.is_playing:
                 self._start_playback_at(pos)
 
-    def reapply_audio_profile(self) -> None:
-        """Re-apply BoTube's live AudioProfile (EQ/DAC/Exclusive) seamlessly when changed."""
-        if self._stream is not None and self._using_hifi and self.is_playing:
-            self._start_playback_at(self.position_ms())
-
-    # --- Subtitle / CC Control ---
-    def set_subtitles(self, cues: list[OnlineSubtitleCue], enabled: bool) -> None:
+    # --- Subtitle / CC & Rich Bilingual AI Subtitle Control ---
+    def set_subtitles(self, cues: list[OnlineSubtitleCue], enabled: bool, *, display_mode: str = "bilingual") -> None:
         self._cues = list(cues or [])
         self._cue_starts = [c.start_ms for c in self._cues]
         self._sub_enabled = bool(enabled)
+        self._sub_display_mode = str(display_mode or "bilingual")
         self._last_sub_text = ""
         if not self._sub_enabled or not self._cues:
             self.subtitle_text_changed.emit("")
         else:
+            self._sync_subtitle_for_pos(self.position_ms())
+
+    def set_subtitle_display_mode(self, display_mode: str) -> None:
+        self._sub_display_mode = str(display_mode or "bilingual")
+        self._last_sub_text = ""
+        if self._sub_enabled:
             self._sync_subtitle_for_pos(self.position_ms())
 
     def set_subtitles_enabled(self, enabled: bool) -> None:
@@ -628,6 +677,47 @@ class YouTubeOnlinePlaybackController(QObject):
             self.subtitle_text_changed.emit("")
         else:
             self._sync_subtitle_for_pos(self.position_ms())
+
+    def set_subtitle_fullscreen(self, is_fullscreen: bool) -> None:
+        flag = bool(is_fullscreen)
+        if flag == getattr(self, "_sub_fullscreen", False):
+            return
+        self._sub_fullscreen = flag
+        self._last_sub_text = ""
+        if self._sub_enabled:
+            self._sync_subtitle_for_pos(self.position_ms())
+
+    def _format_cue_html(self, cue: OnlineSubtitleCue) -> str:
+        import html as _html
+        mode = getattr(self, "_sub_display_mode", "bilingual")
+        is_fs = bool(getattr(self, "_sub_fullscreen", False))
+        orig = (cue.orig or cue.text or "").strip()
+        vi = (cue.vi or "").strip()
+        en = (cue.en or "").strip()
+        phon = (cue.phonetic or "").strip()
+
+        # Plain single-language CC cue
+        if not vi and not en:
+            return _html.escape(orig).replace("\n", "<br>")
+
+        if mode == "vi_only":
+            return _html.escape(vi or orig).replace("\n", "<br>")
+        if mode == "en_only":
+            return _html.escape(en or orig).replace("\n", "<br>")
+        if mode == "orig_only":
+            return _html.escape(orig).replace("\n", "<br>")
+        # Default bilingual studio look: Original crisp white on top + Vietnamese soft mint below!
+        lines: list[str] = []
+        if orig:
+            lines.append(f'<span style="color:#FFFFFF;">{_html.escape(orig)}</span>')
+        if phon and mode == "bilingual_phonetic":
+            phon_px = 17 if is_fs else 13
+            lines.append(f'<span style="color:#A8C2DC;font-size:{phon_px}px;font-weight:500;">{_html.escape(phon)}</span>')
+        sub_line = vi if (vi and vi.lower() != orig.lower()) else (en if (en and en.lower() != orig.lower()) else "")
+        if sub_line:
+            sub_px = 21 if is_fs else 15
+            lines.append(f'<span style="color:#8AE8CA;font-size:{sub_px}px;">{_html.escape(sub_line)}</span>')
+        return "<br>".join(lines) if lines else _html.escape(orig)
 
     def _sync_subtitle_for_pos(self, pos_ms: int) -> None:
         if not self._sub_enabled or not self._cues:
@@ -640,7 +730,7 @@ class YouTubeOnlinePlaybackController(QObject):
         if 0 <= idx < len(self._cues):
             cue = self._cues[idx]
             if cue.start_ms <= pos_ms <= cue.end_ms:
-                text = cue.text
+                text = self._format_cue_html(cue)
         if text != self._last_sub_text:
             self._last_sub_text = text
             self.subtitle_text_changed.emit(text)

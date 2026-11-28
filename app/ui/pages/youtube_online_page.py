@@ -16,6 +16,8 @@ import html
 import logging
 import random
 import re
+import shutil
+import tempfile
 from typing import Any, Callable
 import weakref
 
@@ -23,6 +25,7 @@ from PySide6.QtCore import QEvent, QObject, QPoint, QRect, QSize, Qt, QThread, Q
 from PySide6.QtGui import QColor, QGuiApplication, QPainter, QPainterPath, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkReply, QNetworkRequest
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
@@ -36,6 +39,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMenu,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -52,6 +56,7 @@ from core.youtube_online_client import (
     OnlineChannelInfo,
     OnlineChapter,
     OnlineComment,
+    OnlineSubtitleCue,
     OnlineSubtitleTrack,
     OnlineVideoItem,
     OnlineWatchInfo,
@@ -60,8 +65,13 @@ from core.youtube_online_client import (
     YouTubeOnlineClient,
     YouTubeOnlineProfileStore,
     format_seconds_mmss,
+    has_cached_ai_subtitles,
+    load_cached_ai_subtitles,
+    online_ai_sub_cache_dir,
     parse_duration_text,
     parse_youtube_input,
+    save_cached_ai_subtitles,
+    serialize_ai_segments_to_cues,
 )
 from core.youtube_online_player import OnlineVideoSurface, YouTubeOnlinePlaybackController
 from ui.i18n import get_language, register_language_listener, tr_pair, unregister_language_listener
@@ -77,7 +87,10 @@ YOUTUBE_PAGE_STYLE = """
 QWidget#youtubeOnlineRoot {
     background: #0D1118;
     color: #EDF3FA;
-    font-family: 'Segoe UI';
+    font-family: 'Segoe UI', 'Malgun Gothic', 'Meiryo UI', 'Microsoft YaHei UI', sans-serif;
+}
+QWidget#youtubeOnlineRoot QWidget#ytFullscreenPage {
+    background: #000000;
 }
 QWidget#youtubeOnlineRoot QScrollArea {
     background: transparent;
@@ -288,7 +301,7 @@ QWidget#youtubeOnlineRoot QPushButton#ytSubscribeBtn {
     color: #FFFFFF;
     border: none;
     border-radius: 17px;
-    padding: 7px 18px;
+    padding: 6px 14px;
     font-size: 12px;
     font-weight: 700;
 }
@@ -305,7 +318,7 @@ QWidget#youtubeOnlineRoot QPushButton#ytActionPill {
     color: #E3ECF7;
     border: 1px solid #29384C;
     border-radius: 17px;
-    padding: 7px 14px;
+    padding: 6px 11px;
     font-size: 12px;
     font-weight: 600;
 }
@@ -323,7 +336,7 @@ QWidget#youtubeOnlineRoot QPushButton#ytPrimaryPill {
     color: #0B1117;
     border: none;
     border-radius: 17px;
-    padding: 7px 16px;
+    padding: 6px 13px;
     font-size: 12px;
     font-weight: 700;
 }
@@ -393,14 +406,44 @@ QWidget#youtubeOnlineRoot QLabel#ytBufferingPill {
     font-size: 12px;
     font-weight: 600;
 }
+QWidget#youtubeOnlineRoot QPushButton#ytBackAppBtn {
+    background: #172333;
+    color: #DCE7F4;
+    border: 1px solid #2A3D55;
+    border-radius: 17px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+}
+QWidget#youtubeOnlineRoot QPushButton#ytBackAppBtn:hover {
+    background: #22344A;
+    color: #77E0BE;
+    border-color: #77E0BE;
+}
+QWidget#youtubeOnlineRoot QFrame#ytAiProgressBar {
+    background: #122129;
+    border: 1px solid #26544A;
+    border-radius: 9px;
+}
 QWidget#youtubeOnlineRoot QLabel#ytSubOverlay {
-    background: rgba(8, 11, 17, 220);
+    background: rgba(8, 11, 17, 222);
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
-    padding: 7px 16px;
-    font-size: 17px;
+    border-radius: 9px;
+    padding: 8px 18px;
+    font-size: 16px;
     font-weight: 700;
+    margin-bottom: 14px;
+}
+QWidget#youtubeOnlineRoot QLabel#ytSubOverlayFS {
+    background: rgba(8, 11, 17, 225);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 11px;
+    padding: 12px 26px 15px 26px;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
 }
 
 /* ---- Compact Combos & Sliders ---- */
@@ -488,7 +531,7 @@ ACCOUNT_DIALOG_STYLE = """
 QDialog#ytAccountDialog {
     background: #0D1118;
     color: #EDF3FA;
-    font-family: 'Segoe UI';
+    font-family: 'Segoe UI', 'Malgun Gothic', 'Meiryo UI', 'Microsoft YaHei UI', sans-serif;
 }
 QDialog#ytAccountDialog QLabel {
     background: transparent;
@@ -1271,6 +1314,7 @@ class YouTubeOnlinePage(QWidget):
 
     playback_starting = Signal()
     download_requested = Signal(str, str)  # (youtube_url, title)
+    back_to_botube_requested = Signal()
     status_message = Signal(str)
 
     VIEW_HOME = 0
@@ -1278,11 +1322,13 @@ class YouTubeOnlinePage(QWidget):
     VIEW_CHANNEL = 2
     VIEW_PLAYLIST = 3
     VIEW_LIBRARY = 4
+    VIEW_FULLSCREEN = 5
 
     def __init__(
         self,
         *,
         profile_provider: Callable[[], AudioProfile] | None = None,
+        audio_panel_opener: Callable[[QWidget], None] | None = None,
         profile_store: YouTubeOnlineProfileStore | None = None,
         client: YouTubeOnlineClient | None = None,
         parent: QWidget | None = None,
@@ -1291,6 +1337,7 @@ class YouTubeOnlinePage(QWidget):
         self.setObjectName("youtubeOnlineRoot")
         self.setStyleSheet(YOUTUBE_PAGE_STYLE)
 
+        self._audio_panel_opener = audio_panel_opener
         self.profile = profile_store or YouTubeOnlineProfileStore()
         self.client = client or YouTubeOnlineClient(profile_store=self.profile)
         self._thumbs = _OnlineThumbnailLoader(self)
@@ -1318,12 +1365,21 @@ class YouTubeOnlinePage(QWidget):
         self._desc_expanded = False
         self._cinema_mode = False
         self._is_fullscreen_stage = False
+        self._pre_fs_view_idx = self.VIEW_WATCH
         self._last_seek_ms = 0
         self._user_dragging_seek = False
         self._active_channel: OnlineChannelInfo | None = None
         self._active_playlist_items: list[OnlineVideoItem] = []
         self._active_playlist_title = ""
         self._active_playlist_url = ""
+
+        # Isolated In-Tab AI Subtitle Generation state (never touches offline SubtitleManager!)
+        self._ai_cues: list[OnlineSubtitleCue] = []
+        self._ai_cues_vid = ""
+        self._ai_worker = None
+        self._ai_temp_dir: str | None = None
+        self._ai_gen_vid = ""
+        self._ai_gen_title = ""
 
         # Worker tracking with generation counters
         self._workers: dict[str, _TaskWorker] = {}
@@ -1360,6 +1416,12 @@ class YouTubeOnlinePage(QWidget):
         self._grid_resize_timer.setInterval(120)
         self._grid_resize_timer.timeout.connect(self._relayout_home_grid)
 
+        # Fullscreen auto-hide controls timer (3.0s mouse inactivity)
+        self._fs_hide_timer = QTimer(self)
+        self._fs_hide_timer.setSingleShot(True)
+        self._fs_hide_timer.setInterval(3000)
+        self._fs_hide_timer.timeout.connect(self._hide_fs_controls_if_idle)
+
         # Restore saved UI preferences
         self._sync_pref_controls()
 
@@ -1384,27 +1446,36 @@ class YouTubeOnlinePage(QWidget):
         top_lay.setContentsMargins(14, 8, 14, 8)
         top_lay.setSpacing(8)
 
+        # Standalone Back-to-BoTube Offline Workspace button
+        self.btn_back_botube = QPushButton("← BoTube")
+        self.btn_back_botube.setObjectName("ytBackAppBtn")
+        self.btn_back_botube.setFixedHeight(34)
+        self.btn_back_botube.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.btn_back_botube.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_back_botube, "house", "BoTube", color=ACCENT, size=15, icon_only=False)
+        self.btn_back_botube.clicked.connect(self.back_to_botube_requested.emit)
+
         self.btn_back = QPushButton()
         self.btn_back.setObjectName("ytIconBtn")
-        self.btn_back.setFixedSize(34, 34)
+        self.btn_back.setFixedSize(32, 32)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_back, "arrow-left", "Back", color=TEXT, size=18)
+        button_icon(self.btn_back, "arrow-left", "Back", color=TEXT, size=17)
         self.btn_back.setEnabled(False)
         self.btn_back.clicked.connect(self._go_back)
 
         self.btn_forward = QPushButton()
         self.btn_forward.setObjectName("ytIconBtn")
-        self.btn_forward.setFixedSize(34, 34)
+        self.btn_forward.setFixedSize(32, 32)
         self.btn_forward.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_forward, "arrow-right", "Forward", color=TEXT, size=18)
+        button_icon(self.btn_forward, "arrow-right", "Forward", color=TEXT, size=17)
         self.btn_forward.setEnabled(False)
         self.btn_forward.clicked.connect(self._go_forward)
 
         self.btn_refresh = QPushButton()
         self.btn_refresh.setObjectName("ytIconBtn")
-        self.btn_refresh.setFixedSize(34, 34)
+        self.btn_refresh.setFixedSize(32, 32)
         self.btn_refresh.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_refresh, "refresh-cw", "Refresh", color=TEXT, size=16)
+        button_icon(self.btn_refresh, "refresh-cw", "Refresh", color=TEXT, size=15)
         self.btn_refresh.clicked.connect(self._refresh_current_view)
 
         brand = QLabel("YouTube")
@@ -1419,9 +1490,9 @@ class YouTubeOnlinePage(QWidget):
         # Centered search bar
         self.search_input = QLineEdit()
         self.search_input.setObjectName("ytSearchInput")
-        self.search_input.setFixedHeight(38)
-        self.search_input.setMinimumWidth(260)
-        self.search_input.setMaximumWidth(560)
+        self.search_input.setFixedHeight(36)
+        self.search_input.setMinimumWidth(200)
+        self.search_input.setMaximumWidth(540)
         self.search_input.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.search_input.setClearButtonEnabled(True)
         self.search_input.returnPressed.connect(self._on_search_submitted)
@@ -1430,10 +1501,19 @@ class YouTubeOnlinePage(QWidget):
 
         self.btn_search = QPushButton()
         self.btn_search.setObjectName("ytSearchBtn")
-        self.btn_search.setFixedSize(38, 38)
+        self.btn_search.setFixedSize(36, 36)
         self.btn_search.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_search, "search", "Search", color=TEXT, size=16)
+        button_icon(self.btn_search, "search", "Search", color=TEXT, size=15)
         self.btn_search.clicked.connect(self._on_search_submitted)
+
+        # BoTube Audio Studio (EQ / DAC / WASAPI Exclusive) quick button
+        self.btn_top_audio_fx = QPushButton()
+        self.btn_top_audio_fx.setObjectName("ytAccountBtn")
+        self.btn_top_audio_fx.setFixedHeight(34)
+        self.btn_top_audio_fx.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.btn_top_audio_fx.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_top_audio_fx, "sliders-horizontal", "Audio Studio", color=ACCENT, size=15, icon_only=False)
+        self.btn_top_audio_fx.clicked.connect(lambda: self._open_audio_studio(self.btn_top_audio_fx))
 
         # Quick Audio-Only toggle pill
         self.btn_audio_mode = QPushButton()
@@ -1452,16 +1532,19 @@ class YouTubeOnlinePage(QWidget):
         self.btn_account.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_account.clicked.connect(self._open_account_dialog)
 
+        top_lay.addWidget(self.btn_back_botube)
+        top_lay.addSpacing(2)
         top_lay.addWidget(self.btn_back)
         top_lay.addWidget(self.btn_forward)
         top_lay.addWidget(self.btn_refresh)
-        top_lay.addSpacing(4)
+        top_lay.addSpacing(2)
         top_lay.addWidget(brand)
         top_lay.addWidget(badge_pro)
         top_lay.addStretch(1)
         top_lay.addWidget(self.search_input, 4)
         top_lay.addWidget(self.btn_search)
         top_lay.addStretch(1)
+        top_lay.addWidget(self.btn_top_audio_fx)
         top_lay.addWidget(self.btn_audio_mode)
         top_lay.addWidget(self.btn_account)
         root.addWidget(self.top_bar)
@@ -1499,6 +1582,7 @@ class YouTubeOnlinePage(QWidget):
         self._build_channel_view()    # index 2
         self._build_playlist_view()   # index 3
         self._build_library_view()    # index 4
+        self._build_fullscreen_view() # index 5 (True 100% Edge-to-Edge Video Fullscreen!)
         root.addWidget(self.stack, 1)
 
         # 4. PERSISTENT IN-TAB MINI PLAYER BAR (when browsing while audio/video plays)
@@ -1601,7 +1685,8 @@ class YouTubeOnlinePage(QWidget):
         left_host.setObjectName("ytScrollHost")
         left_lay = QVBoxLayout(left_host)
         left_lay.setContentsMargins(0, 0, 6, 24)
-        left_lay.setSpacing(12)
+        left_lay.setSpacing(10)
+        self._watch_left_lay = left_lay
 
         # 16:9 Stage (Video + Audio-Only Art + Floating Subtitle Overlay + Buffering Pill)
         self.stage_frame = QFrame()
@@ -1650,9 +1735,10 @@ class YouTubeOnlinePage(QWidget):
         self.lbl_buffering.hide()
         stage_grid.addWidget(self.lbl_buffering, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
-        # Floating Subtitle / CC Overlay (bottom-center — hidden whenever Sub is Off or empty!)
+        # Floating Subtitle / CC & Bilingual AI Overlay (bottom-center — RichText for dual-line AI!)
         self.lbl_sub_overlay = QLabel("")
         self.lbl_sub_overlay.setObjectName("ytSubOverlay")
+        self.lbl_sub_overlay.setTextFormat(Qt.TextFormat.RichText)
         self.lbl_sub_overlay.setWordWrap(True)
         self.lbl_sub_overlay.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_sub_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
@@ -1660,12 +1746,13 @@ class YouTubeOnlinePage(QWidget):
         stage_grid.addWidget(self.lbl_sub_overlay, 0, 0, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignHCenter)
         left_lay.addWidget(self.stage_frame)
 
-        # Commercial Player Controls Bar
+        # Commercial Player Controls Bar (Compact, zero horizontal clipping even on 1024px windows!)
         ctrl_box = QFrame()
+        self.ctrl_box = ctrl_box
         ctrl_box.setObjectName("ytWatchControls")
         ctrl_lay = QVBoxLayout(ctrl_box)
-        ctrl_lay.setContentsMargins(14, 8, 14, 10)
-        ctrl_lay.setSpacing(8)
+        ctrl_lay.setContentsMargins(12, 7, 12, 8)
+        ctrl_lay.setSpacing(6)
 
         seek_row = QHBoxLayout()
         seek_row.setSpacing(10)
@@ -1721,23 +1808,25 @@ class YouTubeOnlinePage(QWidget):
         self.vol_slider.setObjectName("ytVolSlider")
         self.vol_slider.setRange(0, 100)
         self.vol_slider.setValue(int(round(float(self.profile.get_pref("volume", 0.7) or 0.7) * 100)))
-        self.vol_slider.setFixedWidth(84)
+        self.vol_slider.setFixedWidth(68)
         self.vol_slider.valueChanged.connect(self._on_volume_changed)
 
-        # 3-Mode Subtitle Selector + CC Language Picker
+        # 5-Mode Subtitle Selector (Off / YouTube CC / Native In-Tab AI Bilingual / AI VI / AI EN)
         self.combo_sub_mode = QComboBox()
         self.combo_sub_mode.setObjectName("ytCombo")
         self.combo_sub_mode.setProperty("_i18n_safe_combo", True)
         self.combo_sub_mode.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.combo_sub_mode.addItem("Sub: Tắt", "off")
-        self.combo_sub_mode.addItem("Sub: YouTube CC", "youtube_cc")
-        self.combo_sub_mode.addItem("AI Sub (Tải về)", "ai_handoff")
+        self.combo_sub_mode.addItem("YouTube CC", "youtube_cc")
+        self.combo_sub_mode.addItem("AI Song ngữ", "ai_bilingual")
+        self.combo_sub_mode.addItem("AI Tiếng Việt", "ai_vi")
+        self.combo_sub_mode.addItem("AI Tiếng Anh", "ai_en")
         self.combo_sub_mode.currentIndexChanged.connect(self._on_sub_mode_changed)
 
         self.combo_sub_lang = QComboBox()
         self.combo_sub_lang.setObjectName("ytCombo")
         self.combo_sub_lang.setProperty("_i18n_skip_combo", True)
-        self.combo_sub_lang.setMaximumWidth(135)
+        self.combo_sub_lang.setMaximumWidth(115)
         self.combo_sub_lang.hide()
         self.combo_sub_lang.currentIndexChanged.connect(self._on_sub_lang_changed)
 
@@ -1755,31 +1844,38 @@ class YouTubeOnlinePage(QWidget):
         self.combo_speed = QComboBox()
         self.combo_speed.setObjectName("ytCombo")
         self.combo_speed.setProperty("_i18n_skip_combo", True)
-        self.combo_speed.setFixedWidth(64)
+        self.combo_speed.setFixedWidth(58)
         for sp in (0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0):
             self.combo_speed.addItem(f"{sp:g}x", sp)
         self.combo_speed.setCurrentIndex(2)
         self.combo_speed.currentIndexChanged.connect(self._on_speed_changed)
 
+        self.btn_ctrl_audio_fx = QPushButton()
+        self.btn_ctrl_audio_fx.setObjectName("ytIconBtn")
+        self.btn_ctrl_audio_fx.setFixedSize(30, 30)
+        self.btn_ctrl_audio_fx.setCursor(Qt.CursorShape.PointingHandCursor)
+        button_icon(self.btn_ctrl_audio_fx, "sliders-horizontal", "Audio Studio (EQ / DAC)", color=ACCENT, size=15)
+        self.btn_ctrl_audio_fx.clicked.connect(lambda: self._open_audio_studio(self.btn_ctrl_audio_fx))
+
         self.btn_cinema = QPushButton()
         self.btn_cinema.setObjectName("ytIconBtn")
-        self.btn_cinema.setFixedSize(32, 32)
+        self.btn_cinema.setFixedSize(30, 30)
         self.btn_cinema.setCheckable(True)
         self.btn_cinema.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_cinema, "tv", "Cinema Mode", color=TEXT, size=16)
+        button_icon(self.btn_cinema, "tv", "Cinema Mode", color=TEXT, size=15)
         self.btn_cinema.toggled.connect(self._toggle_cinema_mode)
 
         self.btn_fs = QPushButton()
         self.btn_fs.setObjectName("ytIconBtn")
-        self.btn_fs.setFixedSize(32, 32)
+        self.btn_fs.setFixedSize(30, 30)
         self.btn_fs.setCursor(Qt.CursorShape.PointingHandCursor)
-        button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=16)
+        button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=15)
         self.btn_fs.clicked.connect(self._toggle_fullscreen_stage)
 
         btn_row.addWidget(self.btn_prev)
         btn_row.addWidget(self.btn_play)
         btn_row.addWidget(self.btn_next)
-        btn_row.addSpacing(4)
+        btn_row.addSpacing(2)
         btn_row.addWidget(self.btn_mute)
         btn_row.addWidget(self.vol_slider)
         btn_row.addStretch(1)
@@ -1787,10 +1883,39 @@ class YouTubeOnlinePage(QWidget):
         btn_row.addWidget(self.combo_sub_lang)
         btn_row.addWidget(self.combo_quality)
         btn_row.addWidget(self.combo_speed)
+        btn_row.addWidget(self.btn_ctrl_audio_fx)
         btn_row.addWidget(self.btn_cinema)
         btn_row.addWidget(self.btn_fs)
         ctrl_lay.addLayout(btn_row)
         left_lay.addWidget(ctrl_box)
+
+        # Inline Isolated AI Subtitle Progress Strip (hidden when idle)
+        self.ai_sub_bar = QFrame()
+        self.ai_sub_bar.setObjectName("ytAiProgressBar")
+        ai_lay = QHBoxLayout(self.ai_sub_bar)
+        ai_lay.setContentsMargins(12, 6, 12, 6)
+        ai_lay.setSpacing(10)
+        self.lbl_ai_status = QLabel("")
+        self.lbl_ai_status.setStyleSheet("color: #8DE7CA; font-size: 12px; font-weight: 600;")
+        self.ai_progress = QProgressBar()
+        self.ai_progress.setRange(0, 100)
+        self.ai_progress.setFixedHeight(8)
+        self.ai_progress.setFixedWidth(140)
+        self.ai_progress.setTextVisible(False)
+        self.ai_progress.setStyleSheet(
+            "QProgressBar { background: #1B2D36; border: none; border-radius: 4px; }"
+            "QProgressBar::chunk { background: #77E0BE; border-radius: 4px; }"
+        )
+        self.btn_ai_cancel = QPushButton("✕")
+        self.btn_ai_cancel.setObjectName("ytIconBtn")
+        self.btn_ai_cancel.setFixedSize(26, 26)
+        self.btn_ai_cancel.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_ai_cancel.clicked.connect(self._cancel_ai_subtitle_job)
+        ai_lay.addWidget(self.lbl_ai_status, 1)
+        ai_lay.addWidget(self.ai_progress)
+        ai_lay.addWidget(self.btn_ai_cancel)
+        self.ai_sub_bar.hide()
+        left_lay.addWidget(self.ai_sub_bar)
 
         # Title + Active Hi-Fi Audio Status Badge
         title_row = QHBoxLayout()
@@ -1806,20 +1931,21 @@ class YouTubeOnlinePage(QWidget):
         title_row.addWidget(self.lbl_audio_badge, 0, Qt.AlignmentFlag.AlignTop)
         left_lay.addLayout(title_row)
 
-        # Channel Row + Action Pills (Subscribe, Like, Save, Download, Copy Link — zero squishing!)
+        # Channel Row + Action Pills (Compact spacing so zero clipping even at 1024px!)
         action_row = QHBoxLayout()
-        action_row.setSpacing(8)
+        action_row.setSpacing(6)
 
         self.lbl_ch_avatar = QLabel()
-        self.lbl_ch_avatar.setFixedSize(40, 40)
+        self.lbl_ch_avatar.setFixedSize(36, 36)
         self.lbl_ch_avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lbl_ch_avatar.setStyleSheet("background: #1C2736; border-radius: 20px; color: #8DE7CA; font-weight: 700;")
+        self.lbl_ch_avatar.setStyleSheet("background: #1C2736; border-radius: 18px; color: #8DE7CA; font-weight: 700;")
         action_row.addWidget(self.lbl_ch_avatar)
 
         ch_col = QVBoxLayout()
         ch_col.setSpacing(1)
         self.btn_watch_channel = QPushButton("")
         self.btn_watch_channel.setObjectName("ytWatchChanBtn")
+        self.btn_watch_channel.setMaximumWidth(165)
         self.btn_watch_channel.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_watch_channel.clicked.connect(self._open_current_channel)
         self.lbl_watch_subs = QLabel("")
@@ -1831,44 +1957,51 @@ class YouTubeOnlinePage(QWidget):
         self.btn_subscribe = QPushButton()
         self.btn_subscribe.setObjectName("ytSubscribeBtn")
         self.btn_subscribe.setCheckable(True)
-        self.btn_subscribe.setFixedHeight(34)
+        self.btn_subscribe.setFixedHeight(32)
         self.btn_subscribe.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_subscribe.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_subscribe.clicked.connect(self._toggle_subscribe_current)
-        action_row.addSpacing(4)
+        action_row.addSpacing(2)
         action_row.addWidget(self.btn_subscribe)
         action_row.addStretch(1)
 
         self.btn_like = QPushButton()
         self.btn_like.setObjectName("ytActionPill")
         self.btn_like.setCheckable(True)
-        self.btn_like.setFixedHeight(34)
+        self.btn_like.setFixedHeight(32)
         self.btn_like.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_like.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_like.clicked.connect(self._toggle_like_current)
 
         self.btn_save_pl = QPushButton()
         self.btn_save_pl.setObjectName("ytActionPill")
-        self.btn_save_pl.setFixedHeight(34)
+        self.btn_save_pl.setFixedHeight(32)
         self.btn_save_pl.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_save_pl.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_save_pl.clicked.connect(self._open_save_playlist_menu)
 
+        self.btn_ai_sub_gen = QPushButton()
+        self.btn_ai_sub_gen.setObjectName("ytActionPill")
+        self.btn_ai_sub_gen.setFixedHeight(32)
+        self.btn_ai_sub_gen.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.btn_ai_sub_gen.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_ai_sub_gen.clicked.connect(self._on_ai_sub_btn_clicked)
+
         self.btn_dl_video = QPushButton()
         self.btn_dl_video.setObjectName("ytPrimaryPill")
-        self.btn_dl_video.setFixedHeight(34)
+        self.btn_dl_video.setFixedHeight(32)
         self.btn_dl_video.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_dl_video.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_dl_video.clicked.connect(self._download_current_video)
 
         self.btn_copy_link = QPushButton()
         self.btn_copy_link.setObjectName("ytActionPill")
-        self.btn_copy_link.setFixedHeight(34)
+        self.btn_copy_link.setFixedHeight(32)
         self.btn_copy_link.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.btn_copy_link.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_copy_link.clicked.connect(self._copy_current_link)
 
-        for b in (self.btn_like, self.btn_save_pl, self.btn_dl_video, self.btn_copy_link):
+        for b in (self.btn_like, self.btn_save_pl, self.btn_ai_sub_gen, self.btn_dl_video, self.btn_copy_link):
             action_row.addWidget(b)
         left_lay.addLayout(action_row)
 
@@ -1948,8 +2081,8 @@ class YouTubeOnlinePage(QWidget):
 
         # RIGHT COLUMN (Active Queue / Radio Mix + Unclipped Related Up Next)
         self.watch_right_panel = QWidget()
-        self.watch_right_panel.setMinimumWidth(360)
-        self.watch_right_panel.setMaximumWidth(430)
+        self.watch_right_panel.setMinimumWidth(290)
+        self.watch_right_panel.setMaximumWidth(400)
         right_lay = QVBoxLayout(self.watch_right_panel)
         right_lay.setContentsMargins(0, 0, 0, 0)
         right_lay.setSpacing(12)
@@ -2215,6 +2348,19 @@ class YouTubeOnlinePage(QWidget):
 
         self.stack.addWidget(page)
 
+    def _build_fullscreen_view(self) -> None:
+        """Dedicated 100% Edge-to-Edge Video Fullscreen Canvas (reparents stage_frame + auto-hiding ctrl_box)."""
+        fs_page = QWidget()
+        fs_page.setObjectName("ytFullscreenPage")
+        fs_page.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        fs_page.setMouseTracking(True)
+        fs_page.installEventFilter(self)
+        self.fullscreen_page = fs_page
+        self.fullscreen_lay = QVBoxLayout(fs_page)
+        self.fullscreen_lay.setContentsMargins(0, 0, 0, 0)
+        self.fullscreen_lay.setSpacing(0)
+        self.stack.addWidget(fs_page)
+
     def _build_mini_bar(self) -> None:
         self.mini_bar = QFrame()
         self.mini_bar.setObjectName("ytMiniBar")
@@ -2278,6 +2424,10 @@ class YouTubeOnlinePage(QWidget):
         self.search_input.setPlaceholderText(
             tr_pair("Tìm kiếm YouTube, bài hát, nghệ sĩ hoặc dán link...", "Search YouTube, songs, artists, or paste URL...", lg)
         )
+        self.btn_back_botube.setText("BoTube")
+        self.btn_back_botube.setToolTip(tr_pair("Quay về Thư viện Offline BoTube", "Return to BoTube Offline Library", lg))
+        self.btn_top_audio_fx.setText(tr_pair("Âm thanh", "Audio EQ", lg))
+        self.btn_top_audio_fx.setToolTip(tr_pair("Chỉnh Âm thanh Hi-Fi, EQ & DAC BoTube", "BoTube Hi-Fi Audio Studio, EQ & DAC", lg))
         self.btn_audio_mode.setText(
             tr_pair("🎵 Chỉ nghe Nhạc", "🎵 Audio Only", lg)
             if self.btn_audio_mode.isChecked()
@@ -2316,8 +2466,31 @@ class YouTubeOnlinePage(QWidget):
 
         # Watch controls
         self.combo_sub_mode.setItemText(0, tr_pair("Sub: Tắt", "Sub: Off", lg))
-        self.combo_sub_mode.setItemText(1, tr_pair("Sub: YouTube CC", "Sub: YouTube CC", lg))
-        self.combo_sub_mode.setItemText(2, tr_pair("AI Sub (Tải về)", "AI Sub (Download)", lg))
+        self.combo_sub_mode.setItemText(1, tr_pair("YouTube CC", "YouTube CC", lg))
+        has_ai = bool(self._current_item and has_cached_ai_subtitles(self._current_item.video_id))
+        cur_sub_mode = str(self.combo_sub_mode.currentData() or "off")
+        ai_active = has_ai and cur_sub_mode in ("ai_bilingual", "ai_vi", "ai_en")
+        self.combo_sub_mode.setItemText(2, tr_pair("✨ AI Song ngữ (Đã lưu)" if has_ai else "✨ AI Song ngữ", "✨ AI Bilingual (Saved)" if has_ai else "✨ AI Bilingual", lg))
+        self.combo_sub_mode.setItemText(3, tr_pair("✨ AI Tiếng Việt", "✨ AI Vietnamese", lg))
+        self.combo_sub_mode.setItemText(4, tr_pair("✨ AI Tiếng Anh", "✨ AI English", lg))
+        self.btn_ai_sub_gen.setText(
+            tr_pair("↻ Tạo lại AI", "↻ Regen AI", lg)
+            if ai_active
+            else (tr_pair("⚡ AI Sub", "⚡ AI Sub", lg) if has_ai else tr_pair("✨ AI Sub", "✨ AI Sub", lg))
+        )
+        self.btn_ai_sub_gen.setToolTip(
+            tr_pair(
+                "AI Sub đã lưu trên ổ cứng — bấm để tạo lại nếu cần" if ai_active else (
+                    "Bấm để nạp ngay AI Sub đã lưu từ ổ cứng (0 giây)" if has_ai else
+                    "Tự động tải audio nền, chạy AI tạo sub song ngữ, lưu vào ổ cứng & xóa file tạm"
+                ),
+                "AI Subtitles cached on disk — click to regenerate" if ai_active else (
+                    "Click to load cached AI Subtitles instantly from disk" if has_ai else
+                    "Download temp audio, generate bilingual AI subtitles, cache to disk & delete temp audio"
+                ),
+                lg,
+            )
+        )
         self.btn_like.setText(
             tr_pair("❤️ Đã thích", "❤️ Liked", lg) if self.btn_like.isChecked() else tr_pair("🤍 Thích", "🤍 Like", lg)
         )
@@ -2680,7 +2853,7 @@ class YouTubeOnlinePage(QWidget):
 
     def _on_card_clicked(self, item: OnlineVideoItem) -> None:
         if item.item_type == "playlist" and item.playlist_id:
-            self.open_playlist(item.playlist_id, title_hint=item.title)
+            self.open_playlist(item.playlist_id, title_hint=item.title, seed_video_id=item.video_id)
         elif item.item_type == "channel" and item.channel_id:
             self.open_channel(item.channel_id, item.channel_name or item.title)
         elif item.video_id:
@@ -2750,7 +2923,7 @@ class YouTubeOnlinePage(QWidget):
             self._thumbs.load(item.thumbnail_url, self.lbl_audio_art, QSize(300, 169), radius=10)
             self._thumbs.load(item.thumbnail_url, self.lbl_mini_thumb, QSize(80, 45), radius=6)
         if item.channel_avatar:
-            self._thumbs.load(item.channel_avatar, self.lbl_ch_avatar, QSize(40, 40), radius=20)
+            self._thumbs.load(item.channel_avatar, self.lbl_ch_avatar, QSize(36, 36), radius=18)
         self.lbl_mini_title.setText(item.title)
         self.lbl_mini_sub.setText(item.channel_name or "YouTube")
 
@@ -2847,9 +3020,26 @@ class YouTubeOnlinePage(QWidget):
         )
         self.stage_stack.setCurrentIndex(1 if (audio_only or chosen_q == "audio_only") else 0)
 
-        # If subtitle mode is YouTube CC, load the selected CC track right away (0% GPU!)
-        if self.combo_sub_mode.currentData() == "youtube_cc":
+        # Auto-load cached AI subtitles from isolated disk cache if this video was processed before (<2ms!)
+        self._ai_cues = []
+        self._ai_cues_vid = ""
+        cached_ai = load_cached_ai_subtitles(stream.video_id)
+        if cached_ai:
+            self._ai_cues = cached_ai
+            self._ai_cues_vid = stream.video_id
+        self.retranslate(get_language())
+
+        cur_sub_mode = str(self.combo_sub_mode.currentData() or "off")
+        if cur_sub_mode == "youtube_cc":
             self._load_selected_youtube_cc()
+        elif cur_sub_mode in ("ai_bilingual", "ai_vi", "ai_en"):
+            if self._ai_cues:
+                self._apply_ai_cues_for_mode(cur_sub_mode)
+            else:
+                self.player.set_subtitles([], enabled=False)
+        elif cached_ai and cur_sub_mode == "off":
+            # Respect user's explicit "Off" choice, but let them know cached AI subs are ready in 1 click
+            self.player.set_subtitles([], enabled=False)
         else:
             self.player.set_subtitles([], enabled=False)
 
@@ -2879,7 +3069,7 @@ class YouTubeOnlinePage(QWidget):
             self.btn_subscribe.setChecked(self.profile.is_subscribed(info.channel_id))
             self._refresh_subscribe_button_text()
         if info.channel_avatar:
-            self._thumbs.load(info.channel_avatar, self.lbl_ch_avatar, QSize(40, 40), radius=20)
+            self._thumbs.load(info.channel_avatar, self.lbl_ch_avatar, QSize(36, 36), radius=18)
         if info.subscriber_text:
             self.lbl_watch_subs.setText(info.subscriber_text)
         stats = " • ".join(p for p in (info.views_text, info.published_text) if p)
@@ -2893,6 +3083,8 @@ class YouTubeOnlinePage(QWidget):
         self._render_related_list(info.related)
         if info.comment_token:
             self._load_comments_async()
+        # Proactively pre-resolve the #1 next track via fast 0.25s InnerTube IOS so pressing Next is instant!
+        QTimer.singleShot(1200, self._maybe_preresolve_next)
 
     def _format_description_html(self, desc: str) -> str:
         escaped = html.escape(desc)
@@ -3202,24 +3394,16 @@ class YouTubeOnlinePage(QWidget):
         self.profile.set_pref("speed", sp)
         self.player.set_playback_rate(sp)
 
+    def _open_audio_studio(self, anchor_widget: QWidget) -> None:
+        if callable(self._audio_panel_opener):
+            self._audio_panel_opener(anchor_widget)
+
+    def on_audio_profile_changed(self) -> None:
+        """Seamlessly re-apply live BoTube Audio Studio profile (EQ / Preset / DAC / Exclusive)."""
+        self.player.reapply_audio_profile()
+
     def _on_sub_mode_changed(self) -> None:
         mode = str(self.combo_sub_mode.currentData() or "off")
-        if mode == "ai_handoff":
-            self.combo_sub_mode.blockSignals(True)
-            self.combo_sub_mode.setCurrentIndex(0)
-            self.combo_sub_mode.blockSignals(False)
-            self.combo_sub_lang.hide()
-            self.player.set_subtitles_enabled(False)
-            if self._current_item is not None:
-                self._emit_download_item(self._current_item)
-                self.status_message.emit(
-                    tr_pair(
-                        "Đã chuyển link sang tab Tải về để bạn lưu và tạo Phụ đề AI song ngữ BoTube.",
-                        "Sent link to Downloads so you can save and generate full BoTube AI subtitles.",
-                    )
-                )
-            return
-
         self.profile.set_pref("subtitle_mode", mode)
         if mode == "off":
             self.combo_sub_lang.hide()
@@ -3228,6 +3412,186 @@ class YouTubeOnlinePage(QWidget):
         elif mode == "youtube_cc":
             self.combo_sub_lang.show()
             self._load_selected_youtube_cc()
+        elif mode in ("ai_bilingual", "ai_vi", "ai_en"):
+            self.combo_sub_lang.hide()
+            if self._current_item is None:
+                return
+            vid = self._current_item.video_id
+            if self._ai_cues and self._ai_cues_vid == vid:
+                self._apply_ai_cues_for_mode(mode)
+            else:
+                cached = load_cached_ai_subtitles(vid)
+                if cached:
+                    self._ai_cues = cached
+                    self._ai_cues_vid = vid
+                    self._apply_ai_cues_for_mode(mode)
+                else:
+                    self._start_ai_subtitle_generation(force_regen=False)
+
+    def _apply_ai_cues_for_mode(self, mode: str) -> None:
+        disp = {"ai_bilingual": "bilingual", "ai_vi": "vi_only", "ai_en": "en_only"}.get(mode, "bilingual")
+        self.player.set_subtitles(self._ai_cues, enabled=True, display_mode=disp)
+
+    def _on_ai_sub_btn_clicked(self) -> None:
+        if self._current_item is None or not self._current_item.video_id:
+            return
+        vid = self._current_item.video_id
+        has_ai = has_cached_ai_subtitles(vid)
+        cur_mode = str(self.combo_sub_mode.currentData() or "off")
+        if has_ai and cur_mode not in ("ai_bilingual", "ai_vi", "ai_en"):
+            # Instant load from disk cache without re-running AI!
+            self._start_ai_subtitle_generation(force_regen=False)
+        else:
+            self._start_ai_subtitle_generation(force_regen=has_ai)
+
+    def _start_ai_subtitle_generation(self, *, force_regen: bool = False) -> None:
+        """Download ONLY compact temp audio, reuse BoTube AIWorker, cache JSON to disk & delete temp audio!"""
+        if self._current_item is None or not self._current_item.video_id:
+            return
+        vid = self._current_item.video_id
+        title = self._current_item.title or vid
+
+        if not force_regen:
+            cached = load_cached_ai_subtitles(vid)
+            if cached:
+                self._ai_cues = cached
+                self._ai_cues_vid = vid
+                mode = str(self.combo_sub_mode.currentData() or "ai_bilingual")
+                if mode not in ("ai_bilingual", "ai_vi", "ai_en"):
+                    mode = "ai_bilingual"
+                    idx = self.combo_sub_mode.findData(mode)
+                    if idx >= 0:
+                        self.combo_sub_mode.blockSignals(True)
+                        self.combo_sub_mode.setCurrentIndex(idx)
+                        self.combo_sub_mode.blockSignals(False)
+                self._apply_ai_cues_for_mode(mode)
+                self.retranslate(get_language())
+                self.status_message.emit(tr_pair("⚡ Đã nạp AI Sub từ bộ nhớ đệm ổ cứng!", "⚡ Loaded cached AI Subtitles from disk!"))
+                return
+
+        self._cancel_ai_subtitle_job()
+        self._ai_gen_vid = vid
+        self._ai_gen_title = title
+        self._ai_temp_dir = tempfile.mkdtemp(prefix=f"botube-yt-ai-{vid}-")
+
+        self.ai_progress.setValue(8)
+        self.lbl_ai_status.setText(tr_pair("🤖 Bước 1/2: Đang tải audio nền (tự xóa sau khi xong)…", "🤖 Step 1/2: Fetching temp audio (auto-deleted after)…"))
+        self.ai_sub_bar.show()
+
+        stream = self._current_stream if (self._current_stream and self._current_stream.video_id == vid) else None
+        cookies_br = str(self.profile.get_pref("cookies_browser", "") or "")
+        cookies_file = str(self.profile.get_pref("cookies_file", "") or "")
+        tmp_dir = self._ai_temp_dir
+
+        self._run_async(
+            "ai_audio_dl",
+            lambda procs: self.client.download_temp_audio_for_ai(
+                vid,
+                stream,
+                tmp_dir,
+                title=title,
+                cookies_browser=cookies_br,
+                cookies_file=cookies_file,
+                processes=procs,
+            ),
+            on_ok=lambda audio_path: self._run_bo_ai_worker_on_temp_audio(vid, title, str(audio_path)),
+            on_err=self._on_ai_sub_failed,
+            pass_processes=True,
+        )
+
+    def _run_bo_ai_worker_on_temp_audio(self, vid: str, title: str, temp_audio_path: str) -> None:
+        if vid != self._ai_gen_vid:
+            self._cleanup_ai_temp_dir()
+            return
+        self.ai_progress.setValue(20)
+        self.lbl_ai_status.setText(tr_pair("🤖 Bước 2/2: Đang tách lời & dịch song ngữ AI…", "🤖 Step 2/2: Generating & translating AI subtitles…"))
+        try:
+            from worker import AIWorker
+            # Pass temp dir as output_dir so any scratch artifacts from run_ai_pipeline are 100% removed on cleanup
+            out_dir = str(self._ai_temp_dir or online_ai_sub_cache_dir())
+            worker = AIWorker(media_id=f"yt_{vid}", input_path=temp_audio_path, output_dir=out_dir, parent=self)
+            worker.progress.connect(self._on_ai_sub_progress)
+            worker.data_ready.connect(lambda _mid, segs, v=vid, t=title: self._on_ai_sub_finished(v, t, segs))
+            worker.failed.connect(lambda _mid, err: self._on_ai_sub_failed(err))
+            worker.finished.connect(worker.deleteLater)
+            self._ai_worker = worker
+            worker.start()
+        except Exception as err:
+            self._on_ai_sub_failed(str(err))
+
+    def _on_ai_sub_progress(self, percent: int, message: str) -> None:
+        pct = max(20, min(99, int(percent or 20)))
+        self.ai_progress.setValue(pct)
+        if message:
+            self.lbl_ai_status.setText(f"🤖 {message} ({pct}%)")
+
+    def _on_ai_sub_finished(self, vid: str, title: str, segments: list[Any]) -> None:
+        self._ai_worker = None
+        self._cleanup_ai_temp_dir()
+        self.ai_sub_bar.hide()
+
+        cues = serialize_ai_segments_to_cues(segments)
+        if not cues:
+            self.status_message.emit(tr_pair("AI không phát hiện lời thoại/ca từ trong video này.", "AI detected no lyrics or speech in this video."))
+            return
+
+        save_cached_ai_subtitles(vid, cues, title=title)
+        if self._current_item is not None and self._current_item.video_id == vid:
+            self._ai_cues = cues
+            self._ai_cues_vid = vid
+            cur_mode = str(self.combo_sub_mode.currentData() or "off")
+            if cur_mode not in ("ai_bilingual", "ai_vi", "ai_en"):
+                cur_mode = "ai_bilingual"
+                idx = self.combo_sub_mode.findData(cur_mode)
+                if idx >= 0:
+                    self.combo_sub_mode.blockSignals(True)
+                    self.combo_sub_mode.setCurrentIndex(idx)
+                    self.combo_sub_mode.blockSignals(False)
+                self.profile.set_pref("subtitle_mode", cur_mode)
+            self.combo_sub_lang.hide()
+            self._apply_ai_cues_for_mode(cur_mode)
+            self.retranslate(get_language())
+        self.status_message.emit(
+            tr_pair(
+                f"✅ Đã tạo & lưu AI Sub ({len(cues)} câu) — file audio tạm đã được dọn sạch!",
+                f"✅ Saved AI Subtitles ({len(cues)} cues) — temp audio cleaned up!",
+            )
+        )
+
+    def _on_ai_sub_failed(self, err_msg: str) -> None:
+        self._ai_worker = None
+        self._cleanup_ai_temp_dir()
+        self.ai_sub_bar.hide()
+        first_line = str(err_msg or "").strip().splitlines()
+        short = first_line[-1][:140] if first_line else "AI Error"
+        self.status_message.emit(tr_pair(f"⚠️ Không tạo được AI Sub: {short}", f"⚠️ AI Subtitle failed: {short}"))
+
+    def _cancel_ai_subtitle_job(self) -> None:
+        self._ai_gen_vid = ""
+        prev_dl = self._workers.pop("ai_audio_dl", None)
+        if prev_dl is not None:
+            prev_dl.cancel()
+        if self._ai_worker is not None:
+            try:
+                if hasattr(self._ai_worker, "stop"):
+                    self._ai_worker.stop()
+                else:
+                    self._ai_worker.requestInterruption()
+                self._ai_worker.wait(1000)
+            except Exception:
+                pass
+            self._ai_worker = None
+        self._cleanup_ai_temp_dir()
+        self.ai_sub_bar.hide()
+
+    def _cleanup_ai_temp_dir(self) -> None:
+        tmp = self._ai_temp_dir
+        self._ai_temp_dir = None
+        if tmp:
+            try:
+                shutil.rmtree(tmp, ignore_errors=True)
+            except Exception:
+                pass
 
     def _on_sub_lang_changed(self) -> None:
         trk = self.combo_sub_lang.currentData()
@@ -3242,19 +3606,28 @@ class YouTubeOnlinePage(QWidget):
             self.player.set_subtitles([], enabled=False)
             self.lbl_sub_overlay.hide()
             if self._current_stream is not None:
-                self.status_message.emit(tr_pair("Video này chưa có phụ đề CC trên YouTube.", "This video has no YouTube CC captions."))
+                self.status_message.emit(tr_pair("Video này chưa có phụ đề CC — hãy chọn ✨ AI Song ngữ để tự tạo!", "No YouTube CC — select ✨ AI Bilingual to auto-generate!"))
             return
         self._run_async(
             "subtitle_cc",
             lambda: self.client.fetch_subtitle_cues(trk),
-            on_ok=lambda cues: self.player.set_subtitles(cues, enabled=True),
+            on_ok=lambda cues: self.player.set_subtitles(cues, enabled=True, display_mode="orig_only"),
             on_err=lambda _m: self.player.set_subtitles([], enabled=False),
         )
 
     def _on_subtitle_text_changed(self, text: str) -> None:
         clean = str(text or "").strip()
-        if clean and self.combo_sub_mode.currentData() == "youtube_cc":
+        mode = str(self.combo_sub_mode.currentData() or "off")
+        if clean and mode != "off":
+            # Keep normal lyric lines on crisp 1-2 cinema rows; only wrap very long lines
+            plain_lines = re.sub(r"<[^>]+>", "", clean.replace("<br>", "\n")).splitlines()
+            longest = max((len(ln.strip()) for ln in plain_lines), default=0)
+            max_w = max(460, int(self.stage_frame.width() * 0.88))
+            self.lbl_sub_overlay.setMaximumWidth(max_w)
+            wrap_threshold = 72 if self._is_fullscreen_stage else 56
+            self.lbl_sub_overlay.setWordWrap(longest > wrap_threshold)
             self.lbl_sub_overlay.setText(clean)
+            self.lbl_sub_overlay.adjustSize()
             self.lbl_sub_overlay.show()
             self.lbl_sub_overlay.raise_()
         else:
@@ -3303,40 +3676,87 @@ class YouTubeOnlinePage(QWidget):
             self.exit_fullscreen_stage()
         else:
             self._is_fullscreen_stage = True
+            self._pre_fs_view_idx = self.stack.currentIndex()
             self.top_bar.hide()
             self.sub_nav.hide()
-            self.watch_right_panel.hide()
+            self.mini_bar.hide()
+
+            # Reparent ONLY stage_frame (100% edge-to-edge video) + auto-hiding ctrl_box into VIEW_FULLSCREEN!
+            self._watch_left_lay.removeWidget(self.stage_frame)
+            self._watch_left_lay.removeWidget(self.ctrl_box)
+            self.stage_frame.setMinimumHeight(0)
             self.stage_frame.setMaximumHeight(16777215)
-            self.stage_frame.setMinimumHeight(560)
+            self.stage_frame.setStyleSheet("QFrame#ytStageFrame { background: #000000; border: none; border-radius: 0px; }")
+            self.fullscreen_lay.addWidget(self.stage_frame, 1)
+            self.fullscreen_lay.addWidget(self.ctrl_box, 0)
+            self.ctrl_box.show()
+            self.video_widget.setMouseTracking(True)
+            self.video_widget.installEventFilter(self)
+
+            # Enlarge floating subtitles for full-monitor readability
+            self.lbl_sub_overlay.setObjectName("ytSubOverlayFS")
+            self.lbl_sub_overlay.style().polish(self.lbl_sub_overlay)
+            self.player.set_subtitle_fullscreen(True)
+
+            self.stack.setCurrentIndex(self.VIEW_FULLSCREEN)
             if hasattr(win, "sidebar_container"):
                 win.sidebar_container.hide()
             if hasattr(win, "playback_bar"):
                 win.playback_bar.hide()
             win.showFullScreen()
-            button_icon(self.btn_fs, "minimize", "Exit Fullscreen", color=ACCENT, size=16)
+            button_icon(self.btn_fs, "minimize", "Exit Fullscreen", color=ACCENT, size=15)
+            self._fs_hide_timer.start()
+
+    def _wake_fs_controls(self) -> None:
+        if not self._is_fullscreen_stage:
+            return
+        self.ctrl_box.show()
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        self._fs_hide_timer.start()
+
+    def _hide_fs_controls_if_idle(self) -> None:
+        if not self._is_fullscreen_stage:
+            return
+        if self.ctrl_box.underMouse() or QApplication.activePopupWidget() is not None:
+            self._fs_hide_timer.start()
+            return
+        self.ctrl_box.hide()
 
     def exit_fullscreen_stage(self) -> None:
         if not self._is_fullscreen_stage:
             return
         self._is_fullscreen_stage = False
+        self._fs_hide_timer.stop()
+        self.setCursor(Qt.CursorShape.ArrowCursor)
         win = self.window()
+
+        # Restore stage_frame + ctrl_box back into Watch column
+        self.fullscreen_lay.removeWidget(self.stage_frame)
+        self.fullscreen_lay.removeWidget(self.ctrl_box)
+        self.stage_frame.setStyleSheet("")
+        self.stage_frame.setMaximumHeight(700 if self._cinema_mode else 580)
+        self.stage_frame.setMinimumHeight(400)
+        self._watch_left_lay.insertWidget(0, self.stage_frame)
+        self._watch_left_lay.insertWidget(1, self.ctrl_box)
+        self.ctrl_box.show()
+
+        self.lbl_sub_overlay.setObjectName("ytSubOverlay")
+        self.lbl_sub_overlay.style().polish(self.lbl_sub_overlay)
+        self.player.set_subtitle_fullscreen(False)
+
         self.top_bar.show()
         self.sub_nav.show()
         self.watch_right_panel.setVisible(not self._cinema_mode)
-        self.stage_frame.setMaximumHeight(700 if self._cinema_mode else 580)
-        self.stage_frame.setMinimumHeight(400)
-        if win is not None:
-            if hasattr(win, "sidebar_container"):
-                win.sidebar_container.show()
-            if win.isFullScreen():
-                win.showNormal()
-        button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=16)
+        self.stack.setCurrentIndex(self.VIEW_WATCH)
+        if win is not None and win.isFullScreen():
+            win.showNormal()
+        button_icon(self.btn_fs, "maximize", "Fullscreen", color=TEXT, size=15)
 
     def _update_mini_bar_visibility(self) -> None:
         show_mini = (
             self._current_item is not None
             and self.player.is_loaded
-            and self.stack.currentIndex() != self.VIEW_WATCH
+            and self.stack.currentIndex() not in (self.VIEW_WATCH, self.VIEW_FULLSCREEN)
         )
         self.mini_bar.setVisible(show_mini)
 
@@ -3498,7 +3918,7 @@ class YouTubeOnlinePage(QWidget):
         self.btn_chan_page_sub.setChecked(subbed)
         self._refresh_subscribe_button_text()
 
-    def open_playlist(self, playlist_url_or_id: str, *, title_hint: str = "") -> None:
+    def open_playlist(self, playlist_url_or_id: str, *, title_hint: str = "", seed_video_id: str = "") -> None:
         raw = str(playlist_url_or_id or "").strip()
         if not raw:
             return
@@ -3514,6 +3934,7 @@ class YouTubeOnlinePage(QWidget):
             "playlist",
             lambda procs: self.client.fetch_playlist(
                 raw,
+                seed_video_id=seed_video_id,
                 cookies_browser=cookies_br,
                 cookies_file=cookies_file,
                 processes=procs,
@@ -3698,6 +4119,8 @@ class YouTubeOnlinePage(QWidget):
     def eventFilter(self, obj: QObject, event: QEvent) -> bool:
         if obj is self.search_input and event.type() == QEvent.Type.FocusOut:
             QTimer.singleShot(150, self._hide_suggest_if_unfocused)
+        elif self._is_fullscreen_stage and event.type() in (QEvent.Type.MouseMove, QEvent.Type.HoverMove):
+            self._wake_fs_controls()
         return super().eventFilter(obj, event)
 
     def _hide_suggest_if_unfocused(self) -> None:
@@ -3722,6 +4145,8 @@ class YouTubeOnlinePage(QWidget):
         unregister_language_listener(self.retranslate)
         self._suggest_timer.stop()
         self._grid_resize_timer.stop()
+        self._fs_hide_timer.stop()
+        self._cancel_ai_subtitle_job()
         self.exit_fullscreen_stage()
         for worker in list(self._workers.values()):
             try:

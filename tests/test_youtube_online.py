@@ -18,13 +18,22 @@ from core.youtube_online_client import (
     YouTubeOnlineClient,
     YouTubeOnlineProfileStore,
     _extract_items_from_payload,
+    has_cached_ai_subtitles,
+    load_cached_ai_subtitles,
     parse_chapters_from_description,
     parse_duration_text,
     parse_json3_subtitles,
     parse_vtt_subtitles,
     parse_youtube_input,
+    save_cached_ai_subtitles,
+    serialize_ai_segments_to_cues,
 )
-from core.youtube_online_player import OnlineAudioStreamEngine, pick_best_video_stream
+from core.youtube_online_player import (
+    OnlineAudioStreamEngine,
+    OnlineVideoSurface,
+    YouTubeOnlinePlaybackController,
+    pick_best_video_stream,
+)
 from tests.test_ui_settings_and_i18n import _collect_leftover_vietnamese
 from ui.i18n import set_language
 from ui.pages.youtube_online_page import _YouTubeAccountDialog
@@ -228,6 +237,170 @@ class YouTubeOnlineCoreTests(unittest.TestCase):
         self.assertIn("-user_agent", cmd)
         self.assertIn("-ss", cmd)
         self.assertLess(cmd.index("-ss"), cmd.index("-i"))
+        self.assertIn("+nobuffer", cmd)
+
+    def test_ai_subtitle_disk_cache_roundtrip_and_bilingual_formatting(self):
+        segments = [
+            {"start": 1.25, "end": 4.5, "orig": "Stay with me", "vi": "Ở lại bên anh", "en": "Stay with me"},
+            {"start": 5.0, "end": 8.0, "text": "Forever tonight", "vi": "Mãi mãi đêm nay", "en": "Forever tonight"},
+        ]
+        cues = serialize_ai_segments_to_cues(segments)
+        self.assertEqual(len(cues), 2)
+        self.assertEqual(cues[0].start_ms, 1250)
+        self.assertEqual(cues[0].end_ms, 4500)
+        self.assertEqual(cues[0].vi, "Ở lại bên anh")
+
+        with tempfile.TemporaryDirectory() as td:
+            cache_root = Path(td)
+            with patch("core.youtube_online_client.online_ai_sub_cache_dir", return_value=cache_root):
+                self.assertFalse(has_cached_ai_subtitles("dQw4w9WgXcQ"))
+                saved_path = save_cached_ai_subtitles("dQw4w9WgXcQ", cues, title="Demo Track")
+                self.assertTrue(saved_path.is_file())
+                self.assertTrue(has_cached_ai_subtitles("dQw4w9WgXcQ"))
+                reloaded = load_cached_ai_subtitles("dQw4w9WgXcQ")
+                self.assertEqual(len(reloaded), 2)
+                self.assertEqual(reloaded[0].orig, "Stay with me")
+                self.assertEqual(reloaded[0].vi, "Ở lại bên anh")
+                self.assertEqual(reloaded[1].en, "Forever tonight")
+
+        # Verify bilingual normal + fullscreen HTML formatting
+        surface = OnlineVideoSurface()
+        ctrl = YouTubeOnlinePlaybackController(surface)
+        try:
+            ctrl._sub_display_mode = "bilingual"
+            ctrl._sub_fullscreen = False
+            html_norm = ctrl._format_cue_html(cues[0])
+            self.assertIn("Stay with me", html_norm)
+            self.assertIn("Ở lại bên anh", html_norm)
+            self.assertIn("font-size:15px", html_norm)
+
+            ctrl._sub_fullscreen = True
+            html_fs = ctrl._format_cue_html(cues[0])
+            self.assertIn("font-size:21px", html_fs)
+
+            ctrl._sub_display_mode = "vi_only"
+            self.assertEqual(ctrl._format_cue_html(cues[0]), "Ở lại bên anh")
+            ctrl._sub_display_mode = "en_only"
+            self.assertEqual(ctrl._format_cue_html(cues[0]), "Stay with me")
+        finally:
+            ctrl.shutdown()
+            surface.deleteLater()
+
+    def test_innertube_ios_fast_path_and_rdem_mix_playlist(self):
+        client = YouTubeOnlineClient()
+        fake_ios_resp = {
+            "playabilityStatus": {"status": "OK"},
+            "videoDetails": {
+                "title": "IOS Fast MV",
+                "author": "Studio Artist",
+                "channelId": "UCfast123",
+                "lengthSeconds": "210",
+            },
+            "streamingData": {
+                "adaptiveFormats": [
+                    {
+                        "url": "https://cdn/opus_251",
+                        "mimeType": 'audio/webm; codecs="opus"',
+                        "bitrate": 160000,
+                        "audioSampleRate": "48000",
+                    },
+                    {
+                        "url": "https://cdn/vid_1080",
+                        "mimeType": 'video/mp4; codecs="avc1.640028"',
+                        "width": 1920,
+                        "height": 1080,
+                        "fps": 60,
+                    },
+                ]
+            },
+            "captions": {
+                "playerCaptionsTracklistRenderer": {
+                    "captionTracks": [
+                        {
+                            "languageCode": "vi",
+                            "baseUrl": "https://www.youtube.com/api/timedtext?v=abc&lang=vi",
+                            "name": {"simpleText": "Tiếng Việt"},
+                        }
+                    ]
+                }
+            },
+        }
+        fake_http = MagicMock()
+        fake_http.status_code = 200
+        fake_http.json.return_value = fake_ios_resp
+        fake_sess = MagicMock()
+        fake_sess.post.return_value = fake_http
+        with patch.object(client, "_get_session", return_value=fake_sess):
+            resolved = client._resolve_stream_innertube_ios("dQw4w9WgXcQ")
+        self.assertIsNotNone(resolved)
+        self.assertEqual(resolved.audio_url, "https://cdn/opus_251")
+        self.assertEqual(resolved.video_streams["1080p"]["url"], "https://cdn/vid_1080")
+        self.assertEqual(resolved.subtitles[0].lang_code, "vi")
+
+        fake_mix_resp = {
+            "contents": {
+                "twoColumnWatchNextResults": {
+                    "playlist": {
+                        "playlist": {
+                            "title": "Tổng hợp - BTS",
+                            "contents": [
+                                {
+                                    "playlistPanelVideoRenderer": {
+                                        "videoId": "_gyultVTesk",
+                                        "title": {"simpleText": "BTS - Dynamite"},
+                                        "lengthText": {"simpleText": "3:44"},
+                                        "shortBylineText": {"runs": [{"text": "HYBE LABELS"}]},
+                                    }
+                                }
+                            ],
+                        }
+                    }
+                }
+            }
+        }
+        with patch.object(client, "_innertube_post", return_value=fake_mix_resp):
+            mix_title, mix_items = client._fetch_mix_via_innertube(
+                "RDEMI0V0e34vA6znf4KLMCIbbQ", seed_video_id="_gyultVTesk"
+            )
+        self.assertEqual(mix_title, "Tổng hợp - BTS")
+        self.assertEqual(len(mix_items), 1)
+        self.assertEqual(mix_items[0].video_id, "_gyultVTesk")
+
+    def test_instant_speed_and_audio_profile_reconfigure_without_video_reload(self):
+        surface = OnlineVideoSurface()
+        ctrl = YouTubeOnlinePlaybackController(surface)
+        try:
+            ctrl._stream = ResolvedStream(
+                video_id="dQw4w9WgXcQ",
+                title="Test",
+                audio_url="https://cdn/opus",
+                audio_codec="opus",
+                audio_sr=48000,
+                audio_abr=142.0,
+                duration_sec=200.0,
+            )
+            ctrl._using_hifi = True
+            ctrl._is_playing = True
+            ctrl._is_paused = False
+            mock_engine = MagicMock()
+            mock_engine.position_ms.return_value = 15000
+            mock_engine.start_or_reconfigure.return_value = {"output_mode": "shared", "sample_rate": 48000, "dtype": "float32"}
+            ctrl._hifi_engine = mock_engine
+
+            with patch.object(ctrl._qt_player, "setSource") as mock_set_source, \
+                 patch.object(ctrl._qt_player, "setPlaybackRate") as mock_set_rate:
+                ctrl.set_playback_rate(1.5)
+                mock_set_source.assert_not_called()
+                mock_set_rate.assert_called_once_with(1.5)
+                self.assertEqual(mock_engine.start_or_reconfigure.call_count, 1)
+
+                ctrl.reapply_audio_profile()
+                mock_set_source.assert_not_called()
+                self.assertEqual(mock_engine.start_or_reconfigure.call_count, 2)
+        finally:
+            ctrl._hifi_engine = None
+            ctrl.shutdown()
+            surface.deleteLater()
 
 
 class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
@@ -248,6 +421,23 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
                 pump(100)
             self.assertEqual(window.content_stack.currentIndex(), 7)
             self.assertTrue(window.top_toolbar_container.isHidden())
+            self.assertTrue(window.sidebar_container.isHidden())
+            self.assertTrue(window.playback_bar.isHidden())
+
+            # 1b. Standalone Back-to-BoTube button restores offline sidebar & playback bar cleanly
+            yt.btn_back_botube.click()
+            pump(60)
+            self.assertEqual(window.content_stack.currentIndex(), 0)
+            self.assertFalse(window.sidebar_container.isHidden())
+            self.assertFalse(window.playback_bar.isHidden())
+
+            # Return to YouTube tab for remaining checks
+            with patch.object(yt, "_load_home_feed"):
+                window.sidebar.setCurrentRow(yt_row)
+                window.handle_sidebar_click(window.sidebar.item(yt_row))
+                pump(60)
+            self.assertEqual(window.content_stack.currentIndex(), 7)
+            self.assertTrue(window.sidebar_container.isHidden())
 
             # 2. 100% VI/EN i18n check (zero leftover Vietnamese in English mode)
             set_language("en", persist=False)
@@ -302,6 +492,56 @@ class YouTubeOnlineUiIntegrationTests(unittest.TestCase):
             with patch.object(window.audio_effects.stream, "pause") as mock_off_pause:
                 yt.playback_starting.emit()
                 mock_off_pause.assert_called_once()
+
+            # 6. True Edge-to-Edge Video Fullscreen reparents ONLY stage_frame + ctrl_box and hides mini_bar
+            yt._show_view(yt.VIEW_WATCH)
+            yt._current_item = sample_item
+            yt.player._stream = ResolvedStream(video_id=sample_item.video_id, title=sample_item.title)
+            with patch.object(window, "showFullScreen"), patch.object(window, "showNormal"):
+                yt._toggle_fullscreen_stage()
+                pump(30)
+                self.assertTrue(yt._is_fullscreen_stage)
+                self.assertEqual(yt.stack.currentIndex(), yt.VIEW_FULLSCREEN)
+                self.assertEqual(yt.fullscreen_lay.indexOf(yt.stage_frame), 0)
+                self.assertEqual(yt.fullscreen_lay.indexOf(yt.ctrl_box), 1)
+                self.assertEqual(yt.lbl_sub_overlay.objectName(), "ytSubOverlayFS")
+                self.assertTrue(yt.player._sub_fullscreen)
+                yt._update_mini_bar_visibility()
+                self.assertTrue(yt.mini_bar.isHidden())
+
+                yt.exit_fullscreen_stage()
+                pump(30)
+                self.assertFalse(yt._is_fullscreen_stage)
+                self.assertEqual(yt.stack.currentIndex(), yt.VIEW_WATCH)
+                self.assertEqual(yt._watch_left_lay.indexOf(yt.stage_frame), 0)
+                self.assertEqual(yt._watch_left_lay.indexOf(yt.ctrl_box), 1)
+                self.assertEqual(yt.lbl_sub_overlay.objectName(), "ytSubOverlay")
+                self.assertFalse(yt.player._sub_fullscreen)
+
+            # 7. Audio Studio live sync wiring & panel opener
+            with patch.object(yt, "on_audio_profile_changed") as mock_reapply:
+                window.audio_effects.panel.dac_phase_changed.emit("minimum")
+                pump(90)
+                mock_reapply.assert_called()
+
+            # 8. In-tab AI Subtitle finish saves isolated disk cache & deletes temp audio directory
+            with tempfile.TemporaryDirectory() as td:
+                cache_root = Path(td) / "subs_cache"
+                fake_tmp = Path(td) / "temp_audio_job"
+                fake_tmp.mkdir()
+                (fake_tmp / "song.opus").write_bytes(b"fake-audio")
+                yt._ai_temp_dir = str(fake_tmp)
+                yt._current_item = sample_item
+                with patch("core.youtube_online_client.online_ai_sub_cache_dir", return_value=cache_root):
+                    yt._on_ai_sub_finished(
+                        sample_item.video_id,
+                        sample_item.title,
+                        [{"start": 0.5, "end": 3.0, "orig": "Never gonna give you up", "vi": "Không bao giờ từ bỏ em"}],
+                    )
+                    pump(30)
+                    self.assertFalse(fake_tmp.exists())
+                    self.assertTrue(has_cached_ai_subtitles(sample_item.video_id))
+                    self.assertEqual(len(yt._ai_cues), 1)
 
 
 if __name__ == "__main__":

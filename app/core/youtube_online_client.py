@@ -162,6 +162,127 @@ class OnlineSubtitleCue:
     start_ms: int
     end_ms: int
     text: str
+    orig: str = ""
+    en: str = ""
+    vi: str = ""
+    phonetic: str = ""
+
+
+def online_ai_sub_cache_dir() -> Path:
+    """Isolated directory for YouTube Online AI-generated bilingual subtitles (never touches offline storage)."""
+    d = Path(storage_dir()) / "youtube_online_subs"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def online_ai_sub_cache_path(video_id: str) -> Path:
+    safe_id = re.sub(r"[^A-Za-z0-9_-]", "", str(video_id or "").strip())
+    return online_ai_sub_cache_dir() / f"{safe_id}.json"
+
+
+def has_cached_ai_subtitles(video_id: str) -> bool:
+    vid = str(video_id or "").strip()
+    return bool(_RE_VIDEO_ID.match(vid) and online_ai_sub_cache_path(vid).is_file())
+
+
+def load_cached_ai_subtitles(video_id: str) -> list[OnlineSubtitleCue]:
+    """Load previously generated bilingual AI subtitles for a YouTube video from local disk cache."""
+    vid = str(video_id or "").strip()
+    if not _RE_VIDEO_ID.match(vid):
+        return []
+    path = online_ai_sub_cache_path(vid)
+    if not path.is_file():
+        return []
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        entries = raw.get("cues") if isinstance(raw, dict) else (raw if isinstance(raw, list) else [])
+        cues: list[OnlineSubtitleCue] = []
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            start_ms = max(0, int(e.get("start_ms") or 0))
+            end_ms = max(start_ms + 150, int(e.get("end_ms") or (start_ms + 2000)))
+            orig = str(e.get("orig") or e.get("text") or "").strip()
+            en = str(e.get("en") or "").strip()
+            vi = str(e.get("vi") or "").strip()
+            phon = str(e.get("phonetic") or "").strip()
+            if orig or en or vi:
+                cues.append(OnlineSubtitleCue(
+                    start_ms=start_ms,
+                    end_ms=end_ms,
+                    text=orig or vi or en,
+                    orig=orig,
+                    en=en,
+                    vi=vi,
+                    phonetic=phon,
+                ))
+        cues.sort(key=lambda c: c.start_ms)
+        return cues
+    except Exception as err:
+        logger.warning("Failed to load cached YouTube AI subs for %s: %s", vid, err)
+        return []
+
+
+def serialize_ai_segments_to_cues(segments: list[Any]) -> list[OnlineSubtitleCue]:
+    """Convert BoTube AIWorker output segments (`SubtitleItem` or dict) into `OnlineSubtitleCue` list."""
+    cues: list[OnlineSubtitleCue] = []
+    for seg in segments or []:
+        if isinstance(seg, dict):
+            s_ms = int(seg.get("start_ms") or round(float(seg.get("start") or 0.0) * 1000))
+            e_ms = int(seg.get("end_ms") or round(float(seg.get("end") or 0.0) * 1000))
+            orig = str(seg.get("orig") or seg.get("text") or seg.get("jp") or "").strip()
+            en = str(seg.get("en") or "").strip()
+            vi = str(seg.get("vi") or "").strip()
+            phon = str(seg.get("phonetic") or seg.get("romaji") or "").strip()
+        else:
+            s_ms = int(getattr(seg, "start_ms", 0) or 0)
+            e_ms = int(getattr(seg, "end_ms", 0) or 0)
+            top = getattr(seg, "top", None)
+            mid = getattr(seg, "middle", None)
+            bot = getattr(seg, "bottom", None)
+            orig = str(getattr(top, "text", None) or getattr(seg, "text", "") or "").strip()
+            en = str(getattr(seg, "en", "") or getattr(mid, "text", None) or (mid if isinstance(mid, str) else "") or "").strip()
+            vi = str(getattr(seg, "vi", "") or getattr(bot, "text", None) or (bot if isinstance(bot, str) else "") or "").strip()
+            phon = str(getattr(seg, "phonetic", "") or getattr(seg, "romaji", "") or "").strip()
+        if orig or en or vi:
+            cues.append(OnlineSubtitleCue(
+                start_ms=max(0, s_ms),
+                end_ms=max(max(0, s_ms) + 200, e_ms),
+                text=orig or vi or en,
+                orig=orig,
+                en=en,
+                vi=vi,
+                phonetic=phon,
+            ))
+    cues.sort(key=lambda c: c.start_ms)
+    return cues
+
+
+def save_cached_ai_subtitles(video_id: str, cues: list[OnlineSubtitleCue], *, title: str = "") -> Path:
+    """Atomically save AI-generated bilingual cues to isolated `storage/youtube_online_subs/<vid>.json`."""
+    path = online_ai_sub_cache_path(video_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": 1,
+        "video_id": str(video_id),
+        "title": str(title or ""),
+        "saved_at": int(time.time()),
+        "cues": [
+            {
+                "start_ms": c.start_ms,
+                "end_ms": c.end_ms,
+                "orig": c.orig or c.text,
+                "en": c.en,
+                "vi": c.vi,
+                "phonetic": c.phonetic,
+            }
+            for c in cues
+        ],
+    }
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, path)
+    return path
 
 
 @dataclass
@@ -1481,6 +1602,7 @@ class YouTubeOnlineClient:
         self,
         playlist_url_or_id: str,
         *,
+        seed_video_id: str = "",
         cookies_browser: str = "",
         cookies_file: str = "",
         processes: OwnedProcesses | None = None,
@@ -1489,6 +1611,23 @@ class YouTubeOnlineClient:
         raw = str(playlist_url_or_id or "").strip()
         if not raw:
             return ("", [])
+
+        # Extract playlist ID & optional seed videoId from URL if pasted
+        pl_id = raw
+        vid_hint = str(seed_video_id or "").strip()
+        if raw.startswith(("http://", "https://")):
+            parsed = parse_youtube_input(raw)
+            if parsed:
+                pl_id = parsed.get("playlist_id") or raw
+                if not vid_hint:
+                    vid_hint = parsed.get("video_id", "")
+
+        # Dynamic YouTube Mixes (RD..., RDEM..., RDCLAK..., UL...) are served via InnerTube /next!
+        if pl_id.startswith(("RD", "UL")) and not raw.startswith(":"):
+            mix_title, mix_items = self._fetch_mix_via_innertube(pl_id, seed_video_id=vid_hint)
+            if mix_items:
+                return mix_title, mix_items
+
         if raw.startswith(("http://", "https://", ":")):
             target = raw
         else:
@@ -1531,13 +1670,18 @@ class YouTubeOnlineClient:
                 processes.release(proc)
 
         if proc.returncode != 0 or not stdout.strip():
+            # Fallback to InnerTube Mix/Browse when YouTube rejects playlist tab scraping
+            if not raw.startswith(":"):
+                mix_title, mix_items = self._fetch_mix_via_innertube(pl_id, seed_video_id=vid_hint)
+                if mix_items:
+                    return mix_title, mix_items
             msg = (stderr or "").strip().splitlines()
             tail = msg[-1] if msg else f"yt-dlp exit {proc.returncode}"
             raise RuntimeError(tail)
 
         data = json.loads(stdout)
         title = str(data.get("title") or "YouTube Playlist").strip()
-        pl_id = str(data.get("id") or "").strip()
+        pl_id_out = str(data.get("id") or "").strip()
         entries = data.get("entries") or []
         items: list[OnlineVideoItem] = []
         for e in entries:
@@ -1555,12 +1699,162 @@ class YouTubeOnlineClient:
                 thumbnail_url=_best_thumb_url(e.get("thumbnails"), vid),
                 duration_text=format_seconds_mmss(dur_s) if dur_s > 0 else "",
                 duration_sec=dur_s,
-                playlist_id=pl_id,
+                playlist_id=pl_id_out,
                 item_type="video",
             ))
         return title, items
 
-    # --- 8. Direct Stream + Subtitles Resolver via Portable yt-dlp.exe ---
+    def _fetch_mix_via_innertube(self, playlist_id: str, *, seed_video_id: str = "", lang: str = "vi") -> tuple[str, list[OnlineVideoItem]]:
+        """Resolve dynamic YouTube Mix playlists (RD..., RDEM...) cleanly via InnerTube /next."""
+        try:
+            body: dict[str, Any] = {**self._context(lang), "playlistId": playlist_id}
+            if _RE_VIDEO_ID.match(seed_video_id):
+                body["videoId"] = seed_video_id
+            data = self._innertube_post("next", body, timeout=10.0)
+            pl_panel = (
+                data.get("contents", {})
+                .get("twoColumnWatchNextResults", {})
+                .get("playlist", {})
+                .get("playlist", {})
+            )
+            title = str(pl_panel.get("title") or "YouTube Mix").strip() if isinstance(pl_panel, dict) else "YouTube Mix"
+            pp_nodes: list[tuple[str, dict[str, Any]]] = []
+            _walk_nodes(pl_panel if isinstance(pl_panel, dict) else data, {"playlistPanelVideoRenderer"}, pp_nodes, limit=60)
+            items: list[OnlineVideoItem] = []
+            seen: set[str] = set()
+            for _k, pn in pp_nodes:
+                it = _parse_playlist_panel_video(pn)
+                if it is not None and it.video_id not in seen:
+                    seen.add(it.video_id)
+                    it.playlist_id = playlist_id
+                    items.append(it)
+            if items:
+                return title, items
+        except Exception as err:
+            logger.debug("InnerTube mix fetch failed for %s: %s", playlist_id, err)
+        return ("", [])
+
+    # --- 8. Fast Direct Stream + Subtitles Resolver (0.25s InnerTube IOS + yt-dlp.exe Fallback) ---
+    def _resolve_stream_innertube_ios(self, vid: str) -> ResolvedStream | None:
+        """Ultra-fast (~0.25s) InnerTube IOS direct stream resolver with full 4K/1080p/Opus/CC."""
+        ios_ua = "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X)"
+        try:
+            resp = self._get_session().post(
+                f"{_INNERTUBE_BASE}/player?prettyPrint=false",
+                headers={"User-Agent": ios_ua, "Origin": "https://www.youtube.com"},
+                json={
+                    "context": {
+                        "client": {
+                            "clientName": "IOS",
+                            "clientVersion": "20.10.4",
+                            "hl": "vi",
+                            "gl": "VN",
+                            "deviceMake": "Apple",
+                            "deviceModel": "iPhone16,2",
+                            "osName": "iPhone",
+                            "osVersion": "18.3.2.22D82",
+                        }
+                    },
+                    "videoId": vid,
+                    "contentCheckOk": True,
+                    "racyCheckOk": True,
+                },
+                timeout=6.0,
+            )
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if (data.get("playabilityStatus") or {}).get("status") != "OK":
+                return None
+            sd = data.get("streamingData") or {}
+            adaptive = sd.get("adaptiveFormats") or []
+            muxed = sd.get("formats") or []
+            if not any(f.get("url") for f in adaptive):
+                return None
+
+            vd = data.get("videoDetails") or {}
+            # Convert InnerTube streamingData into the same normalized format shape used by _build_resolved_stream
+            norm_formats: list[dict[str, Any]] = []
+            for raw_f in list(adaptive) + list(muxed):
+                url = str(raw_f.get("url") or "").strip()
+                if not url:
+                    continue
+                mime = str(raw_f.get("mimeType") or "")
+                codec_m = re.search(r'codecs="([^"]+)"', mime)
+                codecs_str = codec_m.group(1) if codec_m else ""
+                is_audio = mime.startswith("audio/")
+                is_video = mime.startswith("video/")
+                ext = "webm" if "webm" in mime else ("mp4" if "mp4" in mime else "m4a")
+                acodec = "none"
+                vcodec = "none"
+                if is_audio:
+                    acodec = codecs_str or "opus"
+                elif is_video:
+                    if "," in codecs_str:
+                        vcodec, acodec = [c.strip() for c in codecs_str.split(",", 1)]
+                    else:
+                        vcodec = codecs_str or "avc1"
+                norm_formats.append({
+                    "url": url,
+                    "ext": ext,
+                    "protocol": "https",
+                    "width": int(raw_f.get("width") or 0),
+                    "height": int(raw_f.get("height") or 0),
+                    "fps": float(raw_f.get("fps") or 30),
+                    "vcodec": vcodec,
+                    "acodec": acodec,
+                    "abr": float(raw_f.get("averageBitrate") or raw_f.get("bitrate") or 0) / 1000.0 if is_audio else 0.0,
+                    "tbr": float(raw_f.get("averageBitrate") or raw_f.get("bitrate") or 0) / 1000.0,
+                    "asr": int(raw_f.get("audioSampleRate") or 48000),
+                    "http_headers": {"User-Agent": ios_ua},
+                })
+
+            # Extract captionTracks into subtitles/automatic_captions dicts
+            subs_map: dict[str, list[dict[str, Any]]] = {}
+            auto_map: dict[str, list[dict[str, Any]]] = {}
+            cap_tracks = (
+                (data.get("captions") or {})
+                .get("playerCaptionsTracklistRenderer", {})
+                .get("captionTracks")
+                or []
+            )
+            for ct in cap_tracks:
+                if not isinstance(ct, dict) or not ct.get("baseUrl"):
+                    continue
+                lc = str(ct.get("languageCode") or "").strip()
+                if not lc:
+                    continue
+                base_url = str(ct["baseUrl"])
+                sep = "&" if "?" in base_url else "?"
+                name = _extract_text(ct.get("name")) or lc
+                is_asr = str(ct.get("kind") or "").lower() == "asr"
+                target_map = auto_map if is_asr else subs_map
+                target_map.setdefault(lc, []).append({
+                    "ext": "json3",
+                    "url": f"{base_url}{sep}fmt=json3",
+                    "name": name,
+                })
+
+            info_like = {
+                "title": str(vd.get("title") or vid),
+                "channel": str(vd.get("author") or ""),
+                "channel_id": str(vd.get("channelId") or ""),
+                "duration": float(vd.get("lengthSeconds") or 0.0),
+                "thumbnail": _best_thumb_url(vd.get("thumbnail"), vid),
+                "description": str(vd.get("shortDescription") or ""),
+                "is_live": bool(vd.get("isLiveContent") and float(vd.get("lengthSeconds") or 0) == 0),
+                "formats": norm_formats,
+                "subtitles": subs_map,
+                "automatic_captions": auto_map,
+                "http_headers": {"User-Agent": ios_ua},
+            }
+            resolved = self._build_resolved_stream(vid, info_like)
+            if resolved.audio_url and (resolved.video_streams or resolved.progressive_url):
+                return resolved
+        except Exception as err:
+            logger.debug("InnerTube IOS fast-path fallback to yt-dlp for %s: %s", vid, err)
+        return None
+
     def resolve_stream(
         self,
         video_id: str,
@@ -1579,6 +1873,18 @@ class YouTubeOnlineClient:
                 cached = self._stream_cache.get(vid)
                 if cached is not None and (time.monotonic() - cached.resolved_at_mono) < self._STREAM_CACHE_TTL_SEC:
                     return cached
+
+        # Fast-path (~0.25s): InnerTube IOS returns direct 4K/1080p/Opus URLs without cold EXE startup!
+        if not cookies_browser and not cookies_file:
+            fast = self._resolve_stream_innertube_ios(vid)
+            if fast is not None:
+                with self._cache_lock:
+                    if len(self._stream_cache) > 40:
+                        oldest = sorted(self._stream_cache.items(), key=lambda kv: kv[1].resolved_at_mono)[:10]
+                        for k, _ in oldest:
+                            self._stream_cache.pop(k, None)
+                    self._stream_cache[vid] = fast
+                return fast
 
         ytdlp = resolve_ytdlp_executable()
         if not ytdlp.is_file():
@@ -1855,3 +2161,91 @@ class YouTubeOnlineClient:
                     0,
                 )
             return (False, raw[:220], 0)
+
+    # --- 11. Download Compact Temp Audio Only for In-Tab AI Subtitles ---
+    def download_temp_audio_for_ai(
+        self,
+        video_id: str,
+        stream: ResolvedStream | None,
+        temp_dir: Path | str,
+        *,
+        title: str = "",
+        cookies_browser: str = "",
+        cookies_file: str = "",
+        processes: OwnedProcesses | None = None,
+    ) -> Path:
+        """Download ONLY the lightweight audio track to an owned temp dir (deleted immediately after AI finishes)."""
+        from core.audio_effects import find_tool
+        from download_core.utils import sanitize_folder_name
+
+        dest_dir = Path(temp_dir)
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        # Preserve sanitized song title in filename so BoTube Fast-Lyrics / Genius reference lookup works identically!
+        safe_title = sanitize_folder_name(str(title or video_id).strip())[:110] or video_id
+
+        # Fast path: stream-copy audio URL via FFmpeg (~1-2 seconds, zero re-encode!)
+        if stream is not None and stream.audio_url:
+            ext = "webm" if "opus" in (stream.audio_codec or "").lower() else "m4a"
+            out_path = dest_dir / f"{safe_title}.{ext}"
+            ffmpeg = find_tool("ffmpeg")
+            cmd = [
+                ffmpeg, "-y", "-nostdin", "-hide_banner", "-loglevel", "error",
+                "-reconnect", "1", "-reconnect_streamed", "1", "-reconnect_delay_max", "5",
+            ]
+            ua = (stream.http_headers or {}).get("User-Agent")
+            if ua:
+                cmd.extend(["-user_agent", str(ua)])
+            cmd.extend(["-i", stream.audio_url, "-vn", "-c:a", "copy", str(out_path)])
+            proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, creationflags=_NO_WINDOW)
+            if processes is not None:
+                processes.track(proc)
+            try:
+                _out, _err = proc.communicate(timeout=120)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+            finally:
+                if processes is not None:
+                    processes.release(proc)
+            if proc.returncode == 0 and out_path.is_file() and out_path.stat().st_size > 4096:
+                return out_path
+
+        # Fallback: yt-dlp.exe audio-only download into temp_dir
+        ytdlp = resolve_ytdlp_executable()
+        if not ytdlp.is_file():
+            raise FileNotFoundError(f"Không tìm thấy yt-dlp.exe tại {ytdlp}")
+        out_tmpl = str(dest_dir / f"{safe_title}.%(ext)s")
+        cmd = [
+            str(ytdlp),
+            "--no-playlist",
+            "--no-warnings",
+            "-f", "ba/b",
+            *self._cookie_args(cookies_browser, cookies_file),
+            "-o", out_tmpl,
+            "--",
+            f"https://www.youtube.com/watch?v={video_id}",
+        ]
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=_NO_WINDOW,
+        )
+        if processes is not None:
+            processes.track(proc)
+        try:
+            _out, stderr = proc.communicate(timeout=150)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            raise TimeoutError("Hết thời gian tải audio nền cho AI Sub.")
+        finally:
+            if processes is not None:
+                processes.release(proc)
+
+        candidates = [p for p in dest_dir.iterdir() if p.is_file() and p.stat().st_size > 4096]
+        if candidates:
+            return candidates[0]
+        tail = (stderr or "").strip().splitlines()
+        raise RuntimeError(tail[-1] if tail else "Không tải được audio nền cho AI Sub.")

@@ -336,6 +336,7 @@ class MainWindow(QMainWindow):
         self.media_manager = SystemMediaManager(self)
         self.audio_devices = QMediaDevices()
         self.audio_effects = install_audio_effects(self)
+        self._wire_youtube_online_audio_sync()
         self._volume_settings = install_volume_settings(self)
         if hasattr(self, 'sub_layer') and hasattr(self.sub_layer, '_subtitle_effects'):
             self.sub_layer._subtitle_effects.bind_position_provider(self.authoritative_subtitle_position_ms)
@@ -412,6 +413,69 @@ class MainWindow(QMainWindow):
         yt = getattr(self, "youtube_online_page", None)
         if yt is not None and hasattr(yt, "pause_if_playing"):
             yt.pause_if_playing()
+
+    def _open_audio_panel_for_youtube_online(self, anchor_widget):
+        """Open BoTube's existing Audio Studio panel anchored cleanly to the YouTube Online button."""
+        fx = getattr(self, "audio_effects", None)
+        if fx is None or getattr(fx, "panel", None) is None:
+            return
+        if fx.panel.isVisible():
+            fx.panel.hide()
+            return
+        if hasattr(self, "vol_popup"):
+            self.vol_popup.hide()
+        if hasattr(fx, "_update_signal_path"):
+            fx._update_signal_path()
+        fx.panel.open_at(anchor_widget)
+        # When anchored near the top bar, flip popover neatly below & right-aligned with the button
+        try:
+            top_pt = anchor_widget.mapToGlobal(QPoint(anchor_widget.width() // 2, 0))
+            bot_right = anchor_widget.mapToGlobal(QPoint(anchor_widget.width(), anchor_widget.height()))
+            scr = anchor_widget.screen().availableGeometry()
+            if (top_pt.y() - fx.panel.height() - 10) < (scr.top() + 8):
+                x = max(scr.left() + 8, min(bot_right.x() - fx.panel.width(), scr.right() - fx.panel.width() - 8))
+                y = min(scr.bottom() - fx.panel.height() - 8, bot_right.y() + 6)
+                fx.panel.move(x, max(scr.top() + 8, y))
+        except Exception:
+            pass
+
+    def _wire_youtube_online_audio_sync(self):
+        """Forward live Audio Studio profile & 10-band EQ changes to YouTube Online."""
+        fx = getattr(self, "audio_effects", None)
+        yt = getattr(self, "youtube_online_page", None)
+        if fx is None or yt is None or getattr(fx, "panel", None) is None:
+            return
+        panel = fx.panel
+        notify = lambda *_args: QTimer.singleShot(45, yt.on_audio_profile_changed)
+        for sig_name in (
+            "settings_changed",
+            "level_changed",
+            "output_device_changed",
+            "dac_phase_changed",
+            "recommended_requested",
+        ):
+            sig = getattr(panel, sig_name, None)
+            if sig is not None:
+                sig.connect(notify)
+
+        def _hook_eq_dialog():
+            dlg = getattr(fx, "eq_dialog", None)
+            if dlg is not None and not getattr(dlg, "_yt_online_synced", False):
+                dlg._yt_online_synced = True
+                if hasattr(dlg, "eq_changed"):
+                    dlg.eq_changed.connect(notify)
+
+        if hasattr(panel, "open_eq_requested"):
+            panel.open_eq_requested.connect(lambda: QTimer.singleShot(90, _hook_eq_dialog))
+
+    def _return_from_youtube_online(self):
+        """Leave standalone YouTube Online workspace and restore BoTube Offline shell cleanly."""
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and getattr(yt, "_is_fullscreen_stage", False):
+            yt.exit_fullscreen_stage()
+        if hasattr(self, "sidebar") and self.sidebar.count() > 0:
+            self.sidebar.setCurrentRow(0)
+            self.handle_sidebar_click(self.sidebar.item(0))
 
     def _queue_download_from_youtube_online(self, url: str, title: str):
         """1-click handoff from YouTube Online -> existing BoTube Studio Download page (0 edits to DownloadPage)."""
@@ -848,9 +912,11 @@ class MainWindow(QMainWindow):
         )
         self.youtube_online_page = YouTubeOnlinePage(
             profile_provider=lambda: getattr(getattr(self, "audio_effects", None), "profile", None),
+            audio_panel_opener=self._open_audio_panel_for_youtube_online,
         )
         self.youtube_online_page.playback_starting.connect(self._pause_offline_for_youtube_online)
         self.youtube_online_page.download_requested.connect(self._queue_download_from_youtube_online)
+        self.youtube_online_page.back_to_botube_requested.connect(self._return_from_youtube_online)
         self.youtube_online_page.status_message.connect(self._show_status)
         self.content_stack.addWidget(self.home_page)           # Index 0
         self.content_stack.addWidget(self.foryou_page)         # Index 1
@@ -2991,6 +3057,16 @@ class MainWindow(QMainWindow):
                 self._normal_window_state = self.windowState()
             self.top_toolbar_container.hide()
             self.showMaximized()
+            if hasattr(self, 'sidebar_container'):
+                if index == 7:
+                    self.sidebar_container.hide()
+                else:
+                    self.sidebar_container.show()
+            if hasattr(self, 'grid_main_page') and self.grid_main_page.layout() is not None:
+                if index == 7:
+                    self.grid_main_page.layout().setContentsMargins(0, 0, 0, 0)
+                else:
+                    self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
             if hasattr(self, 'playback_bar'):
                 if index == 7:
                     self.playback_bar.hide()
@@ -3007,6 +3083,16 @@ class MainWindow(QMainWindow):
                 self.top_toolbar_container.show()
             else:
                 self.top_toolbar_container.hide()
+            if hasattr(self, 'sidebar_container'):
+                if index == 7:
+                    self.sidebar_container.hide()
+                else:
+                    self.sidebar_container.show()
+            if hasattr(self, 'grid_main_page') and self.grid_main_page.layout() is not None:
+                if index == 7:
+                    self.grid_main_page.layout().setContentsMargins(0, 0, 0, 0)
+                else:
+                    self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
             if hasattr(self, 'playback_bar'):
                 if index == 7:
                     self.playback_bar.hide()
