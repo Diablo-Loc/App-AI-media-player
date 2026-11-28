@@ -24,7 +24,6 @@ from ui.i18n import (
     get_language,
     install_app_language_manager,
     normalize_language,
-    reload_language_from_settings,
     set_language,
     tr_pair,
     translate_widget_tree,
@@ -64,6 +63,11 @@ _GENIUS_MODE_ITEMS = (
 _AUTO_UPDATE_ITEMS = (
     ('on', 'Bật — Kiểm tra tự động mỗi ngày', 'On — Check daily automatically'),
     ('off', 'Tắt — Chỉ kiểm tra thủ công', 'Off — Manual checks only'),
+)
+_WORKSPACE_MODE_ITEMS = (
+    ('both', 'Cả hai — BoTube Offline + YouTube Online', 'Both — BoTube Offline + YouTube Online'),
+    ('offline', 'Offline — Chỉ BoTube gốc (Ẩn YouTube)', 'Offline Only — Classic BoTube (Hide YouTube)'),
+    ('online', 'Online — Chỉ YouTube (+ Tải về & Cài đặt)', 'Online Only — YouTube Studio (+ Downloads & Settings)'),
 )
 _AUDIO_PRESET_ITEMS = (
     ('master_hifi', 'Chuẩn Hi-Fi (Hợp nhất)', 'Hi-Fi Master (Unified)'),
@@ -247,6 +251,7 @@ class SettingsStudioView(QObject):
         self.cards_layout.setSpacing(12)
 
         self._build_appearance_card()
+        self._build_workspace_card()
         self._build_audio_card()
         self._build_asr_card()
         self._build_translation_card()
@@ -267,6 +272,7 @@ class SettingsStudioView(QObject):
                 c
                 for c in (
                     getattr(self, 'appearance_card', None),
+                    getattr(self, 'workspace_card', None),
                     getattr(self, 'audio_card', None),
                     getattr(self, 'asr_card', None),
                     getattr(self, 'translation_card', None),
@@ -456,6 +462,67 @@ class SettingsStudioView(QObject):
         )
         self._update_language_badge(cur_lang)
         self.cards_layout.addWidget(self.appearance_card)
+
+    def _build_workspace_card(self):
+        self.lbl_workspace_badge = QLabel()
+        self.lbl_workspace_badge.setObjectName('studioBadge')
+        self.workspace_card, lay = self._make_card(
+            'Chế độ ứng dụng · Offline & Online',
+            'Workspace Mode · Offline & Online',
+            self.lbl_workspace_badge,
+        )
+
+        self.workspace_mode_combo = self._make_proxy_combo(_WORKSPACE_MODE_ITEMS)
+        win = getattr(self.controller, 'window', None)
+        saved_ws = (
+            win.load_saved_workspace_mode()
+            if (win is not None and hasattr(win, 'load_saved_workspace_mode'))
+            else 'both'
+        )
+        if saved_ws not in ('both', 'offline', 'online'):
+            saved_ws = 'both'
+        idx_ws = self.workspace_mode_combo.findData(saved_ws)
+        self.workspace_mode_combo.setCurrentIndex(max(0, idx_ws))
+        self.workspace_mode_combo.currentIndexChanged.connect(self._on_workspace_mode_changed)
+
+        self._add_card_row(
+            lay,
+            'Chế độ hiển thị',
+            'Workspace Mode',
+            'Chọn Offline (chỉ BoTube gốc), Online (chỉ YouTube + Tải về & Cài đặt — ẩn tab không liên quan), hoặc hiển thị Cả hai.',
+            'Choose Offline (classic BoTube only), Online (YouTube + Downloads & Settings only), or Both.',
+            self.workspace_mode_combo,
+        )
+        self._update_workspace_badge(saved_ws, get_language())
+        self.cards_layout.addWidget(self.workspace_card)
+
+    def _update_workspace_badge(self, mode: str, lang: str | None = None) -> None:
+        is_en = normalize_language(lang or get_language()) == 'en'
+        m = str(mode or 'both').strip().lower()
+        if m == 'offline':
+            self.lbl_workspace_badge.setText('Offline Only' if is_en else 'Chỉ Offline')
+            self.lbl_workspace_badge.setProperty('tone', 'neutral')
+        elif m == 'online':
+            self.lbl_workspace_badge.setText('YouTube Online' if is_en else 'Chỉ Online')
+            self.lbl_workspace_badge.setProperty('tone', 'good')
+        else:
+            self.lbl_workspace_badge.setText('Both Modes' if is_en else 'Offline + Online')
+            self.lbl_workspace_badge.setProperty('tone', 'good')
+        self.lbl_workspace_badge.style().unpolish(self.lbl_workspace_badge)
+        self.lbl_workspace_badge.style().polish(self.lbl_workspace_badge)
+
+    def _on_workspace_mode_changed(self, *_args) -> None:
+        mode = str(self.workspace_mode_combo.currentData() or 'both').strip().lower()
+        if mode not in ('both', 'offline', 'online'):
+            mode = 'both'
+        self._update_workspace_badge(mode)
+        win = getattr(self.controller, 'window', None)
+        if win is not None:
+            if hasattr(win, 'save_workspace_mode'):
+                win.save_workspace_mode(mode)
+            if hasattr(win, 'apply_workspace_mode'):
+                win.apply_workspace_mode(mode, navigate=False)
+        self._show_save_pill('✓ Đã đổi chế độ ứng dụng', '✓ Workspace mode updated')
 
     def _build_audio_card(self):
         self.lbl_audio_badge = QLabel('Chuẩn Hi-Fi · −14 LUFS')
@@ -1154,6 +1221,10 @@ class SettingsStudioView(QObject):
         self._retranslate_proxy_combo(self.compute_device_combo, _COMPUTE_DEVICE_ITEMS, target)
         self._retranslate_proxy_combo(self.online_ai_combo, _ONLINE_PROVIDER_ITEMS, target)
         self._retranslate_proxy_combo(self.genius_mode_combo, _GENIUS_MODE_ITEMS, target)
+        if hasattr(self, 'workspace_mode_combo'):
+            self._retranslate_proxy_combo(self.workspace_mode_combo, _WORKSPACE_MODE_ITEMS, target)
+            cur_ws = str(self.workspace_mode_combo.currentData() or 'both')
+            self._update_workspace_badge(cur_ws, target)
         if hasattr(self, 'auto_update_combo'):
             self._retranslate_proxy_combo(self.auto_update_combo, _AUTO_UPDATE_ITEMS, target)
         if hasattr(self, 'btn_check_updates'):

@@ -282,6 +282,7 @@ class AudioEffectsController(QObject):
         self._failed_request = None
         self._last_pos_sample = None
         self._last_sync_at = 0.0
+        self._last_wasapi_recovery_mono = 0.0
         self._ram_cache: OrderedDict[tuple, dict] = OrderedDict()
 
         self._request_timer = QTimer(self)
@@ -1139,14 +1140,32 @@ class AudioEffectsController(QObject):
             else:
                 self.panel.set_status(self._active_status_text(info))
         except Exception as err:
-            logger.warning('Real-time WASAPI stream fallback to Qt native: %s', err)
-            self.stream.stop()
-            self._sync_timer.stop()
-            if self.player.audioOutput() is not self.window.audio_output:
-                self.player.setAudioOutput(self.window.audio_output)
-            self._apply_qt_normalization(ramp=False)
-            self.panel.set_status('Thiết bị bận · Dùng mặc định')
+            self._fallback_to_qt_native(err)
+            return
         self._update_signal_path()
+
+    def _fallback_to_qt_native(self, err, status_text: str = 'Thiết bị bận · Dùng mặc định'):
+        """Gracefully recover to Qt native audio output if WASAPI fails (never crash BoTube)."""
+        logger.warning('Real-time WASAPI stream fallback to Qt native: %s', err)
+        self.stream.stop()
+        self._sync_timer.stop()
+        if self.player.audioOutput() is not self.window.audio_output:
+            self.player.setAudioOutput(self.window.audio_output)
+        self._apply_qt_normalization(ramp=False)
+        self.panel.set_status(status_text)
+        self._update_signal_path()
+
+    def _safe_stream_seek(self, target_ms: int) -> None:
+        try:
+            self.stream.seek(int(target_ms))
+        except Exception as err:
+            self._fallback_to_qt_native(err)
+
+    def _safe_stream_resume(self, target_ms: int) -> None:
+        try:
+            self.stream.resume(int(target_ms))
+        except Exception as err:
+            self._fallback_to_qt_native(err)
 
     def _progress(self, text):
         if not self._closed and self.sender() is self.worker and self.worker.generation == self._generation:
@@ -1207,7 +1226,7 @@ class AudioEffectsController(QObject):
         if state == QMediaPlayer.PlaybackState.PlayingState:
             if self._source_info is not None:
                 if self.stream.status_info().get('paused'):
-                    self.stream.resume(self._effective_start_position_ms())
+                    self._safe_stream_resume(self._effective_start_position_ms())
                 elif not self.stream.is_active():
                     self._start_or_reconfigure_stream()
                 self._last_sync_at = time.monotonic()
@@ -1244,7 +1263,7 @@ class AudioEffectsController(QObject):
         self._last_pos_sample = (pos, time.monotonic())
         self._last_sync_at = time.monotonic()
         if self.stream.is_active() and abs(self.stream.position_ms() - pos) > 500:
-            self.stream.seek(pos)
+            self._safe_stream_seek(pos)
 
     def _seek_requested(self, _position):
         if not self._closed and self._use_stream_engine():
@@ -1256,7 +1275,7 @@ class AudioEffectsController(QObject):
         pos = self.player.position()
         self._last_pos_sample = (pos, time.monotonic())
         self._last_sync_at = time.monotonic()
-        self.stream.seek(pos)
+        self._safe_stream_seek(pos)
 
     def _position_changed(self, position):
         if self._closed or not self._use_stream_engine():
@@ -1273,9 +1292,22 @@ class AudioEffectsController(QObject):
             self._seek_timer.start()
 
     def _sync_tick(self):
-        if self._closed or not self._use_stream_engine() or not self.stream.is_active():
+        if self._closed or not self._use_stream_engine():
             return
         if self.player.playbackState() != QMediaPlayer.PlaybackState.PlayingState:
+            return
+        # Auto-recover mid-song WASAPI endpoint invalidation (Bluetooth drop / DAC glitch) within <= 500ms!
+        stream_err = self.stream.consume_stream_error() if hasattr(self.stream, 'consume_stream_error') else ''
+        if stream_err:
+            now_m = time.monotonic()
+            if (now_m - self._last_wasapi_recovery_mono) >= 1.5 and self._source_info is not None:
+                self._last_wasapi_recovery_mono = now_m
+                logger.warning('Mid-playback WASAPI drop detected (%s) — auto-recovering audio stream', stream_err)
+                self._start_or_reconfigure_stream()
+            else:
+                self._fallback_to_qt_native(stream_err)
+            return
+        if not self.stream.is_active():
             return
         if self.window.playback_bar.time_slider.isSliderDown():
             return
@@ -1284,7 +1316,7 @@ class AudioEffectsController(QObject):
         drift = abs(self.player.position() - self.stream.position_ms())
         if drift > 2500 and self.player.position() > 2500:
             self._last_sync_at = time.monotonic()
-            self.stream.seek(self.player.position())
+            self._safe_stream_seek(self.player.position())
 
     def _handle_device_change(self):
         if self._closed:

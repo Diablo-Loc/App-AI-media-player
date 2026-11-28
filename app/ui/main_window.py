@@ -47,6 +47,7 @@ from ui.pages.playlists_page import PlaylistsPage
 from ui.pages.history_page import HistoryPage
 from ui.pages.download import DownloadPage
 from ui.pages.settings import SettingsPage
+from ui.pages.youtube_online_page import YouTubeOnlinePage
 from ui.pages.dynamic_island import MiniPlayer
 from ui.nav.sidebar import Sidebar
 from ui.system_media_manager import SystemMediaManager
@@ -335,6 +336,7 @@ class MainWindow(QMainWindow):
         self.media_manager = SystemMediaManager(self)
         self.audio_devices = QMediaDevices()
         self.audio_effects = install_audio_effects(self)
+        self._wire_youtube_online_audio_sync()
         self._volume_settings = install_volume_settings(self)
         if hasattr(self, 'sub_layer') and hasattr(self.sub_layer, '_subtitle_effects'):
             self.sub_layer._subtitle_effects.bind_position_provider(self.authoritative_subtitle_position_ms)
@@ -383,8 +385,400 @@ class MainWindow(QMainWindow):
                 sig.connect(slot, Qt.ConnectionType.QueuedConnection)
         self._hw_media_connected_mgr = manager
 
+    def _is_youtube_online_controlling_media(self) -> bool:
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is None:
+            return False
+        if yt.is_playing_active():
+            return True
+        return bool(
+            hasattr(self, "content_stack")
+            and self.content_stack.currentWidget() is yt
+            and yt.player.is_loaded
+        )
+
+    def _pause_offline_for_youtube_online(self):
+        """Pause offline playback & release WASAPI Exclusive before YouTube Online opens audio."""
+        player = getattr(getattr(self, "media_player", None), "player", None)
+        if player is not None and player.playbackState() == QMediaPlayer.PlaybackState.PlayingState:
+            player.pause()
+        fx = getattr(self, "audio_effects", None)
+        if fx is not None:
+            stream = getattr(fx, "stream", None)
+            if stream is not None and hasattr(stream, "pause"):
+                stream.pause()
+        self.sync_mini_player_state()
+
+    def _pause_youtube_online_if_playing(self):
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and hasattr(yt, "pause_if_playing"):
+            yt.pause_if_playing()
+
+    def _is_on_youtube_online_tab(self) -> bool:
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and getattr(yt, "_is_fullscreen_stage", False):
+            return True
+        return getattr(self, "content_stack", None) is not None and self.content_stack.currentIndex() == 7
+
+    def _restore_clean_window_cursor(self):
+        """Guarantee mouse cursor & window activation are 100% restored when leaving YouTube Online."""
+        if hasattr(self, "mouse_hide_timer") and self.mouse_hide_timer.isActive():
+            self.mouse_hide_timer.stop()
+        self.unsetCursor()
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        try:
+            while QApplication.overrideCursor() is not None:
+                QApplication.restoreOverrideCursor()
+        except Exception:
+            pass
+        self.raise_()
+        self.activateWindow()
+
+    def _open_sub_settings_for_youtube_online(self):
+        """Open BoTube's existing Subtitle Appearance Studio panel while inside YouTube Online."""
+        if hasattr(self, "toggle_subsettings_panel"):
+            self.toggle_subsettings_panel()
+
+    def _yt_before_exclusive(self):
+        fx = getattr(self, "audio_effects", None)
+        if fx is not None and hasattr(fx, "_pause_smtc_for_exclusive"):
+            fx._pause_smtc_for_exclusive()
+
+    def _yt_after_exclusive(self):
+        fx = getattr(self, "audio_effects", None)
+        if fx is not None and hasattr(fx, "_resume_smtc_after_exclusive"):
+            fx._resume_smtc_after_exclusive()
+
+    def _open_audio_panel_for_youtube_online(self, anchor_widget):
+        """Open BoTube's existing Audio Studio panel anchored cleanly & synced with YouTube Hi-Fi status."""
+        fx = getattr(self, "audio_effects", None)
+        yt = getattr(self, "youtube_online_page", None)
+        if fx is None or getattr(fx, "panel", None) is None:
+            return
+        if fx.panel.isVisible():
+            fx.panel.hide()
+            return
+        if hasattr(self, "vol_popup"):
+            self.vol_popup.hide()
+        if hasattr(fx, "_update_signal_path"):
+            fx._update_signal_path()
+        self._yt_benchmark_armed = True
+        if yt is not None and hasattr(yt, "sync_to_audio_panel"):
+            yt.sync_to_audio_panel(fx.panel)
+        fx.panel.open_at(anchor_widget)
+        # When anchored near the top bar, flip popover neatly below & right-aligned with the button
+        try:
+            top_pt = anchor_widget.mapToGlobal(QPoint(anchor_widget.width() // 2, 0))
+            bot_right = anchor_widget.mapToGlobal(QPoint(anchor_widget.width(), anchor_widget.height()))
+            scr = anchor_widget.screen().availableGeometry()
+            if (top_pt.y() - fx.panel.height() - 10) < (scr.top() + 8):
+                x = max(scr.left() + 8, min(bot_right.x() - fx.panel.width(), scr.right() - fx.panel.width() - 8))
+                y = min(scr.bottom() - fx.panel.height() - 8, bot_right.y() + 6)
+                fx.panel.move(x, max(scr.top() + 8, y))
+        except Exception:
+            pass
+
+    def _on_open_benchmark_from_youtube(self):
+        """Restore BoTube shell, release YouTube WASAPI Exclusive & measure active YouTube track in Benchmark Lab."""
+        armed = bool(getattr(self, "_yt_benchmark_armed", False))
+        yt = getattr(self, "youtube_online_page", None)
+        yt_has_song = bool(yt is not None and getattr(yt, "_current_stream", None) is not None)
+        if not (self._is_on_youtube_online_tab() or armed or (yt_has_song and yt.player.is_playing)):
+            return
+        self._yt_benchmark_armed = False
+        fx = getattr(self, "audio_effects", None)
+        if yt is not None:
+            if getattr(yt, "_is_fullscreen_stage", False):
+                yt.exit_fullscreen_stage()
+            if getattr(yt, "_is_pill_mode", False) and hasattr(yt, "exit_pill_mode"):
+                yt.exit_pill_mode()
+            if hasattr(yt, "hide_floating_overlays"):
+                yt.hide_floating_overlays()
+            yt.pause_if_playing()
+        if hasattr(self, "sidebar_container"):
+            self.sidebar_container.show()
+        if hasattr(self, "playback_bar"):
+            self.playback_bar.setVisible(getattr(self, "_workspace_mode", "both") != "online")
+        if hasattr(self, "grid_main_page") and self.grid_main_page.layout() is not None:
+            self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
+        self._restore_clean_window_cursor()
+        if yt is not None and yt_has_song and fx is not None and getattr(fx, "benchmark_page", None) is not None:
+            if hasattr(yt, "prepare_benchmark_audio_for"):
+                yt.prepare_benchmark_audio_for(fx.benchmark_page)
+
+    def _wire_youtube_online_audio_sync(self):
+        """Forward live Audio Studio profile & 10-band EQ changes to YouTube Online."""
+        fx = getattr(self, "audio_effects", None)
+        yt = getattr(self, "youtube_online_page", None)
+        if fx is None or yt is None or getattr(fx, "panel", None) is None:
+            return
+        panel = fx.panel
+
+        def _sync_audio_and_panel(*_args):
+            yt.on_audio_profile_changed()
+            if self._is_on_youtube_online_tab() and hasattr(yt, "sync_to_audio_panel"):
+                QTimer.singleShot(160, lambda: yt.sync_to_audio_panel(panel))
+
+        notify = lambda *_args: QTimer.singleShot(45, _sync_audio_and_panel)
+        for sig_name in (
+            "settings_changed",
+            "level_changed",
+            "output_device_changed",
+            "dac_phase_changed",
+            "recommended_requested",
+        ):
+            sig = getattr(panel, sig_name, None)
+            if sig is not None:
+                sig.connect(notify)
+        if hasattr(panel, "open_benchmark_requested"):
+            panel.open_benchmark_requested.connect(self._on_open_benchmark_from_youtube)
+        if getattr(fx, "benchmark_page", None) is not None and hasattr(fx.benchmark_page, "back_requested"):
+            def _ensure_shell_visible():
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar"):
+                    self.playback_bar.show()
+                self._restore_clean_window_cursor()
+            fx.benchmark_page.back_requested.connect(_ensure_shell_visible)
+        if hasattr(yt, "player") and hasattr(yt.player, "audio_status_changed"):
+            yt.player.audio_status_changed.connect(
+                lambda _txt: yt.sync_to_audio_panel(panel) if self._is_on_youtube_online_tab() else None
+            )
+
+        def _hook_eq_dialog():
+            dlg = getattr(fx, "eq_dialog", None)
+            if dlg is not None and not getattr(dlg, "_yt_online_synced", False):
+                dlg._yt_online_synced = True
+                if hasattr(dlg, "eq_changed"):
+                    dlg.eq_changed.connect(notify)
+
+        if hasattr(panel, "open_eq_requested"):
+            panel.open_eq_requested.connect(lambda: QTimer.singleShot(90, _hook_eq_dialog))
+
+        # Sync ALL BoTube Subtitle Studio settings (mode, font, color, bg, outline, shadow, fade, phonetic, VFX) live!
+        sub_panel = getattr(self, "subsettings_panel", None)
+        if sub_panel is not None:
+            notify_sub = lambda *_args: QTimer.singleShot(
+                35,
+                lambda: yt.apply_subtitle_style(dict(getattr(self, "config", {}) or {}))
+                if not getattr(yt, "_shutting_down", False)
+                else None,
+            )
+            for sname in (
+                "subtitle_mode_changed",
+                "font_size_changed",
+                "font_color_changed",
+                "bg_color_changed",
+                "bg_opacity_changed",
+                "outline_changed",
+                "shadow_changed",
+                "fade_effect_changed",
+                "phonetic_changed",
+                "word_karaoke_changed",
+                "lock_position_changed",
+                "studio_profile_requested",
+                "reset_requested",
+            ):
+                sig = getattr(sub_panel, sname, None)
+                if sig is not None:
+                    sig.connect(notify_sub)
+            fx_panel = getattr(sub_panel, "effects_panel", None)
+            if fx_panel is not None and hasattr(fx_panel, "changed"):
+                fx_panel.changed.connect(notify_sub)
+        if hasattr(self, "settings_page") and hasattr(self.settings_page, "settings_changed"):
+            self.settings_page.settings_changed.connect(lambda *_args: QTimer.singleShot(50, yt.refresh_ai_availability))
+        yt.apply_subtitle_style(dict(getattr(self, "config", {}) or {}))
+        QTimer.singleShot(0, lambda: self.apply_workspace_mode(navigate=True))
+
+    @staticmethod
+    def _workspace_mode_file():
+        from pathlib import Path as _Path
+        return _Path(storage_dir()) / "workspace-mode.json"
+
+    @classmethod
+    def load_saved_workspace_mode(cls) -> str:
+        """Load portable workspace mode ('both' | 'offline' | 'online') without polluting sandbox tests."""
+        from pathlib import Path as _Path
+        p = cls._workspace_mode_file()
+        if p.is_file():
+            try:
+                raw = json.loads(p.read_text(encoding="utf-8"))
+                val = str((raw.get("mode") if isinstance(raw, dict) else raw) or "both").strip().lower()
+                if val in ("both", "offline", "online"):
+                    return val
+            except Exception:
+                pass
+        # Preserve a user's existing QSettings choice on real app storage (never leak into temp test sandboxes)
+        try:
+            import tempfile as _tf
+            if not str(p.resolve()).lower().startswith(str(_Path(_tf.gettempdir()).resolve()).lower()):
+                from PySide6.QtCore import QSettings as _QS
+                val = str(_QS("MyStudio", "AI_Music_Player").value("app_workspace_mode", "both") or "both").strip().lower()
+                if val in ("both", "offline", "online"):
+                    return val
+        except Exception:
+            pass
+        return "both"
+
+    @classmethod
+    def save_workspace_mode(cls, mode: str) -> str:
+        m = str(mode or "both").strip().lower()
+        if m not in ("both", "offline", "online"):
+            m = "both"
+        p = cls._workspace_mode_file()
+        try:
+            p.parent.mkdir(parents=True, exist_ok=True)
+            tmp = p.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps({"mode": m}, ensure_ascii=False, indent=2), encoding="utf-8")
+            os.replace(tmp, p)
+        except Exception:
+            pass
+        return m
+
+    def apply_workspace_mode(self, mode: str | None = None, *, navigate: bool = False) -> str:
+        """Apply BoTube workspace mode: 'both' (default), 'offline' (classic BoTube), or 'online' (YouTube + Download + Settings)."""
+        if mode is None:
+            mode = self.load_saved_workspace_mode()
+        m = str(mode or "both").strip().lower()
+        if m not in ("both", "offline", "online"):
+            m = "both"
+        self._workspace_mode = m
+
+        online_allowed = {"youtube_online", "download", "settings"}
+        if hasattr(self, "sidebar"):
+            # Reorder YouTube to top (before Download & Settings) in pure Online mode; restore canonical order otherwise!
+            yt_row_cur = self.sidebar.row_for_page("youtube_online") if hasattr(self.sidebar, "row_for_page") else -1
+            if yt_row_cur >= 0:
+                cur_key = self.sidebar.page_key_at(self.sidebar.currentRow())
+                self.sidebar.blockSignals(True)
+                try:
+                    if m == "online" and yt_row_cur != 0:
+                        yt_item = self.sidebar.takeItem(yt_row_cur)
+                        self.sidebar.insertItem(0, yt_item)
+                    elif m != "online":
+                        set_row = self.sidebar.row_for_page("settings")
+                        target_idx = max(0, set_row - 1) if set_row >= 0 else (self.sidebar.count() - 1)
+                        if yt_row_cur != target_idx:
+                            yt_item = self.sidebar.takeItem(yt_row_cur)
+                            set_row2 = self.sidebar.row_for_page("settings")
+                            ins_idx = set_row2 if set_row2 >= 0 else self.sidebar.count()
+                            self.sidebar.insertItem(ins_idx, yt_item)
+                    if cur_key:
+                        new_cur = self.sidebar.row_for_page(cur_key)
+                        if new_cur >= 0:
+                            self.sidebar.setCurrentRow(new_cur)
+                finally:
+                    self.sidebar.blockSignals(False)
+
+            for r in range(self.sidebar.count()):
+                pkey = self.sidebar.page_key_at(r) if hasattr(self.sidebar, "page_key_at") else ""
+                if m == "offline":
+                    hide = (pkey == "youtube_online")
+                elif m == "online":
+                    hide = (pkey not in online_allowed)
+                else:
+                    hide = False
+                self.sidebar.setRowHidden(r, hide)
+
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and hasattr(yt, "set_workspace_mode"):
+            yt.set_workspace_mode(m)
+
+        cur_idx = self.content_stack.currentIndex() if hasattr(self, "content_stack") else 0
+        if m == "offline":
+            if cur_idx == 7:
+                if yt is not None:
+                    if getattr(yt, "_is_fullscreen_stage", False):
+                        yt.exit_fullscreen_stage()
+                    if getattr(yt, "_is_pill_mode", False) and hasattr(yt, "exit_pill_mode"):
+                        yt.exit_pill_mode()
+                    if hasattr(yt, "hide_floating_overlays"):
+                        yt.hide_floating_overlays()
+                    yt.pause_if_playing()
+                home_row = self.sidebar.row_for_page("home") if hasattr(self, "sidebar") else 0
+                if home_row >= 0:
+                    self.sidebar.setCurrentRow(home_row)
+                    self.handle_sidebar_click(self.sidebar.item(home_row))
+            else:
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.setVisible(cur_idx in (0, 2))
+        elif m == "online":
+            if hasattr(self, "playback_bar"):
+                self.playback_bar.hide()
+            if hasattr(self, "top_toolbar_container"):
+                self.top_toolbar_container.hide()
+            # On startup or if currently sitting on a hidden offline tab, jump cleanly to YouTube Online
+            cur_is_offline_tab = cur_idx in (0, 1, 2, 5, 6)
+            if (navigate or cur_is_offline_tab) and hasattr(self, "sidebar"):
+                yt_row = self.sidebar.row_for_page("youtube_online")
+                if yt_row >= 0:
+                    self.sidebar.setCurrentRow(yt_row)
+                    self.handle_sidebar_click(self.sidebar.item(yt_row))
+        else:
+            # 'both': restore playback bar & shell if currently on a non-YouTube tab
+            if cur_idx != 7:
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.setVisible(cur_idx in (0, 2))
+
+        # If user started in Online-only mode (deferred offline scan) and now switches to Both/Offline, load their folders!
+        if m != "online" and getattr(self, "_deferred_offline_folders", None):
+            pending = list(self._deferred_offline_folders)
+            self._deferred_offline_folders = []
+            if len(pending) > 1:
+                QTimer.singleShot(80, lambda f=pending: self.load_folders_content(f))
+            elif len(pending) == 1:
+                QTimer.singleShot(80, lambda f=pending[0]: self.load_folder_content(f))
+        return m
+
+    def _return_from_youtube_online(self):
+        """Leave standalone YouTube Online workspace (or open minimal Online-only sidebar menu)."""
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and getattr(yt, "_is_fullscreen_stage", False):
+            yt.exit_fullscreen_stage()
+        self._restore_clean_window_cursor()
+        if getattr(self, "_workspace_mode", "both") == "online":
+            # Online-only mode: toggle the clean minimal sidebar (YouTube / Download / Settings)
+            if hasattr(self, "sidebar_container"):
+                vis = self.sidebar_container.isVisible()
+                self.sidebar_container.setVisible(not vis)
+            return
+        if hasattr(self, "sidebar") and self.sidebar.count() > 0:
+            self.sidebar.setCurrentRow(0)
+            self.handle_sidebar_click(self.sidebar.item(0))
+        QTimer.singleShot(60, self._restore_clean_window_cursor)
+
+    def _queue_download_from_youtube_online(self, url: str, title: str):
+        """1-click handoff from YouTube Online -> existing BoTube Studio Download page (0 edits to DownloadPage)."""
+        clean_url = str(url or "").strip()
+        if not clean_url or not hasattr(self, "download_page"):
+            return
+        clean_title = " ".join(str(title or clean_url).splitlines()).strip() or clean_url
+        dp = self.download_page
+        cur_links = dp.txt_links.toPlainText().strip()
+        cur_names = dp.txt_names.toPlainText().strip()
+        dp.txt_links.setPlainText((cur_links + "\n" + clean_url) if cur_links else clean_url)
+        dp.txt_names.setPlainText((cur_names + "\n" + clean_title) if cur_names else clean_title)
+        dl_row = self.sidebar.row_for_page("download") if hasattr(self, "sidebar") else -1
+        if dl_row >= 0:
+            self.sidebar.setCurrentRow(dl_row)
+            self.handle_sidebar_click(self.sidebar.item(dl_row))
+        if hasattr(self, "_show_status"):
+            self._show_status(f"⬇ Đã chuyển sang Tải về: {clean_title}")
+
     def _hardware_play(self):
         """Idempotent Play-only handler for keyboard/headphone SMTC Play key."""
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.player.play()
+            return
+        self._pause_youtube_online_if_playing()
         if self._try_startup_resume():
             return
         if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(True):
@@ -397,6 +791,9 @@ class MainWindow(QMainWindow):
 
     def _hardware_pause(self):
         """Idempotent Pause-only handler for keyboard/headphone SMTC Pause key."""
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.pause_if_playing()
+            return
         if hasattr(self, "audio_effects") and self.audio_effects.set_pending_playback(False):
             self.sync_mini_player_state()
             return
@@ -413,6 +810,9 @@ class MainWindow(QMainWindow):
         if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
             return
         self._hw_last_skip_mono = now
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.play_next()
+            return
         self.play_next()
 
     def _hardware_prev(self):
@@ -423,6 +823,9 @@ class MainWindow(QMainWindow):
         if (now - float(getattr(self, "_hw_last_skip_mono", 0.0) or 0.0)) < 0.28:
             return
         self._hw_last_skip_mono = now
+        if self._is_youtube_online_controlling_media():
+            self.youtube_online_page.play_previous()
+            return
         self.play_previous()
 
     def _save_font_size(self, value):
@@ -441,6 +844,10 @@ class MainWindow(QMainWindow):
         self._save_setting("lock_position", value)
 
     def _escape_shortcut(self):
+        yt = getattr(self, "youtube_online_page", None)
+        if yt is not None and getattr(yt, "_is_fullscreen_stage", False):
+            yt.exit_fullscreen_stage()
+            return
         if self.isFullScreen():
             self.toggle_fullscreen()
                              
@@ -550,6 +957,8 @@ class MainWindow(QMainWindow):
                 self.audio_effects.shutdown()
             if hasattr(self, 'download_page'):
                 self.download_page.shutdown_workers()
+            if hasattr(self, 'youtube_online_page') and self.youtube_online_page is not None:
+                self.youtube_online_page.shutdown()
             if hasattr(self, 'update_controller') and self.update_controller is not None:
                 self.update_controller.shutdown()
             info_owner = getattr(QApplication.instance(), '_media_info_worker_owner', None)
@@ -748,6 +1157,7 @@ class MainWindow(QMainWindow):
             "❤️ Bộ sưu tập",
             "🕒 Lịch sử",
             "💾 Download",
+            "🌐 YouTube",
             "⚙️ Tùy chỉnh",
         ])
 
@@ -778,13 +1188,26 @@ class MainWindow(QMainWindow):
             media_library=self.media_library,
             notify_callback=self._show_status,
         )
-        self.content_stack.addWidget(self.home_page)        # Index 0
-        self.content_stack.addWidget(self.foryou_page)      # Index 1
-        self.content_stack.addWidget(self.library_page)     # Index 2
-        self.content_stack.addWidget(self.download_page)    # Index 3
-        self.content_stack.addWidget(self.settings_page)    # Index 4
-        self.content_stack.addWidget(self.collections_page) # Index 5
-        self.content_stack.addWidget(self.history_page)     # Index 6
+        self.youtube_online_page = YouTubeOnlinePage(
+            profile_provider=lambda: getattr(getattr(self, "audio_effects", None), "profile", None),
+            audio_panel_opener=self._open_audio_panel_for_youtube_online,
+            sub_settings_opener=self._open_sub_settings_for_youtube_online,
+            sub_style_provider=lambda: dict(getattr(self, "config", {}) or {}),
+            on_before_exclusive=self._yt_before_exclusive,
+            on_after_exclusive=self._yt_after_exclusive,
+        )
+        self.youtube_online_page.playback_starting.connect(self._pause_offline_for_youtube_online)
+        self.youtube_online_page.download_requested.connect(self._queue_download_from_youtube_online)
+        self.youtube_online_page.back_to_botube_requested.connect(self._return_from_youtube_online)
+        self.youtube_online_page.status_message.connect(self._show_status)
+        self.content_stack.addWidget(self.home_page)           # Index 0
+        self.content_stack.addWidget(self.foryou_page)         # Index 1
+        self.content_stack.addWidget(self.library_page)        # Index 2
+        self.content_stack.addWidget(self.download_page)       # Index 3
+        self.content_stack.addWidget(self.settings_page)       # Index 4
+        self.content_stack.addWidget(self.collections_page)    # Index 5
+        self.content_stack.addWidget(self.history_page)        # Index 6
+        self.content_stack.addWidget(self.youtube_online_page) # Index 7
 
         # 3. Tạo Vỏ bọc (Toolbar + Stack)
         self.content_ctrl = ContentController(self)
@@ -1022,6 +1445,15 @@ class MainWindow(QMainWindow):
             self.play_next()
 
     def toggle_play_pause(self):
+        if self._is_on_youtube_online_tab():
+            fw = QApplication.focusWidget()
+            if isinstance(fw, (QLineEdit,)):
+                return
+            yt = getattr(self, "youtube_online_page", None)
+            if yt is not None:
+                yt.toggle_play_pause()
+            return
+        self._pause_youtube_online_if_playing()
         if self._try_startup_resume():
             return
         if self.audio_effects.toggle_pending_start():
@@ -1172,6 +1604,11 @@ class MainWindow(QMainWindow):
 
     def adjust_volume(self, delta):
         """Xử lý khi bấm phím tắt Tăng/Giảm âm lượng"""
+        if self._is_on_youtube_online_tab():
+            yt = getattr(self, "youtube_online_page", None)
+            if yt is not None and hasattr(yt, "adjust_volume"):
+                yt.adjust_volume(delta)
+            return
         if not self.audio_output:
             return
         current_vol = self.audio_effects.volume()
@@ -1181,6 +1618,14 @@ class MainWindow(QMainWindow):
         self.playback_bar.update_volume_icon(new_vol)
 
     def seek_relative(self, ms):
+        if self._is_on_youtube_online_tab():
+            fw = QApplication.focusWidget()
+            if isinstance(fw, (QLineEdit,)):
+                return
+            yt = getattr(self, "youtube_online_page", None)
+            if yt is not None and hasattr(yt, "seek_relative"):
+                yt.seek_relative(ms)
+            return
         player = self.media_player.player
         if player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:
             new_pos = max(0, player.position() + ms)
@@ -1483,6 +1928,10 @@ class MainWindow(QMainWindow):
             print("Switching to Large Mode")
             
     def eventFilter(self, watched, event):
+        # 0. Tuyệt đối không cho luồng Fullscreen Offline (playback_bar / BlankCursor) can thiệp tab YouTube Online
+        if self._is_on_youtube_online_tab():
+            return super().eventFilter(watched, event)
+
         # 1. Kiểm tra an toàn: Đảm bảo các widget quan trọng đã tồn tại
         if not hasattr(self, 'video_display') or not hasattr(self, 'playback_bar'):
             return super().eventFilter(watched, event)
@@ -1561,6 +2010,7 @@ class MainWindow(QMainWindow):
         """Xử lý khi click vào một bài hát / video"""
         if media_item is None:
             return
+        self._pause_youtube_online_if_playing()
 
         video_path = str(getattr(media_item, "path", "") or "")
         file_exists = bool(video_path and os.path.isfile(video_path))
@@ -1817,6 +2267,11 @@ class MainWindow(QMainWindow):
         print(f"📢 STATUS: {message}")
         
     def toggle_fullscreen(self):
+        if self._is_on_youtube_online_tab():
+            yt = getattr(self, "youtube_online_page", None)
+            if yt is not None:
+                yt._toggle_fullscreen_stage()
+            return
         if self.isFullScreen():
             # Thoát fullscreen
             self.showNormal()
@@ -1840,6 +2295,13 @@ class MainWindow(QMainWindow):
         QTimer.singleShot(100, self.sync_subtitle_margin)
     
     def show_controls(self):
+        if self._is_on_youtube_online_tab():
+            if hasattr(self, "mouse_hide_timer"):
+                self.mouse_hide_timer.stop()
+            if hasattr(self, "playback_bar"):
+                self.playback_bar.hide()
+            self.unsetCursor()
+            return
         if self.playback_bar.isHidden():
             self.playback_bar.show()
             if hasattr(self, "ai_progress_bar") and self.ai_progress_bar._state != "idle":
@@ -1851,6 +2313,13 @@ class MainWindow(QMainWindow):
 
     def hide_controls(self):
         """Ẩn thanh điều khiển và chuột"""
+        if self._is_on_youtube_online_tab():
+            if hasattr(self, "mouse_hide_timer"):
+                self.mouse_hide_timer.stop()
+            if hasattr(self, "playback_bar"):
+                self.playback_bar.hide()
+            self.unsetCursor()
+            return
         if self.playback_bar.underMouse():
             return
         if any(popup.isVisible() for popup in (
@@ -2004,6 +2473,11 @@ class MainWindow(QMainWindow):
             else ([last_folder] if last_folder else [])
         )
         self._restore_passive_last_played_ui()
+
+        if self.load_saved_workspace_mode() == "online":
+            # In pure Online mode, skip heavy offline disk/thumbnail scanning on startup and stay on YouTube Online!
+            self._deferred_offline_folders = list(folders)
+            return
 
         if len(folders) > 1:
             print(f"🔄 Khôi phục đa thư mục ({len(folders)} nguồn): {folders}")
@@ -2517,7 +2991,11 @@ class MainWindow(QMainWindow):
             # Nếu người dùng đang mở Bộ sưu tập (5) hoặc Lịch sử (6) (VD: vừa thêm/quét lại thư mục),
             # giữ nguyên tab hiện tại để không giật màn hình về Trang chủ.
             cur_stack_idx = self.content_stack.currentIndex() if hasattr(self, 'content_stack') else 0
-            if cur_stack_idx in (5, 6):
+            if cur_stack_idx == 7 or getattr(self, "_workspace_mode", "both") == "online":
+                # Never hijack the screen away from YouTube Online or hide the user's navigation!
+                if hasattr(self, 'content_ctrl'):
+                    self.content_ctrl.all_items = self.all_media_items
+            elif cur_stack_idx in (5, 6):
                 if cur_stack_idx == 5 and hasattr(self, 'collections_page'):
                     self.collections_page.refresh_all()
                     self.collections_page.refresh_folders_ui()
@@ -2526,6 +3004,12 @@ class MainWindow(QMainWindow):
             else:
                 self.content_ctrl.set_new_data(self.all_media_items)
                 self.sidebar.setCurrentRow(0)
+                if hasattr(self, "sidebar_container"):
+                    self.sidebar_container.show()
+                if hasattr(self, "top_toolbar_container"):
+                    self.top_toolbar_container.show()
+                if hasattr(self, "playback_bar") and not self.isFullScreen():
+                    self.playback_bar.show()
 
         # Nạp dữ liệu vào hàng chờ (SAU KHI ĐÃ CLEAR GRID)
         #self.pending_items = self.media_items.copy()
@@ -2870,6 +3354,7 @@ class MainWindow(QMainWindow):
         "settings": 4,
         "collections": 5,
         "history": 6,
+        "youtube_online": 7,
     }
 
     def handle_sidebar_click(self, item):
@@ -2878,8 +3363,20 @@ class MainWindow(QMainWindow):
         row = self.sidebar.row(item)
         page_key = self.sidebar.page_key_at(row) if hasattr(self.sidebar, "page_key_at") else ""
         index = self._PAGE_KEY_TO_STACK.get(page_key, row)
-        if index == self.content_stack.currentIndex():
+        prev_index = self.content_stack.currentIndex()
+        if index == prev_index:
+            if index != 7 and getattr(self, "_workspace_mode", "both") != "online" and not self.isFullScreen():
+                if hasattr(self, "playback_bar") and self.playback_bar.isHidden():
+                    self.playback_bar.show()
+                if index in (0, 2) and hasattr(self, "top_toolbar_container") and self.top_toolbar_container.isHidden():
+                    self.top_toolbar_container.show()
             return
+        if prev_index == 7:
+            self._yt_benchmark_armed = False
+            yt_prev = getattr(self, "youtube_online_page", None)
+            if yt_prev is not None and hasattr(yt_prev, "hide_floating_overlays"):
+                yt_prev.hide_floating_overlays()
+            self._restore_clean_window_cursor()
 
         # ===============================================================
         # BƯỚC 0: "NUCLEAR RESET" - TẨY NÃO SUBTITLE TRƯỚC KHI CHUYỂN
@@ -2913,8 +3410,21 @@ class MainWindow(QMainWindow):
                 self._normal_window_state = self.windowState()
             self.top_toolbar_container.hide()
             self.showMaximized()
+            if hasattr(self, 'sidebar_container'):
+                if index == 7:
+                    self.sidebar_container.hide()
+                else:
+                    self.sidebar_container.show()
+            if hasattr(self, 'grid_main_page') and self.grid_main_page.layout() is not None:
+                if index == 7:
+                    self.grid_main_page.layout().setContentsMargins(0, 0, 0, 0)
+                else:
+                    self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
             if hasattr(self, 'playback_bar'):
-                self.playback_bar.show()
+                if index == 7 or getattr(self, "_workspace_mode", "both") == "online":
+                    self.playback_bar.hide()
+                else:
+                    self.playback_bar.show()
             if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
                 self.ai_progress_bar.show()
         else:
@@ -2926,8 +3436,21 @@ class MainWindow(QMainWindow):
                 self.top_toolbar_container.show()
             else:
                 self.top_toolbar_container.hide()
+            if hasattr(self, 'sidebar_container'):
+                if index == 7:
+                    self.sidebar_container.hide()
+                else:
+                    self.sidebar_container.show()
+            if hasattr(self, 'grid_main_page') and self.grid_main_page.layout() is not None:
+                if index == 7:
+                    self.grid_main_page.layout().setContentsMargins(0, 0, 0, 0)
+                else:
+                    self.grid_main_page.layout().setContentsMargins(20, 18, 20, 16)
             if hasattr(self, 'playback_bar'):
-                self.playback_bar.show()
+                if index == 7 or getattr(self, "_workspace_mode", "both") == "online":
+                    self.playback_bar.hide()
+                else:
+                    self.playback_bar.show()
             if hasattr(self, 'ai_progress_bar') and self.ai_progress_bar._state != 'idle':
                 self.ai_progress_bar.show()
 
@@ -2942,6 +3465,7 @@ class MainWindow(QMainWindow):
             elif index == 4: self.content_ctrl.switch_to_settings()
             elif index == 5: self.content_ctrl.switch_to_collections()
             elif index == 6: self.content_ctrl.switch_to_history()
+            elif index == 7: self.content_ctrl.switch_to_youtube_online()
 
         # 4. Cập nhật vị trí video & sub
         if index == 1:

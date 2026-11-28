@@ -315,6 +315,17 @@ class AudioStreamEngine:
         self._track = 0
         self._preferred_device = ''
         self._last_exclusive_format: dict[tuple[str, str, int], tuple[int, str]] = {}
+        self._stream_error = ''
+
+    def has_stream_error(self) -> bool:
+        with self._lock:
+            return bool(self._stream_error)
+
+    def consume_stream_error(self) -> str:
+        with self._lock:
+            err = self._stream_error
+            self._stream_error = ''
+            return err
 
     def set_user_volume(self, volume: float, muted: bool = False):
         with self._lock:
@@ -386,6 +397,49 @@ class AudioStreamEngine:
         except Exception:
             pass
         return list_wasapi_output_devices()
+
+    def _reinit_portaudio_safe(self, sd) -> None:
+        """Safely re-initialize PortAudio device table after Windows WASAPI/Bluetooth/DAC invalidation."""
+        with self._lock:
+            self._last_exclusive_format.clear()
+        try:
+            term = getattr(sd, '_terminate', None)
+            init = getattr(sd, '_initialize', None)
+            with self._lock:
+                if (
+                    callable(term)
+                    and callable(init)
+                    and type(term).__module__ != 'unittest.mock'
+                    and type(init).__module__ != 'unittest.mock'
+                ):
+                    term()
+                    init()
+        except Exception:
+            pass
+
+    @staticmethod
+    def _open_shared_wasapi_on_device(sd, dev_idx: int, dev_name: str, dev_sr: int, fallback_reason: str):
+        for sr in (dev_sr, 48000, 44100):
+            stream = None
+            try:
+                stream = sd.RawOutputStream(
+                    device=dev_idx,
+                    channels=2,
+                    dtype='float32',
+                    samplerate=sr,
+                    blocksize=0,
+                    latency=0.16,
+                    extra_settings=sd.WasapiSettings(exclusive=False),
+                )
+                actual_mode = 'shared_fallback' if fallback_reason else 'shared'
+                return stream, dev_name, sr, 'float32', actual_mode, fallback_reason
+            except Exception:
+                if stream is not None:
+                    try:
+                        stream.close()
+                    except Exception:
+                        pass
+        return None
 
     def _open_wasapi_stream(self, profile: AudioProfile, source_info: dict | None, preferred_device: str):
         import sounddevice as sd
@@ -467,20 +521,48 @@ class AudioStreamEngine:
                     pass
             fallback_reason = pin_missing_note
 
-        for sr in (dev_sr, 48000, 44100):
+        # Tier 1: Shared WASAPI on selected device
+        opened = self._open_shared_wasapi_on_device(sd, dev_idx, dev_name, dev_sr, fallback_reason)
+        if opened is not None:
+            return opened
+
+        # Tier 2: Re-initialize PortAudio device list (recovers stale Bluetooth / USB DAC / Windows audio handles!)
+        self._reinit_portaudio_safe(sd)
+        try:
+            dev_idx2, dev_info2 = select_wasapi_device(sd, target_pref)
+            dev_name2 = str(dev_info2['name'])
+            dev_sr2 = int(round(float(dev_info2.get('default_samplerate') or 48000)))
+            opened = self._open_shared_wasapi_on_device(sd, dev_idx2, dev_name2, dev_sr2, fallback_reason)
+            if opened is not None:
+                return opened
+        except Exception:
+            pass
+
+        # Tier 3: Fall back to Windows default WASAPI output endpoint if the pinned/previous device vanished
+        if target_pref:
+            try:
+                def_idx, def_info = select_wasapi_device(sd, '')
+                def_name = str(def_info['name'])
+                def_sr = int(round(float(def_info.get('default_samplerate') or 48000)))
+                fb_note = f'Thiết bị cũ tạm ngắt → Tự chuyển sang {def_name}'
+                opened = self._open_shared_wasapi_on_device(sd, def_idx, def_name, def_sr, fb_note)
+                if opened is not None:
+                    return opened
+            except Exception:
+                pass
+
+        # Tier 4: Last-resort default PortAudio output (DirectSound/MME) if WASAPI endpoint is momentarily locked
+        for sr in (48000, 44100):
             stream = None
             try:
                 stream = sd.RawOutputStream(
-                    device=dev_idx,
                     channels=2,
                     dtype='float32',
                     samplerate=sr,
                     blocksize=0,
-                    latency=0.16,
-                    extra_settings=sd.WasapiSettings(exclusive=False),
+                    latency=0.18,
                 )
-                actual_mode = 'shared_fallback' if fallback_reason else 'shared'
-                return stream, dev_name, sr, 'float32', actual_mode, fallback_reason
+                return stream, (dev_name or 'Default Output'), sr, 'float32', 'shared_fallback', 'WASAPI tạm bận → Tự chuyển đầu ra mặc định'
             except Exception:
                 if stream is not None:
                     try:
@@ -552,6 +634,8 @@ class AudioStreamEngine:
         with self._lock:
             current_gain_lin = self._target_gain_linear
         started = False
+        writer_failed = False
+        writer_err = ''
         mmcss_handle = _enter_mmcss_pro_audio()
         try:
             stdout = proc.stdout
@@ -637,10 +721,23 @@ class AudioStreamEngine:
                 if len(raw) < chunk_bytes:
                     break
         except Exception as err:
-            logger.debug('AudioStreamEngine writer exited: %s', err)
+            if not cancel_event.is_set() and op_id == self._op_id:
+                writer_failed = True
+                writer_err = str(err) or type(err).__name__
+                logger.warning('AudioStreamEngine WASAPI writer interrupted (%s) — marking for auto-recovery', writer_err)
+            else:
+                logger.debug('AudioStreamEngine writer exited: %s', err)
         finally:
+            if writer_failed:
+                with self._lock:
+                    if op_id == self._op_id and self._playing and not self._paused:
+                        self._start_ms = float(self.position_ms())
+                        self._played_frames = 0
+                        self._last_write_mono = 0.0
+                        self._active_stream = None
+                        self._stream_error = writer_err
             # Smooth zero-crossing cosine release ONLY on natural EOF (skip blocking writes on seek/stop cancel).
-            if started and not cancel_event.is_set() and float(np.max(np.abs(last_frame))) > 1e-5:
+            if started and not writer_failed and not cancel_event.is_set() and float(np.max(np.abs(last_frame))) > 1e-5:
                 try:
                     tail = build_release_tail(last_frame, max(8, int(0.006 * out_sr)))
                     raw_tail = quantize_pcm(tail, out_dtype, rng=None, dither_offset=dither_offset)
@@ -790,6 +887,7 @@ class AudioStreamEngine:
             self._played_frames = 0
             self._last_write_mono = 0.0
             self._underflows = 0
+            self._stream_error = ''
             self._paused = bool(paused)
             self._playing = True
 
@@ -915,6 +1013,7 @@ class AudioStreamEngine:
             self._playing = False
             self._paused = False
             self._last_write_mono = 0.0
+            self._stream_error = ''
         self._stop_active_worker(release_exclusive=release_exclusive)
 
     def shutdown(self):

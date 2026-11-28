@@ -49,6 +49,7 @@ class Sidebar(QListWidget):
         "collections": "Collections",
         "history": "History",
         "download": "Downloads",
+        "youtube_online": "YouTube",
         "settings": "Settings",
     }
 
@@ -86,6 +87,7 @@ class Sidebar(QListWidget):
                 "❤️": "heart",
                 "🕒": "history",
                 "💾": "download",
+                "🌐": "youtube",
                 "⚙️": "settings",
             }
             page_keys = {
@@ -95,6 +97,7 @@ class Sidebar(QListWidget):
                 "❤️": "collections",
                 "🕒": "history",
                 "💾": "download",
+                "🌐": "youtube_online",
                 "⚙️": "settings",
             }
             pkey = page_keys.get(icon_text, label_text.lower())

@@ -1,4 +1,4 @@
-/* BoTube 6.0 Commercial Showcase — Modern CSS (Layers, Grid/Subgrid, Container Queries, Scroll-Driven Animations) */
+/* BoTube 6.1 Showcase — Modern CSS (Layers, Grid/Subgrid, Container Queries, Native Dialog, Scroll-Driven Animations) */
 
 @layer reset, tokens, base, layout, components, motion;
 
@@ -466,6 +466,8 @@
   }
 
   .studio-canvas {
+    content-visibility: auto;
+    contain-intrinsic-size: auto none auto 288px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -605,16 +607,242 @@
   .screenshot-frame img {
     inline-size: 100%;
     block-size: auto;
-    aspect-ratio: 1280 / 750;
+    aspect-ratio: 1280 / 760;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-subtle);
     object-fit: cover;
+  }
+
+  .screenshot-zoom-btn {
+    display: block;
+    inline-size: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: zoom-in;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .screenshot-zoom-btn img {
+    transition: transform 0.25s ease;
+  }
+
+  .screenshot-zoom-btn:hover img {
+    transform: scale(1.015);
   }
 
   .screenshot-frame figcaption {
     margin-block-start: 0.75rem;
     font-size: 0.84rem;
     color: var(--text-secondary);
+  }
+
+  /* Interactive Screenshot Gallery */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .gallery-card {
+    grid-column: span 2;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: clip;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .gallery-card-wide {
+    grid-column: span 3;
+  }
+
+  .gallery-card:hover {
+    border-color: #3a5674;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 960px) {
+    .gallery-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .gallery-card,
+    .gallery-card-wide {
+      grid-column: span 1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .gallery-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .gallery-trigger {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    padding: 0;
+    border: none;
+    background: #0a1018;
+    cursor: zoom-in;
+    overflow: hidden;
+    border-block-end: 1px solid var(--border-subtle);
+  }
+
+  .gallery-trigger img {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: 1280 / 760;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .gallery-trigger:hover img {
+    transform: scale(1.025);
+  }
+
+  .gallery-zoom-chip {
+    position: absolute;
+    inset-block-end: 10px;
+    inset-inline-end: 10px;
+    background: rgba(11, 16, 23, 0.86);
+    border: 1px solid rgba(119, 224, 190, 0.45);
+    color: var(--accent-mint);
+    border-radius: 999px;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    backdrop-filter: blur(6px);
+  }
+
+  .gallery-body {
+    padding: 1.15rem 1.25rem 1.35rem;
+    display: grid;
+    gap: 0.45rem;
+    align-content: start;
+  }
+
+  .gallery-badge {
+    inline-size: fit-content;
+    font-size: 0.72rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    padding: 0.16rem 0.55rem;
+    border-radius: 999px;
+  }
+
+  .gallery-badge-mint {
+    background: #153129;
+    color: var(--accent-mint);
+    border: 1px solid #2b5a4d;
+  }
+
+  .gallery-badge-sky {
+    background: #132838;
+    color: var(--accent-sky);
+    border: 1px solid #244a66;
+  }
+
+  .gallery-badge-gold {
+    background: #302410;
+    color: var(--accent-gold);
+    border: 1px solid #5c461f;
+  }
+
+  .gallery-body h3 {
+    font-size: 1.04rem;
+    line-height: 1.3;
+  }
+
+  .gallery-body p {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+  }
+
+  .card-icon-red {
+    background: #33161b;
+    color: #f87171;
+    border: 1px solid #632833;
+  }
+
+  /* Native Modal Screenshot Lightbox */
+  dialog.lightbox-dialog {
+    margin: auto;
+    padding: 0;
+    inline-size: min(94vw, 1180px);
+    max-block-size: 92dvh;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: #0e151f;
+    color: var(--text-primary);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72);
+    overflow: auto;
+  }
+
+  dialog.lightbox-dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  dialog.lightbox-dialog::backdrop {
+    background: rgba(5, 9, 15, 0.82);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    overscroll-behavior: contain;
+  }
+
+  .lightbox-shell {
+    padding: 1.15rem 1.25rem 1.25rem;
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .lightbox-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .lightbox-title {
+    font-size: 1.15rem;
+    line-height: 1.3;
+    color: var(--text-primary);
+    margin-block-end: 0.25rem;
+  }
+
+  .lightbox-desc {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+  }
+
+  .lightbox-close {
+    background: #1a2535;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    inline-size: 36px;
+    block-size: 36px;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .lightbox-close:hover {
+    background: #26364c;
+    border-color: var(--accent-mint);
+    color: var(--accent-mint);
+  }
+
+  .lightbox-media img {
+    inline-size: 100%;
+    block-size: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
   }
 
   .signal-chain {
@@ -963,6 +1191,7 @@
       }
 
       .feature-card,
+      .gallery-card,
       .step-card {
         animation: card-reveal auto linear backwards;
         animation-timeline: view();
